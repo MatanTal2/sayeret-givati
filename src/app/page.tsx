@@ -12,6 +12,7 @@ export default function Home() {
   const [data, setData] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [now, setNow] = useState<string>("");
 
   // Fetch data from API on mount
   useEffect(() => {
@@ -48,6 +49,10 @@ export default function Home() {
       });
   }, []);
 
+  useEffect(() => {
+    setNow(new Date().toLocaleString("he-IL"));
+  }, []);
+
   // Extract unique platoons for filter
   const platoons = Array.from(new Set(data.map((r) => r.platoon).filter(Boolean)));
 
@@ -55,7 +60,7 @@ export default function Home() {
     <div dir="rtl" className="min-h-screen bg-gray-50 p-4 sm:p-8 font-sans">
       <header className="flex flex-col items-center gap-2 mb-6">
         <h1 className="text-2xl font-bold text-purple-800">שבצ&quot;ק מסייעת - סיירת גבעתי</h1>
-        <div className="text-sm text-gray-600">{new Date().toLocaleString("he-IL")}</div>
+        <div className="text-sm text-gray-600">{now}</div>
       </header>
       <section className="mb-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
         <select className="border rounded p-2" defaultValue="">
