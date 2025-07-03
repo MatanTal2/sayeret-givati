@@ -1,12 +1,54 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+
+interface Row {
+  name: string;
+  platoon: string;
+  status: string;
+  notes: string;
+}
 
 export default function Home() {
-  // Placeholder data structure
-  const data = [
-    { name: "יוסי כהן", platoon: "צוות א", status: "בית", notes: "" },
-    { name: "דני לוי", platoon: "צוות ב", status: "משמר", notes: "" },
-  ];
-  const platoons = ["צוות א", "צוות ב"];
+  const [data, setData] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch data from API on mount
+  useEffect(() => {
+    fetch("/api/sheets")
+      .then(async (res) => {
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+      })
+      .then((json) => {
+        // Expecting { data: string[][] }
+        const rows = json.data;
+        if (!Array.isArray(rows) || rows.length < 1) throw new Error("No data");
+        // Assume first row is header
+        const [header, ...body] = rows;
+        // Map columns to Row
+        const colIdx = {
+          name: header.findIndex((h: string) => h.includes("שם")),
+          platoon: header.findIndex((h: string) => h.includes("מחלקה") || h.includes("צוות")),
+          status: header.findIndex((h: string) => h.includes("סטטוס")),
+          notes: header.findIndex((h: string) => h.includes("הערות")),
+        };
+        const mapped: Row[] = body.map((r: string[]) => ({
+          name: r[colIdx.name] || "",
+          platoon: r[colIdx.platoon] || "",
+          status: r[colIdx.status] || "בית", // default
+          notes: r[colIdx.notes] || "",
+        }));
+        setData(mapped);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("לא ניתן לטעון את הנתונים כרגע. ניתן להוסיף רשומות ידנית.");
+        setLoading(false);
+      });
+  }, []);
+
+  // Extract unique platoons for filter
+  const platoons = Array.from(new Set(data.map((r) => r.platoon).filter(Boolean)));
 
   return (
     <div dir="rtl" className="min-h-screen bg-gray-50 p-4 sm:p-8 font-sans">
@@ -29,52 +71,56 @@ export default function Home() {
         <button className="bg-green-600 text-white px-4 py-2 rounded">הוסף שורה</button>
       </section>
       <div className="overflow-x-auto">
-        <table className="w-full bg-white rounded shadow text-right">
-          <thead className="bg-purple-100">
-            <tr>
-              <th className="p-2">בחר</th>
-              <th className="p-2">שם</th>
-              <th className="p-2">מחלקה/צוות</th>
-              <th className="p-2">סטטוס</th>
-              <th className="p-2">הערות</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row, idx) => (
-              <tr key={idx} className="border-b">
-                <td className="p-2 text-center">
-                  <input type="checkbox" />
-                </td>
-                <td className="p-2">{row.name}</td>
-                <td className="p-2">{row.platoon}</td>
-                <td className="p-2">
-                  <div className="flex gap-1 flex-wrap">
-                    <button className={`px-2 py-1 rounded ${row.status === "בית" ? "bg-blue-200" : "bg-gray-100"}`}>בית</button>
-                    <button className={`px-2 py-1 rounded ${row.status === "משמר" ? "bg-blue-200" : "bg-gray-100"}`}>משמר</button>
+        {loading ? (
+          <div className="text-center text-gray-500 py-8">טוען נתונים...</div>
+        ) : (
+          <table className="w-full bg-white rounded shadow text-right">
+            <thead className="bg-purple-100">
+              <tr>
+                <th className="p-2">בחר</th>
+                <th className="p-2">שם</th>
+                <th className="p-2">מחלקה/צוות</th>
+                <th className="p-2">סטטוס</th>
+                <th className="p-2">הערות</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((row, idx) => (
+                <tr key={idx} className="border-b">
+                  <td className="p-2 text-center">
+                    <input type="checkbox" />
+                  </td>
+                  <td className="p-2">{row.name}</td>
+                  <td className="p-2">{row.platoon}</td>
+                  <td className="p-2">
+                    <div className="flex gap-1 flex-wrap">
+                      <button className={`px-2 py-1 rounded ${row.status === "בית" ? "bg-blue-200" : "bg-gray-100"}`}>בית</button>
+                      <button className={`px-2 py-1 rounded ${row.status === "משמר" ? "bg-blue-200" : "bg-gray-100"}`}>משמר</button>
+                      <input
+                        type="text"
+                        placeholder="אחר..."
+                        className="border rounded px-2 py-1 w-20"
+                        defaultValue={row.status !== "בית" && row.status !== "משמר" ? row.status : ""}
+                      />
+                    </div>
+                  </td>
+                  <td className="p-2">
                     <input
                       type="text"
-                      placeholder="אחר..."
-                      className="border rounded px-2 py-1 w-20"
-                      defaultValue={row.status !== "בית" && row.status !== "משמר" ? row.status : ""}
+                      className="border rounded px-2 py-1 w-32"
+                      defaultValue={row.notes}
                     />
-                  </div>
-                </td>
-                <td className="p-2">
-                  <input
-                    type="text"
-                    className="border rounded px-2 py-1 w-32"
-                    defaultValue={row.notes}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
       <section className="flex flex-col sm:flex-row gap-4 mt-6 items-center justify-between">
         <button className="bg-purple-700 text-white px-4 py-2 rounded">הפק טקסט</button>
         <button className="bg-gray-300 text-gray-800 px-4 py-2 rounded">העתק ללוח</button>
-        <span className="text-red-600 text-sm">לא ניתן לטעון את הנתונים כרגע. ניתן להוסיף רשומות ידנית.</span>
+        {error && <span className="text-red-600 text-sm">{error}</span>}
       </section>
     </div>
   );
