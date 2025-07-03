@@ -1,4 +1,3 @@
-
 # sayeret-givati Platoon/Class Status App  
 
 ## שבצ"ק מסייעת - סיירת גבעתי
@@ -14,7 +13,7 @@
   Dropdown lets you filter by any platoon/class (`מחלקה/צוות`) in the sheet.
 
 - **Filter by Name with Autocomplete:**  
-  Start typing in a search box and see live dropdown suggestions. Selecting a name shows only that person’s row.
+  Start typing in a search box and see live dropdown suggestions. Selecting a name shows only that person's row.
 
 - **Mark Attendance/Status:**  
   - Each person has three status options:
@@ -35,7 +34,7 @@
   - Each row has a checkbox for including/excluding in the generated report.
 
 - **Generate Formatted Output:**  
-  - Click “הפק טקסט” to generate a formatted, Hebrew text summary, including date/time and only selected people.
+  - Click "הפק טקסט" to generate a formatted, Hebrew text summary, including date/time and only selected people.
 
 - **Copy to Clipboard:**  
   - Copy generated summary in one click.
@@ -43,7 +42,7 @@
 - **Offline Robustness:**  
   - If Google Sheets cannot be loaded (network error, offline, or API issue):  
     - Show a clear error message:  
-      **“לא ניתן לטעון את הנתונים כרגע. ניתן להוסיף רשומות ידנית.”**
+      **"לא ניתן לטעון את הנתונים כרגע. ניתן להוסיף רשומות ידנית."**
     - The app remains usable: manual row adding, editing, and report generation all still work (data is only in memory until refresh).
 
 - **RTL and Mobile-Friendly:**  
@@ -65,7 +64,7 @@
 ## User Story
 
 > As a platoon/class leader,  
-> I want to view, filter, and update my team’s daily status using a simple web app,  
+> I want to view, filter, and update my team's daily status using a simple web app,  
 > So I can quickly track, edit, and report who is present, at home, or has a special status,  
 > In Hebrew, from any device, and even when offline.
 
@@ -95,5 +94,27 @@
 - Persistent offline mode using local storage (not included by default).
 - Export as CSV.
 - Write-back to Google Sheets (would require Google Auth and is not included in this spec).
+
+---
+
+## Google Sheets Configuration
+
+// Configuration constants
+const COLUMN_NAMES = {
+  name: ['name', 'שם'],
+  platoon: ['platoon', 'מחלקה', 'צוות'],
+  status: ['status', 'סטטוס'],
+};
+
+const DEFAULT_VALUES = {
+  platoon: 'מסייעת',
+  status: 'בית',
+  notes: '',
+};
+
+const SHEET_CONFIG = {
+  defaultName: 'Sheet1',
+  useFirstSheet: true,
+};
 
 ---
