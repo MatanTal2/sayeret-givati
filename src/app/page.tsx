@@ -1,531 +1,653 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import Image from 'next/image';
 
-interface Row {
+interface Soldier {
   name: string;
   platoon: string;
   status: string;
-  notes: string;
   customStatus?: string;
+  notes?: string;
+  isSelected: boolean;
 }
 
 export default function Home() {
-  const [data, setData] = useState<Row[]>([]);
+  const [soldiers, setSoldiers] = useState<Soldier[]>([]);
+  const [filteredSoldiers, setFilteredSoldiers] = useState<Soldier[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [now, setNow] = useState<string>("");
-  const [selectedPlatoon, setSelectedPlatoon] = useState<string>("");
-  const [searchName, setSearchName] = useState<string>("");
-  const [generatedText, setGeneratedText] = useState<string>("");
-  const [showPreview, setShowPreview] = useState<boolean>(false);
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-  const [showAddForm, setShowAddForm] = useState<boolean>(false);
-  const [newRow, setNewRow] = useState<Row>({ name: "", platoon: "", status: "בית", notes: "", customStatus: "" });
+  const [platoonFilter, setPlatoonFilter] = useState('');
+  const [nameFilter, setNameFilter] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [reportText, setReportText] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
 
-  // Function to update status
-  const updateStatus = (rowName: string, newStatus: string) => {
-    setData(prevData => 
-      prevData.map((row) => 
-        row.name === rowName ? { ...row, status: newStatus } : row
-      )
-    );
-  };
-
-  // Function to toggle row selection
-  const toggleRowSelection = (rowName: string) => {
-    setSelectedRows(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(rowName)) {
-        newSet.delete(rowName);
-      } else {
-        newSet.add(rowName);
-      }
-      return newSet;
-    });
-  };
-
-  // Function to select all rows
-  const selectAll = () => {
-    const allNames = new Set(filteredData.map(row => row.name));
-    setSelectedRows(allNames);
-  };
-
-  // Function to deselect all rows
-  const deselectAll = () => {
-    setSelectedRows(new Set());
-  };
-
-  // Function to select by status
-  const selectByStatus = (status: string) => {
-    const statusNames = new Set(filteredData.filter(row => row.status === status).map(row => row.name));
-    setSelectedRows(statusNames);
-  };
-
-  // Function to add new row
-  const addNewRow = () => {
-    if (!newRow.name.trim()) {
-      alert("נא להכניס שם");
-      return;
-    }
-    
-    // Check if name already exists
-    if (data.some(row => row.name === newRow.name)) {
-      alert("שם זה כבר קיים");
-      return;
-    }
-    
-    // If status is "אחר", validate custom status
-    if (newRow.status === "אחר" && !newRow.customStatus?.trim()) {
-      alert("נא להכניס סטטוס מותאם");
-      return;
-    }
-    
-    // Use custom status if "אחר" is selected
-    const finalStatus = newRow.status === "אחר" ? newRow.customStatus : newRow.status;
-    
-    setData(prevData => [...prevData, { ...newRow, status: finalStatus || newRow.status }]);
-    
-    // Automatically select the new person
-    setSelectedRows(prev => new Set([...prev, newRow.name]));
-    
-    setNewRow({ name: "", platoon: "", status: "בית", notes: "", customStatus: "" });
-    setShowAddForm(false);
-  };
-
-  // Function to cancel adding row
-  const cancelAddRow = () => {
-    setNewRow({ name: "", platoon: "", status: "בית", notes: "", customStatus: "" });
-    setShowAddForm(false);
-  };
-
-  // Function to generate report text
-  const generateReport = () => {
-    const now = new Date();
-    const dateStr = now.toLocaleDateString("he-IL");
-    const timeStr = now.toLocaleTimeString("he-IL", { hour: '2-digit', minute: '2-digit' });
-    
-    // Get Hebrew day name
-    const dayNames = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
-    const dayName = dayNames[now.getDay()];
-    
-    const selectedData = filteredData.filter(row => selectedRows.has(row.name));
-    
-    let report = `דוח שבצ"ק מסייעת - סיירת גבעתי\n\n`;
-    report += `יום ${dayName} ${dateStr}\n`;
-    report += `שעה: ${timeStr}\n\n`;
-    
-    // Group by platoon
-    const platoonGroups = selectedData.reduce((acc, row) => {
-      const platoon = row.platoon || "לא מוגדר";
-      if (!acc[platoon]) acc[platoon] = [];
-      acc[platoon].push(row);
-      return acc;
-    }, {} as Record<string, typeof selectedData>);
-    
-    // Generate report for each platoon
-    Object.entries(platoonGroups).forEach(([platoon, soldiers]) => {
-      report += `מחלקה ${platoon}:\n`;
-      soldiers.forEach((soldier, index) => {
-        report += `${index + 1}. ${soldier.name} - ${soldier.status}`;
-        if (soldier.notes) report += ` (${soldier.notes})`;
-        report += `\n`;
-      });
-      report += `\n`;
-    });
-    
-    report += `סה"כ: ${selectedData.length}\n`;
-    
-    setGeneratedText(report);
-    setShowPreview(true);
-    
-    // Scroll to preview after a short delay to ensure it's rendered
-    setTimeout(() => {
-      const previewElement = document.getElementById('report-preview');
-      if (previewElement) {
-        previewElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
-  };
-
-  // Fetch data from API on mount
-  useEffect(() => {
-    fetch("/api/sheets")
-      .then(async (res) => {
-        if (!res.ok) throw new Error(await res.text());
-        return res.json();
-      })
-      .then((json) => {
-        // Expecting { data: string[][] }
-        const rows = json.data;
-        if (!Array.isArray(rows) || rows.length < 1) throw new Error("No data");
-        // Assume first row is header
-        const [header, ...body] = rows;
-        // Map columns to Row
-        const colIdx = {
-          name: header.findIndex((h: string) => h.includes("שם")),
-          platoon: header.findIndex((h: string) => h.includes("מחלקה") || h.includes("צוות")),
-          status: header.findIndex((h: string) => h.includes("סטטוס")),
-          notes: header.findIndex((h: string) => h.includes("הערות")),
-        };
-        const mapped: Row[] = body.map((r: string[]) => ({
-          name: r[colIdx.name] || "",
-          platoon: r[colIdx.platoon] || "",
-          status: r[colIdx.status] || "בית", // default
-          notes: r[colIdx.notes] || "",
-        }));
-        setData(mapped);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("לא ניתן לטעון את הנתונים כרגע. ניתן להוסיף רשומות ידנית.");
-        setLoading(false);
-      });
-  }, []);
-
-  useEffect(() => {
-    setNow(new Date().toLocaleString("he-IL"));
-  }, []);
-
-  // Extract unique platoons for filter
-  const platoons = Array.from(new Set(data.map((r) => r.platoon).filter(Boolean)));
-
-  // Filter data based on selected platoon and search name
-  const filteredData = data.filter(row => {
-    const matchesPlatoon = !selectedPlatoon || row.platoon === selectedPlatoon;
-    const matchesName = !searchName || row.name.toLowerCase().includes(searchName.toLowerCase());
-    return matchesPlatoon && matchesName;
+  // Add new soldier form state
+  const [newSoldier, setNewSoldier] = useState({
+    name: '',
+    platoon: 'מסייעת',
+    status: 'בית',
+    customStatus: '',
+    notes: ''
   });
 
+  useEffect(() => {
+    fetchSoldiers();
+  }, []);
+
+  const fetchSoldiers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('/api/sheets');
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `שגיאת שרת: ${response.status} - ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.data || !Array.isArray(result.data)) {
+        throw new Error('המידע שהתקבל אינו תקין');
+      }
+      
+      const rows = result.data;
+      if (rows.length < 2) {
+        throw new Error('אין מספיק נתונים בגיליון');
+      }
+      
+      // Map the data to soldiers array
+      const [, ...body] = rows; // Skip header row
+      const soldiersData = body
+        .filter((row: string[]) => row[0] && row[0].trim()) // Only rows with names
+        .map((row: string[]) => ({
+          name: row[0] || '',
+          platoon: row[1] || 'מסייעת',
+          status: row[2] || 'בית',
+          isSelected: true
+        }));
+      
+      setSoldiers(soldiersData);
+      setFilteredSoldiers(soldiersData);
+    } catch (error) {
+      console.error('Error fetching soldiers:', error);
+      setError(
+        error instanceof Error 
+          ? error.message 
+          : 'שגיאה לא צפויה בטעינת הנתונים. אנא נסה שוב מאוחר יותר.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterSoldiers = () => {
+    let filtered = soldiers;
+    
+    if (platoonFilter) {
+      filtered = filtered.filter(soldier => soldier.platoon === platoonFilter);
+    }
+    
+    if (nameFilter) {
+      filtered = filtered.filter(soldier => 
+        soldier.name.toLowerCase().includes(nameFilter.toLowerCase())
+      );
+    }
+    
+    setFilteredSoldiers(filtered);
+  };
+
+  useEffect(() => {
+    filterSoldiers();
+  }, [soldiers, platoonFilter, nameFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const updateStatus = (index: number, newStatus: string, customStatus?: string) => {
+    const updatedSoldiers = [...soldiers];
+    const originalIndex = soldiers.findIndex(s => s.name === filteredSoldiers[index].name);
+    updatedSoldiers[originalIndex] = {
+      ...updatedSoldiers[originalIndex],
+      status: newStatus,
+      customStatus: newStatus === 'אחר' ? customStatus : undefined
+    };
+    setSoldiers(updatedSoldiers);
+  };
+
+  const toggleSelection = (index: number) => {
+    const updatedSoldiers = [...soldiers];
+    const originalIndex = soldiers.findIndex(s => s.name === filteredSoldiers[index].name);
+    updatedSoldiers[originalIndex] = {
+      ...updatedSoldiers[originalIndex],
+      isSelected: !updatedSoldiers[originalIndex].isSelected
+    };
+    setSoldiers(updatedSoldiers);
+  };
+
+  const updateNotes = (index: number, notes: string) => {
+    const updatedSoldiers = [...soldiers];
+    const originalIndex = soldiers.findIndex(s => s.name === filteredSoldiers[index].name);
+    updatedSoldiers[originalIndex] = {
+      ...updatedSoldiers[originalIndex],
+      notes
+    };
+    setSoldiers(updatedSoldiers);
+  };
+
+  const selectAll = () => {
+    const updatedSoldiers = soldiers.map(soldier => ({
+      ...soldier,
+      isSelected: true
+    }));
+    setSoldiers(updatedSoldiers);
+  };
+
+  const selectNone = () => {
+    const updatedSoldiers = soldiers.map(soldier => ({
+      ...soldier,
+      isSelected: false
+    }));
+    setSoldiers(updatedSoldiers);
+  };
+
+  const selectByStatus = (status: string) => {
+    const updatedSoldiers = soldiers.map(soldier => ({
+      ...soldier,
+      isSelected: soldier.status === status
+    }));
+    setSoldiers(updatedSoldiers);
+  };
+
+  const addNewSoldier = () => {
+    if (!newSoldier.name.trim()) {
+      alert('שם החייל חובה');
+      return;
+    }
+
+    // Check for duplicate names
+    if (soldiers.some(s => s.name.toLowerCase() === newSoldier.name.toLowerCase())) {
+      alert('חייל בשם זה כבר קיים ברשימה');
+      return;
+    }
+
+    const soldier: Soldier = {
+      name: newSoldier.name.trim(),
+      platoon: newSoldier.platoon,
+      status: newSoldier.status,
+      customStatus: newSoldier.status === 'אחר' ? newSoldier.customStatus : undefined,
+      notes: newSoldier.notes.trim() || undefined,
+      isSelected: true
+    };
+
+    setSoldiers([...soldiers, soldier]);
+    setNewSoldier({
+      name: '',
+      platoon: 'מסייעת',
+      status: 'בית',
+      customStatus: '',
+      notes: ''
+    });
+    setShowAddForm(false);
+  };
+
+  const generateReport = () => {
+    try {
+      const selectedSoldiers = soldiers.filter(s => s.isSelected);
+      
+      if (selectedSoldiers.length === 0) {
+        alert('לא נבחרו חיילים לדוח');
+        return;
+      }
+
+      const now = new Date();
+      const options: Intl.DateTimeFormatOptions = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'numeric', 
+        day: 'numeric',
+        timeZone: 'Asia/Jerusalem'
+      };
+      const hebrewDate = now.toLocaleDateString('he-IL', options);
+      const time = now.toLocaleTimeString('he-IL', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        timeZone: 'Asia/Jerusalem'
+      });
+
+      // Group by platoon
+      const groupedByPlatoon = selectedSoldiers.reduce((acc, soldier) => {
+        if (!acc[soldier.platoon]) {
+          acc[soldier.platoon] = [];
+        }
+        acc[soldier.platoon].push(soldier);
+        return acc;
+      }, {} as Record<string, Soldier[]>);
+
+      let report = `דוח שבצ״ק מסייעת - סיירת גבעתי\n`;
+      report += `${hebrewDate}\n`;
+      report += `שעה: ${time}\n\n`;
+
+      Object.entries(groupedByPlatoon).forEach(([platoon, platoonSoldiers]) => {
+        report += `מחלקה ${platoon}:\n`;
+        platoonSoldiers.forEach((soldier, index) => {
+          const status = soldier.status === 'אחר' && soldier.customStatus 
+            ? soldier.customStatus 
+            : soldier.status;
+          const notes = soldier.notes ? ` - ${soldier.notes}` : '';
+          report += `${index + 1}. ${soldier.name} - ${status}${notes}\n`;
+        });
+        report += '\n';
+      });
+
+      setReportText(report);
+      setShowPreview(true);
+      
+      // Scroll to preview
+      setTimeout(() => {
+        document.getElementById('report-preview')?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 100);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('שגיאה ביצירת הדוח. אנא נסה שוב.');
+    }
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(reportText);
+      alert('הדוח הועתק ללוח');
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      alert('שגיאה בהעתקה. אנא העתק ידנית.');
+    }
+  };
+
+  const selectedCount = soldiers.filter(s => s.isSelected).length;
+  const totalCount = soldiers.length;
+  const uniquePlatoons = [...new Set(soldiers.map(s => s.platoon))];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">טוען נתונים...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div dir="rtl" className="min-h-screen bg-gray-50 p-4 sm:p-8 font-sans text-gray-800">
-      <header className="flex flex-col items-center gap-2 mb-6">
-        <h1 className="text-2xl font-bold text-purple-800">שבצ&quot;ק מסייעת - סיירת גבעתי</h1>
-        <div className="text-sm text-gray-700">{now}</div>
-      </header>
-      <section className="mb-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <select 
-          className="border rounded p-2" 
-          value={selectedPlatoon}
-          onChange={(e) => setSelectedPlatoon(e.target.value)}
-        >
-          <option value="">כל המחלקות</option>
-          {platoons.map((p) => (
-            <option key={p} value={p}>{p}</option>
-          ))}
-        </select>
-        <input
-          type="text"
-          placeholder="חפש שם..."
-          className="border rounded p-2 w-48"
-          value={searchName}
-          onChange={(e) => setSearchName(e.target.value)}
-        />
-        <button 
-          onClick={() => setShowAddForm(true)}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
-        >
-          הוסף שורה
-        </button>
-      </section>
-      
-      {/* Add Row Form - Collapsible - Right under the button */}
-      {showAddForm && (
-        <section className="mb-4 bg-white rounded shadow p-4 border-2 border-green-200">
-          <h2 className="text-lg font-bold text-green-700 mb-4">הוסף חייל חדש</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="min-h-screen bg-gray-50" dir="rtl">
+      {/* Header with Logo */}
+      <header className="bg-white shadow-sm border-b border-gray-200 mb-6">
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <Image 
+              src="/sayeret-givati-logo.png" 
+              alt="לוגו סיירת גבעתי" 
+              width={80} 
+              height={80}
+              className="h-16 w-auto"
+            />
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">שם *</label>
-              <input
-                type="text"
-                value={newRow.name}
-                onChange={(e) => setNewRow({...newRow, name: e.target.value})}
-                className="w-full border-2 border-gray-300 rounded px-3 py-2 focus:border-green-500 focus:outline-none"
-                placeholder="הכנס שם..."
-                dir="rtl"
-              />
+              <h1 className="text-3xl font-bold text-gray-900">
+                מערכת שבצ״ק מסייעת
+              </h1>
+              <p className="text-lg text-gray-700 font-medium">סיירת גבעתי</p>
             </div>
-            
-                         <div>
-               <label className="block text-sm font-medium text-gray-700 mb-1">מחלקה</label>
-               <select
-                 value={newRow.platoon}
-                 onChange={(e) => setNewRow({...newRow, platoon: e.target.value})}
-                 className="w-full border-2 border-gray-300 rounded px-3 py-2 focus:border-green-500 focus:outline-none"
-               >
-                 <option value="">בחר מחלקה...</option>
-                 {platoons.map((p) => (
-                   <option key={p} value={p}>{p}</option>
-                 ))}
-               </select>
-             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">סטטוס</label>
-              <select
-                value={newRow.status}
-                onChange={(e) => setNewRow({...newRow, status: e.target.value})}
-                className="w-full border-2 border-gray-300 rounded px-3 py-2 focus:border-green-500 focus:outline-none"
-              >
-                <option value="בית">בית</option>
-                <option value="משמר">משמר</option>
-                <option value="אחר">אחר</option>
-              </select>
-            </div>
-            
-            {newRow.status === "אחר" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">סטטוס מותאם</label>
-                <input
-                  type="text"
-                  value={newRow.customStatus || ""}
-                  onChange={(e) => setNewRow({...newRow, customStatus: e.target.value})}
-                  className="w-full border-2 border-gray-300 rounded px-3 py-2 focus:border-green-500 focus:outline-none"
-                  placeholder="הכנס סטטוס..."
-                  dir="rtl"
-                />
-              </div>
-            )}
-            
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">הערות</label>
-              <input
-                type="text"
-                value={newRow.notes}
-                onChange={(e) => setNewRow({...newRow, notes: e.target.value})}
-                className="w-full border-2 border-gray-300 rounded px-3 py-2 focus:border-green-500 focus:outline-none"
-                placeholder="הערות (אופציונלי)..."
-                dir="rtl"
-              />
-            </div>
-          </div>
-          
-          <div className="flex gap-3 mt-4 justify-end">
-            <button
-              onClick={cancelAddRow}
-              className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors"
-            >
-              ביטול
-            </button>
-            <button
-              onClick={addNewRow}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
-            >
-              הוסף
-            </button>
-          </div>
-        </section>
-      )}
-      
-      {/* Bulk selection controls */}
-      <section className="mb-4 bg-white rounded shadow p-4">
-        <div className="flex flex-wrap gap-2 items-center justify-between">
-          <div className="flex flex-wrap gap-2">
-            <button 
-              onClick={selectAll}
-              className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
-            >
-              בחר הכל
-            </button>
-            <button 
-              onClick={deselectAll}
-              className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700"
-            >
-              בטל בחירה
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-sm text-gray-600">בחר לפי סטטוס:</span>
-            <button 
-              onClick={() => selectByStatus("בית")}
-              className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700"
-            >
-              בית
-            </button>
-            <button 
-              onClick={() => selectByStatus("משמר")}
-              className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700"
-            >
-              משמר
-            </button>
-          </div>
-          <div className="text-sm text-gray-600">
-            נבחרו: {selectedRows.size} מתוך {filteredData.length}
           </div>
         </div>
-      </section>
-      {/* Scrollable Table Container */}
-      <div className="bg-white rounded shadow overflow-hidden">
-        {loading ? (
-          <div className="text-center text-gray-700 py-8">טוען נתונים...</div>
-        ) : (
-          <>
-            {/* Fixed Header - Desktop Only */}
-            <div className="hidden md:block bg-purple-100 p-3 border-b">
-              <div className="grid grid-cols-12 gap-2 text-sm font-medium text-gray-700">
-                <div className="col-span-1 text-center">בחר</div>
-                <div className="col-span-2">שם</div>
-                <div className="col-span-2">מחלקה</div>
-                <div className="col-span-4">סטטוס</div>
-                <div className="col-span-3">הערות</div>
+      </header>
+
+      <div className="max-w-6xl mx-auto px-4 pb-32">
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-bold">!</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-red-800">שגיאה בטעינת הנתונים</h3>
+                <p className="text-red-700 mt-1">{error}</p>
+                <button 
+                  onClick={fetchSoldiers}
+                  className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm"
+                >
+                  נסה שוב
+                </button>
               </div>
             </div>
-            
-            {/* Scrollable Body */}
-            <div className="max-h-96 overflow-y-auto">
-              {filteredData.map((row, idx) => (
-                <div key={idx} className="border-b border-gray-100 hover:bg-gray-50 p-3">
-                  {/* Desktop Layout - Single Row */}
-                  <div className="hidden md:grid grid-cols-12 gap-2 items-center">
-                    <div className="col-span-1 text-center">
+          </div>
+        )}
+
+        {!error && (
+          <>
+            {/* Filters */}
+            <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">סינון</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">מחלקה</label>
+                  <select 
+                    value={platoonFilter}
+                    onChange={(e) => setPlatoonFilter(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    <option value="">כל המחלקות</option>
+                    {uniquePlatoons.map(platoon => (
+                      <option key={platoon} value={platoon}>{platoon}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">חיפוש לפי שם</label>
+                  <input 
+                    type="text"
+                    value={nameFilter}
+                    onChange={(e) => setNameFilter(e.target.value)}
+                    placeholder="הקלד שם..."
+                    className="w-full border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Selection Controls */}
+            <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+              <div className="flex flex-wrap gap-4 items-center justify-between">
+                <div className="flex flex-wrap gap-2">
+                  <button 
+                    onClick={selectAll}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm"
+                  >
+                    בחר הכל
+                  </button>
+                  <button 
+                    onClick={selectNone}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm"
+                  >
+                    בטל בחירה
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700">בחר לפי סטאטוס:</label>
+                  <select 
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        selectByStatus(e.target.value);
+                        e.target.value = '';
+                      }
+                    }}
+                    className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    <option value="">בחר סטאטוס</option>
+                    <option value="בית">בית</option>
+                    <option value="משמר">משמר</option>
+                    <option value="אחר">אחר</option>
+                  </select>
+                </div>
+                <div className="text-sm text-gray-600">
+                  נבחרו: {selectedCount} מתוך {totalCount}
+                </div>
+              </div>
+            </div>
+
+            {/* Add New Soldier */}
+            <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+              <button 
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              >
+                הוסף שורה
+              </button>
+              
+              {showAddForm && (
+                <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                  <h3 className="font-medium mb-4">הוסף חייל חדש</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">שם *</label>
                       <input 
-                        type="checkbox" 
-                        checked={selectedRows.has(row.name)}
-                        onChange={() => toggleRowSelection(row.name)}
-                      />
-                    </div>
-                    <div className="col-span-2 text-sm font-medium">{row.name}</div>
-                    <div className="col-span-2 text-sm text-gray-600">{row.platoon}</div>
-                    <div className="col-span-4">
-                      <div className="flex gap-1 flex-wrap">
-                        <button 
-                          onClick={() => updateStatus(row.name, "בית")}
-                          className={`px-2 py-1 rounded cursor-pointer transition-colors font-medium text-xs ${row.status === "בית" ? "bg-purple-600 text-white hover:bg-purple-700" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-                        >
-                          בית
-                        </button>
-                        <button 
-                          onClick={() => updateStatus(row.name, "משמר")}
-                          className={`px-2 py-1 rounded cursor-pointer transition-colors font-medium text-xs ${row.status === "משמר" ? "bg-purple-600 text-white hover:bg-purple-700" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-                        >
-                          משמר
-                        </button>
-                        <input
-                          type="text"
-                          placeholder="אחר..."
-                          className="border border-gray-300 rounded px-2 py-1 w-16 text-xs focus:border-purple-500 focus:outline-none"
-                          defaultValue={row.status !== "בית" && row.status !== "משמר" ? row.status : ""}
-                          onChange={(e) => updateStatus(row.name, e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-span-3">
-                      <input
                         type="text"
-                        className="border border-gray-300 rounded px-2 py-1 w-full text-xs focus:border-purple-500 focus:outline-none"
-                        defaultValue={row.notes}
+                        value={newSoldier.name}
+                        onChange={(e) => setNewSoldier({...newSoldier, name: e.target.value})}
+                        className="w-full border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                        placeholder="שם החייל"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">מחלקה</label>
+                      <select 
+                        value={newSoldier.platoon}
+                        onChange={(e) => setNewSoldier({...newSoldier, platoon: e.target.value})}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        {uniquePlatoons.map(platoon => (
+                          <option key={platoon} value={platoon}>{platoon}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">סטטוס</label>
+                      <div className="flex gap-2">
+                        <select 
+                          value={newSoldier.status}
+                          onChange={(e) => setNewSoldier({...newSoldier, status: e.target.value, customStatus: e.target.value === 'אחר' ? newSoldier.customStatus : ''})}
+                          className="border border-gray-300 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        >
+                          <option value="בית">בית</option>
+                          <option value="משמר">משמר</option>
+                          <option value="אחר">אחר</option>
+                        </select>
+                        {newSoldier.status === 'אחר' && (
+                          <input 
+                            type="text"
+                            value={newSoldier.customStatus}
+                            onChange={(e) => setNewSoldier({...newSoldier, customStatus: e.target.value})}
+                            placeholder="פרט..."
+                            className="flex-1 border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* Mobile Layout - Compact */}
-                  <div className="md:hidden space-y-2">
-                    {/* First Row: Checkbox | Name | Class (Left to Right) */}
-                    <div className="flex items-center gap-2 text-sm">
-                      <input 
-                        type="checkbox" 
-                        checked={selectedRows.has(row.name)}
-                        onChange={() => toggleRowSelection(row.name)}
-                      />
-                      <span className="text-gray-400">|</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs font-medium text-gray-500">שם:</span>
-                        <span className="font-medium">{row.name}</span>
-                      </div>
-                      <span className="text-gray-400">|</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs font-medium text-gray-500">מחלקה:</span>
-                        <span className="text-gray-700">{row.platoon}</span>
-                      </div>
-                    </div>
-                    
-                    {/* Second Row: Status (Left to Right) */}
-                    <div className="flex gap-1 flex-wrap">
-                      <button 
-                        onClick={() => updateStatus(row.name, "בית")}
-                        className={`px-2 py-1 rounded cursor-pointer transition-colors font-medium text-xs ${row.status === "בית" ? "bg-purple-600 text-white hover:bg-purple-700" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-                      >
-                        בית
-                      </button>
-                      <button 
-                        onClick={() => updateStatus(row.name, "משמר")}
-                        className={`px-2 py-1 rounded cursor-pointer transition-colors font-medium text-xs ${row.status === "משמר" ? "bg-purple-600 text-white hover:bg-purple-700" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-                      >
-                        משמר
-                      </button>
-                      <input
-                        type="text"
-                        placeholder="אחר..."
-                        className="border border-gray-300 rounded px-2 py-1 w-20 text-xs focus:border-purple-500 focus:outline-none"
-                        defaultValue={row.status !== "בית" && row.status !== "משמר" ? row.status : ""}
-                        onChange={(e) => updateStatus(row.name, e.target.value)}
-                      />
-                    </div>
-                    
-                    {/* Third Row: Notes */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-gray-500">הערות:</span>
-                      <input
-                        type="text"
-                        placeholder="הכנס הערות..."
-                        className="border border-gray-300 rounded px-2 py-1 flex-1 text-xs focus:border-purple-500 focus:outline-none"
-                        defaultValue={row.notes}
-                      />
-                    </div>
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">הערות</label>
+                    <input 
+                      type="text"
+                      value={newSoldier.notes}
+                      onChange={(e) => setNewSoldier({...newSoldier, notes: e.target.value})}
+                      className="w-full border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                      placeholder="הערות נוספות (אופציונלי)"
+                    />
+                  </div>
+                  <div className="mt-4 flex gap-2">
+                    <button 
+                      onClick={addNewSoldier}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                    >
+                      הוסף
+                    </button>
+                    <button 
+                      onClick={() => setShowAddForm(false)}
+                      className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                    >
+                      ביטול
+                    </button>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
+
+            {/* Soldiers Table - Desktop */}
+            <div className="hidden md:block bg-white rounded-lg shadow-sm mb-6">
+              <div className="max-h-96 overflow-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">בחירה</th>
+                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">שם</th>
+                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">מחלקה</th>
+                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">סטטוס</th>
+                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">הערות</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredSoldiers.map((soldier, index) => (
+                      <tr key={index} className={`border-t ${soldier.isSelected ? 'bg-purple-50' : 'bg-white'}`}>
+                        <td className="px-4 py-3">
+                          <input 
+                            type="checkbox"
+                            checked={soldier.isSelected}
+                            onChange={() => toggleSelection(index)}
+                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-gray-800 font-medium">{soldier.name}</td>
+                        <td className="px-4 py-3 text-gray-700">{soldier.platoon}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-2">
+                            <select 
+                              value={soldier.status === 'אחר' ? 'אחר' : soldier.status}
+                              onChange={(e) => {
+                                if (e.target.value === 'אחר') {
+                                  updateStatus(index, 'אחר', soldier.customStatus || '');
+                                } else {
+                                  updateStatus(index, e.target.value);
+                                }
+                              }}
+                              className="border border-gray-300 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                            >
+                              <option value="בית">בית</option>
+                              <option value="משמר">משמר</option>
+                              <option value="אחר">אחר</option>
+                            </select>
+                            {soldier.status === 'אחר' && (
+                              <input 
+                                type="text"
+                                value={soldier.customStatus || ''}
+                                onChange={(e) => updateStatus(index, 'אחר', e.target.value)}
+                                placeholder="פרט..."
+                                className="w-20 border-2 border-gray-400 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                              />
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <input 
+                            type="text"
+                            value={soldier.notes || ''}
+                            onChange={(e) => updateNotes(index, e.target.value)}
+                            placeholder="הערות..."
+                            className="w-full border-2 border-gray-400 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Soldiers List - Mobile */}
+            <div className="md:hidden space-y-4 mb-6">
+              <div className="max-h-96 overflow-auto space-y-4">
+                {filteredSoldiers.map((soldier, index) => (
+                  <div key={index} className={`p-4 rounded-lg border ${soldier.isSelected ? 'bg-purple-50 border-purple-200' : 'bg-white border-gray-200'}`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <input 
+                        type="checkbox"
+                        checked={soldier.isSelected}
+                        onChange={() => toggleSelection(index)}
+                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      />
+                      <span className="font-medium text-gray-800">שם:</span>
+                      <span className="text-gray-700">{soldier.name}</span>
+                      <span className="mr-auto font-medium text-gray-800">מחלקה:</span>
+                      <span className="text-gray-700">{soldier.platoon}</span>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <div className="flex gap-2 mb-2">
+                        <select 
+                          value={soldier.status === 'אחר' ? 'אחר' : soldier.status}
+                          onChange={(e) => {
+                            if (e.target.value === 'אחר') {
+                              updateStatus(index, 'אחר', soldier.customStatus || '');
+                            } else {
+                              updateStatus(index, e.target.value);
+                            }
+                          }}
+                          className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                        >
+                          <option value="בית">בית</option>
+                          <option value="משמר">משמר</option>
+                          <option value="אחר">אחר</option>
+                        </select>
+                        {soldier.status === 'אחר' && (
+                          <input 
+                            type="text"
+                            value={soldier.customStatus || ''}
+                            onChange={(e) => updateStatus(index, 'אחר', e.target.value)}
+                            placeholder="פרט..."
+                            className="flex-1 border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <span className="font-medium text-gray-800">הערות:</span>
+                      <input 
+                        type="text"
+                        value={soldier.notes || ''}
+                        onChange={(e) => updateNotes(index, e.target.value)}
+                        placeholder="הערות..."
+                        className="w-full mt-1 border-2 border-gray-400 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Report Preview */}
+            {showPreview && (
+              <div id="report-preview" className="bg-white p-6 rounded-lg shadow-sm mb-6">
+                <h3 className="text-lg font-semibold mb-4">תצוגה מקדימה של הדוח</h3>
+                <textarea 
+                  value={reportText}
+                  readOnly
+                  className="w-full h-64 border border-gray-300 rounded-md p-3 font-mono text-sm bg-gray-50"
+                />
+                <button 
+                  onClick={copyToClipboard}
+                  className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                >
+                  העתק ללוח
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
-      {/* Sticky bottom bar for buttons */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow-lg p-3 z-10">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row gap-3 items-center justify-center">
-          <button 
-            onClick={generateReport}
-            className="bg-purple-700 text-white px-5 py-2 rounded hover:bg-purple-800 transition-colors font-medium"
-          >
-            הפק טקסט
-          </button>
-          <button 
-            onClick={() => {
-              if (generatedText) {
-                navigator.clipboard.writeText(generatedText);
-                alert("הטקסט הועתק ללוח!");
-              }
-            }}
-            className="bg-gray-300 text-gray-900 px-5 py-2 rounded hover:bg-gray-400 transition-colors font-medium"
-            disabled={!generatedText}
-          >
-            העתק ללוח
-          </button>
-          {error && <span className="text-red-600 text-sm">{error}</span>}
-        </div>
-      </div>
-      
-      {showPreview && (
-        <section id="report-preview" className="mt-6 bg-white rounded shadow p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold text-purple-800">תצוגה מקדימה של הדוח</h2>
+
+      {/* Fixed Bottom Bar */}
+      {!error && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg">
+          <div className="max-w-6xl mx-auto">
             <button 
-              onClick={() => setShowPreview(false)}
-              className="text-gray-500 hover:text-gray-700 text-xl"
+              onClick={generateReport}
+              className="w-full md:w-auto px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors font-medium"
             >
-              ×
+              הפק טקסט
             </button>
           </div>
-          <textarea
-            value={generatedText}
-            readOnly
-            className="w-full h-64 p-3 border-2 border-gray-300 rounded font-mono text-sm resize-none"
-            dir="rtl"
-          />
-        </section>
+        </div>
       )}
-      
-      {/* Add bottom padding to prevent content from being hidden behind sticky bar */}
-      <div className="h-32"></div>
     </div>
   );
 }
