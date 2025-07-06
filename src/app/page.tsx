@@ -6,6 +6,7 @@ interface Row {
   platoon: string;
   status: string;
   notes: string;
+  customStatus?: string;
 }
 
 export default function Home() {
@@ -18,6 +19,8 @@ export default function Home() {
   const [generatedText, setGeneratedText] = useState<string>("");
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [showAddForm, setShowAddForm] = useState<boolean>(false);
+  const [newRow, setNewRow] = useState<Row>({ name: "", platoon: "", status: "בית", notes: "", customStatus: "" });
 
   // Function to update status
   const updateStatus = (rowName: string, newStatus: string) => {
@@ -58,13 +61,58 @@ export default function Home() {
     setSelectedRows(statusNames);
   };
 
+  // Function to add new row
+  const addNewRow = () => {
+    if (!newRow.name.trim()) {
+      alert("נא להכניס שם");
+      return;
+    }
+    
+    // Check if name already exists
+    if (data.some(row => row.name === newRow.name)) {
+      alert("שם זה כבר קיים");
+      return;
+    }
+    
+    // If status is "אחר", validate custom status
+    if (newRow.status === "אחר" && !newRow.customStatus?.trim()) {
+      alert("נא להכניס סטטוס מותאם");
+      return;
+    }
+    
+    // Use custom status if "אחר" is selected
+    const finalStatus = newRow.status === "אחר" ? newRow.customStatus : newRow.status;
+    
+    setData(prevData => [...prevData, { ...newRow, status: finalStatus || newRow.status }]);
+    
+    // Automatically select the new person
+    setSelectedRows(prev => new Set([...prev, newRow.name]));
+    
+    setNewRow({ name: "", platoon: "", status: "בית", notes: "", customStatus: "" });
+    setShowAddForm(false);
+  };
+
+  // Function to cancel adding row
+  const cancelAddRow = () => {
+    setNewRow({ name: "", platoon: "", status: "בית", notes: "", customStatus: "" });
+    setShowAddForm(false);
+  };
+
   // Function to generate report text
   const generateReport = () => {
-    const currentTime = new Date().toLocaleString("he-IL");
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("he-IL");
+    const timeStr = now.toLocaleTimeString("he-IL", { hour: '2-digit', minute: '2-digit' });
+    
+    // Get Hebrew day name
+    const dayNames = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+    const dayName = dayNames[now.getDay()];
+    
     const selectedData = filteredData.filter(row => selectedRows.has(row.name));
     
-    let report = `דוח שבצ"ק מסייעת - סיירת גבעתי\n`;
-    report += `תאריך ושעה: ${currentTime}\n\n`;
+    let report = `דוח שבצ"ק מסייעת - סיירת גבעתי\n\n`;
+    report += `יום ${dayName} ${dateStr}\n`;
+    report += `שעה: ${timeStr}\n\n`;
     
     // Group by platoon
     const platoonGroups = selectedData.reduce((acc, row) => {
@@ -76,16 +124,16 @@ export default function Home() {
     
     // Generate report for each platoon
     Object.entries(platoonGroups).forEach(([platoon, soldiers]) => {
-      report += `${platoon}:\n`;
-      soldiers.forEach(soldier => {
-        report += `  • ${soldier.name} - ${soldier.status}`;
+      report += `מחלקה ${platoon}:\n`;
+      soldiers.forEach((soldier, index) => {
+        report += `${index + 1}. ${soldier.name} - ${soldier.status}`;
         if (soldier.notes) report += ` (${soldier.notes})`;
         report += `\n`;
       });
       report += `\n`;
     });
     
-    report += `סה"כ נבדקו: ${selectedData.length} חיילים\n`;
+    report += `סה"כ: ${selectedData.length}\n`;
     
     setGeneratedText(report);
     setShowPreview(true);
@@ -172,8 +220,102 @@ export default function Home() {
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
         />
-        <button className="bg-green-600 text-white px-4 py-2 rounded">הוסף שורה</button>
+        <button 
+          onClick={() => setShowAddForm(true)}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
+        >
+          הוסף שורה
+        </button>
       </section>
+      
+      {/* Add Row Form - Collapsible - Right under the button */}
+      {showAddForm && (
+        <section className="mb-4 bg-white rounded shadow p-4 border-2 border-green-200">
+          <h2 className="text-lg font-bold text-green-700 mb-4">הוסף חייל חדש</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">שם *</label>
+              <input
+                type="text"
+                value={newRow.name}
+                onChange={(e) => setNewRow({...newRow, name: e.target.value})}
+                className="w-full border-2 border-gray-300 rounded px-3 py-2 focus:border-green-500 focus:outline-none"
+                placeholder="הכנס שם..."
+                dir="rtl"
+              />
+            </div>
+            
+                         <div>
+               <label className="block text-sm font-medium text-gray-700 mb-1">מחלקה</label>
+               <select
+                 value={newRow.platoon}
+                 onChange={(e) => setNewRow({...newRow, platoon: e.target.value})}
+                 className="w-full border-2 border-gray-300 rounded px-3 py-2 focus:border-green-500 focus:outline-none"
+               >
+                 <option value="">בחר מחלקה...</option>
+                 {platoons.map((p) => (
+                   <option key={p} value={p}>{p}</option>
+                 ))}
+               </select>
+             </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">סטטוס</label>
+              <select
+                value={newRow.status}
+                onChange={(e) => setNewRow({...newRow, status: e.target.value})}
+                className="w-full border-2 border-gray-300 rounded px-3 py-2 focus:border-green-500 focus:outline-none"
+              >
+                <option value="בית">בית</option>
+                <option value="משמר">משמר</option>
+                <option value="אחר">אחר</option>
+              </select>
+            </div>
+            
+            {newRow.status === "אחר" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">סטטוס מותאם</label>
+                <input
+                  type="text"
+                  value={newRow.customStatus || ""}
+                  onChange={(e) => setNewRow({...newRow, customStatus: e.target.value})}
+                  className="w-full border-2 border-gray-300 rounded px-3 py-2 focus:border-green-500 focus:outline-none"
+                  placeholder="הכנס סטטוס..."
+                  dir="rtl"
+                />
+              </div>
+            )}
+            
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">הערות</label>
+              <input
+                type="text"
+                value={newRow.notes}
+                onChange={(e) => setNewRow({...newRow, notes: e.target.value})}
+                className="w-full border-2 border-gray-300 rounded px-3 py-2 focus:border-green-500 focus:outline-none"
+                placeholder="הערות (אופציונלי)..."
+                dir="rtl"
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-3 mt-4 justify-end">
+            <button
+              onClick={cancelAddRow}
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors"
+            >
+              ביטול
+            </button>
+            <button
+              onClick={addNewRow}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
+            >
+              הוסף
+            </button>
+          </div>
+        </section>
+      )}
       
       {/* Bulk selection controls */}
       <section className="mb-4 bg-white rounded shadow p-4">
@@ -212,66 +354,70 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <div className="overflow-x-auto">
+      {/* Scrollable Table Container */}
+      <div className="bg-white rounded shadow overflow-hidden">
         {loading ? (
           <div className="text-center text-gray-700 py-8">טוען נתונים...</div>
         ) : (
-          <table className="w-full bg-white rounded shadow text-right">
-            <thead className="bg-purple-100">
-              <tr>
-                <th className="p-2">בחר</th>
-                <th className="p-2">שם</th>
-                <th className="p-2">מחלקה/צוות</th>
-                <th className="p-2">סטטוס</th>
-                <th className="p-2">הערות</th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            {/* Fixed Header */}
+            <div className="bg-purple-100 p-3 border-b">
+              <div className="grid grid-cols-12 gap-2 text-sm font-medium text-gray-700">
+                <div className="col-span-1 text-center">בחר</div>
+                <div className="col-span-2">שם</div>
+                <div className="col-span-2">מחלקה</div>
+                <div className="col-span-4">סטטוס</div>
+                <div className="col-span-3">הערות</div>
+              </div>
+            </div>
+            
+            {/* Scrollable Body */}
+            <div className="max-h-96 overflow-y-auto">
               {filteredData.map((row, idx) => (
-                <tr key={idx} className="border-b">
-                  <td className="p-2 text-center">
+                <div key={idx} className="grid grid-cols-12 gap-2 p-3 border-b border-gray-100 hover:bg-gray-50 items-center">
+                  <div className="col-span-1 text-center">
                     <input 
                       type="checkbox" 
                       checked={selectedRows.has(row.name)}
                       onChange={() => toggleRowSelection(row.name)}
                     />
-                  </td>
-                  <td className="p-2">{row.name}</td>
-                  <td className="p-2">{row.platoon}</td>
-                  <td className="p-2">
+                  </div>
+                  <div className="col-span-2 text-sm font-medium">{row.name}</div>
+                  <div className="col-span-2 text-sm text-gray-600">{row.platoon}</div>
+                  <div className="col-span-4">
                     <div className="flex gap-1 flex-wrap">
                       <button 
                         onClick={() => updateStatus(row.name, "בית")}
-                        className={`px-3 py-1 rounded cursor-pointer transition-colors font-medium ${row.status === "בית" ? "bg-purple-600 text-white hover:bg-purple-700" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                        className={`px-2 py-1 rounded cursor-pointer transition-colors font-medium text-xs ${row.status === "בית" ? "bg-purple-600 text-white hover:bg-purple-700" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
                       >
                         בית
                       </button>
                       <button 
                         onClick={() => updateStatus(row.name, "משמר")}
-                        className={`px-3 py-1 rounded cursor-pointer transition-colors font-medium ${row.status === "משמר" ? "bg-purple-600 text-white hover:bg-purple-700" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                        className={`px-2 py-1 rounded cursor-pointer transition-colors font-medium text-xs ${row.status === "משמר" ? "bg-purple-600 text-white hover:bg-purple-700" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
                       >
                         משמר
                       </button>
                       <input
                         type="text"
                         placeholder="אחר..."
-                        className="border-2 border-gray-400 rounded px-2 py-1 w-20 focus:border-purple-500 focus:outline-none"
+                        className="border border-gray-300 rounded px-2 py-1 w-16 text-xs focus:border-purple-500 focus:outline-none"
                         defaultValue={row.status !== "בית" && row.status !== "משמר" ? row.status : ""}
                         onChange={(e) => updateStatus(row.name, e.target.value)}
                       />
                     </div>
-                  </td>
-                  <td className="p-2">
+                  </div>
+                  <div className="col-span-3">
                     <input
                       type="text"
-                      className="border-2 border-gray-400 rounded px-2 py-1 w-32 focus:border-purple-500 focus:outline-none"
+                      className="border border-gray-300 rounded px-2 py-1 w-full text-xs focus:border-purple-500 focus:outline-none"
                       defaultValue={row.notes}
                     />
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </div>
       {/* Sticky bottom bar for buttons */}
@@ -299,9 +445,6 @@ export default function Home() {
         </div>
       </div>
       
-      {/* Add bottom padding to prevent content from being hidden behind sticky bar */}
-      <div className="h-24"></div>
-      
       {showPreview && (
         <section id="report-preview" className="mt-6 bg-white rounded shadow p-4">
           <div className="flex justify-between items-center mb-4">
@@ -321,6 +464,9 @@ export default function Home() {
           />
         </section>
       )}
+      
+      {/* Add bottom padding to prevent content from being hidden behind sticky bar */}
+      <div className="h-32"></div>
     </div>
   );
 }
