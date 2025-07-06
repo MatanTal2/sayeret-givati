@@ -360,8 +360,8 @@ export default function Home() {
           <div className="text-center text-gray-700 py-8">טוען נתונים...</div>
         ) : (
           <>
-            {/* Fixed Header */}
-            <div className="bg-purple-100 p-3 border-b">
+            {/* Fixed Header - Desktop Only */}
+            <div className="hidden md:block bg-purple-100 p-3 border-b">
               <div className="grid grid-cols-12 gap-2 text-sm font-medium text-gray-700">
                 <div className="col-span-1 text-center">בחר</div>
                 <div className="col-span-2">שם</div>
@@ -418,20 +418,28 @@ export default function Home() {
                     </div>
                   </div>
                   
-                  {/* Mobile Layout - Stacked */}
+                  {/* Mobile Layout - Compact */}
                   <div className="md:hidden space-y-2">
-                    {/* First Row: Checkbox, Name, Platoon */}
-                    <div className="flex items-center gap-3">
+                    {/* First Row: Checkbox | Name | Class (Left to Right) */}
+                    <div className="flex items-center gap-2 text-sm">
                       <input 
                         type="checkbox" 
                         checked={selectedRows.has(row.name)}
                         onChange={() => toggleRowSelection(row.name)}
                       />
-                      <div className="text-sm font-medium flex-1">{row.name}</div>
-                      <div className="text-sm text-gray-600">{row.platoon}</div>
+                      <span className="text-gray-400">|</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs font-medium text-gray-500">שם:</span>
+                        <span className="font-medium">{row.name}</span>
+                      </div>
+                      <span className="text-gray-400">|</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs font-medium text-gray-500">מחלקה:</span>
+                        <span className="text-gray-700">{row.platoon}</span>
+                      </div>
                     </div>
                     
-                    {/* Second Row: Status Buttons */}
+                    {/* Second Row: Status (Left to Right) */}
                     <div className="flex gap-1 flex-wrap">
                       <button 
                         onClick={() => updateStatus(row.name, "בית")}
@@ -455,11 +463,12 @@ export default function Home() {
                     </div>
                     
                     {/* Third Row: Notes */}
-                    <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-gray-500">הערות:</span>
                       <input
                         type="text"
-                        placeholder="הערות..."
-                        className="border border-gray-300 rounded px-2 py-1 w-full text-xs focus:border-purple-500 focus:outline-none"
+                        placeholder="הכנס הערות..."
+                        className="border border-gray-300 rounded px-2 py-1 flex-1 text-xs focus:border-purple-500 focus:outline-none"
                         defaultValue={row.notes}
                       />
                     </div>
