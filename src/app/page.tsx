@@ -509,31 +509,34 @@ export default function Home() {
                         <td className="px-4 py-3 text-gray-800 font-medium">{soldier.name}</td>
                         <td className="px-4 py-3 text-gray-700">{soldier.platoon}</td>
                         <td className="px-4 py-3">
-                          <div className="flex gap-2">
-                            <select 
-                              value={soldier.status === 'אחר' ? 'אחר' : soldier.status}
-                              onChange={(e) => {
-                                if (e.target.value === 'אחר') {
-                                  updateStatus(index, 'אחר', soldier.customStatus || '');
-                                } else {
-                                  updateStatus(index, e.target.value);
-                                }
-                              }}
-                              className="border border-gray-300 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                          <div className="flex gap-1">
+                            <button 
+                              onClick={() => updateStatus(index, 'בית')}
+                              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                                soldier.status === 'בית' 
+                                  ? 'bg-purple-600 text-white' 
+                                  : 'bg-gray-200 text-gray-700 hover:bg-purple-100'
+                              }`}
                             >
-                              <option value="בית">בית</option>
-                              <option value="משמר">משמר</option>
-                              <option value="אחר">אחר</option>
-                            </select>
-                            {soldier.status === 'אחר' && (
-                              <input 
-                                type="text"
-                                value={soldier.customStatus || ''}
-                                onChange={(e) => updateStatus(index, 'אחר', e.target.value)}
-                                placeholder="פרט..."
-                                className="w-20 border-2 border-gray-400 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                              />
-                            )}
+                              בית
+                            </button>
+                            <button 
+                              onClick={() => updateStatus(index, 'משמר')}
+                              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                                soldier.status === 'משמר' 
+                                  ? 'bg-purple-600 text-white' 
+                                  : 'bg-gray-200 text-gray-700 hover:bg-purple-100'
+                              }`}
+                            >
+                              משמר
+                            </button>
+                            <input 
+                              type="text"
+                              value={soldier.status === 'אחר' ? soldier.customStatus || '' : ''}
+                              onChange={(e) => updateStatus(index, 'אחר', e.target.value)}
+                              placeholder="אחר"
+                              className="w-20 border-2 border-gray-400 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                            />
                           </div>
                         </td>
                         <td className="px-4 py-3">
@@ -572,30 +575,33 @@ export default function Home() {
                     
                     <div className="mb-3">
                       <div className="flex gap-2 mb-2">
-                        <select 
-                          value={soldier.status === 'אחר' ? 'אחר' : soldier.status}
-                          onChange={(e) => {
-                            if (e.target.value === 'אחר') {
-                              updateStatus(index, 'אחר', soldier.customStatus || '');
-                            } else {
-                              updateStatus(index, e.target.value);
-                            }
-                          }}
-                          className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                        <button 
+                          onClick={() => updateStatus(index, 'בית')}
+                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                            soldier.status === 'בית' 
+                              ? 'bg-purple-600 text-white' 
+                              : 'bg-gray-200 text-gray-700 hover:bg-purple-100'
+                          }`}
                         >
-                          <option value="בית">בית</option>
-                          <option value="משמר">משמר</option>
-                          <option value="אחר">אחר</option>
-                        </select>
-                        {soldier.status === 'אחר' && (
-                          <input 
-                            type="text"
-                            value={soldier.customStatus || ''}
-                            onChange={(e) => updateStatus(index, 'אחר', e.target.value)}
-                            placeholder="פרט..."
-                            className="flex-1 border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                          />
-                        )}
+                          בית
+                        </button>
+                        <button 
+                          onClick={() => updateStatus(index, 'משמר')}
+                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                            soldier.status === 'משמר' 
+                              ? 'bg-purple-600 text-white' 
+                              : 'bg-gray-200 text-gray-700 hover:bg-purple-100'
+                          }`}
+                        >
+                          משמר
+                        </button>
+                        <input 
+                          type="text"
+                          value={soldier.status === 'אחר' ? soldier.customStatus || '' : ''}
+                          onChange={(e) => updateStatus(index, 'אחר', e.target.value)}
+                          placeholder="אחר"
+                          className="flex-1 border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                        />
                       </div>
                     </div>
                     
