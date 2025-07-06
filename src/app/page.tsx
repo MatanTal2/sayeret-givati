@@ -374,17 +374,64 @@ export default function Home() {
             {/* Scrollable Body */}
             <div className="max-h-96 overflow-y-auto">
               {filteredData.map((row, idx) => (
-                <div key={idx} className="grid grid-cols-12 gap-2 p-3 border-b border-gray-100 hover:bg-gray-50 items-center">
-                  <div className="col-span-1 text-center">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedRows.has(row.name)}
-                      onChange={() => toggleRowSelection(row.name)}
-                    />
+                <div key={idx} className="border-b border-gray-100 hover:bg-gray-50 p-3">
+                  {/* Desktop Layout - Single Row */}
+                  <div className="hidden md:grid grid-cols-12 gap-2 items-center">
+                    <div className="col-span-1 text-center">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedRows.has(row.name)}
+                        onChange={() => toggleRowSelection(row.name)}
+                      />
+                    </div>
+                    <div className="col-span-2 text-sm font-medium">{row.name}</div>
+                    <div className="col-span-2 text-sm text-gray-600">{row.platoon}</div>
+                    <div className="col-span-4">
+                      <div className="flex gap-1 flex-wrap">
+                        <button 
+                          onClick={() => updateStatus(row.name, "בית")}
+                          className={`px-2 py-1 rounded cursor-pointer transition-colors font-medium text-xs ${row.status === "בית" ? "bg-purple-600 text-white hover:bg-purple-700" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                        >
+                          בית
+                        </button>
+                        <button 
+                          onClick={() => updateStatus(row.name, "משמר")}
+                          className={`px-2 py-1 rounded cursor-pointer transition-colors font-medium text-xs ${row.status === "משמר" ? "bg-purple-600 text-white hover:bg-purple-700" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                        >
+                          משמר
+                        </button>
+                        <input
+                          type="text"
+                          placeholder="אחר..."
+                          className="border border-gray-300 rounded px-2 py-1 w-16 text-xs focus:border-purple-500 focus:outline-none"
+                          defaultValue={row.status !== "בית" && row.status !== "משמר" ? row.status : ""}
+                          onChange={(e) => updateStatus(row.name, e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-span-3">
+                      <input
+                        type="text"
+                        className="border border-gray-300 rounded px-2 py-1 w-full text-xs focus:border-purple-500 focus:outline-none"
+                        defaultValue={row.notes}
+                      />
+                    </div>
                   </div>
-                  <div className="col-span-2 text-sm font-medium">{row.name}</div>
-                  <div className="col-span-2 text-sm text-gray-600">{row.platoon}</div>
-                  <div className="col-span-4">
+                  
+                  {/* Mobile Layout - Stacked */}
+                  <div className="md:hidden space-y-2">
+                    {/* First Row: Checkbox, Name, Platoon */}
+                    <div className="flex items-center gap-3">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedRows.has(row.name)}
+                        onChange={() => toggleRowSelection(row.name)}
+                      />
+                      <div className="text-sm font-medium flex-1">{row.name}</div>
+                      <div className="text-sm text-gray-600">{row.platoon}</div>
+                    </div>
+                    
+                    {/* Second Row: Status Buttons */}
                     <div className="flex gap-1 flex-wrap">
                       <button 
                         onClick={() => updateStatus(row.name, "בית")}
@@ -401,18 +448,21 @@ export default function Home() {
                       <input
                         type="text"
                         placeholder="אחר..."
-                        className="border border-gray-300 rounded px-2 py-1 w-16 text-xs focus:border-purple-500 focus:outline-none"
+                        className="border border-gray-300 rounded px-2 py-1 w-20 text-xs focus:border-purple-500 focus:outline-none"
                         defaultValue={row.status !== "בית" && row.status !== "משמר" ? row.status : ""}
                         onChange={(e) => updateStatus(row.name, e.target.value)}
                       />
                     </div>
-                  </div>
-                  <div className="col-span-3">
-                    <input
-                      type="text"
-                      className="border border-gray-300 rounded px-2 py-1 w-full text-xs focus:border-purple-500 focus:outline-none"
-                      defaultValue={row.notes}
-                    />
+                    
+                    {/* Third Row: Notes */}
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="הערות..."
+                        className="border border-gray-300 rounded px-2 py-1 w-full text-xs focus:border-purple-500 focus:outline-none"
+                        defaultValue={row.notes}
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
