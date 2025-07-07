@@ -328,13 +328,13 @@ export default function Home() {
             {/* Filters */}
             <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">סינון</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">מחלקה</label>
+              <div className="flex flex-wrap gap-6 items-center">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">מחלקה:</label>
                   <select 
                     value={platoonFilter}
                     onChange={(e) => setPlatoonFilter(e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   >
                     <option value="">כל המחלקות</option>
                     {uniquePlatoons.map(platoon => (
@@ -342,14 +342,15 @@ export default function Home() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">חיפוש לפי שם</label>
+                <div className="text-gray-400">|</div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">חיפוש לפי שם:</label>
                   <input 
                     type="text"
                     value={nameFilter}
                     onChange={(e) => setNameFilter(e.target.value)}
                     placeholder="הקלד שם..."
-                    className="w-full border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                    className="border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
                   />
                 </div>
               </div>
@@ -381,7 +382,7 @@ export default function Home() {
                         e.target.value = '';
                       }
                     }}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   >
                     <option value="">בחר סטאטוס</option>
                     <option value="בית">בית</option>
@@ -405,7 +406,7 @@ export default function Home() {
               </button>
               
               {showAddForm && (
-                <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <div className="mt-4 p-4 border-2 border-gray-400 rounded-lg bg-gray-50">
                   <h3 className="font-medium mb-4">הוסף חייל חדש</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
@@ -423,7 +424,7 @@ export default function Home() {
                       <select 
                         value={newSoldier.platoon}
                         onChange={(e) => setNewSoldier({...newSoldier, platoon: e.target.value})}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       >
                         {uniquePlatoons.map(platoon => (
                           <option key={platoon} value={platoon}>{platoon}</option>
@@ -436,7 +437,7 @@ export default function Home() {
                         <select 
                           value={newSoldier.status}
                           onChange={(e) => setNewSoldier({...newSoldier, status: e.target.value, customStatus: e.target.value === 'אחר' ? newSoldier.customStatus : ''})}
-                          className="border border-gray-300 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          className="border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                         >
                           <option value="בית">בית</option>
                           <option value="משמר">משמר</option>
@@ -489,9 +490,13 @@ export default function Home() {
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
                       <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">בחירה</th>
+                      <th className="px-1 py-3 text-gray-400">|</th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">שם</th>
+                      <th className="px-1 py-3 text-gray-400">|</th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">מחלקה</th>
+                      <th className="px-1 py-3 text-gray-400">|</th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">סטטוס</th>
+                      <th className="px-1 py-3 text-gray-400">|</th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">הערות</th>
                     </tr>
                   </thead>
@@ -506,8 +511,11 @@ export default function Home() {
                             className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                           />
                         </td>
+                        <td className="px-1 py-3 text-gray-400 text-center">|</td>
                         <td className="px-4 py-3 text-gray-800 font-medium">{soldier.name}</td>
+                        <td className="px-1 py-3 text-gray-400 text-center">|</td>
                         <td className="px-4 py-3 text-gray-700">{soldier.platoon}</td>
+                        <td className="px-1 py-3 text-gray-400 text-center">|</td>
                         <td className="px-4 py-3">
                           <div className="flex gap-1">
                             <button 
@@ -539,6 +547,7 @@ export default function Home() {
                             />
                           </div>
                         </td>
+                        <td className="px-1 py-3 text-gray-400 text-center">|</td>
                         <td className="px-4 py-3">
                           <input 
                             type="text"
@@ -560,6 +569,7 @@ export default function Home() {
               <div className="max-h-96 overflow-auto space-y-4">
                 {filteredSoldiers.map((soldier, index) => (
                   <div key={index} className={`p-4 rounded-lg border ${soldier.isSelected ? 'bg-purple-50 border-purple-200' : 'bg-white border-gray-200'}`}>
+                    {/* Row 1: Checkbox | Name | Platoon */}
                     <div className="flex items-center gap-3 mb-3">
                       <input 
                         type="checkbox"
@@ -567,14 +577,17 @@ export default function Home() {
                         onChange={() => toggleSelection(index)}
                         className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                       />
+                      <span className="text-gray-400">|</span>
                       <span className="font-medium text-gray-800">שם:</span>
                       <span className="text-gray-700">{soldier.name}</span>
-                      <span className="mr-auto font-medium text-gray-800">מחלקה:</span>
+                      <span className="text-gray-400">|</span>
+                      <span className="font-medium text-gray-800">מחלקה:</span>
                       <span className="text-gray-700">{soldier.platoon}</span>
                     </div>
                     
+                    {/* Row 2: Status buttons */}
                     <div className="mb-3">
-                      <div className="flex gap-2 mb-2">
+                      <div className="flex gap-2">
                         <button 
                           onClick={() => updateStatus(index, 'בית')}
                           className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -605,14 +618,17 @@ export default function Home() {
                       </div>
                     </div>
                     
+                    {/* Row 3: Notes */}
                     <div>
-                      <span className="font-medium text-gray-800">הערות:</span>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-medium text-gray-800">הערות:</span>
+                      </div>
                       <input 
                         type="text"
                         value={soldier.notes || ''}
                         onChange={(e) => updateNotes(index, e.target.value)}
                         placeholder="הערות..."
-                        className="w-full mt-1 border-2 border-gray-400 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                        className="w-full border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
                       />
                     </div>
                   </div>
