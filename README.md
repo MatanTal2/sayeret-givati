@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# שבצ"ק מסייעת - סיירת גבעתי
 
-## Getting Started
+מערכת ווב לניהול שבצ"ק (שבץ צבאי קבוע) של יחידות בסיירת גבעתי.
 
-First, run the development server:
+**🎖️ גרסה 1.0 - הושלמה! ✅**
+
+## תכונות
+
+- **📊 אינטגרציה עם Google Sheets**: צפייה בנתונים בזמן אמת
+- **🔍 סינון מתקדם**: לפי צוות, שם וסטטוס עם ספירה דינמית
+- **✅ בחירה חכמה**: בחירת הכל, לפי סטטוס או לפי צוות
+- **🏠 ניהול סטטוסים**: בית, משמר או סטטוס מותאם אישית
+- **📋 דוחות מעוצבים**: יצירת דוחות רב-מחלקתיים או מסוננים
+- **🎨 ממשק עברי RTL**: עיצוב מלא מימין לשמאל
+- **📱 מותאם מובייל**: עובד בצורה מושלמת על כל המכשירים
+- **⚡ עמידות אופליין**: ממשיך לעבוד גם ללא חיבור לאינטרנט
+- **🎖️ ברנדינג רשמי**: לוגו וצבעי סיירת גבעתי
+
+## מסמכים
+
+- [📋 מפרט גרסה 1.0](docs/spec-v1.md) - מפרט מפורט של התכונות המומשות
+- [📖 מדריך למשתמש](docs/user-manual.md) - הוראות שימוש מפורטות בעברית
+- [🚀 מפרט גרסה 2.0](docs/spec-v2.md) - תכנון לגרסה הבאה
+
+## התחלה מהירה
 
 ```bash
+# התקנת חבילות
+npm install
+
+# הרצה במצב פיתוח
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# פתח http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## קונפיגורציה
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+יש ליצור קובץ `.env.local` עם המשתנים הבאים:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+GOOGLE_SHEETS_PRIVATE_KEY_BASE64=...
+GOOGLE_SHEETS_CLIENT_EMAIL=...
+GOOGLE_SHEET_ID=...
+```
 
-## Learn More
+## מבנה Google Sheets
 
-To learn more about Next.js, take a look at the following resources:
+```
+עמודה A: מספר אישי
+עמודה B: שם פרטי  
+עמודה C: שם משפחה
+עמודה D: צוות
+עמודה E: סטטוס
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## טכנולוגיות
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Frontend**: Next.js 14 + TypeScript
+- **Styling**: Tailwind CSS
+- **API**: Google Sheets API v4
+- **Hosting**: Vercel
 
-## Deploy on Vercel
+## פריסה
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+הפרויקט מוכן לפריסה על Vercel:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/sayeret-givati)
+
+---
+
+**פותח עבור סיירת גבעתי 🇮🇱**
