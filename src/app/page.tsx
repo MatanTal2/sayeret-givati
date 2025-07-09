@@ -3,7 +3,10 @@ import React, { useEffect, useState } from "react";
 import Image from 'next/image';
 
 interface Soldier {
-  name: string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  name: string; // Combined full name for UI
   platoon: string;
   status: string;
   customStatus?: string;
@@ -18,9 +21,13 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [platoonFilter, setPlatoonFilter] = useState('');
   const [nameFilter, setNameFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [reportText, setReportText] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+  const [isMultiPlatoonReport, setIsMultiPlatoonReport] = useState(false);
+  const [includeIdInReport, setIncludeIdInReport] = useState(true);
 
   // Add new soldier form state
   const [newSoldier, setNewSoldier] = useState({
@@ -60,13 +67,23 @@ export default function Home() {
       // Map the data to soldiers array
       const [, ...body] = rows; // Skip header row
       const soldiersData = body
-        .filter((row: string[]) => row[0] && row[0].trim()) // Only rows with names
-        .map((row: string[]) => ({
-          name: row[0] || '',
-          platoon: row[1] || 'מסייעת',
-          status: row[2] || 'בית',
-          isSelected: true
-        }));
+        .filter((row: string[]) => (row[1] && row[1].trim()) || (row[2] && row[2].trim())) // Only rows with names
+        .map((row: string[]) => {
+          const id = row[0] || '';
+          const firstName = row[1] || '';
+          const lastName = row[2] || '';
+          const fullName = `${firstName} ${lastName}`.trim();
+          
+          return {
+            id,
+            firstName,
+            lastName,
+            name: fullName,
+            platoon: row[3] || 'מסייעת',
+            status: row[4] || 'בית',
+            isSelected: true
+          };
+        });
       
       setSoldiers(soldiersData);
       setFilteredSoldiers(soldiersData);
@@ -95,12 +112,16 @@ export default function Home() {
       );
     }
     
+    if (statusFilter) {
+      filtered = filtered.filter(soldier => soldier.status === statusFilter);
+    }
+    
     setFilteredSoldiers(filtered);
   };
 
   useEffect(() => {
     filterSoldiers();
-  }, [soldiers, platoonFilter, nameFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [soldiers, platoonFilter, nameFilter, statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateStatus = (index: number, newStatus: string, customStatus?: string) => {
     const updatedSoldiers = [...soldiers];
@@ -157,6 +178,14 @@ export default function Home() {
     setSoldiers(updatedSoldiers);
   };
 
+  const selectByPlatoon = (platoon: string) => {
+    const updatedSoldiers = soldiers.map(soldier => ({
+      ...soldier,
+      isSelected: soldier.platoon === platoon
+    }));
+    setSoldiers(updatedSoldiers);
+  };
+
   const addNewSoldier = () => {
     if (!newSoldier.name.trim()) {
       alert('שם החייל חובה');
@@ -169,7 +198,15 @@ export default function Home() {
       return;
     }
 
+    // Split the name into first and last name for manually added soldiers
+    const nameParts = newSoldier.name.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
     const soldier: Soldier = {
+      id: '', // Empty ID for manually added soldiers
+      firstName,
+      lastName,
       name: newSoldier.name.trim(),
       platoon: newSoldier.platoon,
       status: newSoldier.status,
@@ -191,7 +228,10 @@ export default function Home() {
 
   const generateReport = () => {
     try {
-      const selectedSoldiers = soldiers.filter(s => s.isSelected);
+      // Choose soldiers based on multi-platoon setting
+      const selectedSoldiers = isMultiPlatoonReport 
+        ? soldiers.filter(s => s.isSelected)
+        : filteredSoldiers.filter(s => s.isSelected);
       
       if (selectedSoldiers.length === 0) {
         alert('לא נבחרו חיילים לדוח');
@@ -215,28 +255,41 @@ export default function Home() {
 
       // Group by platoon
       const groupedByPlatoon = selectedSoldiers.reduce((acc, soldier) => {
-        if (!acc[soldier.platoon]) {
-          acc[soldier.platoon] = [];
+        const platoonKey = soldier.platoon || 'מסייעת'; // fallback to default
+        if (!acc[platoonKey]) {
+          acc[platoonKey] = [];
         }
-        acc[soldier.platoon].push(soldier);
+        acc[platoonKey].push(soldier);
         return acc;
       }, {} as Record<string, Soldier[]>);
 
-      let report = `דוח שבצ״ק מסייעת - סיירת גבעתי\n`;
-      report += `${hebrewDate}\n`;
-      report += `שעה: ${time}\n\n`;
+      console.log('Grouped by platoon:', groupedByPlatoon); // Debug log
 
-      Object.entries(groupedByPlatoon).forEach(([platoon, platoonSoldiers]) => {
-        report += `מחלקה ${platoon}:\n`;
+          let report = `דוח שבצ״ק מסייעת - סיירת גבעתי\n`;
+    report += `${hebrewDate}\n`;
+    report += `שעה: ${time}\n`;
+    const totalSoldiers = isMultiPlatoonReport ? soldiers.length : filteredSoldiers.length;
+    report += `נבחרו: ${selectedSoldiers.length} מתוך ${totalSoldiers}\n\n`;
+
+      // Sort platoons for consistent order
+      const sortedPlatoons = Object.keys(groupedByPlatoon).sort();
+      
+      sortedPlatoons.forEach(platoon => {
+        const platoonSoldiers = groupedByPlatoon[platoon];
+        report += `צוות ${platoon}:\n`;
         platoonSoldiers.forEach((soldier, index) => {
           const status = soldier.status === 'אחר' && soldier.customStatus 
             ? soldier.customStatus 
             : soldier.status;
           const notes = soldier.notes ? ` - ${soldier.notes}` : '';
-          report += `${index + 1}. ${soldier.name} - ${status}${notes}\n`;
+          const idText = includeIdInReport && soldier.id ? ` (${soldier.id})` : '';
+          report += `${index + 1}. ${soldier.name}${idText} - ${status}${notes}\n`;
         });
         report += '\n';
       });
+
+      // Add total count
+      report += `סה"כ: ${selectedSoldiers.length} חיילים\n`;
 
       setReportText(report);
       setShowPreview(true);
@@ -266,7 +319,27 @@ export default function Home() {
 
   const selectedCount = soldiers.filter(s => s.isSelected).length;
   const totalCount = soldiers.length;
+  const filteredSelectedCount = filteredSoldiers.filter(s => s.isSelected).length;
+  const filteredTotalCount = filteredSoldiers.length;
   const uniquePlatoons = [...new Set(soldiers.map(s => s.platoon))];
+
+  // Get platoon counts based on current filters
+  const getPlatoonCounts = (platoon: string) => {
+    // Apply all current filters except platoon filter to get accurate counts
+    let platoonSoldiers = soldiers.filter(s => s.platoon === platoon);
+    
+    if (nameFilter) {
+      platoonSoldiers = platoonSoldiers.filter(soldier => 
+        soldier.name.toLowerCase().includes(nameFilter.toLowerCase())
+      );
+    }
+    
+    if (statusFilter) {
+      platoonSoldiers = platoonSoldiers.filter(soldier => soldier.status === statusFilter);
+    }
+    
+    return `${platoonSoldiers.length}`;
+  };
 
   if (loading) {
     return (
@@ -325,90 +398,133 @@ export default function Home() {
 
         {!error && (
           <>
-            {/* Filters */}
-            <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">סינון</h2>
-              <div className="flex flex-wrap gap-6 items-center">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">מחלקה:</label>
-                  <select 
-                    value={platoonFilter}
-                    onChange={(e) => setPlatoonFilter(e.target.value)}
-                    className="border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  >
-                    <option value="">כל המחלקות</option>
-                    {uniquePlatoons.map(platoon => (
-                      <option key={platoon} value={platoon}>{platoon}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="text-gray-400">|</div>
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">חיפוש לפי שם:</label>
-                  <input 
-                    type="text"
-                    value={nameFilter}
-                    onChange={(e) => setNameFilter(e.target.value)}
-                    placeholder="הקלד שם..."
-                    className="border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                  />
-                </div>
-              </div>
-            </div>
+            {/* Collapsible Filters */}
+            <div className="bg-white rounded-lg shadow-sm mb-6">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="w-full p-4 flex items-center justify-between text-lg font-semibold text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+              >
+                <span>סינון</span>
+                <span className={`transform transition-transform text-purple-600 ${showFilters ? 'rotate-180' : ''}`}>
+                  ▼
+                </span>
+              </button>
+              
+              {showFilters && (
+                <div className="px-6 pb-6">
+                  <div className="flex flex-wrap gap-6 items-center mb-4">
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium text-gray-700 whitespace-nowrap">צוות:</label>
+                      <select 
+                        value={platoonFilter}
+                        onChange={(e) => setPlatoonFilter(e.target.value)}
+                        className="border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        <option value="">כל הצוותים</option>
+                        {uniquePlatoons.map(platoon => (
+                          <option key={platoon} value={platoon}>
+                            {platoon} ({getPlatoonCounts(platoon)})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="text-gray-400">|</div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium text-gray-700 whitespace-nowrap">חיפוש לפי שם:</label>
+                      <input 
+                        type="text"
+                        value={nameFilter}
+                        onChange={(e) => setNameFilter(e.target.value)}
+                        placeholder="הקלד שם..."
+                        className="border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                      />
+                    </div>
+                    <div className="text-gray-400">|</div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium text-gray-700 whitespace-nowrap">סטטוס:</label>
+                      <select 
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        <option value="">כל הסטטוסים</option>
+                        <option value="בית">בית</option>
+                        <option value="משמר">משמר</option>
+                        <option value="אחר">אחר</option>
+                      </select>
+                    </div>
+                  </div>
 
-            {/* Selection Controls */}
-            <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-              <div className="flex flex-wrap gap-4 items-center justify-between">
-                <div className="flex flex-wrap gap-2">
-                  <button 
-                    onClick={selectAll}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm"
-                  >
-                    בחר הכל
-                  </button>
-                  <button 
-                    onClick={selectNone}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm"
-                  >
-                    בטל בחירה
-                  </button>
+                  {/* Selection Controls */}
+                                      <div className="flex flex-wrap gap-4 items-center justify-between border-t pt-4">
+                      <div className="flex flex-wrap gap-2">
+                        <button 
+                          onClick={selectAll}
+                          className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm"
+                        >
+                          בחר הכל
+                        </button>
+                        <button 
+                          onClick={selectNone}
+                          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm"
+                        >
+                          בטל בחירה
+                        </button>
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-700">בחר לפי צוות:</label>
+                          <select 
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                selectByPlatoon(e.target.value);
+                                e.target.value = '';
+                              }
+                            }}
+                            className="border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          >
+                            <option value="">בחר צוות</option>
+                            {uniquePlatoons.map(platoon => (
+                              <option key={platoon} value={platoon}>{platoon}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-gray-700">בחר לפי סטאטוס:</label>
+                        <select 
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              selectByStatus(e.target.value);
+                              e.target.value = '';
+                            }
+                          }}
+                          className="border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        >
+                          <option value="">בחר סטאטוס</option>
+                          <option value="בית">בית</option>
+                          <option value="משמר">משמר</option>
+                          <option value="אחר">אחר</option>
+                        </select>
+                      </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">בחר לפי סטאטוס:</label>
-                  <select 
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        selectByStatus(e.target.value);
-                        e.target.value = '';
-                      }
-                    }}
-                    className="border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  >
-                    <option value="">בחר סטאטוס</option>
-                    <option value="בית">בית</option>
-                    <option value="משמר">משמר</option>
-                    <option value="אחר">אחר</option>
-                  </select>
-                </div>
-                <div className="text-sm text-gray-600">
-                  נבחרו: {selectedCount} מתוך {totalCount}
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Add New Soldier */}
-            <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-              <button 
+            <div className="bg-white rounded-lg shadow-sm mb-6">
+              <button
                 onClick={() => setShowAddForm(!showAddForm)}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                className="w-full p-4 flex items-center justify-between text-lg font-semibold text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
               >
-                הוסף שורה
+                <span>הוסף חדש</span>
+                <span className={`transform transition-transform text-purple-600 ${showAddForm ? 'rotate-180' : ''}`}>
+                  ▼
+                </span>
               </button>
               
               {showAddForm && (
-                <div className="mt-4 p-4 border-2 border-gray-400 rounded-lg bg-gray-50">
-                  <h3 className="font-medium mb-4">הוסף חייל חדש</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="p-6 border-t">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">שם *</label>
                       <input 
@@ -416,11 +532,11 @@ export default function Home() {
                         value={newSoldier.name}
                         onChange={(e) => setNewSoldier({...newSoldier, name: e.target.value})}
                         className="w-full border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                        placeholder="שם החייל"
+                        placeholder="הכנס שם"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">מחלקה</label>
+                                            <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">צוות</label>
                       <select 
                         value={newSoldier.platoon}
                         onChange={(e) => setNewSoldier({...newSoldier, platoon: e.target.value})}
@@ -434,38 +550,47 @@ export default function Home() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">סטטוס</label>
                       <div className="flex gap-2">
-                        <select 
-                          value={newSoldier.status}
-                          onChange={(e) => setNewSoldier({...newSoldier, status: e.target.value, customStatus: e.target.value === 'אחר' ? newSoldier.customStatus : ''})}
-                          className="border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        <button 
+                          onClick={() => setNewSoldier({...newSoldier, status: 'בית', customStatus: ''})}
+                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                            newSoldier.status === 'בית' 
+                              ? 'bg-purple-600 text-white' 
+                              : 'bg-gray-200 text-gray-700 hover:bg-purple-100'
+                          }`}
                         >
-                          <option value="בית">בית</option>
-                          <option value="משמר">משמר</option>
-                          <option value="אחר">אחר</option>
-                        </select>
-                        {newSoldier.status === 'אחר' && (
-                          <input 
-                            type="text"
-                            value={newSoldier.customStatus}
-                            onChange={(e) => setNewSoldier({...newSoldier, customStatus: e.target.value})}
-                            placeholder="פרט..."
-                            className="flex-1 border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                          />
-                        )}
+                          בית
+                        </button>
+                        <button 
+                          onClick={() => setNewSoldier({...newSoldier, status: 'משמר', customStatus: ''})}
+                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                            newSoldier.status === 'משמר' 
+                              ? 'bg-purple-600 text-white' 
+                              : 'bg-gray-200 text-gray-700 hover:bg-purple-100'
+                          }`}
+                        >
+                          משמר
+                        </button>
+                        <input 
+                          type="text"
+                          value={newSoldier.status === 'אחר' ? newSoldier.customStatus : ''}
+                          onChange={(e) => setNewSoldier({...newSoldier, status: 'אחר', customStatus: e.target.value})}
+                          placeholder="אחר"
+                          className="flex-1 border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                        />
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">הערות</label>
+                  <div className="flex items-center gap-4 mb-4">
+                    <label className="text-sm font-medium text-gray-700 whitespace-nowrap">הערות:</label>
                     <input 
                       type="text"
                       value={newSoldier.notes}
                       onChange={(e) => setNewSoldier({...newSoldier, notes: e.target.value})}
-                      className="w-full border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                      className="flex-1 border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
                       placeholder="הערות נוספות (אופציונלי)"
                     />
                   </div>
-                  <div className="mt-4 flex gap-2">
+                  <div className="flex gap-2">
                     <button 
                       onClick={addNewSoldier}
                       className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
@@ -483,17 +608,29 @@ export default function Home() {
               )}
             </div>
 
+            {/* Selection Counter */}
+            <div className="mb-4">
+              <p className="text-lg font-medium text-gray-800">
+                נבחרו: {filteredSelectedCount} מתוך {filteredTotalCount}
+                {(platoonFilter || nameFilter) && (
+                  <span className="text-sm text-gray-600 mr-2">
+                    (סה&quot;כ: {selectedCount} מתוך {totalCount})
+                  </span>
+                )}
+              </p>
+            </div>
+
             {/* Soldiers Table - Desktop */}
             <div className="hidden md:block bg-white rounded-lg shadow-sm mb-6">
               <div className="max-h-96 overflow-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">בחירה</th>
+                      <th className="px-2 py-3 text-center text-sm font-medium text-gray-700 w-16">בחירה</th>
                       <th className="px-1 py-3 text-gray-400">|</th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">שם</th>
                       <th className="px-1 py-3 text-gray-400">|</th>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">מחלקה</th>
+                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">צוות</th>
                       <th className="px-1 py-3 text-gray-400">|</th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">סטטוס</th>
                       <th className="px-1 py-3 text-gray-400">|</th>
@@ -503,7 +640,7 @@ export default function Home() {
                   <tbody>
                     {filteredSoldiers.map((soldier, index) => (
                       <tr key={index} className={`border-t ${soldier.isSelected ? 'bg-purple-50' : 'bg-white'}`}>
-                        <td className="px-4 py-3">
+                        <td className="px-2 py-3 text-center">
                           <input 
                             type="checkbox"
                             checked={soldier.isSelected}
@@ -543,7 +680,7 @@ export default function Home() {
                               value={soldier.status === 'אחר' ? soldier.customStatus || '' : ''}
                               onChange={(e) => updateStatus(index, 'אחר', e.target.value)}
                               placeholder="אחר"
-                              className="w-20 border-2 border-gray-400 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                              className="flex-1 min-w-20 border-2 border-gray-400 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
                             />
                           </div>
                         </td>
@@ -581,7 +718,7 @@ export default function Home() {
                       <span className="font-medium text-gray-800">שם:</span>
                       <span className="text-gray-700">{soldier.name}</span>
                       <span className="text-gray-400">|</span>
-                      <span className="font-medium text-gray-800">מחלקה:</span>
+                      <span className="font-medium text-gray-800">צוות:</span>
                       <span className="text-gray-700">{soldier.platoon}</span>
                     </div>
                     
@@ -639,11 +776,19 @@ export default function Home() {
             {/* Report Preview */}
             {showPreview && (
               <div id="report-preview" className="bg-white p-6 rounded-lg shadow-sm mb-6">
-                <h3 className="text-lg font-semibold mb-4">תצוגה מקדימה של הדוח</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-purple-700">תצוגה מקדימה של הדוח</h3>
+                  <button 
+                    onClick={() => setShowPreview(false)}
+                    className="text-gray-500 hover:text-gray-700 text-xl font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
                 <textarea 
                   value={reportText}
                   readOnly
-                  className="w-full h-64 border border-gray-300 rounded-md p-3 font-mono text-sm bg-gray-50"
+                  className="w-full h-64 border border-gray-300 rounded-md p-3 font-mono text-sm bg-gray-50 text-black"
                 />
                 <button 
                   onClick={copyToClipboard}
@@ -661,12 +806,40 @@ export default function Home() {
       {!error && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg">
           <div className="max-w-6xl mx-auto">
-            <button 
-              onClick={generateReport}
-              className="w-full md:w-auto px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors font-medium"
-            >
-              הפק טקסט
-            </button>
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              <button 
+                onClick={generateReport}
+                className="w-full md:w-auto px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors font-medium"
+              >
+                הפק טקסט
+              </button>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="checkbox"
+                    id="multiPlatoonReport"
+                    checked={isMultiPlatoonReport}
+                    onChange={(e) => setIsMultiPlatoonReport(e.target.checked)}
+                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  />
+                  <label htmlFor="multiPlatoonReport" className="text-sm font-medium text-gray-700">
+                    שבצ&quot;ק רב מחלקתי
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="checkbox"
+                    id="includeIdInReport"
+                    checked={includeIdInReport}
+                    onChange={(e) => setIncludeIdInReport(e.target.checked)}
+                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  />
+                  <label htmlFor="includeIdInReport" className="text-sm font-medium text-gray-700">
+                    כלול מספר אישי
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
