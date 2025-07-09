@@ -73,6 +73,19 @@ export default function Home() {
           const firstName = row[1] || '';
           const lastName = row[2] || '';
           const fullName = `${firstName} ${lastName}`.trim();
+          const rawStatus = row[4] || 'בית';
+          
+          // Handle status mapping
+          let status: string;
+          let customStatus: string | undefined;
+          
+          if (rawStatus === 'בית' || rawStatus === 'משמר') {
+            status = rawStatus;
+            customStatus = undefined;
+          } else {
+            status = 'אחר';
+            customStatus = rawStatus;
+          }
           
           return {
             id,
@@ -80,7 +93,8 @@ export default function Home() {
             lastName,
             name: fullName,
             platoon: row[3] || 'מסייעת',
-            status: row[4] || 'בית',
+            status,
+            customStatus,
             isSelected: true
           };
         });
