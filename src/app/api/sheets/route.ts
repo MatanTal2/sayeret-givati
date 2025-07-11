@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { mapStructuredStatusToRaw } from '../../../lib/statusUtils';
 
 export async function GET() {
   try {
@@ -165,7 +166,7 @@ export async function POST(request: Request) {
       soldier.firstName || soldier.name.split(' ')[0] || '',
       soldier.lastName || soldier.name.split(' ').slice(1).join(' ') || '',
       soldier.platoon || 'מסייעת',
-      soldier.status === 'אחר' ? soldier.customStatus || 'אחר' : soldier.status
+      mapStructuredStatusToRaw(soldier.status, soldier.customStatus)
     ]);
     
     console.log('📝 Formatted data to append:', JSON.stringify(values, null, 2));
@@ -309,7 +310,7 @@ export async function PUT(request: Request) {
         console.log(`🎯 Found soldier ${soldier.name} at row ${actualRowIndex}`);
         
         // Update status column (E) - column index 4
-        const statusValue = soldier.status === 'אחר' ? soldier.customStatus || 'אחר' : soldier.status;
+        const statusValue = mapStructuredStatusToRaw(soldier.status, soldier.customStatus);
         
         updates.push({
           range: `Sheet1!E${actualRowIndex}`,
