@@ -28,15 +28,33 @@ export default function Home() {
   const [showPreview, setShowPreview] = useState(false);
   const [isMultiPlatoonReport, setIsMultiPlatoonReport] = useState(false);
   const [includeIdInReport, setIncludeIdInReport] = useState(true);
+  
+  // State for dropdown selections to show what was selected
+  const [selectedPlatoonForSelection, setSelectedPlatoonForSelection] = useState('');
+  const [selectedStatusForSelection, setSelectedStatusForSelection] = useState('');
 
   // Add new soldier form state
   const [newSoldier, setNewSoldier] = useState({
+    id: '',
     name: '',
-    platoon: 'מסייעת',
+    platoon: '',
     status: 'בית',
     customStatus: '',
     notes: ''
   });
+
+  // Form validation errors
+  const [formErrors, setFormErrors] = useState({
+    name: '',
+    id: '',
+    platoon: ''
+  });
+
+  // Advanced filtering state
+  const [showTeamFilter, setShowTeamFilter] = useState(false);
+  const [showStatusFilter, setShowStatusFilter] = useState(false);
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
 
   useEffect(() => {
     fetchSoldiers();
@@ -95,7 +113,7 @@ export default function Home() {
             platoon: row[3] || 'מסייעת',
             status,
             customStatus,
-            isSelected: true
+            isSelected: false
           };
         });
       
@@ -116,6 +134,7 @@ export default function Home() {
   const filterSoldiers = () => {
     let filtered = soldiers;
     
+    // Legacy single-select filters
     if (platoonFilter) {
       filtered = filtered.filter(soldier => soldier.platoon === platoonFilter);
     }
@@ -129,13 +148,36 @@ export default function Home() {
     if (statusFilter) {
       filtered = filtered.filter(soldier => soldier.status === statusFilter);
     }
+
+    // Advanced multi-select filters
+    if (selectedTeams.length > 0) {
+      filtered = filtered.filter(soldier => selectedTeams.includes(soldier.platoon));
+    }
+
+    if (selectedStatuses.length > 0) {
+      filtered = filtered.filter(soldier => selectedStatuses.includes(soldier.status));
+    }
     
     setFilteredSoldiers(filtered);
   };
 
   useEffect(() => {
     filterSoldiers();
-  }, [soldiers, platoonFilter, nameFilter, statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [soldiers, platoonFilter, nameFilter, statusFilter, selectedTeams, selectedStatuses]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.filter-dropdown')) {
+        setShowTeamFilter(false);
+        setShowStatusFilter(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const updateStatus = (index: number, newStatus: string, customStatus?: string) => {
     const updatedSoldiers = [...soldiers];
@@ -182,6 +224,26 @@ export default function Home() {
       isSelected: false
     }));
     setSoldiers(updatedSoldiers);
+    // Also clear the dropdown selections for better UX
+    setSelectedPlatoonForSelection('');
+    setSelectedStatusForSelection('');
+  };
+
+  const toggleAllVisible = () => {
+    const allVisibleSelected = filteredSoldiers.every(soldier => soldier.isSelected);
+    const updatedSoldiers = [...soldiers];
+    
+    filteredSoldiers.forEach(filteredSoldier => {
+      const originalIndex = soldiers.findIndex(s => s.name === filteredSoldier.name);
+      if (originalIndex !== -1) {
+        updatedSoldiers[originalIndex] = {
+          ...updatedSoldiers[originalIndex],
+          isSelected: !allVisibleSelected
+        };
+      }
+    });
+    
+    setSoldiers(updatedSoldiers);
   };
 
   const selectByStatus = (status: string) => {
@@ -201,14 +263,44 @@ export default function Home() {
   };
 
   const addNewSoldier = () => {
+    // Clear previous errors
+    const errors = { name: '', id: '', platoon: '' };
+
+    // Validate name
     if (!newSoldier.name.trim()) {
-      alert('שם החייל חובה');
-      return;
+      errors.name = 'שם החייל חובה';
+    } else {
+      // Validate name format: only Hebrew letters and spaces
+      const namePattern = /^[\u05D0-\u05EA\s]+$/;
+      if (!namePattern.test(newSoldier.name.trim())) {
+        errors.name = 'השם חייב להכיל רק אותיות עבריות';
+      }
     }
 
-    // Check for duplicate names
-    if (soldiers.some(s => s.name.toLowerCase() === newSoldier.name.toLowerCase())) {
-      alert('חייל בשם זה כבר קיים ברשימה');
+    // Validate ID
+    if (!newSoldier.id.trim()) {
+      errors.id = 'מספר אישי חובה';
+    } else {
+      // Validate ID format: only numbers and between 5-7 digits
+      const idPattern = /^\d{5,7}$/;
+      if (!idPattern.test(newSoldier.id.trim())) {
+        errors.id = 'מספר אישי חייב להכיל בין 5-7 ספרות ורק ספרות';
+      } else {
+        // Check for duplicate IDs across all teams
+        if (soldiers.some(s => s.id && s.id.trim() === newSoldier.id.trim())) {
+          errors.id = 'מספר אישי זה כבר קיים במערכת';
+        }
+      }
+    }
+
+    // Validate platoon
+    if (!newSoldier.platoon) {
+      errors.platoon = 'בחירת צוות חובה';
+    }
+
+    // Set errors and return if any validation failed
+    setFormErrors(errors);
+    if (errors.name || errors.id || errors.platoon) {
       return;
     }
 
@@ -218,7 +310,7 @@ export default function Home() {
     const lastName = nameParts.slice(1).join(' ') || '';
 
     const soldier: Soldier = {
-      id: '', // Empty ID for manually added soldiers
+      id: newSoldier.id.trim(),
       firstName,
       lastName,
       name: newSoldier.name.trim(),
@@ -231,12 +323,14 @@ export default function Home() {
 
     setSoldiers([...soldiers, soldier]);
     setNewSoldier({
+      id: '',
       name: '',
-      platoon: 'מסייעת',
+      platoon: '',
       status: 'בית',
       customStatus: '',
       notes: ''
     });
+    setFormErrors({ name: '', id: '', platoon: '' });
     setShowAddForm(false);
   };
 
@@ -425,7 +519,7 @@ export default function Home() {
               </button>
               
               {showFilters && (
-                <div className="px-6 pb-6">
+                <div className="px-6 py-6">
                   <div className="flex flex-wrap gap-6 items-center mb-4">
                     <div className="flex items-center gap-2">
                       <label className="text-sm font-medium text-gray-700 whitespace-nowrap">צוות:</label>
@@ -470,7 +564,9 @@ export default function Home() {
                   </div>
 
                   {/* Selection Controls */}
-                                      <div className="flex flex-wrap gap-4 items-center justify-between border-t pt-4">
+                  <div className="mt-6 border-t">
+                    <h3 className="mt-3 text-lg font-semibold text-purple-700">בחירה</h3>
+                    <div className="flex flex-wrap gap-x-4 gap-y-2 items-center pt-4">
                       <div className="flex flex-wrap gap-2">
                         <button 
                           onClick={selectAll}
@@ -487,10 +583,13 @@ export default function Home() {
                         <div className="flex items-center gap-2">
                           <label className="text-sm font-medium text-gray-700">בחר לפי צוות:</label>
                           <select 
+                            value={selectedPlatoonForSelection}
                             onChange={(e) => {
                               if (e.target.value) {
                                 selectByPlatoon(e.target.value);
-                                e.target.value = '';
+                                setSelectedPlatoonForSelection(e.target.value);
+                              } else {
+                                setSelectedPlatoonForSelection('');
                               }
                             }}
                             className="border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
@@ -505,10 +604,13 @@ export default function Home() {
                       <div className="flex items-center gap-2">
                         <label className="text-sm font-medium text-gray-700">בחר לפי סטאטוס:</label>
                         <select 
+                          value={selectedStatusForSelection}
                           onChange={(e) => {
                             if (e.target.value) {
                               selectByStatus(e.target.value);
-                              e.target.value = '';
+                              setSelectedStatusForSelection(e.target.value);
+                            } else {
+                              setSelectedStatusForSelection('');
                             }
                           }}
                           className="border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
@@ -520,6 +622,7 @@ export default function Home() {
                         </select>
                       </div>
                     </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -527,7 +630,10 @@ export default function Home() {
             {/* Add New Soldier */}
             <div className="bg-white rounded-lg shadow-sm mb-6">
               <button
-                onClick={() => setShowAddForm(!showAddForm)}
+                onClick={() => {
+                  setShowAddForm(!showAddForm);
+                  if (!showAddForm) setFormErrors({ name: '', id: '', platoon: '' });
+                }}
                 className="w-full p-4 flex items-center justify-between text-lg font-semibold text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
               >
                 <span>הוסף חדש</span>
@@ -538,69 +644,105 @@ export default function Home() {
               
               {showAddForm && (
                 <div className="p-6 border-t">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">שם *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">
+                        שם <span className="text-red-500">*</span>
+                      </label>
                       <input 
                         type="text"
                         value={newSoldier.name}
-                        onChange={(e) => setNewSoldier({...newSoldier, name: e.target.value})}
-                        className="w-full border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                        placeholder="הכנס שם"
+                        onChange={(e) => {
+                          setNewSoldier({...newSoldier, name: e.target.value});
+                          if (formErrors.name) setFormErrors({...formErrors, name: ''});
+                        }}
+                        className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 placeholder-gray-600 ${
+                          formErrors.name 
+                            ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                            : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
+                        }`}
+                        placeholder="שם מלא"
                       />
-                    </div>
-                                            <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">צוות</label>
-                      <select 
-                        value={newSoldier.platoon}
-                        onChange={(e) => setNewSoldier({...newSoldier, platoon: e.target.value})}
-                        className="w-full border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      >
-                        {uniquePlatoons.map(platoon => (
-                          <option key={platoon} value={platoon}>{platoon}</option>
-                        ))}
-                      </select>
+                      {formErrors.name && (
+                        <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">סטטוס</label>
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => setNewSoldier({...newSoldier, status: 'בית', customStatus: ''})}
-                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                            newSoldier.status === 'בית' 
-                              ? 'bg-purple-600 text-white' 
-                              : 'bg-gray-200 text-gray-700 hover:bg-purple-100'
+                      <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">
+                        מספר אישי <span className="text-red-500">*</span>
+                      </label>
+                      <input 
+                        type="text"
+                        value={newSoldier.id}
+                        onChange={(e) => {
+                          setNewSoldier({...newSoldier, id: e.target.value});
+                          if (formErrors.id) setFormErrors({...formErrors, id: ''});
+                        }}
+                        className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 placeholder-gray-600 ${
+                          formErrors.id 
+                            ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                            : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
+                        }`}
+                        placeholder="מספר אישי"
+                      />
+                      {formErrors.id && (
+                        <p className="mt-1 text-sm text-red-600">{formErrors.id}</p>
+                      )}
+                    </div>
+                                            <div>
+                           <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">
+                        צוות <span className="text-red-500">*</span>
+                      </label>
+                        <select 
+                          value={newSoldier.platoon}
+                          onChange={(e) => {
+                            setNewSoldier({...newSoldier, platoon: e.target.value});
+                            if (formErrors.platoon) setFormErrors({...formErrors, platoon: ''});
+                          }}
+                          className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 ${
+                            formErrors.platoon 
+                              ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                              : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
                           }`}
                         >
-                          בית
-                        </button>
-                        <button 
-                          onClick={() => setNewSoldier({...newSoldier, status: 'משמר', customStatus: ''})}
-                          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                            newSoldier.status === 'משמר' 
-                              ? 'bg-purple-600 text-white' 
-                              : 'bg-gray-200 text-gray-700 hover:bg-purple-100'
-                          }`}
-                        >
-                          משמר
-                        </button>
+                          <option value="">צוות</option>
+                          {uniquePlatoons.map(platoon => (
+                            <option key={platoon} value={platoon}>{platoon}</option>
+                          ))}
+                        </select>
+                        {formErrors.platoon && (
+                          <p className="mt-1 text-sm text-red-600">{formErrors.platoon}</p>
+                        )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">סטטוס</label>
+                      <select 
+                        value={newSoldier.status}
+                        onChange={(e) => setNewSoldier({...newSoldier, status: e.target.value, customStatus: ''})}
+                        className="w-full h-10 border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        <option value="בית">בית</option>
+                        <option value="משמר">משמר</option>
+                        <option value="אחר">אחר</option>
+                      </select>
+                      {newSoldier.status === 'אחר' && (
                         <input 
                           type="text"
-                          value={newSoldier.status === 'אחר' ? newSoldier.customStatus : ''}
-                          onChange={(e) => setNewSoldier({...newSoldier, status: 'אחר', customStatus: e.target.value})}
-                          placeholder="אחר"
-                          className="flex-1 border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                          value={newSoldier.customStatus}
+                          onChange={(e) => setNewSoldier({...newSoldier, customStatus: e.target.value})}
+                          placeholder="הכנס סטטוס מותאם"
+                          className="w-full h-10 mt-2 border-2 h-10 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
                         />
-                      </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-4 mb-4">
-                    <label className="text-sm font-medium text-gray-700 whitespace-nowrap">הערות:</label>
+                    {/* <label className="text-sm font-medium text-gray-700 whitespace-nowrap">הערות:</label> */}
                     <input 
                       type="text"
                       value={newSoldier.notes}
                       onChange={(e) => setNewSoldier({...newSoldier, notes: e.target.value})}
-                      className="flex-1 border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                      className="flex-1 h-10 border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
                       placeholder="הערות נוספות (אופציונלי)"
                     />
                   </div>
@@ -612,7 +754,10 @@ export default function Home() {
                       הוסף
                     </button>
                     <button 
-                      onClick={() => setShowAddForm(false)}
+                      onClick={() => {
+                        setShowAddForm(false);
+                        setFormErrors({ name: '', id: '', platoon: '' });
+                      }}
                       className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
                     >
                       ביטול
@@ -640,13 +785,128 @@ export default function Home() {
                 <table className="w-full">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
-                      <th className="px-2 py-3 text-center text-sm font-medium text-gray-700 w-16">בחירה</th>
+                      <th className="px-2 py-3 text-center text-sm font-medium text-gray-700 w-16">
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-xs">בחירה</span>
+                          <input 
+                            type="checkbox"
+                            checked={filteredSoldiers.length > 0 && filteredSoldiers.every(soldier => soldier.isSelected)}
+                            ref={(input) => {
+                              if (input) {
+                                const someSelected = filteredSoldiers.some(soldier => soldier.isSelected);
+                                const allSelected = filteredSoldiers.every(soldier => soldier.isSelected);
+                                input.indeterminate = someSelected && !allSelected;
+                              }
+                            }}
+                            onChange={toggleAllVisible}
+                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                          />
+                        </div>
+                      </th>
                       <th className="px-1 py-3 text-gray-400">|</th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">שם</th>
                       <th className="px-1 py-3 text-gray-400">|</th>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">צוות</th>
+                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700 relative">
+                        <div className="flex items-center gap-2">
+                          <span>צוות</span>
+                          <button
+                            onClick={() => setShowTeamFilter(!showTeamFilter)}
+                            className="text-purple-600 hover:text-purple-800 text-xs"
+                          >
+                            ▼
+                          </button>
+                        </div>
+                                                 {showTeamFilter && (
+                           <div className="filter-dropdown absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 min-w-48">
+                             <div className="p-3 max-h-48 overflow-y-auto">
+                              <div className="space-y-2">
+                                {uniquePlatoons.map(platoon => (
+                                  <label key={platoon} className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedTeams.includes(platoon)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setSelectedTeams([...selectedTeams, platoon]);
+                                        } else {
+                                          setSelectedTeams(selectedTeams.filter(t => t !== platoon));
+                                        }
+                                      }}
+                                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                    />
+                                    <span className="text-sm text-gray-700">{platoon}</span>
+                                  </label>
+                                ))}
+                              </div>
+                              <div className="mt-3 pt-2 border-t border-gray-200 flex gap-2">
+                                <button
+                                  onClick={() => setSelectedTeams([])}
+                                  className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                                >
+                                  נקה
+                                </button>
+                                <button
+                                  onClick={() => setShowTeamFilter(false)}
+                                  className="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
+                                >
+                                  סגור
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </th>
                       <th className="px-1 py-3 text-gray-400">|</th>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">סטטוס</th>
+                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700 relative">
+                        <div className="flex items-center gap-2">
+                          <span>סטטוס</span>
+                          <button
+                            onClick={() => setShowStatusFilter(!showStatusFilter)}
+                            className="text-purple-600 hover:text-purple-800 text-xs"
+                          >
+                            ▼
+                          </button>
+                        </div>
+                                                 {showStatusFilter && (
+                           <div className="filter-dropdown absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 min-w-36">
+                             <div className="p-3 max-h-48 overflow-y-auto">
+                              <div className="space-y-2">
+                                {['בית', 'משמר', 'אחר'].map(status => (
+                                  <label key={status} className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedStatuses.includes(status)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setSelectedStatuses([...selectedStatuses, status]);
+                                        } else {
+                                          setSelectedStatuses(selectedStatuses.filter(s => s !== status));
+                                        }
+                                      }}
+                                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                    />
+                                    <span className="text-sm text-gray-700">{status}</span>
+                                  </label>
+                                ))}
+                              </div>
+                              <div className="mt-3 pt-2 border-t border-gray-200 flex gap-2">
+                                <button
+                                  onClick={() => setSelectedStatuses([])}
+                                  className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                                >
+                                  נקה
+                                </button>
+                                <button
+                                  onClick={() => setShowStatusFilter(false)}
+                                  className="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
+                                >
+                                  סגור
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </th>
                       <th className="px-1 py-3 text-gray-400">|</th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">הערות</th>
                     </tr>
