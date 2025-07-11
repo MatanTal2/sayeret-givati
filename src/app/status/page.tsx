@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -13,15 +13,22 @@ interface Soldier {
   customStatus?: string;
   notes?: string;
   isSelected: boolean;
+  isManuallyAdded?: boolean; // Flag to identify manually added soldiers
 }
 
 export default function StatusPage() {
   const [soldiers, setSoldiers] = useState<Soldier[]>([]);
-  const [filteredSoldiers, setFilteredSoldiers] = useState<Soldier[]>([]);
+  const [originalSoldiers, setOriginalSoldiers] = useState<Soldier[]>([]); // Track original data
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isUpdatingChanges, setIsUpdatingChanges] = useState(false); // For status updates
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [isUpdatingServer, setIsUpdatingServer] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [platoonFilter, setPlatoonFilter] = useState('');
   const [nameFilter, setNameFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -58,6 +65,17 @@ export default function StatusPage() {
     customStatus: '',
     notes: ''
   });
+
+  // Debounced name filter for better performance
+  const [debouncedNameFilter, setDebouncedNameFilter] = useState(nameFilter);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedNameFilter(nameFilter);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [nameFilter]);
 
   useEffect(() => {
     fetchSoldiers();
@@ -106,7 +124,7 @@ export default function StatusPage() {
         const cached = getCachedData();
         if (cached) {
           setSoldiers(cached.data);
-          setFilteredSoldiers(cached.data);
+          setOriginalSoldiers(JSON.parse(JSON.stringify(cached.data))); // Deep copy for comparison
           setLastUpdated(new Date(cached.timestamp));
           setLoading(false);
           return;
@@ -172,7 +190,8 @@ export default function StatusPage() {
       setLastUpdated(new Date(now));
       
       setSoldiers(soldiersData);
-      setFilteredSoldiers(soldiersData);
+      setOriginalSoldiers(JSON.parse(JSON.stringify(soldiersData))); // Deep copy for comparison
+      // setFilteredSoldiers(soldiersData); // This line is removed
     } catch (error) {
       console.error('Error fetching soldiers:', error);
       
@@ -180,7 +199,7 @@ export default function StatusPage() {
       const cached = getCachedData();
       if (cached && soldiers.length === 0) {
         setSoldiers(cached.data);
-        setFilteredSoldiers(cached.data);
+        // setFilteredSoldiers(cached.data); // This line is removed
         setLastUpdated(new Date(cached.timestamp));
         setError(
           `שגיאה בטעינת נתונים חדשים. מציג נתונים שמורים מ-${new Date(cached.timestamp).toLocaleString('he-IL')}`
@@ -198,39 +217,121 @@ export default function StatusPage() {
     }
   };
 
-  const filterSoldiers = () => {
-    let filtered = soldiers;
+  // Optimized filtering with useMemo and debouncing
+  const filteredSoldiers = useMemo(() => {
+    return soldiers.filter(soldier => {
+      // Name filter
+      if (debouncedNameFilter && !soldier.name.toLowerCase().includes(debouncedNameFilter.toLowerCase())) {
+        return false;
+      }
+      
+      // Team filter
+      if (selectedTeams.length > 0 && !selectedTeams.includes(soldier.platoon)) {
+        return false;
+      }
+      
+      // Status filter
+      if (selectedStatuses.length > 0 && !selectedStatuses.includes(soldier.status)) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [soldiers, debouncedNameFilter, selectedTeams, selectedStatuses]);
+
+  // Memoized expensive calculations
+  const { selectedCount, totalCount, filteredSelectedCount, filteredTotalCount, uniquePlatoons, platoonCounts, changedSoldiers } = useMemo(() => {
+    const selectedCount = soldiers.filter(s => s.isSelected).length;
+    const totalCount = soldiers.length;
+    const filteredSelectedCount = filteredSoldiers.filter(s => s.isSelected).length;
+    const filteredTotalCount = filteredSoldiers.length;
+    const uniquePlatoons = [...new Set(soldiers.map(s => s.platoon))].sort();
     
-    // Legacy single-select filters
-    if (platoonFilter) {
-      filtered = filtered.filter(soldier => soldier.platoon === platoonFilter);
-    }
-    
-    if (nameFilter) {
-      filtered = filtered.filter(soldier => 
-        soldier.name.toLowerCase().includes(nameFilter.toLowerCase())
+    // Pre-calculate platoon counts to avoid expensive inline calculations
+    const platoonCounts: Record<string, number> = {};
+    uniquePlatoons.forEach(platoon => {
+      let platoonSoldiers = soldiers.filter(s => s.platoon === platoon);
+      
+      if (nameFilter) {
+        platoonSoldiers = platoonSoldiers.filter(soldier => 
+          soldier.name.toLowerCase().includes(nameFilter.toLowerCase())
+        );
+      }
+      
+      if (statusFilter) {
+        platoonSoldiers = platoonSoldiers.filter(soldier => soldier.status === statusFilter);
+      }
+      
+      platoonCounts[platoon] = platoonSoldiers.length;
+    });
+
+    // Detect changed soldiers (excluding manually added ones)
+    const changedSoldiers = soldiers.filter(soldier => {
+      if (soldier.isManuallyAdded) return false; // Skip manually added soldiers
+      
+      const original = originalSoldiers.find(orig => orig.id === soldier.id && orig.name === soldier.name);
+      if (!original) return false;
+      
+      return (
+        soldier.status !== original.status ||
+        soldier.customStatus !== original.customStatus ||
+        soldier.notes !== original.notes
       );
-    }
+    });
     
-    if (statusFilter) {
-      filtered = filtered.filter(soldier => soldier.status === statusFilter);
-    }
+    return {
+      selectedCount,
+      totalCount,
+      filteredSelectedCount,
+      filteredTotalCount,
+      uniquePlatoons,
+      platoonCounts,
+      changedSoldiers
+    };
+  }, [soldiers, filteredSoldiers, nameFilter, statusFilter, originalSoldiers]);
 
-    // Advanced multi-select filters
-    if (selectedTeams.length > 0) {
-      filtered = filtered.filter(soldier => selectedTeams.includes(soldier.platoon));
+  // Optimized onChange handlers to prevent latency
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewSoldier(prev => ({ ...prev, name: value }));
+    // Only clear error if there was one
+    if (formErrors.name) {
+      setFormErrors(prev => ({ ...prev, name: '' }));
     }
+  }, [formErrors.name]);
 
-    if (selectedStatuses.length > 0) {
-      filtered = filtered.filter(soldier => selectedStatuses.includes(soldier.status));
+  const handleIdChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewSoldier(prev => ({ ...prev, id: value }));
+    // Only clear error if there was one
+    if (formErrors.id) {
+      setFormErrors(prev => ({ ...prev, id: '' }));
     }
-    
-    setFilteredSoldiers(filtered);
-  };
+  }, [formErrors.id]);
 
-  useEffect(() => {
-    filterSoldiers();
-  }, [soldiers, platoonFilter, nameFilter, statusFilter, selectedTeams, selectedStatuses]); // eslint-disable-line react-hooks/exhaustive-deps
+  const handlePlatoonChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setNewSoldier(prev => ({ ...prev, platoon: value }));
+    // Only clear error if there was one
+    if (formErrors.platoon) {
+      setFormErrors(prev => ({ ...prev, platoon: '' }));
+    }
+  }, [formErrors.platoon]);
+
+  const handleStatusChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setNewSoldier(prev => ({ ...prev, status: value, customStatus: '' }));
+  }, []);
+
+  const handleCustomStatusChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewSoldier(prev => ({ ...prev, customStatus: value }));
+  }, []);
+
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewSoldier(prev => ({ ...prev, notes: value }));
+  }, []);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -329,6 +430,120 @@ export default function StatusPage() {
     setSoldiers(updatedSoldiers);
   };
 
+  const updateServerData = async () => {
+    const HARDCODED_PASSWORD = "admin123"; // TODO: Replace with proper authentication
+    
+    if (password !== HARDCODED_PASSWORD) {
+      setPasswordError('סיסמה שגויה');
+      return;
+    }
+
+    try {
+      setIsUpdatingServer(true);
+      setPasswordError('');
+      
+      // Get all soldiers that were manually added
+      const manuallyAddedSoldiers = soldiers.filter(soldier => 
+        soldier.isManuallyAdded
+      );
+      
+      console.log('🔍 DEBUG: Count of manually added soldiers:', manuallyAddedSoldiers.length);
+      
+      if (manuallyAddedSoldiers.length === 0) {
+        console.log('❌ DEBUG: No manually added soldiers found');
+        alert('אין חיילים חדשים לעדכון בשרת');
+        setShowPasswordModal(false);
+        setPassword('');
+        return;
+      }
+      
+      console.log('✅ DEBUG: Found manually added soldiers, proceeding with API call');
+      
+      const response = await fetch('/api/sheets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          soldiers: manuallyAddedSoldiers
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.log('❌ DEBUG: API response error:', errorData);
+        throw new Error(errorData.error || 'שגיאה בעדכון השרת');
+      }
+      
+      const result = await response.json();
+      console.log('✅ DEBUG: API success response:', result);
+      
+      alert('הנתונים עודכנו בהצלחה בשרת!');
+      setShowPasswordModal(false);
+      setPassword('');
+      
+      // Refresh data to get the updated sheet
+      await fetchSoldiers(true);
+      
+    } catch (error) {
+      console.error('❌ DEBUG: Error updating server:', error);
+      alert(
+        error instanceof Error 
+          ? error.message 
+          : 'שגיאה בעדכון השרת. אנא נסה שוב.'
+      );
+    } finally {
+      setIsUpdatingServer(false);
+    }
+  };
+
+  const updateChangedData = async () => {
+    if (changedSoldiers.length === 0) {
+      alert('אין שינויים לעדכון');
+      return;
+    }
+
+    try {
+      setIsUpdatingChanges(true);
+      
+      console.log('🔄 DEBUG: Updating changed soldiers:', changedSoldiers.length);
+      
+      const response = await fetch('/api/sheets', {
+        method: 'PUT', // Use PUT for updates
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          soldiers: changedSoldiers
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.log('❌ DEBUG: API response error:', errorData);
+        throw new Error(errorData.error || 'שגיאה בעדכון הנתונים');
+      }
+      
+      const result = await response.json();
+      console.log('✅ DEBUG: Update success response:', result);
+      
+      alert(`עודכנו ${changedSoldiers.length} רשומות בהצלחה!`);
+      
+      // Update original soldiers to reflect the new state
+      setOriginalSoldiers(JSON.parse(JSON.stringify(soldiers)));
+      
+    } catch (error) {
+      console.error('❌ DEBUG: Error updating changes:', error);
+      alert(
+        error instanceof Error 
+          ? error.message 
+          : 'שגיאה בעדכון הנתונים. אנא נסה שוב.'
+      );
+    } finally {
+      setIsUpdatingChanges(false);
+    }
+  };
+
   const addNewSoldier = () => {
     // Clear previous errors
     const errors = { name: '', id: '', platoon: '' };
@@ -385,8 +600,12 @@ export default function StatusPage() {
       status: newSoldier.status,
       customStatus: newSoldier.status === 'אחר' ? newSoldier.customStatus : undefined,
       notes: newSoldier.notes.trim() || undefined,
-      isSelected: true
+      isSelected: true,
+      isManuallyAdded: true
     };
+
+    console.log('✅ DEBUG: Adding new soldier:', soldier);
+    console.log('✅ DEBUG: isManuallyAdded flag:', soldier.isManuallyAdded);
 
     setSoldiers([...soldiers, soldier]);
     setNewSoldier({
@@ -438,7 +657,7 @@ export default function StatusPage() {
         return acc;
       }, {} as Record<string, Soldier[]>);
 
-      console.log('Grouped by platoon:', groupedByPlatoon); // Debug log
+
 
       let report = `דוח שבצ״ק מסייעת - סיירת גבעתי\n`;
       report += `${hebrewDate}\n`;
@@ -492,29 +711,7 @@ export default function StatusPage() {
     }
   };
 
-  const selectedCount = soldiers.filter(s => s.isSelected).length;
-  const totalCount = soldiers.length;
-  const filteredSelectedCount = filteredSoldiers.filter(s => s.isSelected).length;
-  const filteredTotalCount = filteredSoldiers.length;
-  const uniquePlatoons = [...new Set(soldiers.map(s => s.platoon))];
 
-  // Get platoon counts based on current filters
-  const getPlatoonCounts = (platoon: string) => {
-    // Apply all current filters except platoon filter to get accurate counts
-    let platoonSoldiers = soldiers.filter(s => s.platoon === platoon);
-    
-    if (nameFilter) {
-      platoonSoldiers = platoonSoldiers.filter(soldier => 
-        soldier.name.toLowerCase().includes(nameFilter.toLowerCase())
-      );
-    }
-    
-    if (statusFilter) {
-      platoonSoldiers = platoonSoldiers.filter(soldier => soldier.status === statusFilter);
-    }
-    
-    return `${platoonSoldiers.length}`;
-  };
 
   if (loading) {
     return (
@@ -609,7 +806,7 @@ export default function StatusPage() {
                         <option value="">כל הצוותים</option>
                         {uniquePlatoons.map(platoon => (
                           <option key={platoon} value={platoon}>
-                            {platoon} ({getPlatoonCounts(platoon)})
+                            {platoon} ({platoonCounts[platoon]})
                           </option>
                         ))}
                       </select>
@@ -730,10 +927,7 @@ export default function StatusPage() {
                       <input 
                         type="text"
                         value={newSoldier.name}
-                        onChange={(e) => {
-                          setNewSoldier({...newSoldier, name: e.target.value});
-                          if (formErrors.name) setFormErrors({...formErrors, name: ''});
-                        }}
+                        onChange={handleNameChange}
                         className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 placeholder-gray-600 ${
                           formErrors.name 
                             ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
@@ -752,10 +946,7 @@ export default function StatusPage() {
                       <input 
                         type="text"
                         value={newSoldier.id}
-                        onChange={(e) => {
-                          setNewSoldier({...newSoldier, id: e.target.value});
-                          if (formErrors.id) setFormErrors({...formErrors, id: ''});
-                        }}
+                        onChange={handleIdChange}
                         className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 placeholder-gray-600 ${
                           formErrors.id 
                             ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
@@ -773,10 +964,7 @@ export default function StatusPage() {
                       </label>
                       <select 
                         value={newSoldier.platoon}
-                        onChange={(e) => {
-                          setNewSoldier({...newSoldier, platoon: e.target.value});
-                          if (formErrors.platoon) setFormErrors({...formErrors, platoon: ''});
-                        }}
+                        onChange={handlePlatoonChange}
                         className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 ${
                           formErrors.platoon 
                             ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
@@ -796,7 +984,7 @@ export default function StatusPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">סטטוס</label>
                       <select 
                         value={newSoldier.status}
-                        onChange={(e) => setNewSoldier({...newSoldier, status: e.target.value, customStatus: ''})}
+                        onChange={handleStatusChange}
                         className="w-full h-10 border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       >
                         <option value="בית">בית</option>
@@ -807,7 +995,7 @@ export default function StatusPage() {
                         <input 
                           type="text"
                           value={newSoldier.customStatus}
-                          onChange={(e) => setNewSoldier({...newSoldier, customStatus: e.target.value})}
+                          onChange={handleCustomStatusChange}
                           placeholder="הכנס סטטוס מותאם"
                           className="w-full h-10 mt-2 border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
                         />
@@ -818,10 +1006,16 @@ export default function StatusPage() {
                     <input 
                       type="text"
                       value={newSoldier.notes}
-                      onChange={(e) => setNewSoldier({...newSoldier, notes: e.target.value})}
+                      onChange={handleNotesChange}
                       className="flex-1 h-10 border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
                       placeholder="הערות נוספות (אופציונלי)"
                     />
+                  </div>
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-md p-2">
+                      <span className="text-blue-500">💡</span>
+                      <span>העדכון יחול רק אחרי שהוספת רשומות חדשות</span>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <button 
@@ -829,6 +1023,12 @@ export default function StatusPage() {
                       className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
                     >
                       הוסף
+                    </button>
+                    <button 
+                      onClick={() => setShowPasswordModal(true)}
+                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    >
+                      עדכן בשרת
                     </button>
                     <button 
                       onClick={() => {
@@ -849,7 +1049,7 @@ export default function StatusPage() {
               <div>
                 <p className="text-lg font-medium text-gray-800">
                   נבחרו: {filteredSelectedCount} מתוך {filteredTotalCount}
-                  {(platoonFilter || nameFilter) && (
+                  {(platoonFilter || nameFilter || selectedTeams.length > 0 || selectedStatuses.length > 0) && (
                     <span className="text-sm text-gray-600 mr-2">
                       (סה&quot;כ: {selectedCount} מתוך {totalCount})
                     </span>
@@ -881,24 +1081,49 @@ export default function StatusPage() {
                   </p>
                 )}
               </div>
-              <button
-                onClick={() => fetchSoldiers(true)}
-                disabled={isRefreshing}
-                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-purple-400 transition-colors text-sm flex items-center gap-2 self-start sm:self-auto"
-              >
-                {isRefreshing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span className="sm:hidden">רענן...</span>
-                    <span className="hidden sm:inline">רענן...</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="sm:hidden">↻</span>
-                    <span className="hidden sm:inline">↻ רענן נתונים</span>
-                  </>
-                )}
-              </button>
+              <div className="flex gap-2 self-start sm:self-auto">
+                <button
+                  onClick={() => fetchSoldiers(true)}
+                  disabled={isRefreshing}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-purple-400 transition-colors text-sm flex items-center gap-2"
+                >
+                  {isRefreshing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span className="sm:hidden">רענן...</span>
+                      <span className="hidden sm:inline">רענן...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="sm:hidden">↻</span>
+                      <span className="hidden sm:inline">↻ רענן נתונים</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={updateChangedData}
+                  disabled={isUpdatingChanges || changedSoldiers.length === 0}
+                  className={`px-4 py-2 text-white rounded-md transition-colors text-sm flex items-center gap-2 ${
+                    changedSoldiers.length === 0 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400'
+                  }`}
+                  title={changedSoldiers.length === 0 ? 'אין שינויים לעדכון' : `עדכן ${changedSoldiers.length} שינויים`}
+                >
+                  {isUpdatingChanges ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span className="sm:hidden">עדכן...</span>
+                      <span className="hidden sm:inline">עדכן...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="sm:hidden">📤</span>
+                      <span className="hidden sm:inline">📤 עדכן נתונים {changedSoldiers.length > 0 ? `(${changedSoldiers.length})` : ''}</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Soldiers Table - Desktop */}
@@ -1235,6 +1460,81 @@ export default function StatusPage() {
                   </label>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              הזן סיסמת מנהל
+            </h3>
+            <div className="mb-4">
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setPasswordError('');
+                  }}
+                  placeholder="סיסמה"
+                  className={`w-full border-2 rounded-md px-3 py-2 pr-10 text-gray-800 focus:outline-none focus:ring-2 ${
+                    passwordError 
+                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                      : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
+                  }`}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      updateServerData();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  {showPassword ? (
+                    <span className="text-lg">🙈</span>
+                  ) : (
+                    <span className="text-lg">😑</span>
+                  )}
+                </button>
+              </div>
+              {passwordError && (
+                <p className="mt-1 text-sm text-red-600">{passwordError}</p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={updateServerData}
+                disabled={isUpdatingServer}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-green-400 transition-colors flex items-center gap-2"
+              >
+                {isUpdatingServer ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    מעדכן...
+                  </>
+                ) : (
+                  'עדכן'
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPassword('');
+                  setPasswordError('');
+                }}
+                disabled={isUpdatingServer}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 disabled:bg-gray-400 transition-colors"
+              >
+                ביטול
+              </button>
             </div>
           </div>
         </div>
