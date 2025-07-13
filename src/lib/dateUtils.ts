@@ -39,5 +39,5 @@ export const formatLastUpdated = (date: Date): string => {
 };
 
 export const formatCacheErrorDate = (timestamp: number): string => {
-  return new Date(timestamp).toLocaleString('he-IL');
+  return new Date(timestamp).toLocaleString('he-IL', { timeZone: 'UTC' });
 }; 

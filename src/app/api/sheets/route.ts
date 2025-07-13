@@ -29,17 +29,18 @@ export async function GET() {
       console.log('🔧 Trying to parse as direct JSON...');
       credentials = JSON.parse(serviceAccount);
       console.log('✅ Parsed as direct JSON');
-    } catch {
+    } catch (e) {
       console.log('🔧 Trying to parse as base64...');
       try {
-        credentials = JSON.parse(Buffer.from(serviceAccount, 'base64').toString('utf-8'));
+        const decoded = Buffer.from(serviceAccount, 'base64').toString('utf-8');
+        if (!decoded.trim().startsWith('{')) {
+          throw new Error('Decoded string is not a JSON object');
+        }
+        credentials = JSON.parse(decoded);
         console.log('✅ Parsed as base64');
       } catch (base64Error) {
         console.log('❌ Failed to parse credentials:', base64Error);
-        return NextResponse.json({ 
-          error: 'Failed to parse service account credentials',
-          details: 'Neither direct JSON nor base64 parsing worked'
-        }, { status: 500 });
+        throw new Error('Failed to parse service account credentials');
       }
     }
 

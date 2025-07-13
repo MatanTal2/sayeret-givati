@@ -18,8 +18,8 @@ export const mapRawStatusToStructured = (rawStatus: string): StatusMapping => {
 };
 
 export const mapStructuredStatusToRaw = (status: string, customStatus?: string): string => {
-  if (status === 'אחר' && customStatus) {
-    return customStatus;
+  if (status === 'אחר') {
+    return customStatus ?? 'אחר';
   }
   return status;
 };
