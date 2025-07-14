@@ -6,6 +6,13 @@ import { Soldier } from '../types';
 import { getCachedData, setCachedData } from '../../lib/cache';
 import { formatReportDate, formatReportTime, formatLastUpdated, formatCacheErrorDate } from '../../lib/dateUtils';
 import { mapRawStatusToStructured, mapStructuredStatusToRaw, getAvailableStatuses } from '../../lib/statusUtils';
+// import { 
+//   createToggleAllVisibleHandler,
+//   createSelectAllHandler,
+//   createSelectNoneHandler,
+//   createSelectByStatusHandler,
+//   createSelectByPlatoonHandler
+// } from '../../lib/selectionUtils';
 
 export default function StatusPage() {
   const [soldiers, setSoldiers] = useState<Soldier[]>([]);
@@ -24,15 +31,14 @@ export default function StatusPage() {
   const [nameFilter, setNameFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
   const [reportText, setReportText] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [isMultiPlatoonReport, setIsMultiPlatoonReport] = useState(false);
   const [includeIdInReport, setIncludeIdInReport] = useState(true);
   
   // State for dropdown selections to show what was selected
-  const [selectedPlatoonForSelection, setSelectedPlatoonForSelection] = useState('');
-  const [selectedStatusForSelection, setSelectedStatusForSelection] = useState('');
+  // const [selectedPlatoonForSelection, setSelectedPlatoonForSelection] = useState('');
+  // const [selectedStatusForSelection, setSelectedStatusForSelection] = useState('');
 
   // Advanced filtering state
   const [showTeamFilter, setShowTeamFilter] = useState(false);
@@ -330,25 +336,7 @@ export default function StatusPage() {
     setSoldiers(updatedSoldiers);
   };
 
-  const selectAll = () => {
-    const updatedSoldiers = soldiers.map(soldier => ({
-      ...soldier,
-      isSelected: true
-    }));
-    setSoldiers(updatedSoldiers);
-  };
-
-  const selectNone = () => {
-    const updatedSoldiers = soldiers.map(soldier => ({
-      ...soldier,
-      isSelected: false
-    }));
-    setSoldiers(updatedSoldiers);
-    // Also clear the dropdown selections for better UX
-    setSelectedPlatoonForSelection('');
-    setSelectedStatusForSelection('');
-  };
-
+  // Keep the toggleAllVisible method since it's used in the table header
   const toggleAllVisible = () => {
     const allVisibleSelected = filteredSoldiers.every(soldier => soldier.isSelected);
     const updatedSoldiers = [...soldiers];
@@ -363,22 +351,6 @@ export default function StatusPage() {
       }
     });
     
-    setSoldiers(updatedSoldiers);
-  };
-
-  const selectByStatus = (status: string) => {
-    const updatedSoldiers = soldiers.map(soldier => ({
-      ...soldier,
-      isSelected: soldier.status === status
-    }));
-    setSoldiers(updatedSoldiers);
-  };
-
-  const selectByPlatoon = (platoon: string) => {
-    const updatedSoldiers = soldiers.map(soldier => ({
-      ...soldier,
-      isSelected: soldier.platoon === platoon
-    }));
     setSoldiers(updatedSoldiers);
   };
 
@@ -664,7 +636,7 @@ export default function StatusPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-gray-50 relative" dir="rtl">
       {/* Header with Logo and Navigation */}
       <header className="bg-white shadow-sm border-b border-gray-200 mb-6">
         <div className="max-w-6xl mx-auto px-4 py-4">
@@ -720,32 +692,6 @@ export default function StatusPage() {
 
         {!error && (
           <>
-            {/* Collapsible Filters */}
-            <div className="bg-white rounded-lg shadow-sm mb-6">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="w-full p-4 flex items-center justify-between text-lg font-semibold text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
-              >
-                <span>סינון</span>
-                <span className={`transform transition-transform text-purple-600 ${showFilters ? 'rotate-180' : ''}`}>
-                  ▼
-                </span>
-              </button>
-              
-              {showFilters && (
-                <div className="px-6 py-6">
-                  <div className="flex flex-wrap gap-6 items-center mb-4">
-
-                  </div>
-
-                  {/* Selection Controls */}
-                  <div className="mt-6">
-
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* Search Bar */}
             <div className="mb-6 flex justify-center">
               <div className="relative w-full max-w-md">
