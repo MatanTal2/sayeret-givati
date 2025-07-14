@@ -29,7 +29,7 @@ export async function GET() {
       console.log('🔧 Trying to parse as direct JSON...');
       credentials = JSON.parse(serviceAccount);
       console.log('✅ Parsed as direct JSON');
-    } catch (e) {
+    } catch {
       console.log('🔧 Trying to parse as base64...');
       try {
         const decoded = Buffer.from(serviceAccount, 'base64').toString('utf-8');
