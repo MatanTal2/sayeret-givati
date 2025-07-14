@@ -2,19 +2,10 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Image from 'next/image';
 import Link from 'next/link';
-
-interface Soldier {
-  id: string;
-  firstName: string;
-  lastName: string;
-  name: string; // Combined full name for UI
-  platoon: string;
-  status: string;
-  customStatus?: string;
-  notes?: string;
-  isSelected: boolean;
-  isManuallyAdded?: boolean; // Flag to identify manually added soldiers
-}
+import { Soldier } from '../types';
+import { getCachedData, setCachedData } from '../../lib/cache';
+import { formatReportDate, formatReportTime, formatLastUpdated, formatCacheErrorDate } from '../../lib/dateUtils';
+import { mapRawStatusToStructured, mapStructuredStatusToRaw, getAvailableStatuses } from '../../lib/statusUtils';
 
 export default function StatusPage() {
   const [soldiers, setSoldiers] = useState<Soldier[]>([]);
@@ -81,37 +72,7 @@ export default function StatusPage() {
     fetchSoldiers();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Cache management functions
-  const CACHE_KEY = 'sayeret-givati-soldiers-data';
-  const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
 
-  const getCachedData = () => {
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (!cached) return null;
-      
-      const { data, timestamp } = JSON.parse(cached);
-      const now = Date.now();
-      
-      if (now - timestamp > CACHE_TTL) {
-        localStorage.removeItem(CACHE_KEY);
-        return null;
-      }
-      
-      return { data, timestamp };
-    } catch {
-      localStorage.removeItem(CACHE_KEY);
-      return null;
-    }
-  };
-
-  const setCachedData = (data: Soldier[], timestamp: number) => {
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp }));
-    } catch (error) {
-      console.warn('Failed to cache data:', error);
-    }
-  };
 
   const fetchSoldiers = async (forceRefresh = false) => {
     try {
@@ -161,16 +122,7 @@ export default function StatusPage() {
           const rawStatus = row[4] || 'בית';
           
           // Handle status mapping
-          let status: string;
-          let customStatus: string | undefined;
-          
-          if (rawStatus === 'בית' || rawStatus === 'משמר') {
-            status = rawStatus;
-            customStatus = undefined;
-          } else {
-            status = 'אחר';
-            customStatus = rawStatus;
-          }
+          const { status, customStatus } = mapRawStatusToStructured(rawStatus);
           
           return {
             id,
@@ -202,7 +154,7 @@ export default function StatusPage() {
         // setFilteredSoldiers(cached.data); // This line is removed
         setLastUpdated(new Date(cached.timestamp));
         setError(
-          `שגיאה בטעינת נתונים חדשים. מציג נתונים שמורים מ-${new Date(cached.timestamp).toLocaleString('he-IL')}`
+          `שגיאה בטעינת נתונים חדשים. מציג נתונים שמורים מ-${formatCacheErrorDate(cached.timestamp)}`
         );
       } else {
         setError(
@@ -633,19 +585,8 @@ export default function StatusPage() {
       }
 
       const now = new Date();
-      const options: Intl.DateTimeFormatOptions = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'numeric', 
-        day: 'numeric',
-        timeZone: 'Asia/Jerusalem'
-      };
-      const hebrewDate = now.toLocaleDateString('he-IL', options);
-      const time = now.toLocaleTimeString('he-IL', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        timeZone: 'Asia/Jerusalem'
-      });
+      const hebrewDate = formatReportDate(now);
+      const time = formatReportTime(now);
 
       // Group by platoon
       const groupedByPlatoon = selectedSoldiers.reduce((acc, soldier) => {
@@ -672,9 +613,7 @@ export default function StatusPage() {
         const platoonSoldiers = groupedByPlatoon[platoon];
         report += `צוות ${platoon}:\n`;
         platoonSoldiers.forEach((soldier, index) => {
-          const status = soldier.status === 'אחר' && soldier.customStatus 
-            ? soldier.customStatus 
-            : soldier.status;
+          const status = mapStructuredStatusToRaw(soldier.status, soldier.customStatus);
           const notes = soldier.notes ? ` - ${soldier.notes}` : '';
           const idText = includeIdInReport && soldier.id ? ` (${soldier.id})` : '';
           report += `${index + 1}. ${soldier.name}${idText} - ${status}${notes}\n`;
@@ -1057,27 +996,7 @@ export default function StatusPage() {
                 </p>
                 {lastUpdated && (
                   <p className="text-sm text-gray-500 mt-1">
-                    עודכן לאחרונה: {(() => {
-                      const now = new Date();
-                      const updateDate = new Date(lastUpdated);
-                      const isToday = now.toDateString() === updateDate.toDateString();
-                      const timeString = updateDate.toLocaleTimeString('he-IL', { 
-                        hour: '2-digit', 
-                        minute: '2-digit',
-                        timeZone: 'Asia/Jerusalem'
-                      });
-                      
-                      if (isToday) {
-                        return `היום ${timeString}`;
-                      } else {
-                        const dateString = updateDate.toLocaleDateString('he-IL', { 
-                          day: 'numeric', 
-                          month: 'numeric',
-                          timeZone: 'Asia/Jerusalem'
-                        });
-                        return `${dateString} ${timeString}`;
-                      }
-                    })()}
+                    עודכן לאחרונה: {formatLastUpdated(lastUpdated)}
                   </p>
                 )}
               </div>
@@ -1218,7 +1137,7 @@ export default function StatusPage() {
                           <div className="filter-dropdown absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 min-w-36">
                             <div className="p-3 max-h-48 overflow-y-auto">
                               <div className="space-y-2">
-                                {['בית', 'משמר', 'אחר'].map(status => (
+                                {getAvailableStatuses().map(status => (
                                   <label key={status} className="flex items-center gap-2 cursor-pointer">
                                     <input
                                       type="checkbox"

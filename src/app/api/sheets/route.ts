@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { mapStructuredStatusToRaw } from '../../../lib/statusUtils';
 
 export async function GET() {
   try {
@@ -31,14 +32,15 @@ export async function GET() {
     } catch {
       console.log('🔧 Trying to parse as base64...');
       try {
-        credentials = JSON.parse(Buffer.from(serviceAccount, 'base64').toString('utf-8'));
+        const decoded = Buffer.from(serviceAccount, 'base64').toString('utf-8');
+        if (!decoded.trim().startsWith('{')) {
+          throw new Error('Decoded string is not a JSON object');
+        }
+        credentials = JSON.parse(decoded);
         console.log('✅ Parsed as base64');
       } catch (base64Error) {
         console.log('❌ Failed to parse credentials:', base64Error);
-        return NextResponse.json({ 
-          error: 'Failed to parse service account credentials',
-          details: 'Neither direct JSON nor base64 parsing worked'
-        }, { status: 500 });
+        throw new Error('Failed to parse service account credentials');
       }
     }
 
@@ -165,7 +167,7 @@ export async function POST(request: Request) {
       soldier.firstName || soldier.name.split(' ')[0] || '',
       soldier.lastName || soldier.name.split(' ').slice(1).join(' ') || '',
       soldier.platoon || 'מסייעת',
-      soldier.status === 'אחר' ? soldier.customStatus || 'אחר' : soldier.status
+      mapStructuredStatusToRaw(soldier.status, soldier.customStatus)
     ]);
     
     console.log('📝 Formatted data to append:', JSON.stringify(values, null, 2));
@@ -309,7 +311,7 @@ export async function PUT(request: Request) {
         console.log(`🎯 Found soldier ${soldier.name} at row ${actualRowIndex}`);
         
         // Update status column (E) - column index 4
-        const statusValue = soldier.status === 'אחר' ? soldier.customStatus || 'אחר' : soldier.status;
+        const statusValue = mapStructuredStatusToRaw(soldier.status, soldier.customStatus);
         
         updates.push({
           range: `Sheet1!E${actualRowIndex}`,
