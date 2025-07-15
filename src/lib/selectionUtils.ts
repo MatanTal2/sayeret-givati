@@ -83,9 +83,9 @@ export const selectSoldiersByPlatoon = (soldiers: Soldier[], platoon: string): S
  * @param setSoldiers - React state setter function
  * @returns Function that can be called to select all soldiers
  */
-export const createSelectAllHandler = (setSoldiers: (soldiers: Soldier[]) => void) => {
+export const createSelectAllHandler = (setSoldiers: (soldiers: Soldier[] | ((prev: Soldier[]) => Soldier[])) => void) => {
   return () => {
-    setSoldiers(prev => selectAllSoldiers(prev));
+    setSoldiers((prev: Soldier[]) => selectAllSoldiers(prev));
   };
 };
 
@@ -94,9 +94,9 @@ export const createSelectAllHandler = (setSoldiers: (soldiers: Soldier[]) => voi
  * @param setSoldiers - React state setter function
  * @returns Function that can be called to deselect all soldiers
  */
-export const createSelectNoneHandler = (setSoldiers: (soldiers: Soldier[]) => void) => {
+export const createSelectNoneHandler = (setSoldiers: (soldiers: Soldier[] | ((prev: Soldier[]) => Soldier[])) => void) => {
   return () => {
-    setSoldiers(prev => selectNoneSoldiers(prev));
+    setSoldiers((prev: Soldier[]) => selectNoneSoldiers(prev));
   };
 };
 
@@ -107,11 +107,11 @@ export const createSelectNoneHandler = (setSoldiers: (soldiers: Soldier[]) => vo
  * @returns Function that can be called to toggle visible soldiers
  */
 export const createToggleAllVisibleHandler = (
-  setSoldiers: (soldiers: Soldier[]) => void,
+  setSoldiers: (soldiers: Soldier[] | ((prev: Soldier[]) => Soldier[])) => void,
   filteredSoldiers: Soldier[]
 ) => {
   return () => {
-    setSoldiers(prev => toggleAllVisibleSoldiers(prev, filteredSoldiers));
+    setSoldiers((prev: Soldier[]) => toggleAllVisibleSoldiers(prev, filteredSoldiers));
   };
 };
 
@@ -122,11 +122,11 @@ export const createToggleAllVisibleHandler = (
  * @returns Function that can be called to select soldiers by status
  */
 export const createSelectByStatusHandler = (
-  setSoldiers: (soldiers: Soldier[]) => void,
+  setSoldiers: (soldiers: Soldier[] | ((prev: Soldier[]) => Soldier[])) => void,
   status: string
 ) => {
   return () => {
-    setSoldiers(prev => selectSoldiersByStatus(prev, status));
+    setSoldiers((prev: Soldier[]) => selectSoldiersByStatus(prev, status));
   };
 };
 
@@ -137,10 +137,10 @@ export const createSelectByStatusHandler = (
  * @returns Function that can be called to select soldiers by platoon
  */
 export const createSelectByPlatoonHandler = (
-  setSoldiers: (soldiers: Soldier[]) => void,
+  setSoldiers: (soldiers: Soldier[] | ((prev: Soldier[]) => Soldier[])) => void,
   platoon: string
 ) => {
   return () => {
-    setSoldiers(prev => selectSoldiersByPlatoon(prev, platoon));
+    setSoldiers((prev: Soldier[]) => selectSoldiersByPlatoon(prev, platoon));
   };
 }; 
