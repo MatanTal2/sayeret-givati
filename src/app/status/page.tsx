@@ -7,7 +7,7 @@ import { getCachedData, setCachedData } from '../../lib/cache';
 import { formatReportDate, formatReportTime, formatLastUpdated, formatCacheErrorDate } from '../../lib/dateUtils';
 import { mapRawStatusToStructured, mapStructuredStatusToRaw, getAvailableStatuses } from '../../lib/statusUtils';
 import { GiTank } from "react-icons/gi";
-import { BsFillHouseFill } from "react-icons/bs";
+import { BsFillHouseFill, BsPersonAdd } from "react-icons/bs";
 import { MdNotListedLocation } from "react-icons/md";
 // import { 
 //   createToggleAllVisibleHandler,
@@ -203,6 +203,11 @@ export default function StatusPage() {
     return filteredSoldiers.some(s => s.status === 'אחר');
   }, [filteredSoldiers]);
 
+  // Check if there are any manually added soldiers that need to be updated to server
+  const manuallyAddedCount = useMemo(() => {
+    return soldiers.filter(s => s.isManuallyAdded).length;
+  }, [soldiers]);
+
   // Memoized expensive calculations
   const { selectedCount, totalCount, filteredSelectedCount, filteredTotalCount, uniquePlatoons, changedSoldiers } = useMemo(() => {
     const selectedCount = soldiers.filter(s => s.isSelected).length;
@@ -262,11 +267,6 @@ export default function StatusPage() {
       setFormErrors(prev => ({ ...prev, platoon: '' }));
     }
   }, [formErrors.platoon]);
-
-  const handleStatusChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setNewSoldier(prev => ({ ...prev, status: value, customStatus: '' }));
-  }, []);
 
   const handleCustomStatusChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -697,148 +697,6 @@ export default function StatusPage() {
               </div>
             </div>
 
-            {/* Add New Soldier */}
-            <div className="bg-white rounded-lg shadow-sm mb-6">
-              <button
-                onClick={() => {
-                  setShowAddForm(!showAddForm);
-                  if (!showAddForm) setFormErrors({ name: '', id: '', platoon: '' });
-                }}
-                className="w-full p-4 flex items-center justify-between text-lg font-semibold text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
-              >
-                <span>הוסף חדש</span>
-                <span className={`transform transition-transform text-purple-600 ${showAddForm ? 'rotate-180' : ''}`}>
-                  ▼
-                </span>
-              </button>
-              
-              {showAddForm && (
-                <div className="p-6 border-t">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">
-                        שם <span className="text-red-500">*</span>
-                      </label>
-                      <input 
-                        type="text"
-                        value={newSoldier.name}
-                        onChange={handleNameChange}
-                        className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 placeholder-gray-600 ${
-                          formErrors.name 
-                            ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
-                            : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
-                        }`}
-                        placeholder="שם מלא"
-                      />
-                      {formErrors.name && (
-                        <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">
-                        מספר אישי <span className="text-red-500">*</span>
-                      </label>
-                      <input 
-                        type="text"
-                        value={newSoldier.id}
-                        onChange={handleIdChange}
-                        className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 placeholder-gray-600 ${
-                          formErrors.id 
-                            ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
-                            : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
-                        }`}
-                        placeholder="מספר אישי"
-                      />
-                      {formErrors.id && (
-                        <p className="mt-1 text-sm text-red-600">{formErrors.id}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">
-                        צוות <span className="text-red-500">*</span>
-                      </label>
-                      <select 
-                        value={newSoldier.platoon}
-                        onChange={handlePlatoonChange}
-                        className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 ${
-                          formErrors.platoon 
-                            ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
-                            : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
-                        }`}
-                      >
-                        <option value="">צוות</option>
-                        {uniquePlatoons.map(platoon => (
-                          <option key={platoon} value={platoon}>{platoon}</option>
-                        ))}
-                      </select>
-                      {formErrors.platoon && (
-                        <p className="mt-1 text-sm text-red-600">{formErrors.platoon}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">סטטוס</label>
-                      <select 
-                        value={newSoldier.status}
-                        onChange={handleStatusChange}
-                        className="w-full h-10 border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      >
-                        <option value="בית">בית</option>
-                        <option value="משמר">משמר</option>
-                        <option value="אחר">אחר</option>
-                      </select>
-                      {newSoldier.status === 'אחר' && (
-                        <input 
-                          type="text"
-                          value={newSoldier.customStatus}
-                          onChange={handleCustomStatusChange}
-                          placeholder="הכנס סטטוס מותאם"
-                          className="w-full h-10 mt-2 border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                        />
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 mb-4">
-                    <input 
-                      type="text"
-                      value={newSoldier.notes}
-                      onChange={handleNotesChange}
-                      className="flex-1 h-10 border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                      placeholder="הערות נוספות (אופציונלי)"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-md p-2">
-                      <span className="text-blue-500">💡</span>
-                      <span>העדכון יחול רק אחרי שהוספת רשומות חדשות</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={addNewSoldier}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-                    >
-                      הוסף
-                    </button>
-                    <button 
-                      onClick={() => setShowPasswordModal(true)}
-                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                    >
-                      עדכן בשרת
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setShowAddForm(false);
-                        setFormErrors({ name: '', id: '', platoon: '' });
-                      }}
-                      className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
-                    >
-                      ביטול
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* Selection Counter */}
             <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
@@ -898,8 +756,179 @@ export default function StatusPage() {
                     </>
                   )}
                 </button>
+                <button
+                  onClick={() => {
+                    setShowAddForm(!showAddForm);
+                    if (!showAddForm) setFormErrors({ name: '', id: '', platoon: '' });
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm flex items-center gap-2"
+                >
+                  <BsPersonAdd className="text-lg" />
+                  <span className="hidden sm:inline">הוסף חדש</span>
+                </button>
               </div>
             </div>
+
+            {/* Add New Soldier Form */}
+            {showAddForm && (
+              <div className="bg-white rounded-lg shadow-sm mb-6 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">הוסף חייל חדש</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">
+                      שם <span className="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text"
+                      value={newSoldier.name}
+                      onChange={handleNameChange}
+                      className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 placeholder-gray-600 ${
+                        formErrors.name 
+                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
+                      }`}
+                      placeholder="שם מלא"
+                    />
+                    {formErrors.name && (
+                      <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">
+                      מספר אישי <span className="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text"
+                      value={newSoldier.id}
+                      onChange={handleIdChange}
+                      className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 placeholder-gray-600 ${
+                        formErrors.id 
+                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
+                      }`}
+                      placeholder="מספר אישי"
+                    />
+                    {formErrors.id && (
+                      <p className="mt-1 text-sm text-red-600">{formErrors.id}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">
+                      צוות <span className="text-red-500">*</span>
+                    </label>
+                    <select 
+                      value={newSoldier.platoon}
+                      onChange={handlePlatoonChange}
+                      className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 ${
+                        formErrors.platoon 
+                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
+                      }`}
+                    >
+                      <option value="">בחר צוות</option>
+                      {uniquePlatoons.map(platoon => (
+                        <option key={platoon} value={platoon}>{platoon}</option>
+                      ))}
+                    </select>
+                    {formErrors.platoon && (
+                      <p className="mt-1 text-sm text-red-600">{formErrors.platoon}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">סטטוס</label>
+                    <div className="flex items-center gap-2">
+                      {/* Status Toggle Icons */}
+                      <div className="flex bg-gray-100 rounded-lg p-1">
+                        <button 
+                          type="button"
+                          onClick={() => setNewSoldier(prev => ({ ...prev, status: 'בית', customStatus: '' }))}
+                          className={`px-3 py-2 rounded-md text-lg transition-colors ${
+                            newSoldier.status === 'בית' 
+                              ? 'bg-purple-600 text-white shadow-sm' 
+                              : 'text-gray-600 hover:bg-gray-200'
+                          }`}
+                          title="בית"
+                        >
+                          <BsFillHouseFill />
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setNewSoldier(prev => ({ ...prev, status: 'משמר', customStatus: '' }))}
+                          className={`px-3 py-2 rounded-md text-lg transition-colors ${
+                            newSoldier.status === 'משמר' 
+                              ? 'bg-purple-600 text-white shadow-sm' 
+                              : 'text-gray-600 hover:bg-gray-200'
+                          }`}
+                          title="משמר"
+                        >
+                          <GiTank />
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setNewSoldier(prev => ({ ...prev, status: 'אחר' }))}
+                          className={`px-3 py-2 rounded-md text-lg transition-colors ${
+                            newSoldier.status === 'אחר' 
+                              ? 'bg-purple-600 text-white shadow-sm' 
+                              : 'text-gray-600 hover:bg-gray-200'
+                          }`}
+                          title="אחר"
+                        >
+                          <MdNotListedLocation />
+                        </button>
+                      </div>
+                      
+                      {/* Custom Status Input (when אחר is selected) */}
+                      {newSoldier.status === 'אחר' && (
+                        <input 
+                          type="text"
+                          value={newSoldier.customStatus}
+                          onChange={handleCustomStatusChange}
+                          placeholder="הכנס סטטוס מותאם"
+                          className="flex-1 h-10 border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 mb-4">
+                  <input 
+                    type="text"
+                    value={newSoldier.notes}
+                    onChange={handleNotesChange}
+                    className="flex-1 h-10 border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                    placeholder="הערות נוספות (אופציונלי)"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={addNewSoldier}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                  >
+                    הוסף
+                  </button>
+                  <button 
+                    onClick={() => manuallyAddedCount > 0 ? setShowPasswordModal(true) : undefined}
+                    disabled={manuallyAddedCount === 0}
+                    className={manuallyAddedCount > 0 
+                      ? 'px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors' 
+                      : 'px-4 py-2 bg-gray-400 text-gray-200 rounded-md cursor-not-allowed transition-colors'
+                    }
+                    title={manuallyAddedCount > 0 ? `עדכן ${manuallyAddedCount} חיילים חדשים בשרת` : 'אין חיילים חדשים לעדכון'}
+                  >
+                    {manuallyAddedCount > 0 ? `עדכן בשרת (${manuallyAddedCount})` : 'עדכן בשרת'}
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowAddForm(false);
+                      setFormErrors({ name: '', id: '', platoon: '' });
+                    }}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                  >
+                    ביטול
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Soldiers Table - Desktop */}
             <div className="hidden md:block bg-white rounded-lg shadow-sm mb-6">
@@ -1064,28 +1093,28 @@ export default function StatusPage() {
                           <div className="flex items-center gap-2">
                             {/* Status Toggle Icons */}
                             <div className="flex bg-gray-100 rounded-lg p-1">
-                              <button 
-                                onClick={() => updateStatus(index, 'בית')}
+                            <button 
+                              onClick={() => updateStatus(index, 'בית')}
                                 className={`px-2 py-1 rounded-md text-lg transition-colors ${
-                                  soldier.status === 'בית' 
+                                soldier.status === 'בית' 
                                     ? 'bg-purple-600 text-white shadow-sm' 
                                     : 'text-gray-600 hover:bg-gray-200'
-                                }`}
+                              }`}
                                 title="בית"
-                              >
+                            >
                                 <BsFillHouseFill />
-                              </button>
-                              <button 
-                                onClick={() => updateStatus(index, 'משמר')}
+                            </button>
+                            <button 
+                              onClick={() => updateStatus(index, 'משמר')}
                                 className={`px-2 py-1 rounded-md text-lg transition-colors ${
-                                  soldier.status === 'משמר' 
+                                soldier.status === 'משמר' 
                                     ? 'bg-purple-600 text-white shadow-sm' 
                                     : 'text-gray-600 hover:bg-gray-200'
-                                }`}
+                              }`}
                                 title="משמר"
-                              >
+                            >
                                 <GiTank />
-                              </button>
+                            </button>
                               <button 
                                 onClick={() => updateStatus(index, 'אחר', soldier.customStatus || '')}
                                 className={`px-2 py-1 rounded-md text-lg transition-colors ${
@@ -1101,13 +1130,13 @@ export default function StatusPage() {
                             
                             {/* Custom Status Input (when אחר is selected) */}
                             {soldier.status === 'אחר' && (
-                              <input 
-                                type="text"
+                            <input 
+                              type="text"
                                 value={soldier.customStatus || ''}
-                                onChange={(e) => updateStatus(index, 'אחר', e.target.value)}
+                              onChange={(e) => updateStatus(index, 'אחר', e.target.value)}
                                 placeholder="סטטוס מותאם..."
                                 className="w-20 border-2 border-gray-400 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                              />
+                            />
                             )}
                           </div>
                         </td>
@@ -1269,7 +1298,7 @@ export default function StatusPage() {
                       />
                       <span className="text-gray-700 font-medium flex-1">{soldier.name}</span>
                       <span className="text-gray-600 ml-3 text-sm">{soldier.platoon}</span>
-                      
+                    
                       {/* Status Toggle Icons */}
                       <div className="flex bg-gray-100 rounded-lg p-1">
                         <button 
