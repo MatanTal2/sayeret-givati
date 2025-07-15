@@ -6,6 +6,13 @@ import { Soldier } from '../types';
 import { getCachedData, setCachedData } from '../../lib/cache';
 import { formatReportDate, formatReportTime, formatLastUpdated, formatCacheErrorDate } from '../../lib/dateUtils';
 import { mapRawStatusToStructured, mapStructuredStatusToRaw, getAvailableStatuses } from '../../lib/statusUtils';
+// import { 
+//   createToggleAllVisibleHandler,
+//   createSelectAllHandler,
+//   createSelectNoneHandler,
+//   createSelectByStatusHandler,
+//   createSelectByPlatoonHandler
+// } from '../../lib/selectionUtils';
 
 export default function StatusPage() {
   const [soldiers, setSoldiers] = useState<Soldier[]>([]);
@@ -24,15 +31,14 @@ export default function StatusPage() {
   const [nameFilter, setNameFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
   const [reportText, setReportText] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [isMultiPlatoonReport, setIsMultiPlatoonReport] = useState(false);
   const [includeIdInReport, setIncludeIdInReport] = useState(true);
   
   // State for dropdown selections to show what was selected
-  const [selectedPlatoonForSelection, setSelectedPlatoonForSelection] = useState('');
-  const [selectedStatusForSelection, setSelectedStatusForSelection] = useState('');
+  // const [selectedPlatoonForSelection, setSelectedPlatoonForSelection] = useState('');
+  // const [selectedStatusForSelection, setSelectedStatusForSelection] = useState('');
 
   // Advanced filtering state
   const [showTeamFilter, setShowTeamFilter] = useState(false);
@@ -330,25 +336,7 @@ export default function StatusPage() {
     setSoldiers(updatedSoldiers);
   };
 
-  const selectAll = () => {
-    const updatedSoldiers = soldiers.map(soldier => ({
-      ...soldier,
-      isSelected: true
-    }));
-    setSoldiers(updatedSoldiers);
-  };
-
-  const selectNone = () => {
-    const updatedSoldiers = soldiers.map(soldier => ({
-      ...soldier,
-      isSelected: false
-    }));
-    setSoldiers(updatedSoldiers);
-    // Also clear the dropdown selections for better UX
-    setSelectedPlatoonForSelection('');
-    setSelectedStatusForSelection('');
-  };
-
+  // Keep the toggleAllVisible method since it's used in the table header
   const toggleAllVisible = () => {
     const allVisibleSelected = filteredSoldiers.every(soldier => soldier.isSelected);
     const updatedSoldiers = [...soldiers];
@@ -363,22 +351,6 @@ export default function StatusPage() {
       }
     });
     
-    setSoldiers(updatedSoldiers);
-  };
-
-  const selectByStatus = (status: string) => {
-    const updatedSoldiers = soldiers.map(soldier => ({
-      ...soldier,
-      isSelected: soldier.status === status
-    }));
-    setSoldiers(updatedSoldiers);
-  };
-
-  const selectByPlatoon = (platoon: string) => {
-    const updatedSoldiers = soldiers.map(soldier => ({
-      ...soldier,
-      isSelected: soldier.platoon === platoon
-    }));
     setSoldiers(updatedSoldiers);
   };
 
@@ -664,7 +636,7 @@ export default function StatusPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-gray-50 relative" dir="rtl">
       {/* Header with Logo and Navigation */}
       <header className="bg-white shadow-sm border-b border-gray-200 mb-6">
         <div className="max-w-6xl mx-auto px-4 py-4">
@@ -720,125 +692,22 @@ export default function StatusPage() {
 
         {!error && (
           <>
-            {/* Collapsible Filters */}
-            <div className="bg-white rounded-lg shadow-sm mb-6">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="w-full p-4 flex items-center justify-between text-lg font-semibold text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
-              >
-                <span>סינון</span>
-                <span className={`transform transition-transform text-purple-600 ${showFilters ? 'rotate-180' : ''}`}>
-                  ▼
-                </span>
-              </button>
-              
-              {showFilters && (
-                <div className="px-6 py-6">
-                  <div className="flex flex-wrap gap-6 items-center mb-4">
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm font-medium text-gray-700 whitespace-nowrap">צוות:</label>
-                      <select 
-                        value={platoonFilter}
-                        onChange={(e) => setPlatoonFilter(e.target.value)}
-                        className="border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      >
-                        <option value="">כל הצוותים</option>
-                        {uniquePlatoons.map(platoon => (
-                          <option key={platoon} value={platoon}>
-                            {platoon} ({platoonCounts[platoon]})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="text-gray-400">|</div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm font-medium text-gray-700 whitespace-nowrap">חיפוש לפי שם:</label>
-                      <input 
-                        type="text"
-                        value={nameFilter}
-                        onChange={(e) => setNameFilter(e.target.value)}
-                        placeholder="הקלד שם..."
-                        className="border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                      />
-                    </div>
-                    <div className="text-gray-400">|</div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm font-medium text-gray-700 whitespace-nowrap">סטטוס:</label>
-                      <select 
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      >
-                        <option value="">כל הסטטוסים</option>
-                        <option value="בית">בית</option>
-                        <option value="משמר">משמר</option>
-                        <option value="אחר">אחר</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Selection Controls */}
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold text-purple-700 mb-3">בחירה</h3>
-                    <div className="flex flex-wrap gap-4 items-center justify-between border-t pt-4">
-                      <div className="flex flex-wrap gap-2">
-                        <button 
-                          onClick={selectAll}
-                          className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm"
-                        >
-                          בחר הכל
-                        </button>
-                        <button 
-                          onClick={selectNone}
-                          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm"
-                        >
-                          בטל בחירה
-                        </button>
-                        <div className="flex items-center gap-2">
-                          <label className="text-sm font-medium text-gray-700">בחר לפי צוות:</label>
-                          <select 
-                            value={selectedPlatoonForSelection}
-                            onChange={(e) => {
-                              if (e.target.value) {
-                                selectByPlatoon(e.target.value);
-                                setSelectedPlatoonForSelection(e.target.value);
-                              } else {
-                                setSelectedPlatoonForSelection('');
-                              }
-                            }}
-                            className="border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                          >
-                            <option value="">בחר צוות</option>
-                            {uniquePlatoons.map(platoon => (
-                              <option key={platoon} value={platoon}>{platoon}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-gray-700">בחר לפי סטאטוס:</label>
-                        <select 
-                          value={selectedStatusForSelection}
-                          onChange={(e) => {
-                            if (e.target.value) {
-                              selectByStatus(e.target.value);
-                              setSelectedStatusForSelection(e.target.value);
-                            } else {
-                              setSelectedStatusForSelection('');
-                            }
-                          }}
-                          className="border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                        >
-                          <option value="">בחר סטאטוס</option>
-                          <option value="בית">בית</option>
-                          <option value="משמר">משמר</option>
-                          <option value="אחר">אחר</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
+            {/* Search Bar */}
+            <div className="mb-6 flex justify-center">
+              <div className="relative w-full max-w-md">
+                <input
+                  type="text"
+                  value={nameFilter}
+                  onChange={(e) => setNameFilter(e.target.value)}
+                  placeholder="חיפוש לפי שם..."
+                  className="w-full border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600 pl-10"
+                />
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                  </svg>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Add New Soldier */}
@@ -1243,6 +1112,36 @@ export default function StatusPage() {
 
             {/* Soldiers List - Mobile */}
             <div className="md:hidden space-y-4 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-gray-800">צוות:</span>
+                  <select
+                    value={platoonFilter}
+                    onChange={(e) => setPlatoonFilter(e.target.value)}
+                    className="border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    <option value="">כל הצוותים</option>
+                    {uniquePlatoons.map(platoon => (
+                      <option key={platoon} value={platoon}>
+                        {platoon} ({platoonCounts[platoon]})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-gray-800">סטטוס:</span>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    <option value="">כל הסטטוסים</option>
+                    <option value="בית">בית</option>
+                    <option value="משמר">משמר</option>
+                    <option value="אחר">אחר</option>
+                  </select>
+                </div>
+              </div>
               <div className="max-h-96 overflow-auto space-y-4">
                 {filteredSoldiers.map((soldier, index) => (
                   <div key={index} className={`p-4 rounded-lg border ${soldier.isSelected ? 'bg-purple-50 border-purple-200' : 'bg-white border-gray-200'}`}>
