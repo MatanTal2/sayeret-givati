@@ -27,9 +27,7 @@ export default function StatusPage() {
   const [passwordError, setPasswordError] = useState('');
   const [isUpdatingServer, setIsUpdatingServer] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [platoonFilter, setPlatoonFilter] = useState('');
   const [nameFilter, setNameFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [reportText, setReportText] = useState('');
   const [showPreview, setShowPreview] = useState(false);
@@ -198,30 +196,12 @@ export default function StatusPage() {
   }, [soldiers, debouncedNameFilter, selectedTeams, selectedStatuses]);
 
   // Memoized expensive calculations
-  const { selectedCount, totalCount, filteredSelectedCount, filteredTotalCount, uniquePlatoons, platoonCounts, changedSoldiers } = useMemo(() => {
+  const { selectedCount, totalCount, filteredSelectedCount, filteredTotalCount, uniquePlatoons, changedSoldiers } = useMemo(() => {
     const selectedCount = soldiers.filter(s => s.isSelected).length;
     const totalCount = soldiers.length;
     const filteredSelectedCount = filteredSoldiers.filter(s => s.isSelected).length;
     const filteredTotalCount = filteredSoldiers.length;
     const uniquePlatoons = [...new Set(soldiers.map(s => s.platoon))].sort();
-    
-    // Pre-calculate platoon counts to avoid expensive inline calculations
-    const platoonCounts: Record<string, number> = {};
-    uniquePlatoons.forEach(platoon => {
-      let platoonSoldiers = soldiers.filter(s => s.platoon === platoon);
-      
-      if (nameFilter) {
-        platoonSoldiers = platoonSoldiers.filter(soldier => 
-          soldier.name.toLowerCase().includes(nameFilter.toLowerCase())
-        );
-      }
-      
-      if (statusFilter) {
-        platoonSoldiers = platoonSoldiers.filter(soldier => soldier.status === statusFilter);
-      }
-      
-      platoonCounts[platoon] = platoonSoldiers.length;
-    });
 
     // Detect changed soldiers (excluding manually added ones)
     const changedSoldiers = soldiers.filter(soldier => {
@@ -243,10 +223,9 @@ export default function StatusPage() {
       filteredSelectedCount,
       filteredTotalCount,
       uniquePlatoons,
-      platoonCounts,
       changedSoldiers
     };
-  }, [soldiers, filteredSoldiers, nameFilter, statusFilter, originalSoldiers]);
+  }, [soldiers, filteredSoldiers, originalSoldiers]);
 
   // Optimized onChange handlers to prevent latency
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -857,7 +836,7 @@ export default function StatusPage() {
               <div>
                 <p className="text-lg font-medium text-gray-800">
                   נבחרו: {filteredSelectedCount} מתוך {filteredTotalCount}
-                  {(platoonFilter || nameFilter || selectedTeams.length > 0 || selectedStatuses.length > 0) && (
+                  {(nameFilter || selectedTeams.length > 0 || selectedStatuses.length > 0) && (
                     <span className="text-sm text-gray-600 mr-2">
                       (סה&quot;כ: {selectedCount} מתוך {totalCount})
                     </span>
@@ -1112,34 +1091,119 @@ export default function StatusPage() {
 
             {/* Soldiers List - Mobile */}
             <div className="md:hidden space-y-4 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-gray-800">צוות:</span>
-                  <select
-                    value={platoonFilter}
-                    onChange={(e) => setPlatoonFilter(e.target.value)}
-                    className="border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              <div className="flex flex-col gap-3 mb-4">
+                {/* Team Filter - Mobile */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowTeamFilter(!showTeamFilter)}
+                    className="w-full flex items-center justify-between px-3 py-2 border-2 border-gray-400 rounded-md text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   >
-                    <option value="">כל הצוותים</option>
-                    {uniquePlatoons.map(platoon => (
-                      <option key={platoon} value={platoon}>
-                        {platoon} ({platoonCounts[platoon]})
-                      </option>
-                    ))}
-                  </select>
+                    <span>
+                      {selectedTeams.length === 0 
+                        ? 'כל הצוותים' 
+                        : selectedTeams.length === 1 
+                          ? selectedTeams[0] 
+                          : `${selectedTeams.length} צוותים נבחרו`
+                      }
+                    </span>
+                    <span className={`transform transition-transform ${showTeamFilter ? 'rotate-180' : ''}`}>▼</span>
+                  </button>
+                  {showTeamFilter && (
+                    <div className="filter-dropdown absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                      <div className="p-3 max-h-48 overflow-y-auto">
+                        <div className="space-y-2">
+                          {uniquePlatoons.map(platoon => (
+                            <label key={platoon} className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={selectedTeams.includes(platoon)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedTeams([...selectedTeams, platoon]);
+                                  } else {
+                                    setSelectedTeams(selectedTeams.filter(t => t !== platoon));
+                                  }
+                                }}
+                                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                              />
+                              <span className="text-sm text-gray-700">{platoon}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <div className="mt-3 pt-2 border-t border-gray-200 flex gap-2">
+                          <button
+                            onClick={() => setSelectedTeams([])}
+                            className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                          >
+                            נקה
+                          </button>
+                          <button
+                            onClick={() => setShowTeamFilter(false)}
+                            className="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
+                          >
+                            סגור
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-gray-800">סטטוס:</span>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+
+                {/* Status Filter - Mobile */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowStatusFilter(!showStatusFilter)}
+                    className="w-full flex items-center justify-between px-3 py-2 border-2 border-gray-400 rounded-md text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   >
-                    <option value="">כל הסטטוסים</option>
-                    <option value="בית">בית</option>
-                    <option value="משמר">משמר</option>
-                    <option value="אחר">אחר</option>
-                  </select>
+                    <span>
+                      {selectedStatuses.length === 0 
+                        ? 'כל הסטטוסים' 
+                        : selectedStatuses.length === 1 
+                          ? selectedStatuses[0] 
+                          : `${selectedStatuses.length} סטטוסים נבחרו`
+                      }
+                    </span>
+                    <span className={`transform transition-transform ${showStatusFilter ? 'rotate-180' : ''}`}>▼</span>
+                  </button>
+                  {showStatusFilter && (
+                    <div className="filter-dropdown absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                      <div className="p-3 max-h-48 overflow-y-auto">
+                        <div className="space-y-2">
+                          {getAvailableStatuses().map(status => (
+                            <label key={status} className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={selectedStatuses.includes(status)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedStatuses([...selectedStatuses, status]);
+                                  } else {
+                                    setSelectedStatuses(selectedStatuses.filter(s => s !== status));
+                                  }
+                                }}
+                                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                              />
+                              <span className="text-sm text-gray-700">{status}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <div className="mt-3 pt-2 border-t border-gray-200 flex gap-2">
+                          <button
+                            onClick={() => setSelectedStatuses([])}
+                            className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                          >
+                            נקה
+                          </button>
+                          <button
+                            onClick={() => setShowStatusFilter(false)}
+                            className="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
+                          >
+                            סגור
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="max-h-96 overflow-auto space-y-4">
