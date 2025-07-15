@@ -143,4 +143,4 @@ export const createSelectByPlatoonHandler = (
   return () => {
     setSoldiers((prev: Soldier[]) => selectSoldiersByPlatoon(prev, platoon));
   };
-}; 
+};
