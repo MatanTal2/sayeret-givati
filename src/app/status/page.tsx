@@ -899,12 +899,23 @@ export default function StatusPage() {
             {/* Soldiers Table - Desktop */}
             <div className="hidden md:block bg-white rounded-lg shadow-sm mb-6">
               <div className="max-h-96 overflow-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 sticky top-0">
+                <table className="w-full table-fixed">
+                  <colgroup>
+                    <col className="w-16" />  {/* Checkbox */}
+                    <col className="w-4" />   {/* Separator */}
+                    <col className="w-40" />  {/* Name */}
+                    <col className="w-4" />   {/* Separator */}
+                    <col className="w-28" />  {/* Team */}
+                    <col className="w-4" />   {/* Separator */}
+                    <col className="w-36" />  {/* Status (compact for icons) */}
+                    <col className="w-4" />   {/* Separator */}
+                    <col />                   {/* Notes (flexible) */}
+                  </colgroup>
+                  <thead className="bg-purple-100 sticky top-0">
                     <tr>
-                      <th className="px-2 py-3 text-center text-sm font-medium text-gray-700 w-16">
+                      <th className="px-2 py-3 text-center text-sm font-medium text-gray-700">
                         <div className="flex items-center justify-center gap-2">
-                          <span className="text-xs">בחירה</span>
+                          <span className="text-sm">בחירה</span>
                           <input 
                             type="checkbox"
                             checked={filteredSoldiers.length > 0 && filteredSoldiers.every(soldier => soldier.isSelected)}
@@ -924,7 +935,7 @@ export default function StatusPage() {
                       <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">שם</th>
                       <th className="px-1 py-3 text-gray-400">|</th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-gray-700 relative">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-start gap-2">
                           <span>צוות</span>
                           <button
                             onClick={() => setShowTeamFilter(!showTeamFilter)}
@@ -975,7 +986,7 @@ export default function StatusPage() {
                       </th>
                       <th className="px-1 py-3 text-gray-400">|</th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-gray-700 relative">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-start gap-2">
                           <span>סטטוס</span>
                           <button
                             onClick={() => setShowStatusFilter(!showStatusFilter)}
@@ -1045,34 +1056,54 @@ export default function StatusPage() {
                         <td className="px-4 py-3 text-gray-700">{soldier.platoon}</td>
                         <td className="px-1 py-3 text-gray-400 text-center">|</td>
                         <td className="px-4 py-3">
-                          <div className="flex gap-1">
-                            <button 
-                              onClick={() => updateStatus(index, 'בית')}
-                              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                                soldier.status === 'בית' 
-                                  ? 'bg-purple-600 text-white' 
-                                  : 'bg-gray-200 text-gray-700 hover:bg-purple-100'
-                              }`}
-                            >
-                              בית
-                            </button>
-                            <button 
-                              onClick={() => updateStatus(index, 'משמר')}
-                              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                                soldier.status === 'משמר' 
-                                  ? 'bg-purple-600 text-white' 
-                                  : 'bg-gray-200 text-gray-700 hover:bg-purple-100'
-                              }`}
-                            >
-                              משמר
-                            </button>
-                            <input 
-                              type="text"
-                              value={soldier.status === 'אחר' ? soldier.customStatus || '' : ''}
-                              onChange={(e) => updateStatus(index, 'אחר', e.target.value)}
-                              placeholder="אחר"
-                              className="flex-1 min-w-20 border-2 border-gray-400 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                            />
+                          <div className="flex items-center gap-2">
+                            {/* Status Toggle Icons */}
+                            <div className="flex bg-gray-100 rounded-lg p-1">
+                              <button 
+                                onClick={() => updateStatus(index, 'בית')}
+                                className={`px-2 py-1 rounded-md text-lg transition-colors ${
+                                  soldier.status === 'בית' 
+                                    ? 'bg-purple-600 text-white shadow-sm' 
+                                    : 'text-gray-600 hover:bg-gray-200'
+                                }`}
+                                title="בית"
+                              >
+                                <BsFillHouseFill />
+                              </button>
+                              <button 
+                                onClick={() => updateStatus(index, 'משמר')}
+                                className={`px-2 py-1 rounded-md text-lg transition-colors ${
+                                  soldier.status === 'משמר' 
+                                    ? 'bg-purple-600 text-white shadow-sm' 
+                                    : 'text-gray-600 hover:bg-gray-200'
+                                }`}
+                                title="משמר"
+                              >
+                                <GiTank />
+                              </button>
+                              <button 
+                                onClick={() => updateStatus(index, 'אחר', soldier.customStatus || '')}
+                                className={`px-2 py-1 rounded-md text-lg transition-colors ${
+                                  soldier.status === 'אחר' 
+                                    ? 'bg-purple-600 text-white shadow-sm' 
+                                    : 'text-gray-600 hover:bg-gray-200'
+                                }`}
+                                title="אחר"
+                              >
+                                <MdNotListedLocation />
+                              </button>
+                            </div>
+                            
+                            {/* Custom Status Input (when אחר is selected) */}
+                            {soldier.status === 'אחר' && (
+                              <input 
+                                type="text"
+                                value={soldier.customStatus || ''}
+                                onChange={(e) => updateStatus(index, 'אחר', e.target.value)}
+                                placeholder="סטטוס מותאם..."
+                                className="flex-1 min-w-20 border-2 border-gray-400 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                              />
+                            )}
                           </div>
                         </td>
                         <td className="px-1 py-3 text-gray-400 text-center">|</td>
