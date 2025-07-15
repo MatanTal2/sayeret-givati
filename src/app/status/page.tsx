@@ -9,6 +9,9 @@ import { mapRawStatusToStructured, mapStructuredStatusToRaw, getAvailableStatuse
 import { GiTank } from "react-icons/gi";
 import { BsFillHouseFill, BsPersonAdd } from "react-icons/bs";
 import { MdNotListedLocation } from "react-icons/md";
+import { FaWhatsapp } from "react-icons/fa";
+import { MdDownload } from "react-icons/md";
+import { Download } from "lucide-react";
 // import { 
 //   createToggleAllVisibleHandler,
 //   createSelectAllHandler,
@@ -36,6 +39,7 @@ export default function StatusPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [isMultiPlatoonReport, setIsMultiPlatoonReport] = useState(false);
   const [includeIdInReport, setIncludeIdInReport] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   // State for dropdown selections to show what was selected
   // const [selectedPlatoonForSelection, setSelectedPlatoonForSelection] = useState('');
@@ -609,6 +613,28 @@ export default function StatusPage() {
     }
   };
 
+  const showWhatsAppNotSupported = () => {
+    alert('פונקציית הודעת WhatsApp עדיין לא תמיכה בדפדפן זה. אנא נסה בדפדפן אחר.');
+  };
+
+  const downloadReport = () => {
+    setIsDownloading(true);
+    
+    const blob = new Blob([reportText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `דוח_שבצ״ק_מסייעת_${formatReportDate(new Date())}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    // Reset downloading state after 2 seconds
+    setTimeout(() => {
+      setIsDownloading(false);
+    }, 2000);
+  };
 
 
   if (loading) {
@@ -935,15 +961,15 @@ export default function StatusPage() {
               <div className="max-h-96 overflow-auto">
                 <table className="w-full table-fixed">
                   <colgroup>
-                    <col className="w-16" />  {/* Checkbox */}
-                    <col className="w-4" />   {/* Separator */}
-                    <col className="w-40" />  {/* Name */}
-                    <col className="w-4" />   {/* Separator */}
-                    <col className="w-28" />  {/* Team */}
-                    <col className="w-4" />   {/* Separator */}
-                    <col className={hasOtherStatus ? "w-42" : "w-36"} />  {/* Status (dynamic width for other input) */}
-                    <col className="w-4" />   {/* Separator */}
-                    <col className={hasOtherStatus ? "w-56" : ""} />  {/* Notes (more space when status is compact) */}
+                    <col className="w-16" />
+                    <col className="w-4" />
+                    <col className="w-40" />
+                    <col className="w-4" />
+                    <col className="w-28" />
+                    <col className="w-4" />
+                    <col className={hasOtherStatus ? "w-48" : "w-36"} />
+                    <col className="w-4" />
+                    <col className={hasOtherStatus ? "w-56" : ""} />
                   </colgroup>
                   <thead className="bg-purple-100 sticky top-0">
                     <tr>
@@ -1378,12 +1404,33 @@ export default function StatusPage() {
                   readOnly
                   className="w-full h-64 border border-gray-300 rounded-md p-3 font-mono text-sm bg-gray-50 text-black"
                 />
-                <button 
-                  onClick={copyToClipboard}
-                  className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-                >
-                  העתק ללוח
-                </button>
+                <div className="flex gap-2 mt-4">
+                  <button 
+                    onClick={copyToClipboard}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                  >
+                    העתק ללוח
+                  </button>
+                  <button 
+                    onClick={showWhatsAppNotSupported}
+                    className="p-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
+                    title="שלח ל-WhatsApp"
+                  >
+                    <FaWhatsapp className="text-lg" />
+                  </button>
+                  <button 
+                    onClick={downloadReport}
+                    className="p-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+                    title="הורד דוח"
+                    disabled={isDownloading}
+                  >
+                    {isDownloading ? (
+                      <Download className="animate-spin text-lg" />
+                    ) : (
+                      <MdDownload className="text-lg" />
+                    )}
+                  </button>
+                </div>
               </div>
             )}
           </>
