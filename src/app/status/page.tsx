@@ -198,6 +198,11 @@ export default function StatusPage() {
     });
   }, [soldiers, debouncedNameFilter, selectedTeams, selectedStatuses]);
 
+  // Check if any filtered soldier has "other" status for dynamic column sizing
+  const hasOtherStatus = useMemo(() => {
+    return filteredSoldiers.some(s => s.status === 'אחר');
+  }, [filteredSoldiers]);
+
   // Memoized expensive calculations
   const { selectedCount, totalCount, filteredSelectedCount, filteredTotalCount, uniquePlatoons, changedSoldiers } = useMemo(() => {
     const selectedCount = soldiers.filter(s => s.isSelected).length;
@@ -907,9 +912,9 @@ export default function StatusPage() {
                     <col className="w-4" />   {/* Separator */}
                     <col className="w-28" />  {/* Team */}
                     <col className="w-4" />   {/* Separator */}
-                    <col className="w-36" />  {/* Status (compact for icons) */}
+                    <col className={hasOtherStatus ? "w-42" : "w-36"} />  {/* Status (dynamic width for other input) */}
                     <col className="w-4" />   {/* Separator */}
-                    <col />                   {/* Notes (flexible) */}
+                    <col className={hasOtherStatus ? "w-56" : ""} />  {/* Notes (more space when status is compact) */}
                   </colgroup>
                   <thead className="bg-purple-100 sticky top-0">
                     <tr>
@@ -1101,7 +1106,7 @@ export default function StatusPage() {
                                 value={soldier.customStatus || ''}
                                 onChange={(e) => updateStatus(index, 'אחר', e.target.value)}
                                 placeholder="סטטוס מותאם..."
-                                className="flex-1 min-w-20 border-2 border-gray-400 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                                className="w-20 border-2 border-gray-400 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
                               />
                             )}
                           </div>
