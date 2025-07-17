@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Soldier, FormErrors, NewSoldierForm, FilterState } from '../types';
 import { getCachedData, setCachedData } from '../lib/cache';
-import { formatReportDate, formatReportTime, formatLastUpdated, formatCacheErrorDate } from '../lib/dateUtils';
+import { formatLastUpdated, formatCacheErrorDate } from '../lib/dateUtils';
 import { mapRawStatusToStructured, mapStructuredStatusToRaw, getAvailableStatuses } from '../lib/statusUtils';
 
 export function useSoldiers() {
