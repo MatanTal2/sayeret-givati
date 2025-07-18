@@ -98,12 +98,37 @@ export default function HomePage() {
 
         {/* Footer */}
         <footer className="text-center py-8 text-gray-600">
-          <p className="text-sm">
-            מערכת ניהול מסייעת • גרסה 0.2.0-alpha
-          </p>
-          <p className="text-xs mt-2">
-            © Matan Tal
-          </p>
+          {/* Contact & Support Section */}
+          <div className="mb-6 p-4 bg-gray-100 rounded-lg max-w-2xl mx-auto">
+            <h3 className="text-base font-semibold text-gray-800 mb-3">צור קשר ותמיכה</h3>
+            <div className="space-y-2 text-sm">
+              <p className="flex items-center justify-center gap-2">
+                <span className="text-lg">📧</span>
+                <span>אימייל: support@sayeret-givati.com</span>
+              </p>
+              <p className="flex items-center justify-center gap-2">
+                <span className="text-lg">📞</span>
+                <span>טלפון: 050-123-4567</span>
+              </p>
+              <p className="flex items-center justify-center gap-2">
+                <span className="text-lg">💬</span>
+                <span>WhatsApp: 050-123-4567</span>
+              </p>
+              <p className="text-xs text-gray-500 mt-3">
+                זמינים 24/7 לתמיכה טכנית ועזרה במערכת
+              </p>
+            </div>
+          </div>
+          
+          {/* Version & Copyright */}
+          <div className="border-t border-gray-200 pt-4">
+            <p className="text-sm">
+              מערכת ניהול מסייעת • גרסה 0.2.0-alpha
+            </p>
+            <p className="text-xs mt-2">
+              © Matan Tal
+            </p>
+          </div>
         </footer>
       </div>
     </div>
