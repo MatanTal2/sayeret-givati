@@ -5,13 +5,15 @@ import Link from 'next/link';
 import { Soldier } from '../types';
 import { getCachedData, setCachedData } from '../../lib/cache';
 import { formatReportDate, formatReportTime, formatLastUpdated, formatCacheErrorDate } from '../../lib/dateUtils';
-import { mapRawStatusToStructured, mapStructuredStatusToRaw, getAvailableStatuses } from '../../lib/statusUtils';
+import { mapRawStatusToStructured, mapStructuredStatusToRaw } from '../../lib/statusUtils';
 import { GiTank } from "react-icons/gi";
 import { BsFillHouseFill, BsPersonAdd } from "react-icons/bs";
 import { MdNotListedLocation } from "react-icons/md";
 import { FaWhatsapp } from "react-icons/fa";
 import { MdDownload } from "react-icons/md";
 import { Download } from "lucide-react";
+import SoldiersTableDesktop from '../components/SoldiersTableDesktop';
+import SoldiersTableMobile from '../components/SoldiersTableMobile';
 // import { 
 //   createToggleAllVisibleHandler,
 //   createSelectAllHandler,
@@ -957,435 +959,45 @@ export default function StatusPage() {
             )}
 
             {/* Soldiers Table - Desktop */}
-            <div className="hidden md:block bg-white rounded-lg shadow-sm mb-6">
-              <div className="max-h-96 overflow-auto">
-                <table className="w-full table-fixed">
-                  <colgroup>
-                    <col className="w-16" />
-                    <col className="w-4" />
-                    <col className="w-40" />
-                    <col className="w-4" />
-                    <col className="w-28" />
-                    <col className="w-4" />
-                    <col className={hasOtherStatus ? "w-48" : "w-36"} />
-                    <col className="w-4" />
-                    <col className={hasOtherStatus ? "w-56" : ""} />
-                  </colgroup>
-                  <thead className="bg-purple-100 sticky top-0">
-                    <tr>
-                      <th className="px-2 py-3 text-center text-sm font-medium text-gray-700">
-                        <div className="flex items-center justify-center gap-2">
-                          <span className="text-sm">בחירה</span>
-                          <input 
-                            type="checkbox"
-                            checked={filteredSoldiers.length > 0 && filteredSoldiers.every(soldier => soldier.isSelected)}
-                            ref={(input) => {
-                              if (input) {
-                                const someSelected = filteredSoldiers.some(soldier => soldier.isSelected);
-                                const allSelected = filteredSoldiers.every(soldier => soldier.isSelected);
-                                input.indeterminate = someSelected && !allSelected;
-                              }
-                            }}
-                            onChange={toggleAllVisible}
-                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                          />
-                        </div>
-                      </th>
-                      <th className="px-1 py-3 text-gray-400">|</th>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">שם</th>
-                      <th className="px-1 py-3 text-gray-400">|</th>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700 relative">
-                        <div className="flex items-center justify-start gap-2">
-                          <span>צוות</span>
-                          <button
-                            onClick={() => setShowTeamFilter(!showTeamFilter)}
-                            className="text-purple-600 hover:text-purple-800 text-xs"
-                          >
-                            ▼
-                          </button>
-                        </div>
-                        {showTeamFilter && (
-                          <div className="filter-dropdown absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 min-w-48">
-                            <div className="p-3 max-h-48 overflow-y-auto">
-                              <div className="space-y-2">
-                                {uniquePlatoons.map(platoon => (
-                                  <label key={platoon} className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={selectedTeams.includes(platoon)}
-                                      onChange={(e) => {
-                                        if (e.target.checked) {
-                                          setSelectedTeams([...selectedTeams, platoon]);
-                                        } else {
-                                          setSelectedTeams(selectedTeams.filter(t => t !== platoon));
-                                        }
-                                      }}
-                                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                    />
-                                    <span className="text-sm text-gray-700">{platoon}</span>
-                                  </label>
-                                ))}
-                              </div>
-                              <div className="mt-3 pt-2 border-t border-gray-200 flex gap-2">
-                                <button
-                                  onClick={() => setSelectedTeams([])}
-                                  className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                                >
-                                  נקה
-                                </button>
-                                <button
-                                  onClick={() => setShowTeamFilter(false)}
-                                  className="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
-                                >
-                                  סגור
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </th>
-                      <th className="px-1 py-3 text-gray-400">|</th>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700 relative">
-                        <div className="flex items-center justify-start gap-2">
-                          <span>סטטוס</span>
-                          <button
-                            onClick={() => setShowStatusFilter(!showStatusFilter)}
-                            className="text-purple-600 hover:text-purple-800 text-xs"
-                          >
-                            ▼
-                          </button>
-                        </div>
-                        {showStatusFilter && (
-                          <div className="filter-dropdown absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 min-w-36">
-                            <div className="p-3 max-h-48 overflow-y-auto">
-                              <div className="space-y-2">
-                                {getAvailableStatuses().map(status => (
-                                  <label key={status} className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={selectedStatuses.includes(status)}
-                                      onChange={(e) => {
-                                        if (e.target.checked) {
-                                          setSelectedStatuses([...selectedStatuses, status]);
-                                        } else {
-                                          setSelectedStatuses(selectedStatuses.filter(s => s !== status));
-                                        }
-                                      }}
-                                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                    />
-                                    <span className="text-sm text-gray-700">{status}</span>
-                                  </label>
-                                ))}
-                              </div>
-                              <div className="mt-3 pt-2 border-t border-gray-200 flex gap-2">
-                                <button
-                                  onClick={() => setSelectedStatuses([])}
-                                  className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                                >
-                                  נקה
-                                </button>
-                                <button
-                                  onClick={() => setShowStatusFilter(false)}
-                                  className="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
-                                >
-                                  סגור
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </th>
-                      <th className="px-1 py-3 text-gray-400">|</th>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">הערות</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredSoldiers.map((soldier, index) => (
-                      <tr key={index} className={`border-t ${soldier.isSelected ? 'bg-purple-50' : 'bg-white'}`}>
-                        <td className="px-2 py-3 text-center">
-                          <input 
-                            type="checkbox"
-                            checked={soldier.isSelected}
-                            onChange={() => toggleSelection(index)}
-                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                          />
-                        </td>
-                        <td className="px-1 py-3 text-gray-400 text-center">|</td>
-                        <td className="px-4 py-3 text-gray-800 font-medium">{soldier.name}</td>
-                        <td className="px-1 py-3 text-gray-400 text-center">|</td>
-                        <td className="px-4 py-3 text-gray-700">{soldier.platoon}</td>
-                        <td className="px-1 py-3 text-gray-400 text-center">|</td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            {/* Status Toggle Icons */}
-                            <div className="flex bg-gray-100 rounded-lg p-1">
-                            <button 
-                              onClick={() => updateStatus(index, 'בית')}
-                                className={`px-2 py-1 rounded-md text-lg transition-colors ${
-                                soldier.status === 'בית' 
-                                    ? 'bg-purple-600 text-white shadow-sm' 
-                                    : 'text-gray-600 hover:bg-gray-200'
-                              }`}
-                                title="בית"
-                            >
-                                <BsFillHouseFill />
-                            </button>
-                            <button 
-                              onClick={() => updateStatus(index, 'משמר')}
-                                className={`px-2 py-1 rounded-md text-lg transition-colors ${
-                                soldier.status === 'משמר' 
-                                    ? 'bg-purple-600 text-white shadow-sm' 
-                                    : 'text-gray-600 hover:bg-gray-200'
-                              }`}
-                                title="משמר"
-                            >
-                                <GiTank />
-                            </button>
-                              <button 
-                                onClick={() => updateStatus(index, 'אחר', soldier.customStatus || '')}
-                                className={`px-2 py-1 rounded-md text-lg transition-colors ${
-                                  soldier.status === 'אחר' 
-                                    ? 'bg-purple-600 text-white shadow-sm' 
-                                    : 'text-gray-600 hover:bg-gray-200'
-                                }`}
-                                title="אחר"
-                              >
-                                <MdNotListedLocation />
-                              </button>
-                            </div>
-                            
-                            {/* Custom Status Input (when אחר is selected) */}
-                            {soldier.status === 'אחר' && (
-                            <input 
-                              type="text"
-                                value={soldier.customStatus || ''}
-                              onChange={(e) => updateStatus(index, 'אחר', e.target.value)}
-                                placeholder="סטטוס מותאם..."
-                                className="w-20 border-2 border-gray-400 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                            />
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-1 py-3 text-gray-400 text-center">|</td>
-                        <td className="px-4 py-3">
-                          <input 
-                            type="text"
-                            value={soldier.notes || ''}
-                            onChange={(e) => updateNotes(index, e.target.value)}
-                            placeholder="הערות..."
-                            className="w-full border-2 border-gray-400 rounded-md px-2 py-1 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <SoldiersTableDesktop
+              soldiers={filteredSoldiers}
+              hasOtherStatus={hasOtherStatus}
+              uniquePlatoons={uniquePlatoons}
+              selectedTeams={selectedTeams}
+              selectedStatuses={selectedStatuses}
+              showTeamFilter={showTeamFilter}
+              showStatusFilter={showStatusFilter}
+              onToggleSelection={toggleSelection}
+              onToggleAllVisible={toggleAllVisible}
+              onStatusChange={updateStatus}
+              onNotesChange={updateNotes}
+              onTeamFilterToggle={() => setShowTeamFilter(!showTeamFilter)}
+              onStatusFilterToggle={() => setShowStatusFilter(!showStatusFilter)}
+              onTeamFilterChange={setSelectedTeams}
+              onStatusFilterChange={setSelectedStatuses}
+              allVisibleSelected={filteredSoldiers.length > 0 && filteredSoldiers.every(soldier => soldier.isSelected)}
+              someVisibleSelected={filteredSoldiers.some(soldier => soldier.isSelected)}
+            />
 
-            {/* Soldiers Table - Mobile with Integrated Filter Header */}
-            <div className="md:hidden bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
-              {/* Table Header Row - Integrated Filter */}
-              <div className="bg-purple-100 border-b border-purple-200">
-                <div className="grid grid-cols-2">
-                  {/* Team Filter Column */}
-                  <div className="relative filter-dropdown border-l border-purple-200">
-                    <button
-                      onClick={() => setShowTeamFilter(!showTeamFilter)}
-                      className="w-full h-12 px-4 flex items-center justify-between text-right text-sm font-medium text-purple-800 hover:bg-purple-200 focus:outline-none focus:bg-purple-200 transition-colors"
-                    >
-                <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-purple-700">צוות:</span>
-                        <span className="text-sm text-purple-900">
-                          {selectedTeams.length === 0 
-                            ? 'הכל' 
-                            : selectedTeams.length === 1 
-                              ? selectedTeams[0] 
-                              : `${selectedTeams.length} נבחרו`
-                          }
-                        </span>
-                      </div>
-                      <span className={`text-purple-700 transform transition-transform ${showTeamFilter ? 'rotate-180' : ''}`}>▼</span>
-                    </button>
-                    {showTeamFilter && (
-                      <div className="filter-dropdown absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-b-md shadow-lg z-20">
-                        <div className="p-3 max-h-48 overflow-y-auto">
-                          <div className="space-y-2">
-                    {uniquePlatoons.map(platoon => (
-                              <label key={platoon} className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedTeams.includes(platoon)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setSelectedTeams([...selectedTeams, platoon]);
-                                    } else {
-                                      setSelectedTeams(selectedTeams.filter(t => t !== platoon));
-                                    }
-                                  }}
-                                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                />
-                                <span className="text-sm text-gray-700">{platoon}</span>
-                              </label>
-                            ))}
-                </div>
-                          <div className="mt-3 pt-2 border-t border-gray-200 flex gap-2">
-                            <button
-                              onClick={() => setSelectedTeams([])}
-                              className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                            >
-                              נקה
-                            </button>
-                            <button
-                              onClick={() => setShowTeamFilter(false)}
-                              className="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
-                            >
-                              ✓
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Status Filter Column */}
-                  <div className="relative filter-dropdown border-r border-purple-200">
-                    <button
-                      onClick={() => setShowStatusFilter(!showStatusFilter)}
-                      className="w-full h-12 px-4 flex items-center justify-between text-right text-sm font-medium text-purple-800 hover:bg-purple-200 focus:outline-none focus:bg-purple-200 transition-colors"
-                    >
-                <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-purple-700">סטטוס:</span>
-                        <span className="text-sm text-purple-900">
-                          {selectedStatuses.length === 0 
-                            ? 'הכל' 
-                            : selectedStatuses.length === 1 
-                              ? selectedStatuses[0] 
-                              : `${selectedStatuses.length} נבחרו`
-                          }
-                        </span>
-                      </div>
-                      <span className={`text-purple-700 transform transition-transform ${showStatusFilter ? 'rotate-180' : ''}`}>▼</span>
-                    </button>
-                    {showStatusFilter && (
-                      <div className="filter-dropdown absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-b-md shadow-lg z-20">
-                        <div className="p-3 max-h-48 overflow-y-auto">
-                          <div className="space-y-2">
-                            {getAvailableStatuses().map(status => (
-                              <label key={status} className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedStatuses.includes(status)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setSelectedStatuses([...selectedStatuses, status]);
-                                    } else {
-                                      setSelectedStatuses(selectedStatuses.filter(s => s !== status));
-                                    }
-                                  }}
-                                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                />
-                                <span className="text-sm text-gray-700">{status}</span>
-                              </label>
-                            ))}
-                          </div>
-                          <div className="mt-3 pt-2 border-t border-gray-200 flex gap-2">
-                            <button
-                              onClick={() => setSelectedStatuses([])}
-                              className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                            >
-                              נקה
-                            </button>
-                            <button
-                              onClick={() => setShowStatusFilter(false)}
-                              className="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
-                            >
-                              ✓
-                            </button>
-                </div>
-              </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Soldiers Data */}
-              <div className="max-h-96 overflow-auto space-y-4">
-                {filteredSoldiers.map((soldier, index) => (
-                  <div key={index} className={`p-4 rounded-lg border ${soldier.isSelected ? 'bg-purple-50 border-purple-200' : 'bg-white border-gray-200'}`}>
-                    {/* Row 1: Checkbox | Name | Platoon | Status Toggle */}
-                    <div className="flex items-center gap-5 mb-3">
-                      <input 
-                        type="checkbox"
-                        checked={soldier.isSelected}
-                        onChange={() => toggleSelection(index)}
-                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                      />
-                      <span className="text-gray-700 font-medium flex-1">{soldier.name}</span>
-                      <span className="text-gray-600 ml-3 text-sm">{soldier.platoon}</span>
-                    
-                      {/* Status Toggle Icons */}
-                      <div className="flex bg-gray-100 rounded-lg p-1">
-                        <button 
-                          onClick={() => updateStatus(index, 'בית')}
-                          className={`px-2 py-1 rounded-md text-lg transition-colors ${
-                            soldier.status === 'בית' 
-                              ? 'bg-purple-600 text-white shadow-sm' 
-                              : 'text-gray-600 hover:bg-gray-200'
-                          }`}
-                          title="בית"
-                        >
-                          <BsFillHouseFill />
-                        </button>
-                        <button 
-                          onClick={() => updateStatus(index, 'משמר')}
-                          className={`px-2 py-1 rounded-md text-lg transition-colors ${
-                            soldier.status === 'משמר' 
-                              ? 'bg-purple-600 text-white shadow-sm' 
-                              : 'text-gray-600 hover:bg-gray-200'
-                          }`}
-                          title="משמר"
-                        >
-                          <GiTank />
-                        </button>
-                        <button 
-                          onClick={() => updateStatus(index, 'אחר', soldier.customStatus || '')}
-                          className={`px-2 py-1 rounded-md text-lg transition-colors ${
-                            soldier.status === 'אחר' 
-                              ? 'bg-purple-600 text-white shadow-sm' 
-                              : 'text-gray-600 hover:bg-gray-200'
-                          }`}
-                          title="אחר"
-                        >
-                          <MdNotListedLocation />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Row 2: Notes + Custom Status (when selected) */}
-                    <div className="flex gap-3">
-                      <input 
-                        type="text"
-                        value={soldier.notes || ''}
-                        onChange={(e) => updateNotes(index, e.target.value)}
-                        placeholder="הערות..."
-                        className="flex-1 border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                      />
-                      {soldier.status === 'אחר' && (
-                        <input 
-                          type="text"
-                          value={soldier.customStatus || ''}
-                          onChange={(e) => updateStatus(index, 'אחר', e.target.value)}
-                          placeholder="סטטוס מותאם..."
-                          className="w-32 border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                      />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Soldiers Table - Mobile */}
+            <SoldiersTableMobile
+              soldiers={filteredSoldiers}
+              uniquePlatoons={uniquePlatoons}
+              selectedTeams={selectedTeams}
+              selectedStatuses={selectedStatuses}
+              showTeamFilter={showTeamFilter}
+              showStatusFilter={showStatusFilter}
+              onToggleSelection={toggleSelection}
+              onToggleAllVisible={toggleAllVisible}
+              onStatusChange={updateStatus}
+              onNotesChange={updateNotes}
+              onTeamFilterToggle={() => setShowTeamFilter(!showTeamFilter)}
+              onStatusFilterToggle={() => setShowStatusFilter(!showStatusFilter)}
+              onTeamFilterChange={setSelectedTeams}
+              onStatusFilterChange={setSelectedStatuses}
+              allVisibleSelected={filteredSoldiers.length > 0 && filteredSoldiers.every(soldier => soldier.isSelected)}
+              someVisibleSelected={filteredSoldiers.some(soldier => soldier.isSelected)}
+            />
 
             {/* Report Preview */}
             {showPreview && (

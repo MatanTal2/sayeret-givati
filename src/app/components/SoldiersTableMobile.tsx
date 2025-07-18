@@ -66,9 +66,9 @@ export default function SoldiersTableMobile({
     <div className="md:hidden bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
       {/* Table Header Row - Integrated Filter */}
       <div className="bg-purple-100 border-b border-purple-200">
-        <div className="grid grid-cols-3">
+        <div className="grid grid-cols-[auto_1fr_1fr]">
           {/* Select All Checkbox Column */}
-          <div className="flex items-center justify-center border-l border-purple-200 px-2">
+          <div className="flex items-center justify-start border-l border-purple-200 px-4">
             <SelectAllCheckbox
               allSelected={allVisibleSelected}
               someSelected={someVisibleSelected}
