@@ -101,6 +101,9 @@ export default function HomePage() {
           <p className="text-sm">
             מערכת ניהול מסייעת • גרסה 0.2.0-alpha
           </p>
+          <p className="text-xs mt-2">
+            © Matan Tal
+          </p>
         </footer>
       </div>
     </div>
