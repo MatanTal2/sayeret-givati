@@ -3,6 +3,7 @@ import { GiTank } from "react-icons/gi";
 import { MdNotListedLocation } from "react-icons/md";
 import { Soldier } from '../../types';
 import { getAvailableStatuses } from '../../lib/statusUtils';
+import SelectAllCheckbox from './SelectAllCheckbox';
 
 interface SoldiersTableDesktopProps {
   soldiers: Soldier[];
@@ -83,16 +84,10 @@ export default function SoldiersTableDesktop({
               <th className="px-2 py-3 text-center text-sm font-medium text-gray-700">
                 <div className="flex items-center justify-center gap-2">
                   <span className="text-sm">בחירה</span>
-                  <input 
-                    type="checkbox"
-                    checked={allVisibleSelected}
-                    ref={(input) => {
-                      if (input) {
-                        input.indeterminate = someVisibleSelected && !allVisibleSelected;
-                      }
-                    }}
-                    onChange={onToggleAllVisible}
-                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  <SelectAllCheckbox
+                    allSelected={allVisibleSelected}
+                    someSelected={someVisibleSelected}
+                    onToggle={onToggleAllVisible}
                   />
                 </div>
               </th>

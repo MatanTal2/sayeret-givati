@@ -3,6 +3,7 @@ import { GiTank } from "react-icons/gi";
 import { MdNotListedLocation } from "react-icons/md";
 import { Soldier } from '../../types';
 import { getAvailableStatuses } from '../../lib/statusUtils';
+import SelectAllCheckbox from './SelectAllCheckbox';
 
 interface SoldiersTableMobileProps {
   soldiers: Soldier[];
@@ -68,16 +69,10 @@ export default function SoldiersTableMobile({
         <div className="grid grid-cols-3">
           {/* Select All Checkbox Column */}
           <div className="flex items-center justify-center border-l border-purple-200 px-2">
-            <input 
-              type="checkbox"
-              checked={allVisibleSelected}
-              ref={(input) => {
-                if (input) {
-                  input.indeterminate = someVisibleSelected && !allVisibleSelected;
-                }
-              }}
-              onChange={onToggleAllVisible}
-              className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+            <SelectAllCheckbox
+              allSelected={allVisibleSelected}
+              someSelected={someVisibleSelected}
+              onToggle={onToggleAllVisible}
             />
           </div>
           
