@@ -66,9 +66,9 @@ export default function SoldiersTableMobile({
     <div className="md:hidden bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
       {/* Table Header Row - Integrated Filter */}
       <div className="bg-purple-100 border-b border-purple-200">
-        <div className="grid grid-cols-[auto_1fr_1fr]">
-          {/* Select All Checkbox Column */}
-          <div className="flex items-center justify-start border-l border-purple-200 px-4">
+        <div className="grid grid-cols-[auto_1fr_1fr] h-12">
+          {/* Select All Checkbox Column - Auto Width */}
+          <div className="flex items-center justify-start border-l border-purple-200 px-4.25 min-w-12">
             <SelectAllCheckbox
               allSelected={allVisibleSelected}
               someSelected={someVisibleSelected}
@@ -76,7 +76,7 @@ export default function SoldiersTableMobile({
             />
           </div>
           
-          {/* Team Filter Column */}
+          {/* Team Filter Column - 50% Width */}
           <div className="relative filter-dropdown border-l border-purple-200">
             <button
               onClick={onTeamFilterToggle}
@@ -130,7 +130,7 @@ export default function SoldiersTableMobile({
             )}
           </div>
 
-          {/* Status Filter Column */}
+          {/* Status Filter Column - 50% Width */}
           <div className="relative filter-dropdown border-r border-purple-200">
             <button
               onClick={onStatusFilterToggle}
@@ -198,7 +198,7 @@ export default function SoldiersTableMobile({
                 onChange={() => onToggleSelection(index)}
                 className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
               />
-              <span className="text-gray-700 font-medium flex-1">{soldier.name}</span>
+              <span className="text-gray-700 pr-0.5 font-medium flex-1">{soldier.name}</span>
               <span className="text-gray-600 ml-3 text-sm">{soldier.platoon}</span>
             
               {/* Status Toggle Icons */}
