@@ -22,9 +22,9 @@ export default function HomePage() {
     },
     {
       title: "צלם",
-      description: "ניהול תיעוד וצילומים",
-      icon: "📸",
-      href: "/photographer", 
+      description: "ניהול ציוד צבאי עם מספר סידורי",
+      icon: "🔢",
+      href: "/equipment", 
       available: false,
       color: "bg-gray-400"
     },
