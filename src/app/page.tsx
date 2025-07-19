@@ -37,6 +37,14 @@ export default function HomePage() {
       color: "bg-gray-400"
     },
     {
+      title: "מעקב לוחם",
+      description: "מעקב כישורים והרשאות חיילים",
+      icon: "📊",
+      href: "/tracking",
+      available: false,
+      color: "bg-gray-400"
+    },
+    {
       title: "הגדרות",
       description: "הגדרות מערכת וצוותים",
       icon: "⚙️",
