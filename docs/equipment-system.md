@@ -147,6 +147,9 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
       allow read: if request.auth != null; // Allow reading other users for UI
+      
+      // Allow test documents with TEST- prefix for development/testing
+      allow read, write, delete: if request.auth != null && userId.matches('^TEST-.*');
     }
     
     // Equipment collection
