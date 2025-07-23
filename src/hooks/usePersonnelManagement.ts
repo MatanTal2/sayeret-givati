@@ -1,24 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { PersonnelFormData, FormMessage, AuthorizedPersonnel } from '@/types/admin';
-import { AdminFirestoreService, ValidationUtils } from '@/lib/adminUtils';
+import { AuthorizedPersonnelData, FormMessage, AuthorizedPersonnel } from '@/types/admin';
+import { ValidationUtils, AdminFirestoreService } from '@/lib/adminUtils';
 
 interface UsePersonnelManagementReturn {
-  formData: PersonnelFormData;
+  formData: AuthorizedPersonnelData;
   isLoading: boolean;
   message: FormMessage | null;
   personnel: AuthorizedPersonnel[];
-  updateFormField: (field: keyof PersonnelFormData, value: string) => void;
-  resetForm: () => void;
+  updateFormField: (field: keyof AuthorizedPersonnelData, value: string) => void;
   addPersonnel: () => Promise<void>;
   fetchPersonnel: () => Promise<void>;
-  deletePersonnel: (id: string) => Promise<void>;
-  validateForm: () => boolean;
   clearMessage: () => void;
+  resetForm: () => void;
 }
 
-const initialFormData: PersonnelFormData = {
+const initialFormData: AuthorizedPersonnelData = {
   militaryPersonalNumber: '',
   firstName: '',
   lastName: '',
@@ -27,12 +25,12 @@ const initialFormData: PersonnelFormData = {
 };
 
 export function usePersonnelManagement(): UsePersonnelManagementReturn {
-  const [formData, setFormData] = useState<PersonnelFormData>(initialFormData);
+  const [formData, setFormData] = useState<AuthorizedPersonnelData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<FormMessage | null>(null);
   const [personnel, setPersonnel] = useState<AuthorizedPersonnel[]>([]);
 
-  const updateFormField = (field: keyof PersonnelFormData, value: string) => {
+  const updateFormField = (field: keyof AuthorizedPersonnelData, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -50,7 +48,7 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
   };
 
   const validateForm = (): boolean => {
-    const validation = ValidationUtils.validatePersonnelForm(formData);
+    const validation = ValidationUtils.validateAuthorizedPersonnelData(formData);
     
     if (!validation.isValid) {
       const firstError = Object.values(validation.errors)[0];
@@ -118,41 +116,6 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     setIsLoading(false);
   };
 
-  const deletePersonnel = async (id: string) => {
-    if (!confirm('Are you sure you want to remove this person from the authorized list?')) {
-      return;
-    }
-
-    setIsLoading(true);
-    
-    try {
-      const result = await AdminFirestoreService.deleteAuthorizedPersonnel(id);
-      
-      if (result.success) {
-        setMessage({
-          text: result.message,
-          type: 'success'
-        });
-        
-        // Refresh personnel list
-        await fetchPersonnel();
-      } else {
-        setMessage({
-          text: result.message,
-          type: 'error'
-        });
-      }
-    } catch (error) {
-      console.error('Error deleting personnel:', error);
-      setMessage({
-        text: 'Failed to delete personnel. Please try again.',
-        type: 'error'
-      });
-    }
-    
-    setIsLoading(false);
-  };
-
   const clearMessage = () => {
     setMessage(null);
   };
@@ -166,8 +129,6 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     resetForm,
     addPersonnel,
     fetchPersonnel,
-    deletePersonnel,
-    validateForm,
     clearMessage
   };
 } 

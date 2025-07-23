@@ -44,9 +44,35 @@ Stores soldier profiles, authentication data, and role-based permissions for the
 | `permissions` | `string[]` | ✅ | Computed permissions array |
 | `status` | `UserStatus` | ✅ | Active, inactive, transferred, discharged |
 | `joinDate` | `timestamp` | ✅ | Date joined the unit |
-| `testUser` | `boolean` | ❌ | Flag for test/development users |
+| `testUser` | `boolean` | ❌ | Flag for test/development users - TEST- prefix in document ID |
 | `createdAt` | `timestamp` | ✅ | Document creation timestamp |
 | `updatedAt` | `timestamp` | ✅ | Last update timestamp |
+
+### Test User Flag Explanation
+
+The `testUser` flag is used for development and testing purposes:
+
+- **Purpose**: Identifies accounts created for testing/development
+- **Document ID**: Test users have `TEST-` prefix (e.g., `TEST-abc123xyz789`)
+- **Security**: Test documents have relaxed security rules for development
+- **Data**: Test data can be safely deleted without affecting production
+- **Usage**: Set to `true` only for non-production testing accounts
+
+### Role Approval System
+
+The system implements a secure role approval workflow:
+
+1. **Default Role**: All new users start with `soldier` role
+2. **Role Request**: Users cannot choose privileged roles during registration
+3. **Admin Approval**: Only admins with proper privileges can assign higher roles
+4. **Role Hierarchy**: 
+   - `soldier` - Basic access (auto-approved)
+   - `team_leader` - Team management (requires approval)
+   - `officer` - Enhanced permissions (requires approval)
+   - `equipment_manager` - Full equipment access (requires approval)
+   - `commander` - Full system access (requires approval)
+   - `admin` - System administration (requires approval)
+5. **Audit Trail**: All role changes are logged with approver information
 
 ### Enums
 

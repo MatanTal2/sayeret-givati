@@ -5,6 +5,9 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { ADMIN_TABS } from '@/constants/admin';
 import { AdminTabType } from '@/types/admin';
 import AddPersonnel from './AddPersonnel';
+import BulkUpload from './BulkUpload';
+import ViewPersonnel from './ViewPersonnel';
+import SystemStats from './SystemStats';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -72,7 +75,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <div key={tab.id}>
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    {tab.name.replace(/^🔐|📋|📊\s/, '')}
+                    {tab.name.replace(/^🔐|📁|📋|📊\s/, '')}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">
                     {tab.description}
@@ -81,31 +84,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 
                 {tab.id === 'add-personnel' && <AddPersonnel />}
                 
-                {tab.id === 'view-personnel' && (
-                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                    🚧 Personnel list view coming soon...
-                  </div>
-                )}
+                {tab.id === 'bulk-upload' && <BulkUpload />}
                 
-                {tab.id === 'system-stats' && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <div className="text-2xl mb-2">👥</div>
-                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">-</div>
-                      <div className="text-sm text-blue-600 dark:text-blue-400">Authorized Personnel</div>
-                    </div>
-                    <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="text-2xl mb-2">✅</div>
-                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">-</div>
-                      <div className="text-sm text-green-600 dark:text-green-400">Registered Users</div>
-                    </div>
-                    <div className="bg-yellow-50 dark:bg-yellow-900/20 p-6 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                      <div className="text-2xl mb-2">🔄</div>
-                      <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">-</div>
-                      <div className="text-sm text-yellow-600 dark:text-yellow-400">Recent Activity</div>
-                    </div>
-                  </div>
-                )}
+                {tab.id === 'view-personnel' && <ViewPersonnel />}
+                
+                {tab.id === 'system-stats' && <SystemStats />}
               </div>
             );
           })}

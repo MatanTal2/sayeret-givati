@@ -1,17 +1,4 @@
-// Military ranks for dropdown options
-const MILITARY_RANKS = [
-  'טוראי',
-  'רב טוראי', 
-  'סמל',
-  'רב סמל',
-  'סמל ראשון',
-  'רס"ל',
-  'רס"ר',
-  'רס"מ',
-  'סג"מ',
-  'סגן',
-  'סרן',
-] as const;
+import { MILITARY_RANKS } from '@/types/admin';
 
 // Admin configuration
 export const ADMIN_CONFIG = {
@@ -34,6 +21,7 @@ export const VALIDATION_PATTERNS = {
 export const VALIDATION_MESSAGES = {
   MILITARY_ID_REQUIRED: 'Military Personal Number is required',
   MILITARY_ID_INVALID: 'Military Personal Number must be 5-7 digits',
+  MILITARY_ID_DUPLICATE: 'Military Personal Number already exists in the system',
   FIRST_NAME_REQUIRED: 'First name is required',
   LAST_NAME_REQUIRED: 'Last name is required',
   RANK_REQUIRED: 'Rank is required',
@@ -74,6 +62,11 @@ export const ADMIN_TABS = [
     id: 'add-personnel' as const,
     name: '🔐 Add Authorized Personnel',
     description: 'Add military personnel to the authorized list. Only authorized personnel can register in the system.'
+  },
+  {
+    id: 'bulk-upload' as const,
+    name: '📁 Bulk Upload',
+    description: 'Upload multiple authorized personnel via CSV file for bulk operations.'
   },
   {
     id: 'view-personnel' as const,

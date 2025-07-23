@@ -186,13 +186,16 @@ export default function AddPersonnel() {
           <div className="text-blue-400 text-lg mr-3">ℹ️</div>
           <div>
             <h4 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">
-              Security Information
+              Authorized Personnel Information
             </h4>
             <ul className="text-xs text-blue-700 dark:text-blue-400 space-y-1">
+              <li>• Same data requirements as CSV bulk upload for consistency</li>
               <li>• Military Personal Numbers are hashed with SHA-256 + salt</li>
-              <li>• Phone numbers are used for MFA during registration</li>
-              <li>• Only authorized personnel can register in the system</li>
-              <li>• All data is encrypted in transit and at rest</li>
+              <li>• Phone numbers are used for MFA during user registration</li>
+              <li>• No email required - this creates pre-authorization records only</li>
+              <li>• Personnel register separately with personal email for Firebase Auth</li>
+              <li>• All users start with &apos;soldier&apos; role by default</li>
+              <li>• Status defaults to &apos;active&apos; and joinDate is set automatically</li>
             </ul>
           </div>
         </div>
