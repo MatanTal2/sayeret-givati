@@ -8,6 +8,7 @@ This document defines the complete Firestore database structure for the Sayeret 
 
 | Collection | Purpose | Status | Priority |
 |------------|---------|---------|----------|
+| [`authorized_personnel`](#authorized_personnel-collection) | Pre-authorized personnel for registration | 📋 Planned | Core |
 | [`users`](#users-collection) | Soldier profiles and authentication | ✅ Implemented | Core |
 | [`equipment`](#equipment-collection) | Military equipment tracking | 📋 Planned | High |
 | [`transfers`](#transfers-collection) | Equipment transfer history | 📋 Planned | High |
@@ -38,14 +39,11 @@ Stores soldier profiles, authentication data, and role-based permissions for the
 | `firstName` | `string` | ✅ | First name in Hebrew or English |
 | `lastName` | `string` | ✅ | Last name in Hebrew or English |
 | `rank` | `string` | ✅ | Military rank (e.g., "רב סמל", "סגן", "רס״ן") |
-| `personalId` | `string` | ✅ | Israeli ID number (תעודת זהות) |
-| `unit` | `string` | ✅ | Assigned unit/platoon (e.g., "שייטת גבעתי", "פלוגה א'") |
 | `role` | `UserRole` | ✅ | Permission level (see UserRole enum) |
 | `phoneNumber` | `string` | ❌ | Israeli phone number (+972-XX-XXXXXXX) for OTP |
 | `permissions` | `string[]` | ✅ | Computed permissions array |
 | `status` | `UserStatus` | ✅ | Active, inactive, transferred, discharged |
 | `joinDate` | `timestamp` | ✅ | Date joined the unit |
-| `profileImage` | `string` | ❌ | Profile image URL (if uploaded) |
 | `testUser` | `boolean` | ❌ | Flag for test/development users |
 | `createdAt` | `timestamp` | ✅ | Document creation timestamp |
 | `updatedAt` | `timestamp` | ✅ | Last update timestamp |
@@ -74,6 +72,44 @@ Stores soldier profiles, authentication data, and role-based permissions for the
 - Users can read other users for UI purposes
 - Only officers+ can modify other user documents
 - Test documents (TEST- prefix) allow full access for development
+
+### Important Notes
+
+- **militaryPersonalNumber (מספר אישי) is NOT stored** in this collection for security
+- מספר אישי is only stored as hash in `authorized_personnel` collection
+- User identification relies on Firebase Auth UID and email
+
+---
+
+## 🔐 `authorized_personnel` Collection
+
+### Purpose
+
+Stores pre-authorized military personnel allowed to register in the system. Used for secure registration flow with מספר אישי verification.
+
+### Document ID
+
+- **Format**: Auto-generated UUID
+- **Example**: `auth_abc123xyz789`
+
+### Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `militaryPersonalNumberHash` | `string` | ✅ | SHA-256 hash of מספר אישי + salt |
+| `salt` | `string` | ✅ | Unique salt for this record |
+| `phoneNumber` | `string` | ✅ | Pre-assigned phone for MFA (+972-XX-XXXXXXX) |
+| `firstName` | `string` | ✅ | Expected first name |
+| `lastName` | `string` | ✅ | Expected last name |
+| `rank` | `string` | ✅ | Expected military rank |
+| `createdAt` | `timestamp` | ✅ | When record was added |
+| `createdBy` | `string` | ✅ | Who authorized this person |
+
+### Security Rules
+
+- Only administrators can read/write this collection
+- No access from client applications
+- Server-side only operations for registration verification
 
 ---
 
@@ -459,33 +495,53 @@ Defines equipment categories, types, and classification system for better organi
 
 ### Composite Indexes
 
+#### Users Collection
+
+- `role` + `status` - For team management queries (active users by role)
+- `status` + `createdAt` - For user registration analytics
+
 #### Equipment Collection
 
-- `currentHolder` + `status`
-- `assignedUnit` + `status`
-- `category` + `status`
-- `lastReportUpdate` + `status`
+- `currentHolder` + `status` - For user equipment status queries
+- `assignedUnit` + `status` - For unit equipment management
+- `category` + `status` - For equipment type filtering
+- `lastReportUpdate` + `status` - For equipment accountability
 
 #### Transfers Collection
 
-- `fromUser` + `status`
-- `toUser` + `status`
-- `status` + `createdAt`
+- `fromUser` + `status` - For user transfer history
+- `toUser` + `status` - For incoming transfer queries
+- `status` + `createdAt` - For transfer workflow management
 
 #### Daily Reports Collection
 
-- `reportedBy` + `reportDate`
-- `reportDate` + `status`
+- `reportedBy` + `reportDate` - For user report history
+- `reportDate` + `status` - For daily report analytics
+
+#### Authorized Personnel Collection
+
+- `createdBy` + `createdAt` - For admin audit queries
 
 ### Single Field Indexes
 
-- `equipment.status`
-- `equipment.currentHolder`
-- `equipment.assignedUnit`
-- `users.role`
-- `users.unit`
-- `transfers.status`
-- `retirement_requests.status`
+#### Users Collection
+
+- `users.role` - For role-based queries and permissions  
+- `users.status` - For filtering active/inactive users
+
+> **Note**: `unit` field was removed from users collection. Unit-based queries will be handled through equipment assignments.
+
+#### Equipment Collection  
+
+- `equipment.status` - For equipment status filtering
+- `equipment.currentHolder` - For user equipment queries
+- `equipment.assignedUnit` - For unit-based equipment queries
+
+#### Other Collections
+
+- `transfers.status` - For transfer workflow queries
+- `retirement_requests.status` - For retirement request filtering
+- `authorized_personnel.createdBy` - For admin management queries
 
 ---
 
@@ -519,13 +575,13 @@ Defines equipment categories, types, and classification system for better organi
 
 ### Phase 2 (Enhanced)
 
-4. 📋 `retirement_requests` - Workflow management
-5. 📋 `daily_reports` - Accountability
+4; 📋 `retirement_requests` - Workflow management
+5; 📋 `daily_reports` - Accountability
 
 ### Phase 3 (Organizational)
 
-6. 📋 `units` - Structure
-7. 📋 `categories` - Classification
+6; 📋 `units` - Structure
+7; 📋 `categories` - Classification
 
 ---
 

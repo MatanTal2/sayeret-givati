@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import SimpleUserTest from '@/components/SimpleUserTest';
-import FirebasePersistentTest from '@/components/FirebasePersistentTest';
+import EquipmentTest from '@/components/EquipmentTest';
 
 // TypeScript interface for test components
 interface TestComponent {
@@ -28,25 +28,11 @@ const testComponents: TestComponent[] = [
     id: 'equipment-management',
     name: '🎖️ Equipment Management Test',
     description: 'Test equipment creation, transfer, tracking, and military workflows',
-    component: FirebasePersistentTest, // Will be replaced with EquipmentTest
+    component: EquipmentTest,
     category: 'Military Features',
     badge: 'Coming Soon'
   }
-  // Future test components can be added here:
-  // {
-  //   id: 'equipment-test',
-  //   name: '🎖️ Equipment Management',
-  //   description: 'Test equipment creation, transfer, and tracking',
-  //   component: EquipmentTest,
-  //   category: 'Military Features'
-  // },
-  // {
-  //   id: 'approval-test', 
-  //   name: '📱 OTP Approval Test',
-  //   description: 'Test OTP-based approval workflows',
-  //   component: ApprovalTest,
-  //   category: 'Military Features'
-  // }
+  // Future test components can be added here
 ];
 
 export default function FirebaseTestPage() {
