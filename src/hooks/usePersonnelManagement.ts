@@ -168,7 +168,7 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
         text: `Successfully added ${result.successful.length} personnel. Duplicates: ${result.duplicates.length}. Failed: ${result.failed.length}.`,
         type: 'success',
       });
-    } catch (error) {
+    } catch {
       setMessage({
         text: 'Failed to add personnel in bulk. Please try again.',
         type: 'error',

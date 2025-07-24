@@ -5,8 +5,7 @@ import {
   HashResult,
   PersonnelFormData,
   ValidationResult,
-  AuthorizedPersonnel,
-  PersonnelOperationResult
+  AuthorizedPersonnel
 } from '@/types/admin';
 import {
   ADMIN_CONFIG,
@@ -195,7 +194,7 @@ export class AdminFirestoreService {
       }
 
       return false;
-    } catch (error) {
+    } catch {
       throw new AdminError('Failed to check for duplicate military ID', 'FIRESTORE_ERROR');
     }
   }
@@ -210,10 +209,7 @@ export class AdminFirestoreService {
       }
 
       return adminDoc.data() as AdminConfig;
-    } catch (error) {
-      if (error instanceof AdminError) {
-        throw error;
-      }
+    } catch {
       throw new AdminError(ADMIN_MESSAGES.LOGIN_CONNECTION_ERROR, 'FIRESTORE_ERROR');
     }
   }
@@ -334,11 +330,15 @@ export class AdminFirestoreService {
     }
   }
 
-  static async addAuthorizedPersonnelBulk(personnel: PersonnelFormData[]): Promise<any> {
+  static async addAuthorizedPersonnelBulk(personnel: PersonnelFormData[]): Promise<{
+    successful: PersonnelFormData[];
+    failed: PersonnelFormData[];
+    duplicates: PersonnelFormData[];
+  }> {
     const results = {
-      successful: [],
-      failed: [],
-      duplicates: [],
+      successful: [] as PersonnelFormData[],
+      failed: [] as PersonnelFormData[],
+      duplicates: [] as PersonnelFormData[],
     };
 
     for (const person of personnel) {
@@ -424,4 +424,11 @@ export class AdminError extends Error {
     this.operation = operation;
     this.timestamp = new Date();
   }
+}
+
+export interface PersonnelOperationResult {
+  success: boolean;
+  personnel?: AuthorizedPersonnel;
+  message: string;
+  error?: AdminError;
 }

@@ -1,6 +1,5 @@
 import { AdminFirestoreService, SecurityUtils, ValidationUtils } from '../adminUtils';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, addDoc } from 'firebase/firestore';
+import { getDocs, addDoc } from 'firebase/firestore';
 
 // Mock Web Crypto API
 const mockDigest = jest.fn();
@@ -39,7 +38,6 @@ describe('SecurityUtils', () => {
   describe('hashMilitaryId', () => {
     it('should generate a hash and a salt', async () => {
       const militaryId = '1234567';
-      const salt = 'somesalt';
       const hash = 'somehash';
 
       mockGetRandomValues.mockImplementation((array) => {
@@ -90,7 +88,6 @@ describe('SecurityUtils', () => {
     });
 
     it('should return false for an invalid military ID', async () => {
-      const militaryId = '1234567';
       const incorrectMilitaryId = '7654321';
       const salt = 'somesalt';
       const correctHash = 'somehash';
@@ -172,19 +169,16 @@ describe('AdminFirestoreService', () => {
     });
 
     it('should return false if no duplicate military ID is found', async () => {
-      const militaryId = '1234567';
-
       (getDocs as jest.Mock).mockResolvedValue({ docs: [] });
 
-      const result = await AdminFirestoreService.checkMilitaryIdExists(militaryId);
+      const result = await AdminFirestoreService.checkMilitaryIdExists('1234567');
       expect(result).toBe(false);
     });
 
     it('should throw an AdminError if a Firestore error occurs', async () => {
-      const militaryId = '1234567';
       (getDocs as jest.Mock).mockRejectedValue(new Error('Firestore error'));
 
-      await expect(AdminFirestoreService.checkMilitaryIdExists(militaryId)).rejects.toThrow(
+      await expect(AdminFirestoreService.checkMilitaryIdExists('1234567')).rejects.toThrow(
         'Failed to check for duplicate military ID'
       );
     });
@@ -201,7 +195,7 @@ describe('AdminFirestoreService', () => {
       };
 
       const checkMilitaryIdExistsSpy = jest.spyOn(AdminFirestoreService, 'checkMilitaryIdExists').mockResolvedValue(true);
-      const validatePersonnelFormSpy = jest.spyOn(ValidationUtils, 'validatePersonnelForm').mockReturnValue({
+      jest.spyOn(ValidationUtils, 'validatePersonnelForm').mockReturnValue({
         isValid: true,
         errors: {},
       });
