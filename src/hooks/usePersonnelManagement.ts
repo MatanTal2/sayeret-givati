@@ -12,6 +12,7 @@ interface UsePersonnelManagementReturn {
   updateFormField: (field: keyof AuthorizedPersonnelData, value: string) => void;
   addPersonnel: () => Promise<void>;
   addPersonnelBulk: (personnel: PersonnelFormData[]) => Promise<void>;
+  deletePersonnel: (personnelId: string) => Promise<void>;
   fetchPersonnel: () => Promise<void>;
   clearMessage: () => void;
   resetForm: () => void;
@@ -141,6 +142,38 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     setIsLoading(false);
   };
 
+  const deletePersonnel = async (personnelId: string) => {
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const result = await AdminFirestoreService.deleteAuthorizedPersonnel(personnelId);
+
+      if (result.success) {
+        setMessage({
+          text: result.message,
+          type: 'success'
+        });
+
+        // Refresh personnel list
+        await fetchPersonnel();
+      } else {
+        setMessage({
+          text: result.message,
+          type: 'error'
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting personnel:', error);
+      setMessage({
+        text: 'Failed to delete personnel. Please try again.',
+        type: 'error'
+      });
+    }
+
+    setIsLoading(false);
+  };
+
   return {
     formData,
     isLoading,
@@ -150,6 +183,7 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     resetForm,
     addPersonnel,
     addPersonnelBulk,
+    deletePersonnel,
     fetchPersonnel,
     clearMessage
   };
