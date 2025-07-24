@@ -3,6 +3,21 @@ const { TextEncoder, TextDecoder } = require('util');
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
+// Mock Web Crypto API
+const crypto = require('crypto');
+Object.defineProperty(global, 'crypto', {
+  value: {
+    getRandomValues: arr => crypto.randomBytes(arr.length),
+    subtle: {
+      digest: async (algorithm, data) => {
+        const hash = crypto.createHash('sha256');
+        hash.update(data);
+        return hash.digest();
+      }
+    }
+  }
+});
+
 // Mock localStorage
 const localStorageMock = {
   getItem: jest.fn(),

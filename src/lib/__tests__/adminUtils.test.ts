@@ -1,5 +1,5 @@
 import { AdminFirestoreService, SecurityUtils, ValidationUtils } from '../adminUtils';
-import { getDocs, addDoc } from 'firebase/firestore';
+import { getDocs, addDoc, writeBatch, doc } from 'firebase/firestore';
 
 // Mock Web Crypto API
 const mockDigest = jest.fn();
@@ -28,6 +28,7 @@ jest.mock('firebase/firestore', () => ({
   addDoc: jest.fn(),
   deleteDoc: jest.fn(),
   serverTimestamp: jest.fn(),
+  writeBatch: jest.fn(),
 }));
 
 describe('SecurityUtils', () => {
@@ -243,24 +244,54 @@ describe('AdminFirestoreService', () => {
         { militaryPersonalNumber: '1', firstName: 'J', lastName: 'K', rank: 'L', phoneNumber: '050-1234560' },
       ];
 
-      const addAuthorizedPersonnelSpy = jest.spyOn(AdminFirestoreService, 'addAuthorizedPersonnel')
-        .mockImplementation(async (person) => {
-          if (person.militaryPersonalNumber === '1') {
-            return { success: false, message: '', error: { code: 'DUPLICATE_ID' } };
-          }
-          if (person.militaryPersonalNumber === '2') {
-            return { success: true, message: '' };
-          }
-          return { success: false, message: '' };
+      // Mock checkMilitaryIdExists to return true for duplicates
+      const checkMilitaryIdExistsSpy = jest.spyOn(AdminFirestoreService, 'checkMilitaryIdExists')
+        .mockImplementation(async (militaryId) => {
+          // Return true for '1' (duplicate) and false for others
+          return militaryId === '1';
         });
+
+      // Mock ValidationUtils.validateAuthorizedPersonnelData
+      const validateSpy = jest.spyOn(ValidationUtils, 'validateAuthorizedPersonnelData')
+        .mockImplementation((data) => {
+          // Return invalid for militaryPersonalNumber '3' to simulate validation failure
+          if (data.militaryPersonalNumber === '3') {
+            return { isValid: false, errors: { militaryPersonalNumber: 'Invalid ID' } };
+          }
+          return { isValid: true, errors: {} as Record<string, string> };
+        });
+
+      // Mock SecurityUtils.hashMilitaryId for successful entries
+      const hashSpy = jest.spyOn(SecurityUtils, 'hashMilitaryId').mockResolvedValue({
+        hash: 'somehash',
+        salt: 'somesalt',
+      });
+
+      // Mock ValidationUtils.toInternationalFormat
+      const formatSpy = jest.spyOn(ValidationUtils, 'toInternationalFormat')
+        .mockReturnValue('+972501234567');
+
+      // Mock Firebase batch operations
+      const mockCommit = jest.fn().mockResolvedValue(undefined);
+      const mockSet = jest.fn();
+      const mockBatch = { set: mockSet, commit: mockCommit };
+      (writeBatch as jest.Mock).mockReturnValue(mockBatch);
+      (doc as jest.Mock).mockReturnValue({ id: 'mock-doc-id' });
 
       const results = await AdminFirestoreService.addAuthorizedPersonnelBulk(personnel);
 
+      // Expected results:
+      // - 1 successful: militaryPersonalNumber '2' (valid and not duplicate)
+      // - 2 duplicates: both entries with militaryPersonalNumber '1' (duplicate detected)
+      // - 1 failed: militaryPersonalNumber '3' (validation failed)
       expect(results.successful.length).toBe(1);
       expect(results.duplicates.length).toBe(2);
       expect(results.failed.length).toBe(1);
 
-      addAuthorizedPersonnelSpy.mockRestore();
+      checkMilitaryIdExistsSpy.mockRestore();
+      validateSpy.mockRestore();
+      hashSpy.mockRestore();
+      formatSpy.mockRestore();
     });
   });
 });
