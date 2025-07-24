@@ -96,7 +96,8 @@ export default function HomePage() {
                    px-3 md:px-6 py-3 rounded-full shadow-lg transition-all duration-200
                    flex items-center md:gap-2 font-medium text-sm
                    focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none
-                   hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                   hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed
+                   transform-gpu will-change-transform"
       >
         {isLoading ? (
           <>
