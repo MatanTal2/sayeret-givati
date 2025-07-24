@@ -103,10 +103,3 @@ export interface AdminApiResponse<T = unknown> {
   error?: string;
   timestamp: Date;
 }
-
-export interface PersonnelOperationResult {
-  success: boolean;
-  personnel?: AuthorizedPersonnel;
-  message: string;
-  error?: Error;
-} 
