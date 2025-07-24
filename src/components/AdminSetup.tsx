@@ -9,19 +9,20 @@ export default function AdminSetup() {
   const [status, setStatus] = useState<string>('Ready to create admin user...');
   const [isLoading, setIsLoading] = useState(false);
   const [isCreated, setIsCreated] = useState(false);
+  const [password, setPassword] = useState('');
 
   const adminEmail = ADMIN_CONFIG.EMAIL;
-  const adminPassword = 'AdminPassword123!'; // You can change this
+
 
   const createAdminUser = async () => {
-    if (isLoading) return;
+    if (isLoading || !password.trim()) return;
     
     setIsLoading(true);
     setStatus('Creating admin user...');
 
     try {
       // Create the admin user in Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(auth, adminEmail, adminPassword);
+      const userCredential = await createUserWithEmailAndPassword(auth, adminEmail, password);
       
       setStatus(`✅ Admin user created successfully!`);
       setIsCreated(true);
@@ -60,7 +61,7 @@ export default function AdminSetup() {
           <div className="text-blue-100 text-sm space-y-1">
             <div>1. This will create the admin user in Firebase Authentication</div>
             <div>2. Email: <code className="bg-blue-800 px-1 rounded">{adminEmail}</code></div>
-            <div>3. Password: <code className="bg-blue-800 px-1 rounded">{adminPassword}</code></div>
+            <div>3. Enter a secure password below</div>
             <div>4. After creation, you can login to the admin panel</div>
           </div>
         </div>
@@ -70,27 +71,48 @@ export default function AdminSetup() {
           <p className="text-green-100">{status}</p>
         </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={createAdminUser}
-            disabled={isLoading || isCreated}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              isLoading || isCreated
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            {isLoading ? '⏳ Creating...' : isCreated ? '✅ Created' : '🔧 Create Admin User'}
-          </button>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="adminPassword" className="block text-white font-medium mb-2">
+              Admin Password:
+            </label>
+            <input
+              type="password"
+              id="adminPassword"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter a secure password..."
+              disabled={isLoading || isCreated}
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg 
+                       text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 
+                       focus:border-blue-500 outline-none transition-colors
+                       disabled:bg-gray-800 disabled:cursor-not-allowed"
+              required
+            />
+          </div>
 
-          {isCreated && (
-            <a
-              href="/admin"
-              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+          <div className="flex gap-3">
+            <button
+              onClick={createAdminUser}
+              disabled={isLoading || isCreated || !password.trim()}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                isLoading || isCreated || !password.trim()
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
             >
-              🚀 Go to Admin Login
-            </a>
-          )}
+              {isLoading ? '⏳ Creating...' : isCreated ? '✅ Created' : '🔧 Create Admin User'}
+            </button>
+
+            {isCreated && (
+              <a
+                href="/admin"
+                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+              >
+                🚀 Go to Admin Login
+              </a>
+            )}
+          </div>
         </div>
 
         {isCreated && (

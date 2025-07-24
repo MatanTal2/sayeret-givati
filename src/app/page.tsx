@@ -5,6 +5,7 @@ import Image from 'next/image';
 import FeatureCard from './components/FeatureCard';
 import AuthModal from '@/components/auth/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { TEXT_CONSTANTS } from '@/constants/text';
 
 export default function HomePage() {
   const { user, isAuthenticated, isLoading, logout, showAuthModal, setShowAuthModal } = useAuth();
@@ -51,30 +52,16 @@ export default function HomePage() {
       color: "bg-gray-400"
     },
     {
-      title: "מעקב לוחם",
-      description: "מעקב כישורים והרשאות חיילים",
-      icon: "📊",
-      href: "/tracking",
-      available: false,
-      color: "bg-gray-400"
-    },
-    {
-      title: "הגדרות",
-      description: "הגדרות מערכת וצוותים",
-      icon: "⚙️",
-      href: "/admin",
-      available: false,
-      color: "bg-gray-400"
-    },
-    {
-      title: "עזרה",
-      description: "מדריך למשתמש ותמיכה",
-      icon: "❓",
-      href: "/help",
+      title: "מודולים נוספים",
+      description: "כלים נוספים בפיתוח",
+      icon: "🔧",
+      href: "#",
       available: false,
       color: "bg-gray-400"
     }
   ];
+
+  // Show all features together without separation
 
   const handleAuthClick = async () => {
     if (isAuthenticated) {
@@ -92,21 +79,20 @@ export default function HomePage() {
       <button
         onClick={handleAuthClick}
         disabled={isLoading}
-        className="fixed top-4 right-4 z-50 bg-blue-600 hover:bg-blue-700 text-white 
+        className="absolute top-4 right-4 z-50 bg-blue-600 hover:bg-blue-700 text-white 
                    px-3 md:px-6 py-3 rounded-full shadow-lg transition-all duration-200
                    flex items-center md:gap-2 font-medium text-sm
                    focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none
-                   hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed
-                   transform-gpu will-change-transform"
+                   hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isLoading ? (
           <>
             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
               <path className="opacity-75" fill="currentColor" 
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
             </svg>
-            <span className="hidden md:inline">טוען...</span>
+            <span className="hidden md:inline">{TEXT_CONSTANTS.BUTTONS.LOADING}</span>
           </>
         ) : isAuthenticated ? (
           <>
@@ -114,24 +100,24 @@ export default function HomePage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            <span className="hidden md:inline">יציאה</span>
+            <span className="hidden md:inline">{TEXT_CONSTANTS.BUTTONS.LOGOUT}</span>
           </>
         ) : (
           <>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 813 3v1" />
             </svg>
-            <span className="hidden md:inline">התחברות</span>
+            <span className="hidden md:inline">{TEXT_CONSTANTS.BUTTONS.LOGIN}</span>
           </>
         )}
       </button>
 
       {/* User Welcome Message */}
       {isAuthenticated && user && (
-        <div className="fixed top-4 left-4 z-50 bg-green-100 text-green-800 
+        <div className="absolute top-4 left-4 z-50 bg-green-100 text-green-800 
                         px-4 py-2 rounded-full shadow-lg text-sm font-medium">
-          שלום, {user.displayName || user.email}
+          {TEXT_CONSTANTS.AUTH.WELCOME_MESSAGE}, {user.displayName || user.email}
         </div>
       )}
 
@@ -142,80 +128,98 @@ export default function HomePage() {
           alt="לוגו סיירת גבעתי" 
           width={400} 
           height={400}
-          className="max-w-lg"
+          className="object-contain"
         />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10">
-        {/* Header */}
-        <header className="text-center py-12">
-          <div className="flex justify-center mb-6">
-            <Image 
-              src="/sayeret-givati-logo.png" 
-              alt="לוגו סיירת גבעתי" 
-              width={120} 
-              height={120}
-            />
+      {/* Main Content */}
+      <main className="relative z-10 pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="flex flex-col items-center justify-center mb-6">
+              <Image 
+                src="/sayeret-givati-logo.png" 
+                alt="לוגו סיירת גבעתי" 
+                width={120} 
+                height={120}
+                className="object-contain mb-6"
+              />
+              <div className="text-center">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+                  מערכת ניהול - מסייעת סיירת גבעתי
+                </h1>
+              </div>
+            </div>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              {TEXT_CONSTANTS.APP_SUBTITLE}
+            </p>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-4">
-            מסייעת סיירת גבעתי
-          </h1>
-          <h2 className="text-2xl md:text-3xl font-medium text-purple-600">
-            פלגה ד
-          </h2>
-        </header>
 
-        {/* Features Grid */}
-        <div className="max-w-6xl mx-auto px-6 pb-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <FeatureCard key={index} {...feature} />
-            ))}
+          {/* All Features */}
+          <div className="mb-12">
+            <h3 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
+              {TEXT_CONSTANTS.FEATURES.SECTION_TITLE}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {features.map((feature, index) => (
+                <FeatureCard
+                  key={index}
+                  title={feature.title}
+                  description={feature.description}
+                  icon={feature.icon}
+                  href={feature.href}
+                  available={feature.available}
+                  color={feature.color}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Footer */}
-        <footer className="text-center py-8 text-gray-600">
-          {/* Contact & Support Section */}
-          <div className="mb-6 p-4 bg-gray-100 rounded-lg max-w-2xl mx-auto">
-            <h3 className="text-base font-semibold text-gray-800 mb-3">צור קשר ותמיכה</h3>
-            <div className="space-y-2 text-sm">
-              <p className="flex items-center justify-center gap-2">
-                <span className="text-lg">📧</span>
-                <span>אימייל: support@sayeret-givati.com</span>
-              </p>
-              <p className="flex items-center justify-center gap-2">
-                <span className="text-lg">📞</span>
-                <span>טלפון: 050-123-4567</span>
-              </p>
-              <p className="flex items-center justify-center gap-2">
-                <span className="text-lg">💬</span>
-                <span>WhatsApp: 050-123-4567</span>
-              </p>
-              <p className="text-xs text-gray-500 mt-3">
-                זמינים 24/7 לתמיכה טכנית ועזרה במערכת
-              </p>
+        <footer className="max-w-4xl mx-auto mt-16 pt-8 border-t border-gray-200 text-center text-gray-600">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div>
+              <h4 className="font-semibold mb-3">קישורים מהירים</h4>
+              <ul className="space-y-2 text-sm">
+                                 <li><a href="/status" className="hover:text-purple-600 transition-colors">ניהול שבצ&quot;ק</a></li>
+                <li><a href="/admin" className="hover:text-purple-600 transition-colors">ממשק ניהול</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-3">תמיכה</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="/help" className="hover:text-purple-600 transition-colors">מדריך למשתמש</a></li>
+                <li><a href="/contact" className="hover:text-purple-600 transition-colors">צור קשר</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-3">מידע</h4>
+              <ul className="space-y-2 text-sm">
+                <li><span>גרסה 0.2.0-alpha</span></li>
+                <li><span>עודכן לאחרונה: דצמבר 2024</span></li>
+              </ul>
             </div>
           </div>
           
           {/* Version & Copyright */}
           <div className="border-t border-gray-200 pt-4">
             <p className="text-sm">
-              מערכת ניהול מסייעת • גרסה 0.2.0-alpha
+              {TEXT_CONSTANTS.APP_NAME} • {TEXT_CONSTANTS.VERSION}
             </p>
             <p className="text-xs mt-2">
               © Matan Tal
             </p>
           </div>
         </footer>
+      </main>
 
-        {/* Auth Modal */}
-        <AuthModal 
-          isOpen={showAuthModal} 
-          onClose={() => setShowAuthModal(false)} 
-        />
-      </div>
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface AuthModalProps {
+export interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
@@ -42,15 +42,16 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   return (
     <>
-      {/* Backdrop - Light and Blurred */}
+      {/* Backdrop - Blur Only */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-20 z-50 transition-opacity backdrop-blur-sm"
+        className="fixed inset-0 z-50 transition-opacity backdrop-blur-sm"
         onClick={onClose}
       />
       
       {/* Modal Container - Centered for all screen sizes */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden transform transition-all">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-none">
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm transform transition-all pointer-events-auto 
+                        my-4 sm:my-8 max-h-[90vh] overflow-y-auto">
           
           {/* Close Button - Top Right */}
           <button
@@ -66,20 +67,20 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </button>
 
           {/* Header with Icon */}
-          <div className="text-center pt-8 pb-6 px-6">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="text-center pt-6 pb-4 px-6">
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                       d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">התחברות למערכת</h2>
-            <p className="text-gray-600 text-sm">היכנס עם הפרטים שלך</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">התחברות למערכת</h2>
+            <p className="text-gray-600 text-xs">היכנס עם הפרטים שלך</p>
           </div>
 
           {/* Form Content */}
-          <div className="px-6 pb-8">
-            <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="px-6 pb-5">
+            <form onSubmit={handleSubmit} className="space-y-3">
               
               {/* Email Field */}
               <div className="space-y-2">
@@ -96,7 +97,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 
                              focus:ring-purple-500 focus:border-purple-500 outline-none transition-all
                              text-right text-gray-800 bg-gray-50 focus:bg-white placeholder-gray-500"
-                    placeholder="your.email@example.com"
+                    placeholder="אימייל"
                     disabled={isLoading}
                     required
                   />
@@ -124,7 +125,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 
                              focus:ring-purple-500 focus:border-purple-500 outline-none transition-all
                              text-right text-gray-800 bg-gray-50 focus:bg-white pr-12 placeholder-gray-500"
-                    placeholder="••••••••"
+                    placeholder="סיסמה"
                     disabled={isLoading}
                     required
                   />
@@ -165,45 +166,92 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </div>
               )}
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isLoading || !formData.email || !formData.password}
-                className="w-full py-4 px-4 bg-gradient-to-r from-purple-600 to-purple-700 
-                         hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-400
-                         text-white font-semibold rounded-xl transition-all duration-200 transform
-                         focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none
-                         disabled:cursor-not-allowed flex items-center justify-center gap-2
-                         hover:scale-[1.02] hover:shadow-lg disabled:hover:scale-100 disabled:hover:shadow-none"
-              >
-                {isLoading ? (
-                  <>
-                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" 
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-                    </svg>
-                    מתחבר...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                    </svg>
-                    התחבר
-                  </>
-                )}
-              </button>
+                             {/* Submit Button */}
+               <button
+                 type="submit"
+                 disabled={isLoading || !formData.email || !formData.password}
+                 className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-purple-700 
+                          hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-400
+                          text-white font-semibold rounded-lg transition-all duration-200 transform
+                          focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none
+                          disabled:cursor-not-allowed flex items-center justify-center gap-2
+                          hover:scale-[1.02] hover:shadow-lg disabled:hover:scale-100 disabled:hover:shadow-none"
+               >
+                 {isLoading ? (
+                   <>
+                     <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                       <path className="opacity-75" fill="currentColor" 
+                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                     </svg>
+                     מתחבר...
+                   </>
+                 ) : (
+                   <>
+                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                             d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                     </svg>
+                     התחבר
+                   </>
+                 )}
+               </button>
+
+               {/* Additional Auth Options */}
+               <div className="space-y-2 mt-3">
+                 {/* Forgot Password Link */}
+                 <button
+                   type="button"
+                   onClick={() => {
+                     // TODO: Implement forgot password functionality
+                     console.log('Forgot password clicked');
+                   }}
+                   className="w-full text-center text-sm text-purple-600 hover:text-purple-800 
+                            transition-colors underline-offset-2 hover:underline"
+                   disabled={isLoading}
+                 >
+                   שכחת סיסמה?
+                 </button>
+
+                 {/* Divider */}
+                 <div className="relative">
+                   <div className="absolute inset-0 flex items-center">
+                     <div className="w-full border-t border-gray-200"></div>
+                   </div>
+                   <div className="relative flex justify-center text-sm">
+                     <span className="px-2 bg-white text-gray-500">או</span>
+                   </div>
+                 </div>
+
+                 {/* Register Button */}
+                 <button
+                   type="button"
+                   onClick={() => {
+                     // TODO: Implement registration functionality
+                     console.log('Register clicked');
+                   }}
+                   className="w-full py-3 px-4 border-2 border-purple-600 text-purple-600 
+                            font-semibold rounded-xl transition-all duration-200 transform
+                            focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none
+                            hover:bg-purple-50 hover:scale-[1.02] flex items-center justify-center gap-2"
+                   disabled={isLoading}
+                 >
+                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                           d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                   </svg>
+                   הרשמה חדשה
+                 </button>
+               </div>
             </form>
           </div>
 
-          {/* Footer */}
-          <div className="px-6 pb-6 text-center border-t border-gray-100 pt-4">
-            <p className="text-xs text-gray-500">
-              מערכת ניהול סיירת גבעתי
-            </p>
-          </div>
+                     {/* Footer */}
+           <div className="px-6 pb-4 text-center border-t border-gray-100 pt-2">
+             <p className="text-xs text-gray-500">
+               מערכת ניהול סיירת גבעתי
+             </p>
+           </div>
         </div>
       </div>
     </>
