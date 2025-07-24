@@ -1,0 +1,9 @@
+<svg width="32" height="20" viewBox="0 0 32 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Samal (סמל) - Sergeant - Two chevrons -->
+  <g stroke="currentColor" stroke-width="1.5" fill="none">
+    <!-- First chevron -->
+    <path d="M8 14 L16 6 L24 14" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Second chevron -->
+    <path d="M8 10 L16 2 L24 10" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg> 

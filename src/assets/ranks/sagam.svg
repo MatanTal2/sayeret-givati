@@ -1,0 +1,11 @@
+<svg width="32" height="24" viewBox="0 0 32 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sagam (סג״מ) - Command Sergeant Major - Crown with star -->
+  <g stroke="currentColor" stroke-width="1.5" fill="currentColor">
+    <!-- Crown base -->
+    <rect x="6" y="16" width="20" height="3" fill="currentColor"/>
+    <!-- Crown peaks -->
+    <path d="M8 16 L10 10 L12 16 M12 16 L14 8 L16 16 M16 16 L18 8 L20 16 M20 16 L22 10 L24 16" stroke="currentColor" fill="none"/>
+    <!-- Star above -->
+    <path d="M16 2 L17.5 5 L21 5 L18.5 7 L20 10 L16 8 L12 10 L13.5 7 L11 5 L14.5 5 Z"/>
+  </g>
+</svg> 

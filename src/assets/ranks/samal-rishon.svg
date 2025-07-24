@@ -1,0 +1,11 @@
+<svg width="32" height="24" viewBox="0 0 32 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Samal Rishon (סמל ראשון) - First Sergeant - Three chevrons with diamond -->
+  <g stroke="currentColor" stroke-width="1.5" fill="none">
+    <!-- Three chevrons -->
+    <path d="M8 18 L16 10 L24 18" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8 14 L16 6 L24 14" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8 10 L16 2 L24 10" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Diamond in center -->
+    <path d="M16 20 L18 22 L16 24 L14 22 Z" fill="currentColor"/>
+  </g>
+</svg> 

@@ -1,0 +1,11 @@
+<svg width="32" height="20" viewBox="0 0 32 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Rasam (רס״מ) - Sergeant Major - Three bars with star -->
+  <g stroke="currentColor" stroke-width="1.5" fill="currentColor">
+    <!-- Three horizontal bars -->
+    <rect x="6" y="7" width="20" height="2" fill="currentColor"/>
+    <rect x="6" y="10" width="20" height="2" fill="currentColor"/>
+    <rect x="6" y="13" width="20" height="2" fill="currentColor"/>
+    <!-- Star above -->
+    <path d="M16 1 L17.5 4 L21 4 L18.5 6 L20 9 L16 7 L12 9 L13.5 6 L11 4 L14.5 4 Z"/>
+  </g>
+</svg> 
