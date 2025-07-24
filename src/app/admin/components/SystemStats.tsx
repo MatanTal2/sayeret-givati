@@ -13,7 +13,7 @@ export default function SystemStats() {
 
   useEffect(() => {
     fetchPersonnel();
-  }, []);
+  }, [fetchPersonnel]);
 
   useEffect(() => {
     if (personnel.length > 0) {

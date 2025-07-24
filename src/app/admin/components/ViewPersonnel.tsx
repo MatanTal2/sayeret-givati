@@ -21,7 +21,7 @@ export default function ViewPersonnel() {
   // Fetch personnel on component mount
   useEffect(() => {
     fetchPersonnel();
-  }, []);
+  }, [fetchPersonnel]);
 
   // Filter and sort personnel
   const filteredPersonnel = personnel
