@@ -1,31 +1,18 @@
 import { db } from '@/lib/firebase';
-import { 
-  doc, 
-  collection, 
-  query, 
-  getDocs, 
-  deleteDoc, 
-  serverTimestamp, 
-  Timestamp,
-  runTransaction,
-  writeBatch,
-  DocumentReference
-} from 'firebase/firestore';
-import { validatePhoneNumber, validateUserName } from '@/lib/equipmentValidation';
-import { 
-  HashResult, 
-  PersonnelFormData, 
-  AuthorizedPersonnelData,
-  ValidationResult, 
-  AuthorizedPersonnel,
-  PersonnelOperationResult
+import { doc, getDoc, collection, addDoc, query, getDocs, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import {
+  AdminConfig,
+  HashResult,
+  PersonnelFormData,
+  ValidationResult,
+  AuthorizedPersonnel
 } from '@/types/admin';
-import { 
-  ADMIN_CONFIG, 
-  VALIDATION_PATTERNS, 
-  VALIDATION_MESSAGES, 
+import {
+  ADMIN_CONFIG,
+  VALIDATION_PATTERNS,
+  VALIDATION_MESSAGES,
   ADMIN_MESSAGES,
-  SECURITY_CONFIG 
+  SECURITY_CONFIG
 } from '@/constants/admin';
 
 /**
@@ -35,15 +22,17 @@ export class SecurityUtils {
   /**
    * Generate a secure hash of military personal number using Web Crypto API
    */
-  static async hashMilitaryId(militaryId: string): Promise<HashResult> {
+  static async hashMilitaryId(militaryId: string, salt?: string): Promise<HashResult> {
     try {
-      // Generate random salt
-      const saltArray = new Uint8Array(SECURITY_CONFIG.SALT_LENGTH);
-      crypto.getRandomValues(saltArray);
-      const salt = Array.from(saltArray)
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-      
+      if (!salt) {
+        // Generate random salt
+        const saltArray = new Uint8Array(SECURITY_CONFIG.SALT_LENGTH);
+        crypto.getRandomValues(saltArray);
+        salt = Array.from(saltArray)
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+      }
+
       // Create hash using Web Crypto API
       const encoder = new TextEncoder();
       const data = encoder.encode(militaryId + salt);
@@ -52,7 +41,7 @@ export class SecurityUtils {
       const hash = Array.from(hashArray)
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
-      
+
       return { hash, salt };
     } catch (error) {
       throw new AdminError(`Failed to hash military ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -64,16 +53,8 @@ export class SecurityUtils {
    */
   static async verifyMilitaryId(militaryId: string, storedHash: string, salt: string): Promise<boolean> {
     try {
-      // Create hash using the same method but with the stored salt
-      const encoder = new TextEncoder();
-      const data = encoder.encode(militaryId + salt);
-      const hashBuffer = await crypto.subtle.digest(SECURITY_CONFIG.HASH_ALGORITHM, data);
-      const hashArray = new Uint8Array(hashBuffer);
-      const computedHash = Array.from(hashArray)
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-      
-      return computedHash === storedHash;
+      const { hash } = await this.hashMilitaryId(militaryId, salt);
+      return hash === storedHash;
     } catch (error) {
       console.error('Failed to verify military ID:', error);
       return false;
@@ -149,13 +130,12 @@ export class ValidationUtils {
     if (!value || !value.trim()) {
       return VALIDATION_MESSAGES.PHONE_REQUIRED;
     }
-    
-    // Use existing validation from equipmentValidation.ts
-    const phoneValidation = validatePhoneNumber(value);
-    if (!phoneValidation.isValid) {
-      return phoneValidation.error || VALIDATION_MESSAGES.PHONE_INVALID;
+
+    // Use improved Israeli mobile validation
+    if (!this.isValidIsraeliMobile(value)) {
+      return VALIDATION_MESSAGES.PHONE_INVALID;
     }
-    
+
     return null;
   }
 
@@ -271,36 +251,34 @@ export class AdminFirestoreService {
    */
   static async checkMilitaryIdExists(militaryId: string): Promise<boolean> {
     try {
-      console.log(`🔍 Checking for duplicate military ID: ${militaryId}`);
-      
-      // Get all authorized personnel records
-      const personnelRef = collection(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION);
-      const snapshot = await getDocs(personnelRef);
-      
-      console.log(`📋 Found ${snapshot.docs.length} existing personnel records to check`);
-      
-      // Check each record by verifying the military ID against stored hash+salt
-      for (const doc of snapshot.docs) {
+      const personnelQuery = query(collection(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION));
+      const querySnapshot = await getDocs(personnelQuery);
+
+      for (const doc of querySnapshot.docs) {
         const data = doc.data();
-        if (data.militaryPersonalNumberHash && data.salt) {
-          console.log(`🔒 Checking against record ${doc.id}`);
-          const isMatch = await SecurityUtils.verifyMilitaryId(
-            militaryId, 
-            data.militaryPersonalNumberHash, 
-            data.salt
-          );
-          if (isMatch) {
-            console.log(`❌ DUPLICATE FOUND! Military ID ${militaryId} matches record ${doc.id}`);
-            return true; // Found duplicate
-          }
+        if (await SecurityUtils.verifyMilitaryId(militaryId, data.militaryPersonalNumberHash, data.salt)) {
+          return true;
         }
       }
-      
-      console.log(`✅ No duplicate found for military ID: ${militaryId}`);
-      return false; // No duplicate found
-    } catch (error) {
-      console.error('❌ Error checking military ID:', error);
-      throw new AdminError('Failed to check for duplicate military ID', 'DUPLICATE_CHECK_ERROR');
+
+      return false;
+    } catch {
+      throw new AdminError('Failed to check for duplicate military ID', 'FIRESTORE_ERROR');
+    }
+  }
+
+  static async getAdminConfig(): Promise<AdminConfig> {
+    try {
+      const adminDocRef = doc(db, ADMIN_CONFIG.FIRESTORE_ADMIN_COLLECTION, ADMIN_CONFIG.FIRESTORE_ADMIN_DOC);
+      const adminDoc = await getDoc(adminDocRef);
+
+      if (!adminDoc.exists()) {
+        throw new AdminError(ADMIN_MESSAGES.LOGIN_CONFIG_NOT_FOUND, 'CONFIG_NOT_FOUND');
+      }
+
+      return adminDoc.data() as AdminConfig;
+    } catch {
+      throw new AdminError(ADMIN_MESSAGES.LOGIN_CONNECTION_ERROR, 'FIRESTORE_ERROR');
     }
   }
 
@@ -319,54 +297,36 @@ export class AdminFirestoreService {
         };
       }
 
-      // Check for duplicate military ID BEFORE the transaction
-      const isDuplicate = await this.checkMilitaryIdExists(formData.militaryPersonalNumber);
-      if (isDuplicate) {
+      // Check for duplicates
+      const militaryIdExists = await this.checkMilitaryIdExists(formData.militaryPersonalNumber);
+      if (militaryIdExists) {
         return {
           success: false,
           message: `Military Personal Number ${formData.militaryPersonalNumber} already exists in the system`,
-          error: new AdminError(
-            `Military Personal Number ${formData.militaryPersonalNumber} already exists in the system`,
-            'DUPLICATE_MILITARY_ID'
-          )
+          error: new AdminError('Duplicate military ID', 'DUPLICATE_ID')
         };
       }
 
-      // Use transaction to add the personnel (no more duplicate check inside)
-      const result = await runTransaction(db, async (transaction) => {
-        // Hash the military personal number
-        const { hash, salt } = await SecurityUtils.hashMilitaryId(formData.militaryPersonalNumber);
-        
-        // Normalize phone number to international format
-        const normalizedPhone = ValidationUtils.toInternationalFormat(formData.phoneNumber);
-        
-        // Create the authorized personnel document
-        const personnelDoc = {
-          militaryPersonalNumberHash: hash,
-          salt: salt,
-          phoneNumber: normalizedPhone,
-          firstName: formData.firstName.trim(),
-          lastName: formData.lastName.trim(),
-          rank: formData.rank.trim(),
-          approvedRole: 'soldier', // Default role for all new users
-          roleStatus: 'approved', // Auto-approve basic soldier role
-          status: 'active', // Default status
-          joinDate: serverTimestamp(),
-          createdAt: serverTimestamp(),
-          createdBy: 'system_admin' // TODO: Replace with actual admin user ID
-        };
+      // Hash the military personal number
+      const { hash, salt } = await SecurityUtils.hashMilitaryId(formData.militaryPersonalNumber);
 
-        // Add to Firestore using transaction
-        const docRef = doc(collection(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION));
-        transaction.set(docRef, personnelDoc);
-        
-        return {
-          docId: docRef.id,
-          hash,
-          salt,
-          normalizedPhone
-        };
-      });
+      // Normalize phone number to international format
+      const normalizedPhone = ValidationUtils.toInternationalFormat(formData.phoneNumber);
+
+      // Create the authorized personnel document
+      const personnelDoc = {
+        militaryPersonalNumberHash: hash,
+        salt: salt,
+        phoneNumber: normalizedPhone,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        rank: formData.rank.trim(),
+        createdAt: serverTimestamp(),
+        createdBy: 'system_admin' // TODO: Replace with actual admin user ID
+      };
+
+      // Add to Firestore
+      const docRef = await addDoc(collection(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION), personnelDoc);
 
       const addedPersonnel: AuthorizedPersonnel = {
         id: result.docId,
@@ -538,7 +498,7 @@ export class AdminFirestoreService {
     try {
       const personnelQuery = query(collection(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION));
       const querySnapshot = await getDocs(personnelQuery);
-      
+
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -572,6 +532,31 @@ export class AdminFirestoreService {
       };
     }
   }
+
+  static async addAuthorizedPersonnelBulk(personnel: PersonnelFormData[]): Promise<{
+    successful: PersonnelFormData[];
+    failed: PersonnelFormData[];
+    duplicates: PersonnelFormData[];
+  }> {
+    const results = {
+      successful: [] as PersonnelFormData[],
+      failed: [] as PersonnelFormData[],
+      duplicates: [] as PersonnelFormData[],
+    };
+
+    for (const person of personnel) {
+      const result = await this.addAuthorizedPersonnel(person);
+      if (result.success) {
+        results.successful.push(person);
+      } else if (result.error?.code === 'DUPLICATE_ID') {
+        results.duplicates.push(person);
+      } else {
+        results.failed.push(person);
+      }
+    }
+
+    return results;
+  }
 }
 
 /**
@@ -588,7 +573,7 @@ export class SessionUtils {
 
       const session = JSON.parse(sessionData);
       const now = new Date().getTime();
-      
+
       return session.expires > now;
     } catch {
       return false;
@@ -642,4 +627,11 @@ export class AdminError extends Error {
     this.operation = operation;
     this.timestamp = new Date();
   }
-} 
+}
+
+export interface PersonnelOperationResult {
+  success: boolean;
+  personnel?: AuthorizedPersonnel;
+  message: string;
+  error?: AdminError;
+}

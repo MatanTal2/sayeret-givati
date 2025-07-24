@@ -35,7 +35,7 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
       ...prev,
       [field]: value
     }));
-    
+
     // Clear message when user types
     if (message) {
       setMessage(null);
@@ -58,7 +58,7 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
       });
       return false;
     }
-    
+
     return true;
   };
 
@@ -72,14 +72,14 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
 
     try {
       const result = await AdminFirestoreService.addAuthorizedPersonnel(formData);
-      
+
       if (result.success) {
         setMessage({
           text: result.message,
           type: 'success'
         });
         resetForm();
-        
+
         // Refresh personnel list
         await fetchPersonnel();
       } else {
@@ -101,7 +101,7 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
 
   const fetchPersonnel = async () => {
     setIsLoading(true);
-    
+
     try {
       const fetchedPersonnel = await AdminFirestoreService.getAllAuthorizedPersonnel();
       setPersonnel(fetchedPersonnel);
@@ -112,12 +112,32 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
         type: 'error'
       });
     }
-    
+
     setIsLoading(false);
   };
 
   const clearMessage = () => {
     setMessage(null);
+  };
+
+  const addPersonnelBulk = async (personnel: PersonnelFormData[]) => {
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const result = await AdminFirestoreService.addAuthorizedPersonnelBulk(personnel);
+      setMessage({
+        text: `Successfully added ${result.successful.length} personnel. Duplicates: ${result.duplicates.length}. Failed: ${result.failed.length}.`,
+        type: 'success',
+      });
+    } catch {
+      setMessage({
+        text: 'Failed to add personnel in bulk. Please try again.',
+        type: 'error',
+      });
+    }
+
+    setIsLoading(false);
   };
 
   return {
@@ -131,4 +151,4 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     fetchPersonnel,
     clearMessage
   };
-} 
+}
