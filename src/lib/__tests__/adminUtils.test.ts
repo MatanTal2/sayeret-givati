@@ -131,12 +131,22 @@ describe('SecurityUtils', () => {
       const militaryId = '1234567';
       const salt = 'somesalt';
       const hash = 'somehash';
+      
+      // Mock console.error to suppress expected error output
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      
       jest
         .spyOn(SecurityUtils, 'hashMilitaryId')
         .mockRejectedValue(new Error('Crypto failed'));
 
       const result = await SecurityUtils.verifyMilitaryId(militaryId, hash, salt);
       expect(result).toBe(false);
+      
+      // Verify that the error was logged (but suppressed from output)
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to verify military ID:', expect.any(Error));
+      
+      // Restore console.error
+      consoleSpy.mockRestore();
     });
   });
 });
