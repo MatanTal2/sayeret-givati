@@ -1,19 +1,19 @@
 import { db } from '@/lib/firebase';
 import { doc, getDoc, collection, addDoc, query, getDocs, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { 
-  AdminConfig, 
-  HashResult, 
-  PersonnelFormData, 
-  ValidationResult, 
+import {
+  AdminConfig,
+  HashResult,
+  PersonnelFormData,
+  ValidationResult,
   AuthorizedPersonnel,
   PersonnelOperationResult
 } from '@/types/admin';
-import { 
-  ADMIN_CONFIG, 
-  VALIDATION_PATTERNS, 
-  VALIDATION_MESSAGES, 
+import {
+  ADMIN_CONFIG,
+  VALIDATION_PATTERNS,
+  VALIDATION_MESSAGES,
   ADMIN_MESSAGES,
-  SECURITY_CONFIG 
+  SECURITY_CONFIG
 } from '@/constants/admin';
 
 /**
@@ -23,15 +23,17 @@ export class SecurityUtils {
   /**
    * Generate a secure hash of military personal number using Web Crypto API
    */
-  static async hashMilitaryId(militaryId: string): Promise<HashResult> {
+  static async hashMilitaryId(militaryId: string, salt?: string): Promise<HashResult> {
     try {
-      // Generate random salt
-      const saltArray = new Uint8Array(SECURITY_CONFIG.SALT_LENGTH);
-      crypto.getRandomValues(saltArray);
-      const salt = Array.from(saltArray)
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-      
+      if (!salt) {
+        // Generate random salt
+        const saltArray = new Uint8Array(SECURITY_CONFIG.SALT_LENGTH);
+        crypto.getRandomValues(saltArray);
+        salt = Array.from(saltArray)
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+      }
+
       // Create hash using Web Crypto API
       const encoder = new TextEncoder();
       const data = encoder.encode(militaryId + salt);
@@ -40,7 +42,7 @@ export class SecurityUtils {
       const hash = Array.from(hashArray)
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
-      
+
       return { hash, salt };
     } catch (error) {
       throw new AdminError(`Failed to hash military ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -52,7 +54,7 @@ export class SecurityUtils {
    */
   static async verifyMilitaryId(militaryId: string, storedHash: string, salt: string): Promise<boolean> {
     try {
-      const { hash } = await this.hashMilitaryId(militaryId + salt);
+      const { hash } = await this.hashMilitaryId(militaryId, salt);
       return hash === storedHash;
     } catch (error) {
       console.error('Failed to verify military ID:', error);
@@ -115,12 +117,12 @@ export class ValidationUtils {
     if (!value.trim()) {
       return VALIDATION_MESSAGES.PHONE_REQUIRED;
     }
-    
+
     // Use improved Israeli mobile validation
     if (!this.isValidIsraeliMobile(value)) {
       return VALIDATION_MESSAGES.PHONE_INVALID;
     }
-    
+
     return null;
   }
 
@@ -180,6 +182,24 @@ export class AdminFirestoreService {
   /**
    * Get admin configuration from Firestore
    */
+  static async checkMilitaryIdExists(militaryId: string): Promise<boolean> {
+    try {
+      const personnelQuery = query(collection(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION));
+      const querySnapshot = await getDocs(personnelQuery);
+
+      for (const doc of querySnapshot.docs) {
+        const data = doc.data();
+        if (await SecurityUtils.verifyMilitaryId(militaryId, data.militaryPersonalNumberHash, data.salt)) {
+          return true;
+        }
+      }
+
+      return false;
+    } catch (error) {
+      throw new AdminError('Failed to check for duplicate military ID', 'FIRESTORE_ERROR');
+    }
+  }
+
   static async getAdminConfig(): Promise<AdminConfig> {
     try {
       const adminDocRef = doc(db, ADMIN_CONFIG.FIRESTORE_ADMIN_COLLECTION, ADMIN_CONFIG.FIRESTORE_ADMIN_DOC);
@@ -213,12 +233,22 @@ export class AdminFirestoreService {
         };
       }
 
+      // Check for duplicates
+      const militaryIdExists = await this.checkMilitaryIdExists(formData.militaryPersonalNumber);
+      if (militaryIdExists) {
+        return {
+          success: false,
+          message: `Military Personal Number ${formData.militaryPersonalNumber} already exists in the system`,
+          error: new AdminError('Duplicate military ID', 'DUPLICATE_ID')
+        };
+      }
+
       // Hash the military personal number
       const { hash, salt } = await SecurityUtils.hashMilitaryId(formData.militaryPersonalNumber);
-      
+
       // Normalize phone number to international format
       const normalizedPhone = ValidationUtils.toInternationalFormat(formData.phoneNumber);
-      
+
       // Create the authorized personnel document
       const personnelDoc = {
         militaryPersonalNumberHash: hash,
@@ -233,7 +263,7 @@ export class AdminFirestoreService {
 
       // Add to Firestore
       const docRef = await addDoc(collection(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION), personnelDoc);
-      
+
       const addedPersonnel: AuthorizedPersonnel = {
         id: docRef.id,
         militaryPersonalNumberHash: hash,
@@ -269,7 +299,7 @@ export class AdminFirestoreService {
     try {
       const personnelQuery = query(collection(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION));
       const querySnapshot = await getDocs(personnelQuery);
-      
+
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -303,6 +333,27 @@ export class AdminFirestoreService {
       };
     }
   }
+
+  static async addAuthorizedPersonnelBulk(personnel: PersonnelFormData[]): Promise<any> {
+    const results = {
+      successful: [],
+      failed: [],
+      duplicates: [],
+    };
+
+    for (const person of personnel) {
+      const result = await this.addAuthorizedPersonnel(person);
+      if (result.success) {
+        results.successful.push(person);
+      } else if (result.error?.code === 'DUPLICATE_ID') {
+        results.duplicates.push(person);
+      } else {
+        results.failed.push(person);
+      }
+    }
+
+    return results;
+  }
 }
 
 /**
@@ -319,7 +370,7 @@ export class SessionUtils {
 
       const session = JSON.parse(sessionData);
       const now = new Date().getTime();
-      
+
       return session.expires > now;
     } catch {
       return false;
@@ -373,4 +424,4 @@ export class AdminError extends Error {
     this.operation = operation;
     this.timestamp = new Date();
   }
-} 
+}
