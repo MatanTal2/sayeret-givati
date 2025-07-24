@@ -42,6 +42,13 @@ export const TEXT_CONSTANTS = {
     HIDE_PASSWORD: 'הסתר סיסמה'
   },
 
+  // User Profile Menu
+  PROFILE: {
+    MY_PROFILE: 'הפרופיל שלי',
+    SETTINGS: 'הגדרות',
+    DEFAULT_USER: 'משתמש'
+  },
+
   // Features & Pages
   FEATURES: {
     SECTION_TITLE: 'כלים ומערכות',

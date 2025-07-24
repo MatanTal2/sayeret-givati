@@ -112,6 +112,96 @@ This project follows a **clean, military-inspired design** with Hebrew RTL suppo
 
 ---
 
+## 👤 Authentication & Profile UI
+
+### **Login Button (Signed-Out State)**
+
+- **Placement:** Top-right in the header (primary navigation area)
+- **Style:**
+
+  - Primary button style (`btn-primary`)
+  - Label: "התחברות"
+  - Lock icon (optional), left of label
+  - Color: Use `--purple-600` for background, `--purple-700` for hover, white text
+  - Padding and font as in button standard
+
+#### Example
+
+```tsx
+<button className="btn-primary flex items-center gap-2">
+  <LockIcon className="w-5 h-5" />
+  התחברות
+</button>
+```
+
+---
+
+### **Profile Button / User Menu (Signed-In State)**
+
+- **Placement:** Top-right in the header, replacing login button
+- **Style:**
+
+  - **Circle with initials**: `w-9 h-9` (`36px`), background `--purple-600`, text-white, `font-bold`
+  - Circle is always visible
+  - Next to circle: user's first name (`font-medium text-base`, text-right for RTL)
+  - Menu opens on click (dropdown with shadow, rounded corners, right-aligned for RTL)
+- **Menu options:**
+
+  - "הפרופיל שלי"
+  - "הגדרות"
+  - Divider
+  - "התנתק" (Logout, `text-red-600` or `bg-red-50` on hover)
+- **Colors:** Only use colors from the approved palette
+
+#### Example
+
+```tsx
+<div className="relative">
+  <button className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 focus:ring-2 focus:ring-purple-500 text-gray-900">
+    <span className="bg-purple-600 text-white rounded-full w-9 h-9 flex items-center justify-center font-bold text-lg">MT</span>
+    <span className="font-medium text-base">מתן</span>
+    <ChevronDownIcon className="w-5 h-5" />
+  </button>
+  <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg py-2 z-20">
+    <a className="block px-4 py-2 text-gray-900 hover:bg-gray-100">הפרופיל שלי</a>
+    <a className="block px-4 py-2 text-gray-900 hover:bg-gray-100">הגדרות</a>
+    <div className="border-t my-1"></div>
+    <a className="px-4 py-2 text-red-600 hover:bg-red-50 flex items-center gap-2">
+      <LogOutIcon className="w-4 h-4" />
+      התנתק
+    </a>
+  </div>
+</div>
+```
+
+---
+
+### **Signed-In User Indication**
+
+- Always show the circle with initials in the header after login.
+- User's first name visible next to initials.
+- Personal greeting on home/dashboard is optional.
+- All UI elements respect color palette and RTL.
+
+---
+
+### **Accessibility & Responsiveness**
+
+- Avatar circle has `aria-label` with full name for accessibility.
+- Menu is keyboard and screen reader friendly.
+- Responsive sizing for mobile (`w-8 h-8`).
+
+---
+
+**Checklist:**
+
+- [ ] Uses only colors from defined palette
+- [ ] Always initials, never profile image
+- [ ] RTL alignment throughout
+- [ ] Accessible and responsive
+
+---
+
 ## 📏 Spacing & Layout
 
 ### Container Widths
