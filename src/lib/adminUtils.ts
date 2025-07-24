@@ -1,11 +1,13 @@
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, addDoc, query, getDocs, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, query, getDocs, deleteDoc, serverTimestamp, Timestamp, writeBatch, DocumentReference } from 'firebase/firestore';
 import {
   AdminConfig,
   HashResult,
   PersonnelFormData,
   ValidationResult,
-  AuthorizedPersonnel
+  AuthorizedPersonnel,
+  AuthorizedPersonnelData,
+  PersonnelOperationResult
 } from '@/types/admin';
 import {
   ADMIN_CONFIG,
@@ -14,6 +16,7 @@ import {
   ADMIN_MESSAGES,
   SECURITY_CONFIG
 } from '@/constants/admin';
+import { validateUserName } from '@/lib/equipmentValidation';
 
 /**
  * Security utilities for hashing military personal numbers
@@ -137,6 +140,14 @@ export class ValidationUtils {
     }
 
     return null;
+  }
+
+  /**
+   * Validate Israeli mobile phone number
+   */
+  static isValidIsraeliMobile(phone: string): boolean {
+    const cleaned = phone.replace(/[\s-]/g, '');
+    return VALIDATION_PATTERNS.PHONE_NUMBER.test(cleaned);
   }
 
   /**
@@ -329,10 +340,10 @@ export class AdminFirestoreService {
       const docRef = await addDoc(collection(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION), personnelDoc);
 
       const addedPersonnel: AuthorizedPersonnel = {
-        id: result.docId,
-        militaryPersonalNumberHash: result.hash,
-        salt: result.salt,
-        phoneNumber: result.normalizedPhone,
+        id: docRef.id,
+        militaryPersonalNumberHash: hash,
+        salt: salt,
+        phoneNumber: normalizedPhone,
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         rank: formData.rank.trim(),
@@ -533,30 +544,7 @@ export class AdminFirestoreService {
     }
   }
 
-  static async addAuthorizedPersonnelBulk(personnel: PersonnelFormData[]): Promise<{
-    successful: PersonnelFormData[];
-    failed: PersonnelFormData[];
-    duplicates: PersonnelFormData[];
-  }> {
-    const results = {
-      successful: [] as PersonnelFormData[],
-      failed: [] as PersonnelFormData[],
-      duplicates: [] as PersonnelFormData[],
-    };
 
-    for (const person of personnel) {
-      const result = await this.addAuthorizedPersonnel(person);
-      if (result.success) {
-        results.successful.push(person);
-      } else if (result.error?.code === 'DUPLICATE_ID') {
-        results.duplicates.push(person);
-      } else {
-        results.failed.push(person);
-      }
-    }
-
-    return results;
-  }
 }
 
 /**
@@ -629,9 +617,4 @@ export class AdminError extends Error {
   }
 }
 
-export interface PersonnelOperationResult {
-  success: boolean;
-  personnel?: AuthorizedPersonnel;
-  message: string;
-  error?: AdminError;
-}
+

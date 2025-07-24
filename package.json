@@ -9,7 +9,8 @@
     "lint": "next lint",
     "test": "jest --env=jsdom --transform '{\"\\\\.[jt]sx?$\": \"ts-jest\"}'",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "vercel-build": "npm run test && npm run build"
   },
   "dependencies": {
     "firebase": "^12.0.0",

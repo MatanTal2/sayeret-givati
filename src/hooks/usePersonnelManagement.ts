@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AuthorizedPersonnelData, FormMessage, AuthorizedPersonnel } from '@/types/admin';
+import { AuthorizedPersonnelData, FormMessage, AuthorizedPersonnel, PersonnelFormData } from '@/types/admin';
 import { ValidationUtils, AdminFirestoreService } from '@/lib/adminUtils';
 
 interface UsePersonnelManagementReturn {
@@ -11,6 +11,7 @@ interface UsePersonnelManagementReturn {
   personnel: AuthorizedPersonnel[];
   updateFormField: (field: keyof AuthorizedPersonnelData, value: string) => void;
   addPersonnel: () => Promise<void>;
+  addPersonnelBulk: (personnel: PersonnelFormData[]) => Promise<void>;
   fetchPersonnel: () => Promise<void>;
   clearMessage: () => void;
   resetForm: () => void;
@@ -148,6 +149,7 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     updateFormField,
     resetForm,
     addPersonnel,
+    addPersonnelBulk,
     fetchPersonnel,
     clearMessage
   };
