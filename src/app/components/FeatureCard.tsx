@@ -26,7 +26,7 @@ export default function FeatureCard({
       }
     `}>
       <div className="text-center">
-        <div className="text-4xl mb-4">{icon}</div>
+        <div className="text-3xl mb-4">{icon}</div>
         <h3 className="text-xl font-bold mb-2">{title}</h3>
         <p className="text-sm opacity-90">{description}</p>
         {!available && (

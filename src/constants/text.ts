@@ -49,6 +49,10 @@ export const TEXT_CONSTANTS = {
       TITLE: 'ניהול שבצ"ק',
       DESCRIPTION: 'מעקב וניהול סטטוס חיילים'
     },
+    SOLDIER_TRACKING: {
+      TITLE: 'מעקב לוחם',
+      DESCRIPTION: 'מעקב כישורים והרשאות חיילים'
+    },
     LOGISTICS: {
       TITLE: 'לוגיסטיקה',
       DESCRIPTION: 'ניהול ציוד ואספקה'
@@ -76,7 +80,10 @@ export const TEXT_CONSTANTS = {
     AVAILABLE: 'זמין',
     NOT_AVAILABLE: 'לא זמין',
     IN_DEVELOPMENT: 'בפיתוח',
-    COMING_SOON: 'בקרוב'
+    COMING_SOON: 'בקרוב',
+    REQUIRES_AUTH: 'דרוש חיבור למערכת',
+    REQUIRES_ADMIN: 'דרושות הרשאות ניהול',
+    LOGIN_TO_ACCESS: 'התחבר לגישה'
   },
 
   // Footer Links

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { TEXT_CONSTANTS } from '@/constants/text';
 
 export interface AuthModalProps {
   isOpen: boolean;
@@ -44,22 +45,22 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     <>
       {/* Backdrop - Blur Only */}
       <div 
-        className="fixed inset-0 z-50 transition-opacity backdrop-blur-sm"
+        className="fixed inset-0 z-50 backdrop-enter backdrop-blur-sm bg-black/20"
         onClick={onClose}
       />
       
       {/* Modal Container - Centered for all screen sizes */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-none">
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm transform transition-all pointer-events-auto 
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm modal-enter pointer-events-auto 
                         my-4 sm:my-8 max-h-[90vh] overflow-y-auto">
           
           {/* Close Button - Top Right */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 hover:bg-gray-100 rounded-full transition-colors
-                       text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
+            className="absolute top-4 right-4 z-10 p-2 hover:bg-gray-100 rounded-full btn-press focus-ring
+                       text-gray-400 hover:text-gray-600 transition-all duration-200"
             disabled={isLoading}
-            aria-label="סגור"
+            aria-label={TEXT_CONSTANTS.ARIA_LABELS.CLOSE_MODAL}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -74,8 +75,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">התחברות למערכת</h2>
-            <p className="text-gray-600 text-xs">היכנס עם הפרטים שלך</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">{TEXT_CONSTANTS.AUTH.LOGIN_TO_SYSTEM}</h2>
+            <p className="text-gray-600 text-xs">{TEXT_CONSTANTS.AUTH.LOGIN_SUBTITLE}</p>
           </div>
 
           {/* Form Content */}
@@ -85,7 +86,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               {/* Email Field */}
               <div className="space-y-2">
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
-                  אימייל
+                  {TEXT_CONSTANTS.AUTH.EMAIL_LABEL}
                 </label>
                 <div className="relative">
                   <input
@@ -97,7 +98,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 
                              focus:ring-purple-500 focus:border-purple-500 outline-none transition-all
                              text-right text-gray-800 bg-gray-50 focus:bg-white placeholder-gray-500"
-                    placeholder="אימייל"
+                    placeholder={TEXT_CONSTANTS.AUTH.EMAIL_PLACEHOLDER}
                     disabled={isLoading}
                     required
                   />
@@ -113,7 +114,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               {/* Password Field */}
               <div className="space-y-2">
                 <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
-                  סיסמה
+                  {TEXT_CONSTANTS.AUTH.PASSWORD_LABEL}
                 </label>
                 <div className="relative">
                   <input
@@ -125,7 +126,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 
                              focus:ring-purple-500 focus:border-purple-500 outline-none transition-all
                              text-right text-gray-800 bg-gray-50 focus:bg-white pr-12 placeholder-gray-500"
-                    placeholder="סיסמה"
+                    placeholder={TEXT_CONSTANTS.AUTH.PASSWORD_PLACEHOLDER}
                     disabled={isLoading}
                     required
                   />
@@ -136,7 +137,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                              text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-md
                              focus:outline-none focus:ring-2 focus:ring-purple-300"
                     disabled={isLoading}
-                    aria-label={showPassword ? 'הסתר סיסמה' : 'הצג סיסמה'}
+                    aria-label={showPassword ? TEXT_CONSTANTS.AUTH.HIDE_PASSWORD : TEXT_CONSTANTS.AUTH.SHOW_PASSWORD}
                   >
                     {showPassword ? (
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,16 +168,15 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               )}
 
                              {/* Submit Button */}
-               <button
-                 type="submit"
-                 disabled={isLoading || !formData.email || !formData.password}
-                 className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-purple-700 
-                          hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-400
-                          text-white font-semibold rounded-lg transition-all duration-200 transform
-                          focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none
-                          disabled:cursor-not-allowed flex items-center justify-center gap-2
-                          hover:scale-[1.02] hover:shadow-lg disabled:hover:scale-100 disabled:hover:shadow-none"
-               >
+                               <button
+                  type="submit"
+                  disabled={isLoading || !formData.email || !formData.password}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-purple-700 
+                           hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-400
+                           text-white font-semibold rounded-lg btn-press focus-ring
+                           disabled:cursor-not-allowed flex items-center justify-center gap-2
+                           transition-all duration-200 hover:shadow-lg disabled:hover:shadow-none"
+                >
                  {isLoading ? (
                    <>
                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -184,7 +184,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                        <path className="opacity-75" fill="currentColor" 
                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                      </svg>
-                     מתחבר...
+                                           {TEXT_CONSTANTS.BUTTONS.CONNECTING}
                    </>
                  ) : (
                    <>
@@ -192,7 +192,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                      </svg>
-                     התחבר
+                                           {TEXT_CONSTANTS.BUTTONS.LOGIN}
                    </>
                  )}
                </button>
@@ -200,17 +200,17 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                {/* Additional Auth Options */}
                <div className="space-y-2 mt-3">
                  {/* Forgot Password Link */}
-                 <button
-                   type="button"
-                   onClick={() => {
-                     // TODO: Implement forgot password functionality
-                     console.log('Forgot password clicked');
-                   }}
-                   className="w-full text-center text-sm text-purple-600 hover:text-purple-800 
-                            transition-colors underline-offset-2 hover:underline"
-                   disabled={isLoading}
-                 >
-                   שכחת סיסמה?
+                                   <button
+                    type="button"
+                    onClick={() => {
+                      // TODO: Implement forgot password functionality
+                      console.log('Forgot password clicked');
+                    }}
+                    className="w-full text-center text-sm text-purple-600 hover:text-purple-800 
+                             transition-all duration-200 underline-offset-2 hover:underline focus-ring rounded-md"
+                    disabled={isLoading}
+                  >
+                                       {TEXT_CONSTANTS.BUTTONS.FORGOT_PASSWORD}
                  </button>
 
                  {/* Divider */}
@@ -219,28 +219,28 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                      <div className="w-full border-t border-gray-200"></div>
                    </div>
                    <div className="relative flex justify-center text-sm">
-                     <span className="px-2 bg-white text-gray-500">או</span>
+                                           <span className="px-2 bg-white text-gray-500">{TEXT_CONSTANTS.AUTH.OR_DIVIDER}</span>
                    </div>
                  </div>
 
                  {/* Register Button */}
-                 <button
-                   type="button"
-                   onClick={() => {
-                     // TODO: Implement registration functionality
-                     console.log('Register clicked');
-                   }}
-                   className="w-full py-3 px-4 border-2 border-purple-600 text-purple-600 
-                            font-semibold rounded-xl transition-all duration-200 transform
-                            focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none
-                            hover:bg-purple-50 hover:scale-[1.02] flex items-center justify-center gap-2"
-                   disabled={isLoading}
-                 >
+                                   <button
+                    type="button"
+                    onClick={() => {
+                      // TODO: Implement registration functionality
+                      console.log('Register clicked');
+                    }}
+                    className="w-full py-3 px-4 border-2 border-purple-600 text-purple-600 
+                             font-semibold rounded-xl btn-press focus-ring
+                             hover:bg-purple-50 flex items-center justify-center gap-2
+                             transition-all duration-200"
+                    disabled={isLoading}
+                  >
                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                    </svg>
-                   הרשמה חדשה
+                                       {TEXT_CONSTANTS.BUTTONS.REGISTER}
                  </button>
                </div>
             </form>
@@ -248,9 +248,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                      {/* Footer */}
            <div className="px-6 pb-4 text-center border-t border-gray-100 pt-2">
-             <p className="text-xs text-gray-500">
-               מערכת ניהול סיירת גבעתי
-             </p>
+                         <p className="text-xs text-gray-500">
+              {TEXT_CONSTANTS.COMPANY_NAME}
+            </p>
            </div>
         </div>
       </div>

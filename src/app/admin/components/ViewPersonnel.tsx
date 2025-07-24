@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { usePersonnelManagement } from '@/hooks/usePersonnelManagement';
-import { RankIcon } from '@/utils/rankUtils';
 
 export default function ViewPersonnel() {
   const {
@@ -257,12 +256,9 @@ export default function ViewPersonnel() {
                           {person.firstName} {person.lastName}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                          <RankIcon 
-                            rank={person.rank}
-                            size={24}
-                            className="text-gray-600 dark:text-gray-400"
-                          />
-                          <span>{person.rank}</span>
+                          <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                            {person.rank}
+                          </span>
                         </div>
                       </div>
                     </td>

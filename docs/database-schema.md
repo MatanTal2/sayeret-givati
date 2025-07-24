@@ -65,7 +65,7 @@ The system implements a secure role approval workflow:
 1. **Default Role**: All new users start with `soldier` role
 2. **Role Request**: Users cannot choose privileged roles during registration
 3. **Admin Approval**: Only admins with proper privileges can assign higher roles
-4. **Role Hierarchy**: 
+4. **Role Hierarchy**:
    - `soldier` - Basic access (auto-approved)
    - `team_leader` - Team management (requires approval)
    - `officer` - Enhanced permissions (requires approval)
