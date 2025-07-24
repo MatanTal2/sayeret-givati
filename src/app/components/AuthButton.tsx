@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { TEXT_CONSTANTS } from '@/constants/text';
-import { LockIcon, ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, LogInIcon } from 'lucide-react';
+import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, LogInIcon } from 'lucide-react';
 
 export default function AuthButton() {
   const { user, isAuthenticated, isLoading, logout, setShowAuthModal } = useAuth();

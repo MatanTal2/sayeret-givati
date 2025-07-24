@@ -89,6 +89,7 @@ export default function HomePage() {
           height={400}
           priority
           className="object-contain"
+          style={{ width: "auto", height: "auto" }}
         />
       </div>
 
