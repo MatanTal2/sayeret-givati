@@ -2,7 +2,7 @@ import { BsFillHouseFill } from "react-icons/bs";
 import { GiTank } from "react-icons/gi";
 import { MdNotListedLocation } from "react-icons/md";
 import { Soldier } from '../../types';
-import { getAvailableStatuses } from '../../lib/statusUtils';
+import { getAvailableStatuses } from '@/lib/statusUtils';
 import SelectAllCheckbox from './SelectAllCheckbox';
 
 interface SoldiersTableDesktopProps {

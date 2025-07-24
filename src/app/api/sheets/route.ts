@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
-import { mapStructuredStatusToRaw } from '../../../lib/statusUtils';
+import { mapStructuredStatusToRaw } from '@/lib/statusUtils';
 
 export async function GET() {
   try {

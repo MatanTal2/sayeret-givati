@@ -37,6 +37,14 @@ export default function HomePage() {
       color: "bg-gray-400"
     },
     {
+      title: "מחולל שמירות",
+      description: "יצירת לוחות שמירה אוטומטיים עם אילוצים",
+      icon: "⏰",
+      href: "/guard-scheduler",
+      available: false,
+      color: "bg-gray-400"
+    },
+    {
       title: "מעקב לוחם",
       description: "מעקב כישורים והרשאות חיילים",
       icon: "📊",
