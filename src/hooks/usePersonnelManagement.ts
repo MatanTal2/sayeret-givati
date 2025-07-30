@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { AuthorizedPersonnelData, FormMessage, AuthorizedPersonnel, PersonnelFormData } from '@/types/admin';
 import { ValidationUtils, AdminFirestoreService } from '@/lib/adminUtils';
 
@@ -101,7 +101,7 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     setIsLoading(false);
   };
 
-  const fetchPersonnel = async () => {
+  const fetchPersonnel = useCallback(async () => {
     setIsLoading(true);
 
     try {
@@ -116,7 +116,7 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     }
 
     setIsLoading(false);
-  };
+  }, []); // Empty dependency array since it doesn't depend on any props/state
 
   const clearMessage = () => {
     setMessage(null);

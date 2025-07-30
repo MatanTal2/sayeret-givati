@@ -21,7 +21,7 @@ export default function ViewPersonnel() {
   // Fetch personnel on component mount
   useEffect(() => {
     fetchPersonnel();
-  }, []);
+  }, [fetchPersonnel]);
 
   // Filter and sort personnel
   const filteredPersonnel = personnel
@@ -255,8 +255,10 @@ export default function ViewPersonnel() {
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {person.firstName} {person.lastName}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          🎖️ {person.rank}
+                        <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                          <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                            {person.rank}
+                          </span>
                         </div>
                       </div>
                     </td>

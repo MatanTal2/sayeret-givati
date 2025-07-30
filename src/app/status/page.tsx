@@ -662,6 +662,7 @@ export default function StatusPage() {
                 alt="לוגו סיירת גבעתי" 
                 width={80} 
                 height={80}
+                priority
                 className="h-16 w-auto"
               />
             </Link>

@@ -3,6 +3,14 @@ const { TextEncoder, TextDecoder } = require('util');
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
+// Mock Firebase environment variables for tests only
+process.env.NEXT_PUBLIC_FIREBASE_API_KEY = 'mock-api-key-for-tests';
+process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = 'mock-auth-domain-for-tests';
+process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = 'mock-project-id-for-tests';
+process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET = 'mock-storage-bucket-for-tests';
+process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID = 'mock-messaging-sender-id-for-tests';
+process.env.NEXT_PUBLIC_FIREBASE_APP_ID = 'mock-app-id-for-tests';
+
 // Mock Web Crypto API
 const crypto = require('crypto');
 Object.defineProperty(global, 'crypto', {
