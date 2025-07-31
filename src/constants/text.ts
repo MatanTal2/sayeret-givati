@@ -39,7 +39,15 @@ export const TEXT_CONSTANTS = {
     NO_ACCOUNT: 'עדיין אין לך חשבון?',
     OR_DIVIDER: 'או',
     SHOW_PASSWORD: 'הצג סיסמה',
-    HIDE_PASSWORD: 'הסתר סיסמה'
+    HIDE_PASSWORD: 'הסתר סיסמה',
+    REGISTER_TO_SYSTEM: 'הרשמה למערכת',
+    WELCOME_TO_SYSTEM: 'ברוכים הבאים למערכת',
+    SYSTEM_SUBTITLE: 'מסייעת סיירת גבעתי',
+    IDENTITY_VERIFICATION: 'אימות זהות',
+    PERSONAL_NUMBER_PLACEHOLDER: 'מספר אישי',
+    PERSONAL_NUMBER_HELPER: 'הזן מספר אישי בין 5-7 ספרות',
+    VERIFY_PERSONAL_NUMBER: 'אמת מספר אישי',
+    REGISTRATION_NOTE: 'מותר להירשם רק לחיילים מאושרים מראש'
   },
 
   // User Profile Menu
