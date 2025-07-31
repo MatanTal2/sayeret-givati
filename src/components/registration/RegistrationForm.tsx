@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import { validatePersonalNumber } from '@/utils/validationUtils';
 
 interface RegistrationFormProps {
   personalNumber: string;
@@ -7,6 +9,22 @@ interface RegistrationFormProps {
 }
 
 export default function RegistrationForm({ personalNumber, setPersonalNumber, onSwitchToLogin }: RegistrationFormProps) {
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [isValid, setIsValid] = useState(false);
+
+  // Real-time validation
+  useEffect(() => {
+    const validation = validatePersonalNumber(personalNumber);
+    setValidationError(validation.errorMessage);
+    setIsValid(validation.isValid);
+  }, [personalNumber]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Only allow digits
+    const cleanValue = value.replace(/[^0-9]/g, '');
+    setPersonalNumber(cleanValue);
+  };
   return (
     <>
       {/* Registration Content */}
@@ -40,12 +58,16 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
               <input
                 type="text"
                 value={personalNumber}
-                onChange={(e) => setPersonalNumber(e.target.value)}
-                className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 
-                         focus:ring-purple-500 focus:border-purple-500 outline-none transition-all
-                         text-right text-gray-800 bg-gray-50 focus:bg-white placeholder-gray-500"
+                onChange={handleInputChange}
+                className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
+                         text-right text-gray-800 bg-gray-50 focus:bg-white placeholder-gray-500 ${
+                  validationError && personalNumber
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                    : 'border-gray-200 focus:border-purple-500 focus:ring-purple-500'
+                }`}
                 placeholder={TEXT_CONSTANTS.AUTH.PERSONAL_NUMBER_PLACEHOLDER}
                 maxLength={7}
+                data-testid="personal-number-input"
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,6 +76,23 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
                 </svg>
               </div>
             </div>
+            
+            {/* Error Message */}
+            {validationError && personalNumber && (
+              <p 
+                className="text-sm text-red-600 text-right px-1"
+                data-testid="personal-number-error"
+              >
+                {validationError}
+              </p>
+            )}
+            
+            {/* Helper Text */}
+            {!validationError && (
+              <p className="text-sm text-gray-500 text-center">
+                {TEXT_CONSTANTS.AUTH.PERSONAL_NUMBER_HELPER}
+              </p>
+            )}
           </div>
 
           {/* Verify Button */}
@@ -62,11 +101,15 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
             onClick={() => {
               console.log('Verify personal number:', personalNumber);
             }}
-            className="w-full py-3 px-4 bg-gradient-to-r from-green-600 to-green-700 
-                     hover:from-green-700 hover:to-green-800
-                     text-white font-semibold rounded-xl btn-press focus-ring
+            disabled={!isValid}
+            className={`w-full py-3 px-4 font-semibold rounded-xl btn-press focus-ring
                      flex items-center justify-center gap-2
-                     transition-all duration-200 hover:shadow-lg"
+                     transition-all duration-200 ${
+              isValid
+                ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-lg'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+            data-testid="verify-button"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
