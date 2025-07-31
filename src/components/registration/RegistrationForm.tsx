@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { validatePersonalNumber } from '@/utils/validationUtils';
+import OTPVerificationStep from './OTPVerificationStep';
+import RegistrationDetailsStep from './RegistrationDetailsStep';
 
 interface RegistrationFormProps {
   personalNumber: string;
@@ -11,6 +13,10 @@ interface RegistrationFormProps {
 export default function RegistrationForm({ personalNumber, setPersonalNumber, onSwitchToLogin }: RegistrationFormProps) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(false);
+  const [currentStep, setCurrentStep] = useState<'personal-number' | 'otp' | 'details'>('personal-number');
+  const [userPhoneNumber, setUserPhoneNumber] = useState<string>('');
+  const [userFirstName, setUserFirstName] = useState<string>('');
+  const [userLastName, setUserLastName] = useState<string>('');
 
   // Real-time validation
   useEffect(() => {
@@ -25,6 +31,53 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
     const cleanValue = value.replace(/[^0-9]/g, '');
     setPersonalNumber(cleanValue);
   };
+
+  const handleVerifyPersonalNumber = () => {
+    console.log('TODO: verify personal number', personalNumber);
+    // TODO: Call backend to verify personal number and get user data
+    // For now, simulate finding user data from authorized_personnel document
+    const mockPhoneNumber = '0521234567';
+    const mockFirstName = 'יוסי';
+    const mockLastName = 'כהן';
+    
+    setUserPhoneNumber(mockPhoneNumber);
+    setUserFirstName(mockFirstName);
+    setUserLastName(mockLastName);
+    setCurrentStep('otp');
+  };
+
+  const handleOTPVerifySuccess = () => {
+    console.log('OTP verification successful');
+    setCurrentStep('details');
+  };
+
+  const handleRegistrationComplete = (data: { email: string; password: string; gender: string; birthdate: string; consent: boolean }) => {
+    console.log('Registration complete with data:', data);
+    // TODO: Complete registration process
+  };
+
+  // Show OTP step if we're in that phase
+  if (currentStep === 'otp') {
+    return (
+      <OTPVerificationStep 
+        phoneNumber={userPhoneNumber}
+        onVerifySuccess={handleOTPVerifySuccess}
+        onBack={() => setCurrentStep('personal-number')}
+      />
+    );
+  }
+
+  // Show registration details step if we're in that phase
+  if (currentStep === 'details') {
+    return (
+      <RegistrationDetailsStep 
+        firstName={userFirstName}
+        lastName={userLastName}
+        phoneNumber={userPhoneNumber}
+        onSubmit={handleRegistrationComplete}
+      />
+    );
+  }
   return (
     <>
       {/* Registration Content */}
@@ -98,9 +151,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
           {/* Verify Button */}
           <button
             type="button"
-            onClick={() => {
-              console.log('Verify personal number:', personalNumber);
-            }}
+            onClick={handleVerifyPersonalNumber}
             disabled={!isValid}
             className={`w-full py-3 px-4 font-semibold rounded-xl btn-press focus-ring
                      flex items-center justify-center gap-2
