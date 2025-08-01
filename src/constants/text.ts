@@ -69,7 +69,9 @@ export const TEXT_CONSTANTS = {
     CREATE_ACCOUNT: 'צור חשבון',
     EMAIL_PLACEHOLDER_REGISTRATION: 'example@email.com',
     PASSWORD_PLACEHOLDER_REGISTRATION: 'הזן סיסמה חזקה',
-    BIRTHDATE_PLACEHOLDER: 'בחר תאריך לידה'
+    BIRTHDATE_PLACEHOLDER: 'בחר תאריך לידה',
+    REGISTRATION_SUCCESS: 'הרשמה בוצעה בהצלחה!',
+    CONTINUE_TO_SYSTEM: 'המשך למערכת'
   },
 
   // User Profile Menu

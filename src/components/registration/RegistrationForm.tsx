@@ -3,6 +3,7 @@ import { TEXT_CONSTANTS } from '@/constants/text';
 import { validatePersonalNumber } from '@/utils/validationUtils';
 import OTPVerificationStep from './OTPVerificationStep';
 import RegistrationDetailsStep from './RegistrationDetailsStep';
+import RegistrationSuccessStep from './RegistrationSuccessStep';
 
 interface RegistrationFormProps {
   personalNumber: string;
@@ -13,7 +14,7 @@ interface RegistrationFormProps {
 export default function RegistrationForm({ personalNumber, setPersonalNumber, onSwitchToLogin }: RegistrationFormProps) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'personal-number' | 'otp' | 'details'>('personal-number');
+  const [currentStep, setCurrentStep] = useState<'personal-number' | 'otp' | 'details' | 'success'>('personal-number');
   const [userPhoneNumber, setUserPhoneNumber] = useState<string>('');
   const [userFirstName, setUserFirstName] = useState<string>('');
   const [userLastName, setUserLastName] = useState<string>('');
@@ -53,7 +54,12 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
 
   const handleRegistrationComplete = (data: { email: string; password: string; gender: string; birthdate: string; consent: boolean }) => {
     console.log('Registration complete with data:', data);
-    // TODO: Complete registration process
+    setCurrentStep('success');
+  };
+
+  const handleContinueToSystem = () => {
+    // This will be handled by the parent component or redirect logic
+    console.log('Continuing to system from registration success');
   };
 
   // Show OTP step if we're in that phase
@@ -75,6 +81,15 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
         lastName={userLastName}
         phoneNumber={userPhoneNumber}
         onSubmit={handleRegistrationComplete}
+      />
+    );
+  }
+
+  // Show success step if registration is complete
+  if (currentStep === 'success') {
+    return (
+      <RegistrationSuccessStep 
+        onContinue={handleContinueToSystem}
       />
     );
   }
