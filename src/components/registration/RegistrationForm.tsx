@@ -2,26 +2,33 @@ import { useState, useEffect } from 'react';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { validatePersonalNumber } from '@/utils/validationUtils';
 import OTPVerificationStep from './OTPVerificationStep';
-import RegistrationDetailsStep from './RegistrationDetailsStep';
+import PersonalDetailsStep from './PersonalDetailsStep';
+import AccountDetailsStep from './AccountDetailsStep';
 import RegistrationSuccessStep from './RegistrationSuccessStep';
+import { PersonalDetailsData, AccountDetailsData } from '@/types/registration';
 
 interface RegistrationFormProps {
   personalNumber: string;
   setPersonalNumber: (value: string) => void;
   onSwitchToLogin?: () => void;
-  onStepChange?: (step: 'personal-number' | 'otp' | 'details' | 'success') => void;
+  onStepChange?: (step: 'personal-number' | 'otp' | 'personal' | 'account' | 'success') => void;
 }
 
 export default function RegistrationForm({ personalNumber, setPersonalNumber, onSwitchToLogin, onStepChange }: RegistrationFormProps) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'personal-number' | 'otp' | 'details' | 'success'>('personal-number');
+  const [currentStep, setCurrentStep] = useState<'personal-number' | 'otp' | 'personal' | 'account' | 'success'>('personal-number');
   const [userPhoneNumber, setUserPhoneNumber] = useState<string>('');
   const [userFirstName, setUserFirstName] = useState<string>('');
   const [userLastName, setUserLastName] = useState<string>('');
+  
+  // Form data for new steps
+  const [personalDetailsData, setPersonalDetailsData] = useState<PersonalDetailsData | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [accountDetailsData, setAccountDetailsData] = useState<AccountDetailsData | null>(null);
 
   // Helper function to update step and notify parent
-  const updateCurrentStep = (step: 'personal-number' | 'otp' | 'details' | 'success') => {
+  const updateCurrentStep = (step: 'personal-number' | 'otp' | 'personal' | 'account' | 'success') => {
     setCurrentStep(step);
     onStepChange?.(step);
   };
@@ -61,11 +68,29 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
 
   const handleOTPVerifySuccess = () => {
     console.log('OTP verification successful');
-    updateCurrentStep('details');
+    updateCurrentStep('personal');
   };
 
-  const handleRegistrationComplete = (data: { email: string; password: string; gender: string; birthdate: string; consent: boolean }) => {
-    console.log('Registration complete with data:', data);
+  const handlePersonalDetailsSubmit = (data: PersonalDetailsData) => {
+    console.log('Personal details submitted:', data);
+    setPersonalDetailsData(data);
+    updateCurrentStep('account');
+  };
+
+  const handleAccountDetailsSubmit = (data: AccountDetailsData) => {
+    console.log('Account details submitted:', data);
+    setAccountDetailsData(data);
+    
+    // Combine all registration data
+    const completeRegistrationData = {
+      ...personalDetailsData!,
+      ...data,
+      phoneNumber: userPhoneNumber
+    };
+    
+    console.log('Complete registration data:', completeRegistrationData);
+    // TODO: Submit to backend
+    
     updateCurrentStep('success');
   };
 
@@ -85,14 +110,24 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
     );
   }
 
-  // Show registration details step if we're in that phase
-  if (currentStep === 'details') {
+  // Show personal details step if we're in that phase
+  if (currentStep === 'personal') {
     return (
-      <RegistrationDetailsStep 
+      <PersonalDetailsStep 
         firstName={userFirstName}
         lastName={userLastName}
-        phoneNumber={userPhoneNumber}
-        onSubmit={handleRegistrationComplete}
+        onSubmit={handlePersonalDetailsSubmit}
+        onBack={() => updateCurrentStep('otp')}
+      />
+    );
+  }
+
+  // Show account details step if we're in that phase
+  if (currentStep === 'account') {
+    return (
+      <AccountDetailsStep 
+        onSubmit={handleAccountDetailsSubmit}
+        onBack={() => updateCurrentStep('personal')}
       />
     );
   }

@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type RegistrationStep = 'personal-number' | 'otp' | 'details' | 'success';
+export type RegistrationStep = 'personal-number' | 'otp' | 'personal' | 'account' | 'success';
 
 interface RegistrationStepDotsProps {
   currentStep: RegistrationStep;
@@ -47,8 +47,10 @@ const getActiveStepNumber = (currentStep: RegistrationStep): number => {
       return 1; // ID Verification
     case 'otp':
       return 2; // OTP
-    case 'details':
-      return 3; // Personal Details (we'll show both 3 and 4 as active conceptually, but primarily 3)
+    case 'personal':
+      return 3; // Personal Details
+    case 'account':
+      return 4; // Account Details  
     case 'success':
       return 5; // Review & Submit
     default:
@@ -59,11 +61,6 @@ const getActiveStepNumber = (currentStep: RegistrationStep): number => {
 const isStepCompleted = (stepNumber: number, currentStep: RegistrationStep): boolean => {
   const activeStep = getActiveStepNumber(currentStep);
   
-  // Special handling for details step which conceptually covers steps 3 and 4
-  if (currentStep === 'details') {
-    return stepNumber <= 3; // Steps 1, 2, 3 are completed/active
-  }
-  
   if (currentStep === 'success') {
     return stepNumber <= 4; // All steps except the final review are completed
   }
@@ -73,12 +70,6 @@ const isStepCompleted = (stepNumber: number, currentStep: RegistrationStep): boo
 
 const isStepActive = (stepNumber: number, currentStep: RegistrationStep): boolean => {
   const activeStep = getActiveStepNumber(currentStep);
-  
-  // For details step, show step 3 as active, but also indicate progress toward step 4
-  if (currentStep === 'details') {
-    return stepNumber === 3;
-  }
-  
   return stepNumber === activeStep;
 };
 
