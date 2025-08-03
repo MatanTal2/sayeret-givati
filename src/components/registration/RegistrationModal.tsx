@@ -83,6 +83,7 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch }: Registr
             setPersonalNumber={setPersonalNumber}
             onSwitchToLogin={handleSwitchToLogin}
             onStepChange={handleStepChange}
+            currentStep={currentStep}
           />
           
           <RegistrationFooter showRegistrationNote={currentStep === 'personal-number'} />

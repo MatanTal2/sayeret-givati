@@ -215,7 +215,7 @@ describe('RegistrationSuccessStep Component', () => {
       const user = userEvent.setup();
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       
-      render(<RegistrationSuccessStep onContinue={null as any} />);
+      render(<RegistrationSuccessStep onContinue={undefined} />);
       
       const continueButton = screen.getByTestId('continue-button');
       await user.click(continueButton);

@@ -167,7 +167,6 @@ describe('RegistrationStepDots Component', () => {
     });
 
     it('should handle focus states', async () => {
-      const user = userEvent.setup();
       render(<RegistrationStepDots currentStep="personal-number" />);
       
       const firstStep = document.querySelector('[role="button"]');

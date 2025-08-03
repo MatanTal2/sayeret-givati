@@ -12,12 +12,12 @@ interface RegistrationFormProps {
   setPersonalNumber: (value: string) => void;
   onSwitchToLogin?: () => void;
   onStepChange?: (step: 'personal-number' | 'otp' | 'personal' | 'account' | 'success') => void;
+  currentStep: 'personal-number' | 'otp' | 'personal' | 'account' | 'success';
 }
 
-export default function RegistrationForm({ personalNumber, setPersonalNumber, onSwitchToLogin, onStepChange }: RegistrationFormProps) {
+export default function RegistrationForm({ personalNumber, setPersonalNumber, onSwitchToLogin, onStepChange, currentStep }: RegistrationFormProps) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'personal-number' | 'otp' | 'personal' | 'account' | 'success'>('personal-number');
   const [userPhoneNumber, setUserPhoneNumber] = useState<string>('');
   const [userFirstName, setUserFirstName] = useState<string>('');
   const [userLastName, setUserLastName] = useState<string>('');
@@ -27,9 +27,8 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [accountDetailsData, setAccountDetailsData] = useState<AccountDetailsData | null>(null);
 
-  // Helper function to update step and notify parent
+  // Helper function to notify parent of step change
   const updateCurrentStep = (step: 'personal-number' | 'otp' | 'personal' | 'account' | 'success') => {
-    setCurrentStep(step);
     onStepChange?.(step);
   };
 
@@ -40,10 +39,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
     setIsValid(validation.isValid);
   }, [personalNumber]);
 
-  // Notify parent of initial step
-  useEffect(() => {
-    onStepChange?.(currentStep);
-  }, [currentStep, onStepChange]);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;

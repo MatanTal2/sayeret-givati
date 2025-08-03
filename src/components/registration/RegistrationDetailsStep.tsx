@@ -34,7 +34,7 @@ interface ValidationErrors {
 export default function RegistrationDetailsStep({ 
   firstName, 
   lastName, 
-  phoneNumber, 
+  phoneNumber, // eslint-disable-line @typescript-eslint/no-unused-vars
   onSubmit 
 }: RegistrationDetailsStepProps) {
   const [formData, setFormData] = useState<RegistrationData>({
