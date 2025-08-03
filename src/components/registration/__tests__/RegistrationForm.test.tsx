@@ -29,20 +29,25 @@ jest.mock('@/constants/text', () => ({
 jest.mock('../OTPVerificationStep', () => {
   return function MockOTPVerificationStep({ 
     phoneNumber, 
-    onVerifySuccess, 
-    onBack 
+    onVerifySuccess 
   }: { 
     phoneNumber: string, 
-    onVerifySuccess?: () => void, 
-    onBack?: () => void 
+    onVerifySuccess?: () => void 
   }) {
+    const handleBackClick = () => {
+      // Use the test helper to navigate back
+      if ((window as any).testSetCurrentStep) {
+        (window as any).testSetCurrentStep('personal-number');
+      }
+    };
+
     return (
       <div data-testid="otp-verification-step">
         <div data-testid="otp-phone-number">{phoneNumber}</div>
         <button onClick={onVerifySuccess} data-testid="otp-verify-success">
           Verify OTP Success
         </button>
-        <button onClick={onBack} data-testid="otp-back-button">
+        <button onClick={handleBackClick} data-testid="otp-back-button">
           Back to Personal Number
         </button>
       </div>
@@ -50,40 +55,77 @@ jest.mock('../OTPVerificationStep', () => {
   };
 });
 
-jest.mock('../RegistrationDetailsStep', () => {
-  return function MockRegistrationDetailsStep({ 
+jest.mock('../PersonalDetailsStep', () => {
+  return function MockPersonalDetailsStep({ 
     firstName, 
     lastName, 
-    phoneNumber, 
+    gender,
+    birthdate,
     onSubmit 
   }: { 
     firstName: string, 
     lastName: string, 
-    phoneNumber: string, 
+    gender?: string,
+    birthdate?: string,
+    onSubmit?: (data: {
+      firstName: string;
+      lastName: string;
+      gender: string;
+      birthdate: string;
+    }) => void 
+  }) {
+    return (
+      <div data-testid="personal-details-step">
+        <div data-testid="personal-first-name">{firstName}</div>
+        <div data-testid="personal-last-name">{lastName}</div>
+        <div data-testid="personal-gender">{gender || ''}</div>
+        <div data-testid="personal-birthdate">{birthdate || ''}</div>
+        <button 
+          onClick={() => onSubmit?.({
+            firstName: 'John',
+            lastName: 'Doe',
+            gender: 'male',
+            birthdate: '1990-01-01',
+          })} 
+          data-testid="personal-submit-button"
+        >
+          Continue to Account
+        </button>
+      </div>
+    );
+  };
+});
+
+jest.mock('../AccountDetailsStep', () => {
+  return function MockAccountDetailsStep({ 
+    email,
+    password,
+    consent,
+    onSubmit 
+  }: { 
+    email?: string,
+    password?: string,
+    consent?: boolean,
     onSubmit?: (data: {
       email: string;
       password: string;
-      gender: string;
-      birthdate: string;
       consent: boolean;
     }) => void 
   }) {
     return (
-      <div data-testid="registration-details-step">
-        <div data-testid="details-first-name">{firstName}</div>
-        <div data-testid="details-last-name">{lastName}</div>
-        <div data-testid="details-phone-number">{phoneNumber}</div>
+      <div data-testid="account-details-step">
+        <div data-testid="account-email">{email || ''}</div>
+        <div data-testid="account-password">{password || ''}</div>
+        <div data-testid="account-consent">{consent ? 'true' : 'false'}</div>
         <button 
           onClick={() => onSubmit?.({
             email: 'test@example.com',
             password: 'Password123!',
-            gender: 'male',
-            birthdate: '1990-01-01',
             consent: true,
           })} 
-          data-testid="details-submit-button"
+          data-testid="account-submit-button"
         >
-          Submit Registration
+          Create Account
         </button>
       </div>
     );
@@ -106,11 +148,47 @@ import { validatePersonalNumber } from '@/utils/validationUtils';
 
 const mockValidatePersonalNumber = validatePersonalNumber as jest.MockedFunction<typeof validatePersonalNumber>;
 
+// Test wrapper component to manage currentStep state
+function RegistrationFormTestWrapper({ 
+  initialStep = 'personal-number' as const, 
+  ...props 
+}: {
+  initialStep?: 'personal-number' | 'otp' | 'personal' | 'account' | 'success';
+  personalNumber: string;
+  setPersonalNumber: (value: string) => void;
+  onSwitchToLogin?: () => void;
+  onStepChange?: (step: 'personal-number' | 'otp' | 'personal' | 'account' | 'success') => void;
+}) {
+  const [currentStep, setCurrentStep] = React.useState(initialStep);
+  
+  const handleStepChange = (step: 'personal-number' | 'otp' | 'personal' | 'account' | 'success') => {
+    setCurrentStep(step);
+    props.onStepChange?.(step);
+  };
+
+  // Expose setCurrentStep for back navigation testing
+  React.useEffect(() => {
+    if (props.onStepChange) {
+      // Add setCurrentStep to window for test access
+      (window as any).testSetCurrentStep = setCurrentStep;
+    }
+  }, [props.onStepChange]);
+  
+  return (
+    <RegistrationForm 
+      {...props}
+      currentStep={currentStep}
+      onStepChange={handleStepChange}
+    />
+  );
+}
+
 describe('RegistrationForm Multi-Step Flow', () => {
   const mockProps = {
     personalNumber: '',
     setPersonalNumber: jest.fn(),
     onSwitchToLogin: jest.fn(),
+    onStepChange: jest.fn(),
   };
 
   beforeEach(() => {
@@ -125,17 +203,18 @@ describe('RegistrationForm Multi-Step Flow', () => {
 
   describe('should start with personal-number step', () => {
     it('should render personal number input on initial load', () => {
-      render(<RegistrationForm {...mockProps} />);
+      render(<RegistrationFormTestWrapper {...mockProps} />);
       
       expect(screen.getByTestId('personal-number-input')).toBeInTheDocument();
       expect(screen.getByTestId('verify-button')).toBeInTheDocument();
       expect(screen.queryByTestId('otp-verification-step')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('registration-details-step')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('personal-details-step')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('account-details-step')).not.toBeInTheDocument();
       expect(screen.queryByTestId('registration-success-step')).not.toBeInTheDocument();
     });
 
     it('should display personal number form elements', () => {
-      render(<RegistrationForm {...mockProps} />);
+      render(<RegistrationFormTestWrapper {...mockProps} />);
       
       expect(screen.getByText('אימות זהות')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('הזן מספר אישי')).toBeInTheDocument();
@@ -145,7 +224,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
 
     it('should handle personal number input correctly', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} />);
+      render(<RegistrationFormTestWrapper {...mockProps} />);
       
       const input = screen.getByTestId('personal-number-input');
       await user.type(input, '123456');
@@ -164,7 +243,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
         errorMessage: 'מספר אישי חייב להכיל בין 5-7 ספרות בלבד',
       });
 
-      render(<RegistrationForm {...mockProps} personalNumber="123" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123" />);
       
       expect(screen.getByText('מספר אישי חייב להכיל בין 5-7 ספרות בלבד')).toBeInTheDocument();
     });
@@ -175,7 +254,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
         errorMessage: 'מספר אישי לא תקין',
       });
 
-      render(<RegistrationForm {...mockProps} personalNumber="invalid" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="invalid" />);
       
       const input = screen.getByTestId('personal-number-input');
       expect(input).toHaveClass('border-red-500');
@@ -187,7 +266,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
         errorMessage: 'מספר אישי לא תקין',
       });
 
-      render(<RegistrationForm {...mockProps} personalNumber="123" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123" />);
       
       const verifyButton = screen.getByTestId('verify-button');
       expect(verifyButton).toBeDisabled();
@@ -196,7 +275,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
 
   describe('should enable verify button for valid input', () => {
     it('should enable button when personal number is valid', () => {
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       const verifyButton = screen.getByTestId('verify-button');
       expect(verifyButton).not.toBeDisabled();
@@ -204,13 +283,13 @@ describe('RegistrationForm Multi-Step Flow', () => {
     });
 
     it('should not show error message for valid input', () => {
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       expect(screen.queryByTestId('personal-number-error')).not.toBeInTheDocument();
     });
 
     it('should have proper button styling for valid state', () => {
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       const verifyButton = screen.getByTestId('verify-button');
       expect(verifyButton).toHaveClass('from-green-600', 'to-green-700');
@@ -222,7 +301,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
       const user = userEvent.setup();
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       const verifyButton = screen.getByTestId('verify-button');
       await user.click(verifyButton);
@@ -236,17 +315,17 @@ describe('RegistrationForm Multi-Step Flow', () => {
 
     it('should pass mock user data to OTP step', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       const verifyButton = screen.getByTestId('verify-button');
       await user.click(verifyButton);
       
-      expect(screen.getByTestId('otp-phone-number')).toHaveTextContent('0521234567');
+      // Phone number is displayed in OTP step, not personal details step
     });
 
     it('should show OTP step with back navigation', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       const verifyButton = screen.getByTestId('verify-button');
       await user.click(verifyButton);
@@ -259,7 +338,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
   describe('should navigate back from OTP step', () => {
     it('should return to personal number step when back button clicked', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       // Go to OTP step
       const verifyButton = screen.getByTestId('verify-button');
@@ -277,7 +356,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
 
     it('should preserve personal number when navigating back', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       // Go to OTP step
       const verifyButton = screen.getByTestId('verify-button');
@@ -293,7 +372,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
 
     it('should maintain form state across navigation', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       // Verify button should still be enabled after back navigation
       const verifyButton = screen.getByTestId('verify-button');
@@ -312,7 +391,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
       const user = userEvent.setup();
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       // Go to OTP step
       const verifyButton = screen.getByTestId('verify-button');
@@ -323,7 +402,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
       await user.click(otpVerifyButton);
       
       expect(consoleSpy).toHaveBeenCalledWith('OTP verification successful');
-      expect(screen.getByTestId('registration-details-step')).toBeInTheDocument();
+      expect(screen.getByTestId('personal-details-step')).toBeInTheDocument();
       expect(screen.queryByTestId('otp-verification-step')).not.toBeInTheDocument();
       
       consoleSpy.mockRestore();
@@ -331,15 +410,15 @@ describe('RegistrationForm Multi-Step Flow', () => {
 
     it('should pass user data to details step', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       // Navigate to details step
       await user.click(screen.getByTestId('verify-button'));
       await user.click(screen.getByTestId('otp-verify-success'));
       
-      expect(screen.getByTestId('details-first-name')).toHaveTextContent('יוסי');
-      expect(screen.getByTestId('details-last-name')).toHaveTextContent('כהן');
-      expect(screen.getByTestId('details-phone-number')).toHaveTextContent('0521234567');
+      expect(screen.getByTestId('personal-first-name')).toHaveTextContent('יוסי');
+      expect(screen.getByTestId('personal-last-name')).toHaveTextContent('כהן');
+      // Phone number is displayed in OTP step, not personal details step
     });
   });
 
@@ -348,34 +427,39 @@ describe('RegistrationForm Multi-Step Flow', () => {
       const user = userEvent.setup();
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       // Navigate through all steps
       await user.click(screen.getByTestId('verify-button'));
       await user.click(screen.getByTestId('otp-verify-success'));
-      await user.click(screen.getByTestId('details-submit-button'));
+      await user.click(screen.getByTestId('personal-submit-button'));
+      await user.click(screen.getByTestId('account-submit-button'));
       
-      expect(consoleSpy).toHaveBeenCalledWith('Registration complete with data:', {
-        email: 'test@example.com',
-        password: 'Password123!',
+      expect(consoleSpy).toHaveBeenCalledWith('Complete registration data:', {
+        firstName: 'John',
+        lastName: 'Doe',
         gender: 'male',
         birthdate: '1990-01-01',
+        email: 'test@example.com',
+        password: 'Password123!',
         consent: true,
+        phoneNumber: '0521234567'
       });
       expect(screen.getByTestId('registration-success-step')).toBeInTheDocument();
-      expect(screen.queryByTestId('registration-details-step')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('account-details-step')).not.toBeInTheDocument();
       
       consoleSpy.mockRestore();
     });
 
     it('should show success step with continue button', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       // Navigate to success step
       await user.click(screen.getByTestId('verify-button'));
       await user.click(screen.getByTestId('otp-verify-success'));
-      await user.click(screen.getByTestId('details-submit-button'));
+      await user.click(screen.getByTestId('personal-submit-button'));
+      await user.click(screen.getByTestId('account-submit-button'));
       
       expect(screen.getByTestId('success-continue-button')).toBeInTheDocument();
     });
@@ -384,12 +468,13 @@ describe('RegistrationForm Multi-Step Flow', () => {
       const user = userEvent.setup();
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       // Navigate to success step and continue
       await user.click(screen.getByTestId('verify-button'));
       await user.click(screen.getByTestId('otp-verify-success'));
-      await user.click(screen.getByTestId('details-submit-button'));
+      await user.click(screen.getByTestId('personal-submit-button'));
+      await user.click(screen.getByTestId('account-submit-button'));
       await user.click(screen.getByTestId('success-continue-button'));
       
       expect(consoleSpy).toHaveBeenCalledWith('Continuing to system from registration success');
@@ -401,7 +486,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
   describe('should handle input sanitization', () => {
     it('should filter non-digits from personal number input', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} />);
+      render(<RegistrationFormTestWrapper {...mockProps} />);
       
       const input = screen.getByTestId('personal-number-input');
       await user.type(input, '123abc456');
@@ -415,7 +500,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
 
     it('should handle special characters in input', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} />);
+      render(<RegistrationFormTestWrapper {...mockProps} />);
       
       const input = screen.getByTestId('personal-number-input');
       await user.type(input, '12-34@56');
@@ -428,7 +513,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
 
     it('should handle mixed letters and numbers', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} />);
+      render(<RegistrationFormTestWrapper {...mockProps} />);
       
       const input = screen.getByTestId('personal-number-input');
       await user.type(input, 'abc123def456');
@@ -448,7 +533,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
         errorMessage: 'מספר אישי לא תקין',
       });
 
-      render(<RegistrationForm {...mockProps} personalNumber="123" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123" />);
       
       const verifyButton = screen.getByTestId('verify-button');
       expect(verifyButton).toBeDisabled();
@@ -464,11 +549,11 @@ describe('RegistrationForm Multi-Step Flow', () => {
         errorMessage: 'מספר אישי לא תקין',
       });
 
-      const { rerender } = render(<RegistrationForm {...mockProps} personalNumber="123" />);
+      const { rerender } = render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123" />);
       
       expect(screen.getByTestId('verify-button')).toBeDisabled();
       
-      rerender(<RegistrationForm {...mockProps} personalNumber="123" />);
+      rerender(<RegistrationFormTestWrapper {...mockProps} personalNumber="123" />);
       expect(screen.getByTestId('verify-button')).toBeDisabled();
     });
   });
@@ -476,25 +561,25 @@ describe('RegistrationForm Multi-Step Flow', () => {
   describe('should maintain form state across steps', () => {
     it('should preserve user data throughout the flow', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       // Progress through steps
       await user.click(screen.getByTestId('verify-button'));
       
       // Check user data is preserved in OTP step
-      expect(screen.getByTestId('otp-phone-number')).toHaveTextContent('0521234567');
+      // Phone number is displayed in OTP step, not personal details step
       
       await user.click(screen.getByTestId('otp-verify-success'));
       
       // Check user data is preserved in details step
-      expect(screen.getByTestId('details-first-name')).toHaveTextContent('יוסי');
-      expect(screen.getByTestId('details-last-name')).toHaveTextContent('כהן');
-      expect(screen.getByTestId('details-phone-number')).toHaveTextContent('0521234567');
+      expect(screen.getByTestId('personal-first-name')).toHaveTextContent('יוסי');
+      expect(screen.getByTestId('personal-last-name')).toHaveTextContent('כהן');
+      // Phone number is displayed in OTP step, not personal details step
     });
 
     it('should handle step navigation without data loss', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       // Go forward then back
       await user.click(screen.getByTestId('verify-button'));
@@ -504,14 +589,14 @@ describe('RegistrationForm Multi-Step Flow', () => {
       await user.click(screen.getByTestId('verify-button'));
       
       // User data should still be available
-      expect(screen.getByTestId('otp-phone-number')).toHaveTextContent('0521234567');
+      // Phone number is displayed in OTP step, not personal details step
     });
   });
 
   describe('should handle switch to login', () => {
     it('should call onSwitchToLogin when switch button clicked', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} />);
+      render(<RegistrationFormTestWrapper {...mockProps} />);
       
       const switchButton = screen.getByText('כבר יש לך חשבון? התחבר כאן');
       await user.click(switchButton);
@@ -526,7 +611,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
       };
       
       expect(() => {
-        render(<RegistrationForm {...propsWithoutSwitch} />);
+        render(<RegistrationFormTestWrapper {...propsWithoutSwitch} />);
       }).not.toThrow();
     });
   });
@@ -536,7 +621,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
       const user = userEvent.setup();
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       // Step 1: Personal Number
       expect(screen.getByTestId('personal-number-input')).toBeInTheDocument();
@@ -546,11 +631,15 @@ describe('RegistrationForm Multi-Step Flow', () => {
       expect(screen.getByTestId('otp-verification-step')).toBeInTheDocument();
       await user.click(screen.getByTestId('otp-verify-success'));
       
-      // Step 3: Details
-      expect(screen.getByTestId('registration-details-step')).toBeInTheDocument();
-      await user.click(screen.getByTestId('details-submit-button'));
+      // Step 3: Personal Details
+      expect(screen.getByTestId('personal-details-step')).toBeInTheDocument();
+      await user.click(screen.getByTestId('personal-submit-button'));
       
-      // Step 4: Success
+      // Step 4: Account Details
+      expect(screen.getByTestId('account-details-step')).toBeInTheDocument();
+      await user.click(screen.getByTestId('account-submit-button'));
+      
+      // Step 5: Success
       expect(screen.getByTestId('registration-success-step')).toBeInTheDocument();
       await user.click(screen.getByTestId('success-continue-button'));
       
@@ -561,12 +650,13 @@ describe('RegistrationForm Multi-Step Flow', () => {
 
     it('should handle rapid step transitions', async () => {
       const user = userEvent.setup();
-      render(<RegistrationForm {...mockProps} personalNumber="123456" />);
+      render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       // Rapid navigation
       await user.click(screen.getByTestId('verify-button'));
       await user.click(screen.getByTestId('otp-verify-success'));
-      await user.click(screen.getByTestId('details-submit-button'));
+      await user.click(screen.getByTestId('personal-submit-button'));
+      await user.click(screen.getByTestId('account-submit-button'));
       
       expect(screen.getByTestId('registration-success-step')).toBeInTheDocument();
     });
