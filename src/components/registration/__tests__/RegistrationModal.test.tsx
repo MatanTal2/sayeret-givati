@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import RegistrationModal from '../RegistrationModal';
@@ -42,8 +42,13 @@ jest.mock('../RegistrationForm', () => {
 });
 
 jest.mock('../RegistrationFooter', () => {
-  return function MockRegistrationFooter() {
-    return <div data-testid="registration-footer">Footer</div>;
+  return function MockRegistrationFooter({ showRegistrationNote }: { showRegistrationNote?: boolean }) {
+    return (
+      <div data-testid="registration-footer">
+        Footer
+        {showRegistrationNote && <span data-testid="registration-note">Test Note</span>}
+      </div>
+    );
   };
 });
 
@@ -251,6 +256,13 @@ describe('RegistrationModal Component', () => {
       expect(screen.getByTestId('registration-footer')).toBeInTheDocument();
     });
 
+    it('should show registration note only on first step', () => {
+      render(<RegistrationModal {...mockProps} />);
+      
+      // Should show registration note on initial step (personal-number)
+      expect(screen.getByTestId('registration-note')).toBeInTheDocument();
+    });
+
     it('should maintain component hierarchy', () => {
       render(<RegistrationModal {...mockProps} />);
       
@@ -325,10 +337,10 @@ describe('RegistrationModal Component', () => {
       const propsWithoutOnClose = {
         isOpen: true,
         onSwitch: mockProps.onSwitch,
-      };
+      } as unknown as Parameters<typeof RegistrationModal>[0];
       
       expect(() => {
-        render(<RegistrationModal {...propsWithoutOnClose as any} />);
+        render(<RegistrationModal {...propsWithoutOnClose} />);
       }).not.toThrow();
     });
 
@@ -336,10 +348,10 @@ describe('RegistrationModal Component', () => {
       const propsWithoutOnSwitch = {
         isOpen: true,
         onClose: mockProps.onClose,
-      };
+      } as unknown as Parameters<typeof RegistrationModal>[0];
       
       expect(() => {
-        render(<RegistrationModal {...propsWithoutOnSwitch as any} />);
+        render(<RegistrationModal {...propsWithoutOnSwitch} />);
       }).not.toThrow();
     });
 

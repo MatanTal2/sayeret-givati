@@ -85,7 +85,7 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch }: Registr
             onStepChange={handleStepChange}
           />
           
-          <RegistrationFooter />
+          <RegistrationFooter showRegistrationNote={currentStep === 'personal-number'} />
         </div>
       </div>
     </>
