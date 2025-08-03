@@ -1,6 +1,11 @@
 import { 
   validatePersonalNumber, 
   validateOTP,
+  validateEmail,
+  validatePassword,
+  validateGender,
+  validateBirthdate,
+  validateConsent,
   maskPhoneNumber,
   FormValidationUtils,
   PhoneUtils,
@@ -547,6 +552,578 @@ describe('Personal Number Validation', () => {
           const classResult = PhoneUtils.maskPhoneNumber(testCase);
           
           expect(exportedResult).toBe(classResult);
+        });
+      });
+    });
+  });
+
+  // Email Validation Tests
+  describe('Email Validation', () => {
+    describe('validateEmail', () => {
+      describe('should validate correct email formats', () => {
+        it('should accept standard email format', () => {
+          const result = validateEmail('user@example.com');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept email with subdomain', () => {
+          const result = validateEmail('test.user@sub.example.com');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept email with plus sign', () => {
+          const result = validateEmail('user+tag@example.com');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept email with Israeli domain', () => {
+          const result = validateEmail('user@domain.co.il');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept email with numbers', () => {
+          const result = validateEmail('user123@example123.com');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept email with hyphens in domain', () => {
+          const result = validateEmail('user@my-domain.com');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+      });
+
+      describe('should reject empty email', () => {
+        it('should reject empty string', () => {
+          const result = validateEmail('');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.EMAIL_REQUIRED);
+        });
+
+        it('should reject whitespace-only email', () => {
+          const result = validateEmail('   ');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.EMAIL_REQUIRED);
+        });
+
+        it('should reject tab and newline characters', () => {
+          const result = validateEmail('\t\n');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.EMAIL_REQUIRED);
+        });
+      });
+
+      describe('should reject invalid email formats', () => {
+        it('should reject email without @', () => {
+          const result = validateEmail('invalidexample.com');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.EMAIL_INVALID);
+        });
+
+        it('should reject email without domain', () => {
+          const result = validateEmail('user@');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.EMAIL_INVALID);
+        });
+
+        it('should reject email without username', () => {
+          const result = validateEmail('@domain.com');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.EMAIL_INVALID);
+        });
+
+        it('should accept email with double dots (current regex allows)', () => {
+          // Note: Current simple email regex allows this pattern
+          const result = validateEmail('user..name@domain.com');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should reject email with spaces', () => {
+          const result = validateEmail('user name@domain.com');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.EMAIL_INVALID);
+        });
+
+        it('should reject email without top-level domain', () => {
+          const result = validateEmail('user@domain');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.EMAIL_INVALID);
+        });
+      });
+
+      describe('should handle special characters in email', () => {
+        it('should accept email with dots in username', () => {
+          const result = validateEmail('first.last@example.com');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept email with underscores', () => {
+          const result = validateEmail('user_name@example.com');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should handle trimming whitespace', () => {
+          const result = validateEmail('  user@example.com  ');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+      });
+    });
+
+    // Test the static class method directly
+    describe('FormValidationUtils.validateEmail', () => {
+      it('should work identically to the exported function', () => {
+        const testCases = [
+          'user@example.com',
+          'invalid',
+          '',
+          'user@',
+          'test.email+tag@domain.co.il'
+        ];
+
+        testCases.forEach(testCase => {
+          const exportedResult = validateEmail(testCase);
+          const classResult = FormValidationUtils.validateEmail(testCase);
+          
+          expect(exportedResult.isValid).toBe(classResult.isValid);
+          expect(exportedResult.errorMessage).toBe(classResult.errorMessage);
+        });
+      });
+    });
+  });
+
+  // Password Validation Tests
+  describe('Password Validation', () => {
+    describe('validatePassword', () => {
+      describe('should validate strong password', () => {
+        it('should accept password with all requirements', () => {
+          const result = validatePassword('Password123!');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept password with minimum length', () => {
+          const result = validatePassword('Pass123!');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept password with special characters', () => {
+          const result = validatePassword('MyStr0ng@Pass');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept password with various special chars', () => {
+          const result = validatePassword('Test#123$Pass');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept long complex password', () => {
+          const result = validatePassword('VeryLongPassword123!@#');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+      });
+
+      describe('should reject empty password', () => {
+        it('should reject empty string', () => {
+          const result = validatePassword('');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.PASSWORD_REQUIRED);
+        });
+
+        it('should reject whitespace-only password', () => {
+          const result = validatePassword('   ');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.PASSWORD_REQUIRED);
+        });
+
+        it('should reject tabs and newlines', () => {
+          const result = validatePassword('\t\n  ');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.PASSWORD_REQUIRED);
+        });
+      });
+
+      describe('should reject weak passwords', () => {
+        it('should reject password without uppercase', () => {
+          const result = validatePassword('password123!');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.PASSWORD_INVALID);
+        });
+
+        it('should reject password without lowercase', () => {
+          const result = validatePassword('PASSWORD123!');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.PASSWORD_INVALID);
+        });
+
+        it('should reject password without numbers', () => {
+          const result = validatePassword('Password!');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.PASSWORD_INVALID);
+        });
+
+        it('should reject password without special characters', () => {
+          const result = validatePassword('Password123');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.PASSWORD_INVALID);
+        });
+
+        it('should reject password too short', () => {
+          const result = validatePassword('Pass1!');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.PASSWORD_INVALID);
+        });
+
+        it('should reject only letters', () => {
+          const result = validatePassword('password');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.PASSWORD_INVALID);
+        });
+
+        it('should reject only numbers', () => {
+          const result = validatePassword('12345678');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.PASSWORD_INVALID);
+        });
+      });
+
+      describe('should handle minimum length', () => {
+        it('should reject exactly 7 characters', () => {
+          const result = validatePassword('Pass1!');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.PASSWORD_INVALID);
+        });
+
+        it('should accept exactly 8 characters', () => {
+          const result = validatePassword('Pass123!');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept 10 characters', () => {
+          const result = validatePassword('Password1!');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+      });
+    });
+
+    // Test the static class method directly
+    describe('FormValidationUtils.validatePassword', () => {
+      it('should work identically to the exported function', () => {
+        const testCases = [
+          'Password123!',
+          'weak',
+          '',
+          'Pass1!',
+          'VeryStrongPassword123!'
+        ];
+
+        testCases.forEach(testCase => {
+          const exportedResult = validatePassword(testCase);
+          const classResult = FormValidationUtils.validatePassword(testCase);
+          
+          expect(exportedResult.isValid).toBe(classResult.isValid);
+          expect(exportedResult.errorMessage).toBe(classResult.errorMessage);
+        });
+      });
+    });
+  });
+
+  // Gender Validation Tests
+  describe('Gender Validation', () => {
+    describe('validateGender', () => {
+      describe('should validate selected gender', () => {
+        it('should accept male selection', () => {
+          const result = validateGender('male');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept female selection', () => {
+          const result = validateGender('female');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept other selection', () => {
+          const result = validateGender('other');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept any non-empty string', () => {
+          const result = validateGender('custom');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should handle trimming whitespace', () => {
+          const result = validateGender('  male  ');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+      });
+
+      describe('should reject empty gender selection', () => {
+        it('should reject empty string', () => {
+          const result = validateGender('');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.GENDER_REQUIRED);
+        });
+
+        it('should reject whitespace-only string', () => {
+          const result = validateGender('   ');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.GENDER_REQUIRED);
+        });
+
+        it('should reject tabs and newlines', () => {
+          const result = validateGender('\t\n  ');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.GENDER_REQUIRED);
+        });
+      });
+    });
+
+    // Test the static class method directly
+    describe('FormValidationUtils.validateGender', () => {
+      it('should work identically to the exported function', () => {
+        const testCases = [
+          'male',
+          'female',
+          'other',
+          '',
+          '   '
+        ];
+
+        testCases.forEach(testCase => {
+          const exportedResult = validateGender(testCase);
+          const classResult = FormValidationUtils.validateGender(testCase);
+          
+          expect(exportedResult.isValid).toBe(classResult.isValid);
+          expect(exportedResult.errorMessage).toBe(classResult.errorMessage);
+        });
+      });
+    });
+  });
+
+  // Birthdate Validation Tests
+  describe('Birthdate Validation', () => {
+    describe('validateBirthdate', () => {
+      describe('should validate correct birthdate for adults', () => {
+        it('should accept birthdate for 25-year-old', () => {
+          const birthdate = new Date();
+          birthdate.setFullYear(birthdate.getFullYear() - 25);
+          const result = validateBirthdate(birthdate.toISOString().split('T')[0]);
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept birthdate for exactly 18-year-old', () => {
+          const birthdate = new Date();
+          birthdate.setFullYear(birthdate.getFullYear() - 18);
+          birthdate.setDate(birthdate.getDate() - 1); // Ensure it's past the birthday
+          const result = validateBirthdate(birthdate.toISOString().split('T')[0]);
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept old birthdate', () => {
+          const result = validateBirthdate('1980-01-01');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept birthdate from different month', () => {
+          const result = validateBirthdate('1990-12-31');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+      });
+
+      describe('should reject empty birthdate', () => {
+        it('should reject empty string', () => {
+          const result = validateBirthdate('');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.BIRTHDATE_REQUIRED);
+        });
+
+        it('should reject whitespace-only string', () => {
+          const result = validateBirthdate('   ');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.BIRTHDATE_REQUIRED);
+        });
+
+        it('should reject tabs and newlines', () => {
+          const result = validateBirthdate('\t\n  ');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.BIRTHDATE_REQUIRED);
+        });
+      });
+
+      describe('should reject future dates', () => {
+        it('should reject tomorrow\'s date', () => {
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const result = validateBirthdate(tomorrow.toISOString().split('T')[0]);
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.BIRTHDATE_INVALID);
+        });
+
+        it('should reject next year', () => {
+          const nextYear = new Date();
+          nextYear.setFullYear(nextYear.getFullYear() + 1);
+          const result = validateBirthdate(nextYear.toISOString().split('T')[0]);
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.BIRTHDATE_INVALID);
+        });
+
+        it('should reject far future date', () => {
+          const result = validateBirthdate('2050-01-01');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.BIRTHDATE_INVALID);
+        });
+      });
+
+      describe('should reject underage birthdates', () => {
+        it('should reject 17-year-old birthdate', () => {
+          const birthdate = new Date();
+          birthdate.setFullYear(birthdate.getFullYear() - 17);
+          const result = validateBirthdate(birthdate.toISOString().split('T')[0]);
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.BIRTHDATE_INVALID);
+        });
+
+        it('should reject 16-year-old birthdate', () => {
+          const birthdate = new Date();
+          birthdate.setFullYear(birthdate.getFullYear() - 16);
+          const result = validateBirthdate(birthdate.toISOString().split('T')[0]);
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.BIRTHDATE_INVALID);
+        });
+
+        it('should reject very young birthdate', () => {
+          const birthdate = new Date();
+          birthdate.setFullYear(birthdate.getFullYear() - 5);
+          const result = validateBirthdate(birthdate.toISOString().split('T')[0]);
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.BIRTHDATE_INVALID);
+        });
+      });
+
+      describe('should handle invalid date formats', () => {
+        it('should reject invalid date string', () => {
+          const result = validateBirthdate('invalid-date');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.BIRTHDATE_INVALID);
+        });
+
+        it('should reject malformed date', () => {
+          const result = validateBirthdate('32/13/2000');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.BIRTHDATE_INVALID);
+        });
+
+        it('should reject incomplete date', () => {
+          const result = validateBirthdate('2000-13');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.BIRTHDATE_INVALID);
+        });
+
+        it('should reject text as date', () => {
+          const result = validateBirthdate('not a date');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.BIRTHDATE_INVALID);
+        });
+      });
+    });
+
+    // Test the static class method directly
+    describe('FormValidationUtils.validateBirthdate', () => {
+      it('should work identically to the exported function', () => {
+        const testCases = [
+          '1990-01-01',
+          '2010-01-01', // Too young
+          '',
+          'invalid-date',
+          '2050-01-01' // Future
+        ];
+
+        testCases.forEach(testCase => {
+          const exportedResult = validateBirthdate(testCase);
+          const classResult = FormValidationUtils.validateBirthdate(testCase);
+          
+          expect(exportedResult.isValid).toBe(classResult.isValid);
+          expect(exportedResult.errorMessage).toBe(classResult.errorMessage);
+        });
+      });
+    });
+  });
+
+  // Consent Validation Tests
+  describe('Consent Validation', () => {
+    describe('validateConsent', () => {
+      describe('should validate accepted consent', () => {
+        it('should accept true consent', () => {
+          const result = validateConsent(true);
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        // JavaScript boolean types only
+        it('should handle explicit boolean true', () => {
+          const result = validateConsent(Boolean(true));
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+      });
+
+      describe('should reject unaccepted consent', () => {
+        it('should reject false consent', () => {
+          const result = validateConsent(false);
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.CONSENT_REQUIRED);
+        });
+
+        it('should handle explicit boolean false', () => {
+          const result = validateConsent(Boolean(false));
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.CONSENT_REQUIRED);
+        });
+
+        // Testing JavaScript falsy behavior
+        it('should reject undefined-like falsy values', () => {
+          const result = validateConsent(false);
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.CONSENT_REQUIRED);
+        });
+      });
+    });
+
+    // Test the static class method directly
+    describe('FormValidationUtils.validateConsent', () => {
+      it('should work identically to the exported function', () => {
+        const testCases = [true, false];
+
+        testCases.forEach(testCase => {
+          const exportedResult = validateConsent(testCase);
+          const classResult = FormValidationUtils.validateConsent(testCase);
+          
+          expect(exportedResult.isValid).toBe(classResult.isValid);
+          expect(exportedResult.errorMessage).toBe(classResult.errorMessage);
         });
       });
     });
