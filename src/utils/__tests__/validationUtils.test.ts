@@ -3,6 +3,7 @@ import {
   validateOTP,
   validateEmail,
   validatePassword,
+  validateHebrewName,
   validateGender,
   validateBirthdate,
   validateConsent,
@@ -842,6 +843,118 @@ describe('Personal Number Validation', () => {
     });
   });
 
+  // Hebrew Name Validation Tests
+  describe('Hebrew Name Validation', () => {
+    describe('validateHebrewName', () => {
+      describe('should validate correct Hebrew names', () => {
+        it('should accept Hebrew first name', () => {
+          const result = validateHebrewName('יוסף');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept Hebrew last name', () => {
+          const result = validateHebrewName('כהן');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept Hebrew name with spaces', () => {
+          const result = validateHebrewName('בן דוד');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept single Hebrew letter name', () => {
+          const result = validateHebrewName('א');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should handle trimming whitespace', () => {
+          const result = validateHebrewName('  יוסף  ');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+      });
+
+      describe('should reject empty name', () => {
+        it('should reject empty string', () => {
+          const result = validateHebrewName('');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.NAME_REQUIRED);
+        });
+
+        it('should reject whitespace-only string', () => {
+          const result = validateHebrewName('   ');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.NAME_REQUIRED);
+        });
+
+        it('should reject tabs and newlines', () => {
+          const result = validateHebrewName('\t\n  ');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.NAME_REQUIRED);
+        });
+      });
+
+      describe('should reject invalid name formats', () => {
+        it('should reject English letters', () => {
+          const result = validateHebrewName('John');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.NAME_INVALID);
+        });
+
+        it('should reject numbers', () => {
+          const result = validateHebrewName('יוסף123');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.NAME_INVALID);
+        });
+
+        it('should reject special characters', () => {
+          const result = validateHebrewName('יוסף@');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.NAME_INVALID);
+        });
+
+        it('should reject mixed Hebrew and English', () => {
+          const result = validateHebrewName('יוסףJohn');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.NAME_INVALID);
+        });
+
+        it('should reject hyphens (special case)', () => {
+          const result = validateHebrewName('כהן-לוי');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.NAME_INVALID);
+        });
+      });
+    });
+
+    // Test the static class method directly
+    describe('FormValidationUtils.validateHebrewName', () => {
+      it('should work identically to the exported function', () => {
+        const testCases = [
+          'יוסף',
+          'כהן',
+          'בן דוד',
+          'John',
+          '',
+          '   ',
+          'יוסף123'
+        ];
+
+        testCases.forEach(testCase => {
+          const exportedResult = validateHebrewName(testCase);
+          const classResult = FormValidationUtils.validateHebrewName(testCase);
+          
+          expect(exportedResult.isValid).toBe(classResult.isValid);
+          expect(exportedResult.errorMessage).toBe(classResult.errorMessage);
+        });
+      });
+    });
+  });
+
   // Gender Validation Tests
   describe('Gender Validation', () => {
     describe('validateGender', () => {
@@ -919,6 +1032,8 @@ describe('Personal Number Validation', () => {
       });
     });
   });
+
+
 
   // Birthdate Validation Tests
   describe('Birthdate Validation', () => {

@@ -30,6 +30,8 @@ export interface CompleteRegistrationData extends PersonalDetailsData, AccountDe
  * Validation errors for personal details
  */
 export interface PersonalDetailsValidationErrors {
+  firstName: string | null;
+  lastName: string | null;
   gender: string | null;
   birthdate: string | null;
 }

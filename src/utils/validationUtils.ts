@@ -236,6 +236,8 @@ export class FormValidationUtils {
     };
   }
 
+
+
   /**
    * Validate consent checkbox
    * @param value - The consent value to validate
@@ -322,6 +324,7 @@ export const validateEmail = FormValidationUtils.validateEmail;
 export const validatePhone = FormValidationUtils.validatePhone;
 export const validateHebrewName = FormValidationUtils.validateHebrewName;
 export const validatePassword = FormValidationUtils.validatePassword;
+
 export const validateGender = FormValidationUtils.validateGender;
 export const validateBirthdate = FormValidationUtils.validateBirthdate;
 export const validateConsent = FormValidationUtils.validateConsent;

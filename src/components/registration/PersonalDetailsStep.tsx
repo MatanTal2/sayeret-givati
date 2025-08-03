@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TEXT_CONSTANTS } from '@/constants/text';
-import { validateGender, validateBirthdate } from '@/utils/validationUtils';
+import { validateHebrewName, validateGender, validateBirthdate } from '@/utils/validationUtils';
 import { PersonalDetailsStepProps, PersonalDetailsData, PersonalDetailsValidationErrors } from '@/types/registration';
 
 export default function PersonalDetailsStep({ 
@@ -16,6 +16,8 @@ export default function PersonalDetailsStep({
   });
 
   const [validationErrors, setValidationErrors] = useState<PersonalDetailsValidationErrors>({
+    firstName: null,
+    lastName: null,
     gender: null,
     birthdate: null
   });
@@ -24,18 +26,25 @@ export default function PersonalDetailsStep({
 
   // Real-time validation
   useEffect(() => {
+    const firstNameValidation = validateHebrewName(formData.firstName);
+    const lastNameValidation = validateHebrewName(formData.lastName);
     const genderValidation = validateGender(formData.gender);
     const birthdateValidation = validateBirthdate(formData.birthdate);
 
     const errors: PersonalDetailsValidationErrors = {
+      firstName: firstNameValidation.errorMessage,
+      lastName: lastNameValidation.errorMessage,
       gender: genderValidation.errorMessage,
       birthdate: birthdateValidation.errorMessage
     };
 
     setValidationErrors(errors);
 
-    // Check if form is valid (readonly fields don't need validation)
-    const isValid = genderValidation.isValid && birthdateValidation.isValid;
+    // Check if all fields are valid
+    const isValid = firstNameValidation.isValid && 
+                   lastNameValidation.isValid && 
+                   genderValidation.isValid && 
+                   birthdateValidation.isValid;
     setIsFormValid(isValid);
   }, [formData]);
 
@@ -72,46 +81,64 @@ export default function PersonalDetailsStep({
       <div className="px-6 pb-5">
         <form className="space-y-3">
           
-          {/* First Name - Compact Row Layout */}
-          <div className="flex items-center space-x-3 space-x-reverse">
-            <label className="block text-sm font-medium text-gray-700 w-20 text-right">
-              {TEXT_CONSTANTS.AUTH.FIRST_NAME}:
-            </label>
-            <input
-              type="text"
-              value={firstName}
-              readOnly
-              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-100 
-                       text-right text-gray-600 cursor-not-allowed text-sm"
-              data-testid="first-name-readonly"
-            />
-          </div>
-
-          {/* Last Name - Compact Row Layout */}
-          <div className="flex items-center space-x-3 space-x-reverse">
-            <label className="block text-sm font-medium text-gray-700 w-20 text-right">
-              {TEXT_CONSTANTS.AUTH.LAST_NAME}:
-            </label>
-            <input
-              type="text"
-              value={lastName}
-              readOnly
-              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-100 
-                       text-right text-gray-600 cursor-not-allowed text-sm"
-              data-testid="last-name-readonly"
-            />
-          </div>
-
-          {/* Gender - Compact Row Layout */}
+          {/* TODO: Update database when firstName or lastName changes */}
+          
+          {/* First Name - Editable */}
           <div className="space-y-1">
-            <div className="flex items-center space-x-3 space-x-reverse">
-              <label className="block text-sm font-medium text-gray-700 w-20 text-right">
-                {TEXT_CONSTANTS.AUTH.GENDER}: *
-              </label>
+            <input
+              type="text"
+              value={formData.firstName}
+              onChange={(e) => handleInputChange('firstName', e.target.value)}
+              className={`w-full px-3 py-2 border-2 rounded-lg focus:ring-2 outline-none transition-all
+                       text-right text-gray-800 bg-white text-sm ${
+                validationErrors.firstName && formData.firstName
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500'
+              }`}
+              placeholder="הזן שם פרטי"
+              data-testid="first-name-input"
+            />
+            
+            {/* First Name Error Message */}
+            {validationErrors.firstName && formData.firstName && (
+              <p className="text-xs text-red-600 text-right px-1" data-testid="first-name-error">
+                {validationErrors.firstName}
+              </p>
+            )}
+          </div>
+
+          {/* Last Name - Editable */}
+          <div className="space-y-1">
+            <input
+              type="text"
+              value={formData.lastName}
+              onChange={(e) => handleInputChange('lastName', e.target.value)}
+              className={`w-full px-3 py-2 border-2 rounded-lg focus:ring-2 outline-none transition-all
+                       text-right text-gray-800 bg-white text-sm ${
+                validationErrors.lastName && formData.lastName
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500'
+              }`}
+              placeholder="הזן שם משפחה"
+              data-testid="last-name-input"
+            />
+            
+            {/* Last Name Error Message */}
+            {validationErrors.lastName && formData.lastName && (
+              <p className="text-xs text-red-600 text-right px-1" data-testid="last-name-error">
+                {validationErrors.lastName}
+              </p>
+            )}
+          </div>
+
+          {/* Gender and Birthdate - Same Row */}
+          <div className="flex gap-4">
+            {/* Gender Dropdown - No Label */}
+            <div className="flex-1 space-y-1">
               <select
                 value={formData.gender}
                 onChange={(e) => handleInputChange('gender', e.target.value)}
-                className={`flex-1 px-3 py-2 border-2 rounded-lg focus:ring-2 outline-none transition-all
+                className={`w-full px-3 py-2 border-2 rounded-lg focus:ring-2 outline-none transition-all
                          text-right text-gray-800 bg-white text-sm ${
                   validationErrors.gender && formData.gender
                     ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
@@ -124,27 +151,22 @@ export default function PersonalDetailsStep({
                 <option value="female">{TEXT_CONSTANTS.AUTH.GENDER_FEMALE}</option>
                 <option value="other">{TEXT_CONSTANTS.AUTH.GENDER_OTHER}</option>
               </select>
+              
+              {/* Gender Error Message */}
+              {validationErrors.gender && formData.gender && (
+                <p className="text-xs text-red-600 text-right px-1" data-testid="gender-error">
+                  {validationErrors.gender}
+                </p>
+              )}
             </div>
-            
-            {/* Gender Error Message */}
-            {validationErrors.gender && formData.gender && (
-              <p className="text-xs text-red-600 text-right px-1" data-testid="gender-error">
-                {validationErrors.gender}
-              </p>
-            )}
-          </div>
 
-          {/* Birthdate - Compact Row Layout */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-3 space-x-reverse">
-              <label className="block text-sm font-medium text-gray-700 w-20 text-right">
-                {TEXT_CONSTANTS.AUTH.BIRTHDATE}: *
-              </label>
+            {/* Birthdate Picker - No Label */}
+            <div className="flex-1 space-y-1">
               <input
                 type="date"
                 value={formData.birthdate}
                 onChange={(e) => handleInputChange('birthdate', e.target.value)}
-                className={`flex-1 px-3 py-2 border-2 rounded-lg focus:ring-2 outline-none transition-all
+                className={`w-full px-3 py-2 border-2 rounded-lg focus:ring-2 outline-none transition-all
                          text-right text-gray-800 bg-white text-sm ${
                   validationErrors.birthdate && formData.birthdate
                     ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
@@ -152,14 +174,14 @@ export default function PersonalDetailsStep({
                 }`}
                 data-testid="birthdate-input"
               />
+              
+              {/* Birthdate Error Message */}
+              {validationErrors.birthdate && formData.birthdate && (
+                <p className="text-xs text-red-600 text-right px-1" data-testid="birthdate-error">
+                  {validationErrors.birthdate}
+                </p>
+              )}
             </div>
-            
-            {/* Birthdate Error Message */}
-            {validationErrors.birthdate && formData.birthdate && (
-              <p className="text-xs text-red-600 text-right px-1" data-testid="birthdate-error">
-                {validationErrors.birthdate}
-              </p>
-            )}
           </div>
 
           {/* Continue Button */}
@@ -179,7 +201,7 @@ export default function PersonalDetailsStep({
             המשך
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                    d="M9 5l7 7-7 7" />
+                    d="M15 5l-7 7 7 7" />
             </svg>
           </button>
         </form>

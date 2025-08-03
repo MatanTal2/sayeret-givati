@@ -153,14 +153,14 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
         <h3 className="text-2xl font-bold text-gray-900 mb-2">{TEXT_CONSTANTS.AUTH.WELCOME_TO_SYSTEM}</h3>
         
         {/* Subtitle */}
-        <p className="text-lg text-gray-600 mb-6">{TEXT_CONSTANTS.AUTH.SYSTEM_SUBTITLE}</p>
+        <p className="text-lg text-gray-600 mb-3">{TEXT_CONSTANTS.AUTH.SYSTEM_SUBTITLE}</p>
       </div>
 
       {/* Registration Form */}
-      <div className="px-6 pb-5">
+      <div className="px-6 pb-3">
         <form className="space-y-4">
           {/* Section Title */}
-          <h4 className="text-lg font-semibold text-gray-800 text-center mb-4">
+          <h4 className="text-lg font-semibold text-gray-800 text-center mb-2">
             {TEXT_CONSTANTS.AUTH.IDENTITY_VERIFICATION}
           </h4>
           

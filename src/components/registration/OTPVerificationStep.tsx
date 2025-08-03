@@ -97,7 +97,7 @@ export default function OTPVerificationStep({
                 value={otpCode}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                         text-center text-2xl font-mono tracking-widest text-gray-800 bg-gray-50 focus:bg-white placeholder-gray-500 ${
+                         text-center tracking-widest text-gray-800 bg-gray-50 focus:bg-white placeholder-gray-500 ${
                   (validationError && otpCode) || backendError
                     ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
                     : 'border-gray-200 focus:border-green-500 focus:ring-green-500'
