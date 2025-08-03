@@ -4,12 +4,15 @@ import { validateEmail, validatePassword, validateConsent } from '@/utils/valida
 import { AccountDetailsStepProps, AccountDetailsData, AccountDetailsValidationErrors } from '@/types/registration';
 
 export default function AccountDetailsStep({ 
+  email = '',
+  password = '',
+  consent = false,
   onSubmit
 }: AccountDetailsStepProps) {
   const [formData, setFormData] = useState<AccountDetailsData>({
-    email: '',
-    password: '',
-    consent: false
+    email,
+    password,
+    consent
   });
 
   const [validationErrors, setValidationErrors] = useState<AccountDetailsValidationErrors>({
@@ -20,6 +23,7 @@ export default function AccountDetailsStep({
 
   const [showPassword, setShowPassword] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [showPasswordTooltip, setShowPasswordTooltip] = useState(false);
 
   // Real-time validation
   useEffect(() => {
@@ -151,12 +155,34 @@ export default function AccountDetailsStep({
                 )}
               </button>
 
-              {/* Lock Icon - Now on Right */}
+              {/* Lock Icon with Tooltip - Now on Right */}
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
+                <div 
+                  className="relative"
+                  onMouseEnter={() => setShowPasswordTooltip(true)}
+                  onMouseLeave={() => setShowPasswordTooltip(false)}
+                >
+                  <svg className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-help transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  
+                  {/* Password Requirements Tooltip */}
+                  {showPasswordTooltip && (
+                    <div className="absolute bottom-full right-0 mb-2 w-64 bg-gray-800 text-white text-xs rounded-lg p-3 z-10 shadow-lg">
+                      <div className="text-center font-semibold mb-2">דרישות סיסמה:</div>
+                      <ul className="text-right space-y-1">
+                        <li>• לפחות 8 תווים</li>
+                        <li>• אות גדולה (A-Z)</li>
+                        <li>• אות קטנה (a-z)</li>
+                        <li>• מספר (0-9)</li>
+                        <li>• תו מיוחד (!@#$%^&*)</li>
+                      </ul>
+                      {/* Tooltip Arrow */}
+                      <div className="absolute top-full right-3 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800"></div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             

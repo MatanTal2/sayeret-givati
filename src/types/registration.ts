@@ -51,6 +51,8 @@ export interface AccountDetailsValidationErrors {
 export interface PersonalDetailsStepProps {
   firstName: string;
   lastName: string;
+  gender?: string;
+  birthdate?: string;
   onSubmit?: (data: PersonalDetailsData) => void;
 }
 
@@ -58,5 +60,8 @@ export interface PersonalDetailsStepProps {
  * Props for AccountDetailsStep component
  */
 export interface AccountDetailsStepProps {
+  email?: string;
+  password?: string;
+  consent?: boolean;
   onSubmit?: (data: AccountDetailsData) => void;
 }

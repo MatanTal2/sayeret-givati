@@ -24,7 +24,6 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
   
   // Form data for new steps
   const [personalDetailsData, setPersonalDetailsData] = useState<PersonalDetailsData | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [accountDetailsData, setAccountDetailsData] = useState<AccountDetailsData | null>(null);
 
   // Helper function to notify parent of step change
@@ -109,8 +108,10 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
   if (currentStep === 'personal') {
     return (
       <PersonalDetailsStep 
-        firstName={userFirstName}
-        lastName={userLastName}
+        firstName={personalDetailsData?.firstName || userFirstName}
+        lastName={personalDetailsData?.lastName || userLastName}
+        gender={personalDetailsData?.gender || ''}
+        birthdate={personalDetailsData?.birthdate || ''}
         onSubmit={handlePersonalDetailsSubmit}
       />
     );
@@ -120,6 +121,9 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
   if (currentStep === 'account') {
     return (
       <AccountDetailsStep 
+        email={accountDetailsData?.email || ''}
+        password={accountDetailsData?.password || ''}
+        consent={accountDetailsData?.consent || false}
         onSubmit={handleAccountDetailsSubmit}
       />
     );

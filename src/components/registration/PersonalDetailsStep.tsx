@@ -6,13 +6,15 @@ import { PersonalDetailsStepProps, PersonalDetailsData, PersonalDetailsValidatio
 export default function PersonalDetailsStep({ 
   firstName, 
   lastName, 
+  gender = '',
+  birthdate = '',
   onSubmit
 }: PersonalDetailsStepProps) {
   const [formData, setFormData] = useState<PersonalDetailsData>({
     firstName,
     lastName,
-    gender: '',
-    birthdate: ''
+    gender,
+    birthdate
   });
 
   const [validationErrors, setValidationErrors] = useState<PersonalDetailsValidationErrors>({
