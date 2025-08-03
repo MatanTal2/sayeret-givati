@@ -1,6 +1,9 @@
 import { 
   validatePersonalNumber, 
+  validateOTP,
+  maskPhoneNumber,
   FormValidationUtils,
+  PhoneUtils,
   VALIDATION_PATTERNS,
   VALIDATION_MESSAGES_HE 
 } from '../validationUtils';
@@ -249,6 +252,302 @@ describe('Personal Number Validation', () => {
         const result = validatePersonalNumber(`${space}12345${space}`);
         expect(result.isValid).toBe(true);
         expect(result.errorMessage).toBeNull();
+      });
+    });
+  });
+
+  // OTP Validation Tests
+  describe('OTP Validation', () => {
+    describe('validateOTP', () => {
+      describe('should validate correct OTP format', () => {
+        it('should accept 6-digit OTP code', () => {
+          const result = validateOTP('123456');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept OTP with all zeros', () => {
+          const result = validateOTP('000000');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept OTP with all nines', () => {
+          const result = validateOTP('999999');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept OTP with leading zeros', () => {
+          const result = validateOTP('000123');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept OTP with mixed digits', () => {
+          const result = validateOTP('012345');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+      });
+
+      describe('should reject incorrect OTP length', () => {
+        it('should reject 5-digit OTP', () => {
+          const result = validateOTP('12345');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.OTP_INVALID);
+        });
+
+        it('should reject 7-digit OTP', () => {
+          const result = validateOTP('1234567');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.OTP_INVALID);
+        });
+
+        it('should reject empty OTP', () => {
+          const result = validateOTP('');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.OTP_INVALID);
+        });
+
+        it('should reject very long OTP', () => {
+          const result = validateOTP('123456789');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.OTP_INVALID);
+        });
+
+        it('should reject single digit', () => {
+          const result = validateOTP('1');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.OTP_INVALID);
+        });
+      });
+
+      describe('should reject non-numeric OTP', () => {
+        it('should reject OTP with letters at the end', () => {
+          const result = validateOTP('12345a');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.OTP_INVALID);
+        });
+
+        it('should reject OTP with letters at the beginning', () => {
+          const result = validateOTP('abc123');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.OTP_INVALID);
+        });
+
+        it('should reject OTP with hyphens', () => {
+          const result = validateOTP('12-34-56');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.OTP_INVALID);
+        });
+
+        it('should reject OTP with spaces', () => {
+          const result = validateOTP('123 456');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.OTP_INVALID);
+        });
+
+        it('should reject OTP with special characters', () => {
+          const result = validateOTP('123@45');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.OTP_INVALID);
+        });
+
+        it('should reject OTP with dots', () => {
+          const result = validateOTP('123.456');
+          expect(result.isValid).toBe(false);
+          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.OTP_INVALID);
+        });
+      });
+
+      describe('should handle leading zeros', () => {
+        it('should accept OTP starting with multiple zeros', () => {
+          const result = validateOTP('000123');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept OTP with zeros in middle', () => {
+          const result = validateOTP('120045');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept OTP ending with zeros', () => {
+          const result = validateOTP('123000');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+      });
+    });
+
+    // Test the static class method directly
+    describe('PhoneUtils.validateOTP', () => {
+      it('should work identically to the exported function', () => {
+        const testCases = [
+          '123456',
+          '12345',
+          '1234567',
+          '',
+          '12345a',
+          '000123'
+        ];
+
+        testCases.forEach(testCase => {
+          const exportedResult = validateOTP(testCase);
+          const classResult = PhoneUtils.validateOTP(testCase);
+          
+          expect(exportedResult.isValid).toBe(classResult.isValid);
+          expect(exportedResult.errorMessage).toBe(classResult.errorMessage);
+        });
+      });
+    });
+
+    // OTP regex pattern testing
+    describe('OTP Pattern Validation', () => {
+      it('should match exactly 6 digits', () => {
+        const validOTPs = ['123456', '000000', '999999', '012345'];
+        const invalidOTPs = ['12345', '1234567', '12345a', '123-45', ''];
+
+        validOTPs.forEach(otp => {
+          expect(/^\d{6}$/.test(otp)).toBe(true);
+        });
+
+        invalidOTPs.forEach(otp => {
+          expect(/^\d{6}$/.test(otp)).toBe(false);
+        });
+      });
+    });
+  });
+
+  // Phone Number Masking Tests
+  describe('Phone Number Utilities', () => {
+    describe('maskPhoneNumber', () => {
+      describe('should mask Israeli phone numbers correctly', () => {
+        it('should mask standard Israeli mobile number', () => {
+          const result = maskPhoneNumber('0521234567');
+          expect(result).toBe('052-***4567');
+        });
+
+        it('should mask different Israeli mobile prefix', () => {
+          const result = maskPhoneNumber('0541234567');
+          expect(result).toBe('054-***4567');
+        });
+
+        it('should mask Israeli mobile with 050 prefix', () => {
+          const result = maskPhoneNumber('0501234567');
+          expect(result).toBe('050-***4567');
+        });
+
+        it('should mask Israeli mobile with 058 prefix', () => {
+          const result = maskPhoneNumber('0581234567');
+          expect(result).toBe('058-***4567');
+        });
+      });
+
+      describe('should handle international format', () => {
+        it('should convert +972 format to masked Israeli format', () => {
+          const result = maskPhoneNumber('+972521234567');
+          expect(result).toBe('052-***4567');
+        });
+
+        it('should convert 972 format (without +) to masked Israeli format', () => {
+          const result = maskPhoneNumber('972521234567');
+          expect(result).toBe('052-***4567');
+        });
+
+        it('should handle +972 with different mobile prefix', () => {
+          const result = maskPhoneNumber('+972541234567');
+          expect(result).toBe('054-***4567');
+        });
+      });
+
+      describe('should handle formatted input', () => {
+        it('should mask pre-formatted phone with hyphens', () => {
+          const result = maskPhoneNumber('052-123-4567');
+          expect(result).toBe('052-***4567');
+        });
+
+        it('should mask phone with spaces', () => {
+          const result = maskPhoneNumber('052 123 4567');
+          expect(result).toBe('052-***4567');
+        });
+
+        it('should mask phone with mixed formatting', () => {
+          const result = maskPhoneNumber('+972-52 123 4567');
+          expect(result).toBe('052-***4567');
+        });
+      });
+
+      describe('should return original for invalid input', () => {
+        it('should return original for too short number', () => {
+          const input = '123';
+          const result = maskPhoneNumber(input);
+          expect(result).toBe(input);
+        });
+
+        it('should return original for non-numeric input', () => {
+          const input = 'invalid';
+          const result = maskPhoneNumber(input);
+          expect(result).toBe(input);
+        });
+
+        it('should return original for empty input', () => {
+          const input = '';
+          const result = maskPhoneNumber(input);
+          expect(result).toBe(input);
+        });
+
+        it('should return original for very short Israeli number', () => {
+          const input = '052123';
+          const result = maskPhoneNumber(input);
+          expect(result).toBe(input);
+        });
+      });
+
+      describe('edge cases and special scenarios', () => {
+        it('should handle exactly 10 digit Israeli number', () => {
+          const result = maskPhoneNumber('0521234567');
+          expect(result).toBe('052-***4567');
+        });
+
+        it('should handle number with +972 and hyphens', () => {
+          const result = maskPhoneNumber('+972-52-123-4567');
+          expect(result).toBe('052-***4567');
+        });
+
+        it('should preserve original for 9-digit input', () => {
+          const input = '052123456';
+          const result = maskPhoneNumber(input);
+          expect(result).toBe(input);
+        });
+
+        it('should handle international format with extra digits', () => {
+          const result = maskPhoneNumber('+97252123456789');
+          expect(result).toBe('052-***6789');
+        });
+      });
+    });
+
+    // Test the static class method directly
+    describe('PhoneUtils.maskPhoneNumber', () => {
+      it('should work identically to the exported function', () => {
+        const testCases = [
+          '0521234567',
+          '+972521234567',
+          '052-123-4567',
+          '123',
+          'invalid',
+          ''
+        ];
+
+        testCases.forEach(testCase => {
+          const exportedResult = maskPhoneNumber(testCase);
+          const classResult = PhoneUtils.maskPhoneNumber(testCase);
+          
+          expect(exportedResult).toBe(classResult);
+        });
       });
     });
   });

@@ -235,6 +235,7 @@ This document outlines comprehensive unit tests for the registration feature, co
 ## Test Implementation Notes
 
 ### Testing Framework Recommendations
+
 - **Jest** for unit testing framework
 - **React Testing Library** for component testing
 - **MSW (Mock Service Worker)** for API mocking
@@ -243,6 +244,7 @@ This document outlines comprehensive unit tests for the registration feature, co
 ### Common Test Patterns
 
 #### Component Testing Pattern
+
 ```javascript
 // Example test structure
 describe('RegistrationForm', () => {
@@ -255,6 +257,7 @@ describe('RegistrationForm', () => {
 ```
 
 #### Validation Function Testing Pattern
+
 ```javascript
 // Example validation test
 describe('validatePersonalNumber', () => {
@@ -267,6 +270,7 @@ describe('validatePersonalNumber', () => {
 ```
 
 #### Mock Setup for API Testing
+
 ```javascript
 // Example API mock setup
 beforeEach(() => {
@@ -279,12 +283,14 @@ beforeEach(() => {
 ```
 
 ### Coverage Requirements
+
 - **Unit Tests**: 100% coverage for validation utilities
 - **Component Tests**: Full user interaction flows
 - **Integration Tests**: Complete registration workflows
 - **Error Handling**: All error scenarios covered
 
 ### Test Data Management
+
 - Use consistent test data across tests
 - Create factory functions for test object generation
 - Mock external dependencies (Firebase, SMS services)
