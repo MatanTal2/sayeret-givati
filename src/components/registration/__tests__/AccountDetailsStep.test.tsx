@@ -521,7 +521,7 @@ describe('AccountDetailsStep', () => {
       const emailInput = screen.getByTestId('email-input');
       
       // Rapid typing
-      await user.type(emailInput, 'verylongemailaddress@example.com', { delay: 1 });
+      await user.type(emailInput, 'verylongemailaddress@example.com');
       
       await waitFor(() => {
         expect(emailInput).toHaveValue('verylongemailaddress@example.com');

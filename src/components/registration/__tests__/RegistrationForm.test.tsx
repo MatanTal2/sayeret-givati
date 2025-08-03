@@ -36,8 +36,11 @@ jest.mock('../OTPVerificationStep', () => {
   }) {
     const handleBackClick = () => {
       // Use the test helper to navigate back
-      if ((window as any).testSetCurrentStep) {
-        (window as any).testSetCurrentStep('personal-number');
+      const windowWithTestHelper = window as typeof window & {
+        testSetCurrentStep?: React.Dispatch<React.SetStateAction<'personal-number' | 'otp' | 'personal' | 'account' | 'success'>>;
+      };
+      if (windowWithTestHelper.testSetCurrentStep) {
+        windowWithTestHelper.testSetCurrentStep('personal-number');
       }
     };
 
@@ -170,7 +173,10 @@ function RegistrationFormTestWrapper({
   React.useEffect(() => {
     if (props.onStepChange) {
       // Add setCurrentStep to window for test access
-      (window as any).testSetCurrentStep = setCurrentStep;
+      const windowWithTestHelper = window as typeof window & {
+        testSetCurrentStep?: React.Dispatch<React.SetStateAction<'personal-number' | 'otp' | 'personal' | 'account' | 'success'>>;
+      };
+      windowWithTestHelper.testSetCurrentStep = setCurrentStep;
     }
   }, [props.onStepChange]);
   

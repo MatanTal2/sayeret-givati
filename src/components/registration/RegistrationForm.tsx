@@ -18,6 +18,7 @@ interface RegistrationFormProps {
 export default function RegistrationForm({ personalNumber, setPersonalNumber, onSwitchToLogin, onStepChange, currentStep }: RegistrationFormProps) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [userPhoneNumber, setUserPhoneNumber] = useState<string>('');
   const [userFirstName, setUserFirstName] = useState<string>('');
   const [userLastName, setUserLastName] = useState<string>('');
@@ -47,18 +48,50 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
     setPersonalNumber(cleanValue);
   };
 
-  const handleVerifyPersonalNumber = () => {
-    console.log('TODO: verify personal number', personalNumber);
-    // TODO: Call backend to verify personal number and get user data
-    // For now, simulate finding user data from authorized_personnel document
-    const mockPhoneNumber = '0521234567';
-    const mockFirstName = 'יוסי';
-    const mockLastName = 'כהן';
-    
-    setUserPhoneNumber(mockPhoneNumber);
-    setUserFirstName(mockFirstName);
-    setUserLastName(mockLastName);
-    updateCurrentStep('otp');
+  const handleVerifyPersonalNumber = async () => {
+    if (!isValid || isVerifying) return;
+
+    setIsVerifying(true);
+    setValidationError(null);
+
+    try {
+      console.log('🔍 Verifying personal number:', personalNumber);
+      
+      const response = await fetch('/api/auth/verify-military-id', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ militaryId: personalNumber }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        console.log('✅ Personal number verified successfully');
+        
+        // Store the personnel data from authorized_personnel collection
+        setUserPhoneNumber(data.personnel.phoneNumber);
+        setUserFirstName(data.personnel.firstName);
+        setUserLastName(data.personnel.lastName);
+        
+        console.log('📞 Phone number:', data.personnel.phoneNumber);
+        console.log('👤 Name:', data.personnel.firstName, data.personnel.lastName);
+        
+        // Move to OTP verification step
+        updateCurrentStep('otp');
+      } else {
+        // Handle verification failure
+        const errorMessage = data.error || 'Failed to verify military ID';
+        console.log('❌ Personal number verification failed:', errorMessage);
+        setValidationError(errorMessage);
+      }
+    } catch (error) {
+      console.error('🚨 Error verifying personal number:', error);
+      setValidationError('Connection error. Please check your internet connection and try again.');
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleOTPVerifySuccess = () => {
@@ -211,20 +244,32 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
           <button
             type="button"
             onClick={handleVerifyPersonalNumber}
-            disabled={!isValid}
+            disabled={!isValid || isVerifying}
             className={`w-full py-3 px-4 font-semibold rounded-xl btn-press focus-ring
                      flex items-center justify-center gap-2
                      transition-all duration-200 ${
-              isValid
+              isValid && !isVerifying
                 ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-lg'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
             data-testid="verify-button"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            {TEXT_CONSTANTS.AUTH.VERIFY_PERSONAL_NUMBER}
+            {isVerifying ? (
+              <>
+                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                מאמת...
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {TEXT_CONSTANTS.AUTH.VERIFY_PERSONAL_NUMBER}
+              </>
+            )}
           </button>
 
           {/* Switch to Login */}

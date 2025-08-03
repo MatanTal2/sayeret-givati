@@ -460,7 +460,7 @@ describe('PersonalDetailsStep', () => {
       
       // Rapid typing
       await user.clear(firstNameInput);
-      await user.type(firstNameInput, 'אבגדהוזחטיכלמנסעפצקרשת', { delay: 1 });
+      await user.type(firstNameInput, 'אבגדהוזחטיכלמנסעפצקרשת');
       
       await waitFor(() => {
         expect(firstNameInput).toHaveValue('אבגדהוזחטיכלמנסעפצקרשת');
