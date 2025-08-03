@@ -89,7 +89,6 @@ export default function RegistrationStepDots({
       {STEP_CONFIGS.map((step, index) => {
         const isCompleted = isStepCompleted(step.id, currentStep);
         const isActive = isStepActive(step.id, currentStep);
-        const isUpcoming = !isCompleted && !isActive;
         
         return (
           <React.Fragment key={step.id}>

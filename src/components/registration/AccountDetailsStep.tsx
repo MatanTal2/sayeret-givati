@@ -4,8 +4,7 @@ import { validateEmail, validatePassword, validateConsent } from '@/utils/valida
 import { AccountDetailsStepProps, AccountDetailsData, AccountDetailsValidationErrors } from '@/types/registration';
 
 export default function AccountDetailsStep({ 
-  onSubmit,
-  onBack 
+  onSubmit
 }: AccountDetailsStepProps) {
   const [formData, setFormData] = useState<AccountDetailsData>({
     email: '',
@@ -202,47 +201,26 @@ export default function AccountDetailsStep({
             )}
           </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex space-x-3 pt-4">
-            {/* Back Button */}
-            {onBack && (
-              <button
-                type="button"
-                onClick={onBack}
-                className="flex-1 py-3 px-4 font-semibold rounded-xl btn-press focus-ring
-                         flex items-center justify-center gap-2
-                         transition-all duration-200 bg-gray-200 hover:bg-gray-300 text-gray-700"
-                data-testid="back-button"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                        d="M15 19l-7-7 7-7" />
-                </svg>
-                חזור
-              </button>
-            )}
-
-            {/* Create Account Button */}
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={!isFormValid}
-              className={`flex-1 py-3 px-4 font-semibold rounded-xl btn-press focus-ring
-                         flex items-center justify-center gap-2
-                         transition-all duration-200 ${
-                isFormValid
-                  ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-lg'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-              data-testid="create-account-button"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d="M5 13l4 4L19 7" />
-              </svg>
-              צור חשבון
-            </button>
-          </div>
+          {/* Create Account Button */}
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!isFormValid}
+            className={`w-full py-3 px-4 font-semibold rounded-xl btn-press focus-ring
+                     flex items-center justify-center gap-2 mt-4
+                     transition-all duration-200 ${
+              isFormValid
+                ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-lg'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+            data-testid="create-account-button"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                    d="M5 13l4 4L19 7" />
+            </svg>
+            צור חשבון
+          </button>
         </form>
       </div>
     </>

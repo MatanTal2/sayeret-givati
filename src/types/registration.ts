@@ -50,7 +50,6 @@ export interface PersonalDetailsStepProps {
   firstName: string;
   lastName: string;
   onSubmit?: (data: PersonalDetailsData) => void;
-  onBack?: () => void;
 }
 
 /**
@@ -58,5 +57,4 @@ export interface PersonalDetailsStepProps {
  */
 export interface AccountDetailsStepProps {
   onSubmit?: (data: AccountDetailsData) => void;
-  onBack?: () => void;
 }

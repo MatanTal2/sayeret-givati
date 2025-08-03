@@ -34,6 +34,27 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch }: Registr
     setCurrentStep(step);
   };
 
+  // Dynamic back navigation based on current step
+  const handleBackNavigation = () => {
+    switch (currentStep) {
+      case 'personal-number':
+        handleSwitchToLogin(); // Go to login
+        break;
+      case 'otp':
+        setCurrentStep('personal-number'); // Go to ID verification
+        break;
+      case 'personal':
+        setCurrentStep('otp'); // Go to OTP
+        break;
+      case 'account':
+        setCurrentStep('personal'); // Go to personal details
+        break;
+      // success step has no back button behavior
+      default:
+        handleSwitchToLogin();
+    }
+  };
+
   return (
     <>
       {/* Backdrop - Blur Only */}
@@ -48,7 +69,7 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch }: Registr
                 my-4 sm:my-8 flex flex-col">
           
           <RegistrationHeader 
-            onBack={handleSwitchToLogin}
+            onBack={handleBackNavigation}
             onClose={handleClose}
           />
           

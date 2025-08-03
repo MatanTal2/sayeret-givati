@@ -105,7 +105,6 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       <OTPVerificationStep 
         phoneNumber={userPhoneNumber}
         onVerifySuccess={handleOTPVerifySuccess}
-        onBack={() => updateCurrentStep('personal-number')}
       />
     );
   }
@@ -117,7 +116,6 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
         firstName={userFirstName}
         lastName={userLastName}
         onSubmit={handlePersonalDetailsSubmit}
-        onBack={() => updateCurrentStep('otp')}
       />
     );
   }
@@ -127,7 +125,6 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
     return (
       <AccountDetailsStep 
         onSubmit={handleAccountDetailsSubmit}
-        onBack={() => updateCurrentStep('personal')}
       />
     );
   }

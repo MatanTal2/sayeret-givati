@@ -5,7 +5,6 @@ import { validateOTP, maskPhoneNumber } from '@/utils/validationUtils';
 interface OTPVerificationStepProps {
   phoneNumber: string;
   onVerifySuccess?: () => void;
-  onBack?: () => void;
 }
 
 export default function OTPVerificationStep({ 
