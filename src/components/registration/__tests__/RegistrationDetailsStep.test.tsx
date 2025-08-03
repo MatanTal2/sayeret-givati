@@ -103,25 +103,16 @@ describe('RegistrationDetailsStep Component', () => {
       expect(lastNameInput).toHaveAttribute('readonly');
     });
 
-    it('should show readonly phone number field', () => {
-      render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const phoneInput = screen.getByTestId('phone-number-readonly');
-      expect(phoneInput).toBeInTheDocument();
-      expect(phoneInput).toHaveValue('0521234567');
-      expect(phoneInput).toHaveAttribute('readonly');
-    });
+
 
     it('should display readonly fields with proper styling', () => {
       render(<RegistrationDetailsStep {...mockProps} />);
       
       const firstNameInput = screen.getByTestId('first-name-readonly');
       const lastNameInput = screen.getByTestId('last-name-readonly');
-      const phoneInput = screen.getByTestId('phone-number-readonly');
       
       expect(firstNameInput).toHaveClass('bg-gray-100', 'cursor-not-allowed');
       expect(lastNameInput).toHaveClass('bg-gray-100', 'cursor-not-allowed');
-      expect(phoneInput).toHaveClass('bg-gray-100', 'cursor-not-allowed');
     });
 
     it('should handle different prop values', () => {
@@ -129,14 +120,12 @@ describe('RegistrationDetailsStep Component', () => {
         ...mockProps,
         firstName: 'דוד',
         lastName: 'לוי',
-        phoneNumber: '0541234567',
       };
       
       render(<RegistrationDetailsStep {...customProps} />);
       
       expect(screen.getByTestId('first-name-readonly')).toHaveValue('דוד');
       expect(screen.getByTestId('last-name-readonly')).toHaveValue('לוי');
-      expect(screen.getByTestId('phone-number-readonly')).toHaveValue('0541234567');
     });
   });
 

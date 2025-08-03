@@ -2,6 +2,7 @@ import { useState } from 'react';
 import RegistrationHeader from './RegistrationHeader';
 import RegistrationForm from './RegistrationForm';
 import RegistrationFooter from './RegistrationFooter';
+import RegistrationStepDots, { RegistrationStep } from './RegistrationStepDots';
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -11,19 +12,26 @@ interface RegistrationModalProps {
 
 export default function RegistrationModal({ isOpen, onClose, onSwitch }: RegistrationModalProps) {
   const [personalNumber, setPersonalNumber] = useState('');
+  const [currentStep, setCurrentStep] = useState<RegistrationStep>('personal-number');
 
   if (!isOpen) return null;
 
   const handleClose = () => {
     // Reset form state when closing
     setPersonalNumber('');
+    setCurrentStep('personal-number');
     onClose();
   };
 
   const handleSwitchToLogin = () => {
     // Reset form state when switching
     setPersonalNumber('');
+    setCurrentStep('personal-number');
     onSwitch();
+  };
+
+  const handleStepChange = (step: RegistrationStep) => {
+    setCurrentStep(step);
   };
 
   return (
@@ -44,10 +52,16 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch }: Registr
             onClose={handleClose}
           />
           
+          {/* Progress Stepper */}
+          <div className="px-6 pt-2">
+            <RegistrationStepDots currentStep={currentStep} />
+          </div>
+          
           <RegistrationForm 
             personalNumber={personalNumber}
             setPersonalNumber={setPersonalNumber}
             onSwitchToLogin={handleSwitchToLogin}
+            onStepChange={handleStepChange}
           />
           
           <RegistrationFooter />

@@ -9,9 +9,10 @@ interface RegistrationFormProps {
   personalNumber: string;
   setPersonalNumber: (value: string) => void;
   onSwitchToLogin?: () => void;
+  onStepChange?: (step: 'personal-number' | 'otp' | 'details' | 'success') => void;
 }
 
-export default function RegistrationForm({ personalNumber, setPersonalNumber, onSwitchToLogin }: RegistrationFormProps) {
+export default function RegistrationForm({ personalNumber, setPersonalNumber, onSwitchToLogin, onStepChange }: RegistrationFormProps) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(false);
   const [currentStep, setCurrentStep] = useState<'personal-number' | 'otp' | 'details' | 'success'>('personal-number');
@@ -19,12 +20,23 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
   const [userFirstName, setUserFirstName] = useState<string>('');
   const [userLastName, setUserLastName] = useState<string>('');
 
+  // Helper function to update step and notify parent
+  const updateCurrentStep = (step: 'personal-number' | 'otp' | 'details' | 'success') => {
+    setCurrentStep(step);
+    onStepChange?.(step);
+  };
+
   // Real-time validation
   useEffect(() => {
     const validation = validatePersonalNumber(personalNumber);
     setValidationError(validation.errorMessage);
     setIsValid(validation.isValid);
   }, [personalNumber]);
+
+  // Notify parent of initial step
+  useEffect(() => {
+    onStepChange?.(currentStep);
+  }, [currentStep, onStepChange]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -44,17 +56,17 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
     setUserPhoneNumber(mockPhoneNumber);
     setUserFirstName(mockFirstName);
     setUserLastName(mockLastName);
-    setCurrentStep('otp');
+    updateCurrentStep('otp');
   };
 
   const handleOTPVerifySuccess = () => {
     console.log('OTP verification successful');
-    setCurrentStep('details');
+    updateCurrentStep('details');
   };
 
   const handleRegistrationComplete = (data: { email: string; password: string; gender: string; birthdate: string; consent: boolean }) => {
     console.log('Registration complete with data:', data);
-    setCurrentStep('success');
+    updateCurrentStep('success');
   };
 
   const handleContinueToSystem = () => {
@@ -68,7 +80,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       <OTPVerificationStep 
         phoneNumber={userPhoneNumber}
         onVerifySuccess={handleOTPVerifySuccess}
-        onBack={() => setCurrentStep('personal-number')}
+        onBack={() => updateCurrentStep('personal-number')}
       />
     );
   }

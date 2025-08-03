@@ -335,7 +335,6 @@ describe('Registration Flow Integration Tests', () => {
       // Check that mock user data is displayed
       expect(screen.getByTestId('first-name-readonly')).toHaveValue('יוסי');
       expect(screen.getByTestId('last-name-readonly')).toHaveValue('כהן');
-      expect(screen.getByTestId('phone-number-readonly')).toHaveValue('0521234567');
     });
 
     it('should handle rapid step navigation without data loss', async () => {

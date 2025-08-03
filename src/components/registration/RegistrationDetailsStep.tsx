@@ -152,20 +152,7 @@ export default function RegistrationDetailsStep({
               />
             </div>
 
-            {/* Phone Number - Read Only */}
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
-                {TEXT_CONSTANTS.AUTH.PHONE_NUMBER}
-              </label>
-              <input
-                type="text"
-                value={phoneNumber}
-                readOnly
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-100 
-                         text-right text-gray-600 cursor-not-allowed"
-                data-testid="phone-number-readonly"
-              />
-            </div>
+
           </div>
 
           {/* Email Field */}
