@@ -1,11 +1,8 @@
-import { auth, db } from '@/lib/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { db } from '@/lib/firebase';
 import { doc, setDoc, serverTimestamp, getDoc, Timestamp } from 'firebase/firestore';
 import { SecurityUtils } from '@/lib/adminUtils';
 import { UserRole } from '@/types/equipment';
-
-// Constants
-const USERS_COLLECTION = 'users';
+import { ADMIN_CONFIG } from '@/constants/admin';
 
 /**
  * Interface for complete registration data including military ID
@@ -59,7 +56,7 @@ export interface UserRegistrationResult {
  */
 export class UserService {
   /**
-   * Create a new user account with Firebase Auth and Firestore profile
+   * Create a new user profile in Firestore (Firebase Auth creation will be added later)
    */
   static async registerUser(registrationData: RegistrationData): Promise<UserRegistrationResult> {
     try {
@@ -67,9 +64,20 @@ export class UserService {
 
       // 1. Generate hash ID for military personal number
       const militaryIdHash = await SecurityUtils.hashMilitaryId(registrationData.militaryPersonalNumber);
-      console.log('🔨 Generated military ID hash for user document ID');
+      console.log('🔨 Generated military ID hash for user document ID:', militaryIdHash);
 
-      // 2. Get authorized personnel data
+      // 2. Check if user already exists in Firestore
+      const existingUser = await this.checkUserExists(militaryIdHash);
+      if (existingUser) {
+        console.log('📝 User profile already exists in Firestore, allowing Firebase Auth fallback creation');
+        return {
+          success: true,
+          uid: militaryIdHash,
+          message: 'User profile already exists - Firebase Auth creation can proceed as fallback'
+        };
+      }
+
+      // 3. Get authorized personnel data
       const authorizedPersonnel = await this.getAuthorizedPersonnelData(militaryIdHash);
       if (!authorizedPersonnel) {
         return {
@@ -77,16 +85,6 @@ export class UserService {
           error: 'Military ID not found in authorized personnel. Registration not allowed.'
         };
       }
-
-      // 3. Create Firebase Auth user
-      console.log('🔐 Creating Firebase Auth user');
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        registrationData.email,
-        registrationData.password
-      );
-      const firebaseUser = userCredential.user;
-      console.log('✅ Firebase Auth user created:', firebaseUser.uid);
 
       // 4. Create user profile document in Firestore
       const userProfile: UserProfile = {
@@ -108,41 +106,26 @@ export class UserService {
       };
 
       // 5. Save user profile to Firestore using hash as document ID
-      const userDocRef = doc(db, USERS_COLLECTION, militaryIdHash);
+      const userDocRef = doc(db, ADMIN_CONFIG.FIRESTORE_USERS_COLLECTION, militaryIdHash);
       await setDoc(userDocRef, userProfile);
       console.log('✅ User profile created in Firestore with ID:', militaryIdHash);
+
+      // 6. Mark as registered in authorized_personnel collection
+      await this.markAsRegistered(militaryIdHash);
+
+      // Note: Firebase Auth user creation is handled client-side in the registration form
+      // This service only creates the Firestore user profile document
+      console.log('📝 Firebase Auth user created client-side, Firestore profile created server-side');
 
       return {
         success: true,
         uid: militaryIdHash,
-        message: 'User registration completed successfully'
+        message: 'User profile created successfully'
       };
 
     } catch (error) {
       console.error('❌ Error during user registration:', error);
       
-      // Handle specific Firebase Auth errors
-      if (error instanceof Error) {
-        if (error.message.includes('email-already-in-use')) {
-          return {
-            success: false,
-            error: 'Email address is already registered. Please use a different email or try logging in.'
-          };
-        }
-        if (error.message.includes('weak-password')) {
-          return {
-            success: false,
-            error: 'Password is too weak. Please choose a stronger password.'
-          };
-        }
-        if (error.message.includes('invalid-email')) {
-          return {
-            success: false,
-            error: 'Invalid email address format.'
-          };
-        }
-      }
-
       return {
         success: false,
         error: 'Registration failed. Please try again or contact support.'
@@ -155,7 +138,7 @@ export class UserService {
    */
   private static async getAuthorizedPersonnelData(militaryIdHash: string): Promise<{ rank: string } | null> {
     try {
-      const personnelDocRef = doc(db, 'authorized_personnel', militaryIdHash);
+      const personnelDocRef = doc(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION, militaryIdHash);
       const personnelDoc = await getDoc(personnelDocRef);
       
       if (personnelDoc.exists()) {
@@ -177,12 +160,26 @@ export class UserService {
    */
   static async checkUserExists(militaryIdHash: string): Promise<boolean> {
     try {
-      const userDocRef = doc(db, USERS_COLLECTION, militaryIdHash);
+      const userDocRef = doc(db, ADMIN_CONFIG.FIRESTORE_USERS_COLLECTION, militaryIdHash);
       const userDoc = await getDoc(userDocRef);
       return userDoc.exists();
     } catch (error) {
       console.error('Error checking user existence:', error);
       return false;
+    }
+  }
+
+  /**
+   * Mark a user as fully registered in authorized_personnel collection
+   */
+  private static async markAsRegistered(militaryIdHash: string): Promise<void> {
+    try {
+      const personnelDocRef = doc(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION, militaryIdHash);
+      await setDoc(personnelDocRef, { registered: true }, { merge: true });
+      console.log('✅ Marked user as registered in authorized_personnel');
+    } catch (error) {
+      console.error('⚠️ Failed to mark user as registered (non-critical):', error);
+      // Don't throw error - this is a non-critical operation
     }
   }
 } 

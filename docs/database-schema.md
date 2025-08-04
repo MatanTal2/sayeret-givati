@@ -38,6 +38,9 @@ Stores soldier profiles, authentication data, and role-based permissions for the
 | `email` | `string` | ✅ | Soldier's military email address |
 | `firstName` | `string` | ✅ | First name in Hebrew or English |
 | `lastName` | `string` | ✅ | Last name in Hebrew or English |
+| `gender` | `string` | ❌ | Gender (e.g., "male", "female") |
+| `birthday` | `timestamp` | ❌ | Date of birth |
+| `profileImage` | `string` | ❌ | Profile image URL or storage path |
 | `rank` | `string` | ✅ | Military rank (e.g., "רב סמל", "סגן", "רס״ן") |
 | `role` | `UserRole` | ✅ | Permission level (see UserRole enum) |
 | `phoneNumber` | `string` | ❌ | Israeli phone number (+972-XX-XXXXXXX) for OTP |
@@ -128,6 +131,7 @@ Stores pre-authorized military personnel allowed to register in the system. Used
 | `firstName` | `string` | ✅ | Expected first name |
 | `lastName` | `string` | ✅ | Expected last name |
 | `rank` | `string` | ✅ | Expected military rank |
+| `registered` | `boolean` | ❌ | Flag indicating complete registration (Firebase Auth + Firestore profile) |
 | `createdAt` | `timestamp` | ✅ | When record was added |
 | `createdBy` | `string` | ✅ | Who authorized this person |
 

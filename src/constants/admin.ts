@@ -7,7 +7,8 @@ export const ADMIN_CONFIG = {
   SESSION_STORAGE_KEY: 'adminSession',
   FIRESTORE_ADMIN_COLLECTION: 'admin_config',
   FIRESTORE_ADMIN_DOC: 'system_admin',
-  FIRESTORE_PERSONNEL_COLLECTION: 'authorized_personnel'
+  FIRESTORE_PERSONNEL_COLLECTION: 'authorized_personnel',
+  FIRESTORE_USERS_COLLECTION: 'users'
 } as const;
 
 // Validation patterns

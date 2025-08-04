@@ -8,9 +8,10 @@ interface RegistrationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSwitch: () => void;
+  onRegistrationSuccess?: () => void;
 }
 
-export default function RegistrationModal({ isOpen, onClose, onSwitch }: RegistrationModalProps) {
+export default function RegistrationModal({ isOpen, onClose, onSwitch, onRegistrationSuccess }: RegistrationModalProps) {
   const [personalNumber, setPersonalNumber] = useState('');
   const [currentStep, setCurrentStep] = useState<RegistrationStep>('personal-number');
 
@@ -84,6 +85,7 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch }: Registr
             onSwitchToLogin={handleSwitchToLogin}
             onStepChange={handleStepChange}
             currentStep={currentStep}
+            onRegistrationSuccess={onRegistrationSuccess}
           />
           
           <RegistrationFooter showRegistrationNote={currentStep === 'personal-number'} />

@@ -8,12 +8,14 @@ interface AuthModalControllerProps {
   isOpen: boolean;
   onClose: () => void;
   initialModal?: 'login' | 'registration';
+  onRegistrationSuccess?: () => void;
 }
 
 export default function AuthModalController({ 
   isOpen, 
   onClose, 
-  initialModal = 'login' 
+  initialModal = 'login',
+  onRegistrationSuccess
 }: AuthModalControllerProps) {
   const [currentModal, setCurrentModal] = useState<ModalType>(isOpen ? initialModal : null);
 
@@ -50,6 +52,7 @@ export default function AuthModalController({
         isOpen={currentModal === 'registration'}
         onClose={handleClose}
         onSwitch={handleSwitchToLogin}
+        onRegistrationSuccess={onRegistrationSuccess}
       />
     </>
   );

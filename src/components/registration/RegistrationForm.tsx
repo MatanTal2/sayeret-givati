@@ -6,6 +6,8 @@ import PersonalDetailsStep from './PersonalDetailsStep';
 import AccountDetailsStep from './AccountDetailsStep';
 import RegistrationSuccessStep from './RegistrationSuccessStep';
 import { PersonalDetailsData, AccountDetailsData } from '@/types/registration';
+import { auth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 interface RegistrationFormProps {
   personalNumber: string;
@@ -13,9 +15,10 @@ interface RegistrationFormProps {
   onSwitchToLogin?: () => void;
   onStepChange?: (step: 'personal-number' | 'otp' | 'personal' | 'account' | 'success') => void;
   currentStep: 'personal-number' | 'otp' | 'personal' | 'account' | 'success';
+  onRegistrationSuccess?: () => void;
 }
 
-export default function RegistrationForm({ personalNumber, setPersonalNumber, onSwitchToLogin, onStepChange, currentStep }: RegistrationFormProps) {
+export default function RegistrationForm({ personalNumber, setPersonalNumber, onSwitchToLogin, onStepChange, currentStep, onRegistrationSuccess }: RegistrationFormProps) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -146,26 +149,103 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
     updateCurrentStep('account');
   };
 
-  const handleAccountDetailsSubmit = (data: AccountDetailsData) => {
-    console.log('Account details submitted:', data);
+  const handleAccountDetailsSubmit = async (data: AccountDetailsData) => {
+    console.log('🚀 Starting user registration process');
     setAccountDetailsData(data);
     
-    // Combine all registration data
+    // Combine all registration data including military ID
     const completeRegistrationData = {
       ...personalDetailsData!,
       ...data,
-      phoneNumber: userPhoneNumber
+      phoneNumber: userPhoneNumber,
+      militaryPersonalNumber: personalNumber // Include military ID
     };
     
-    console.log('Complete registration data:', completeRegistrationData);
-    // TODO: Submit to backend
+    // Don't log sensitive data like passwords
+    console.log('📝 Registration data prepared for user:', completeRegistrationData.email);
     
-    updateCurrentStep('success');
+    try {
+      let firebaseUser = null;
+      let isExistingAuthUser = false;
+
+      // Step 1: Create Firebase Auth user first
+      try {
+        console.log('🔐 Creating Firebase Auth user with email and password');
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          completeRegistrationData.email,
+          completeRegistrationData.password
+        );
+        firebaseUser = userCredential.user;
+        console.log('✅ Firebase Auth user created successfully! UID:', firebaseUser.uid);
+      } catch (authError: unknown) {
+        if (authError instanceof Error && authError.message.includes('email-already-in-use')) {
+          console.log('📝 Firebase Auth user already exists - proceeding with Firestore profile creation');
+          isExistingAuthUser = true;
+          // Don't throw error, continue to Firestore profile creation
+        } else {
+          // For other auth errors, re-throw to be handled in outer catch
+          throw authError;
+        }
+      }
+      
+      // Step 2: Create Firestore user profile (or verify it exists)
+      console.log('📤 Creating/verifying user profile in Firestore');
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(completeRegistrationData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        console.log('✅ User profile verified/created successfully! Profile ID:', result.uid);
+        
+        if (isExistingAuthUser) {
+          console.log('🎉 Registration completed with existing Firebase Auth user and Firestore profile!');
+        } else {
+          console.log('🎉 Complete registration successful! Firebase UID:', firebaseUser?.uid, 'Profile ID:', result.uid);
+        }
+        
+        // User is automatically logged in if Firebase Auth user was created
+        // If existing auth user, they may need to login manually
+        updateCurrentStep('success');
+      } else {
+        console.error('❌ Firestore profile creation failed:', result.error);
+        if (isExistingAuthUser) {
+          setValidationError('Profile verification failed. If you already have an account, please try logging in.');
+        } else {
+          setValidationError(result.error || 'Profile creation failed. Please contact support.');
+        }
+      }
+    } catch (error) {
+      console.error('🚨 Error during registration:', error);
+      
+      // Handle specific Firebase Auth errors
+      if (error instanceof Error) {
+        if (error.message.includes('weak-password')) {
+          setValidationError('Password is too weak. Please choose a stronger password.');
+        } else if (error.message.includes('invalid-email')) {
+          setValidationError('Invalid email address format.');
+        } else {
+          setValidationError('Registration failed. Please try again or contact support.');
+        }
+      } else {
+        setValidationError('Connection error. Please check your internet connection and try again.');
+      }
+    }
   };
 
   const handleContinueToSystem = () => {
-    // This will be handled by the parent component or redirect logic
-    console.log('Continuing to system from registration success');
+    console.log('✅ Registration completed! Redirecting to home page...');
+    
+    // Call the success callback to close modal and redirect
+    if (onRegistrationSuccess) {
+      onRegistrationSuccess();
+    }
   };
 
   // Show OTP step if we're in that phase

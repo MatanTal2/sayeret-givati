@@ -55,7 +55,8 @@ export default function AccountDetailsStep({
 
   const handleSubmit = () => {
     if (isFormValid && onSubmit) {
-      console.log('Account details submitted:', formData);
+      // Remove password logging for security
+      console.log('📝 Account details form submitted');
       onSubmit(formData);
     }
   };
