@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, addDoc, query, getDocs, deleteDoc, serverTimestamp, Timestamp, writeBatch, DocumentReference, setDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, getDocs, deleteDoc, serverTimestamp, Timestamp, writeBatch, DocumentReference, setDoc } from 'firebase/firestore';
 import {
   AdminConfig,
   PersonnelFormData,
