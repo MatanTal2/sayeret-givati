@@ -115,15 +115,15 @@ Stores pre-authorized military personnel allowed to register in the system. Used
 
 ### Document ID
 
-- **Format**: Auto-generated UUID
-- **Example**: `auth_abc123xyz789`
+- **Format**: SHA-256 hash of military personal number (מספר אישי)
+- **Example**: `7a3b8c9d2e1f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d`
+- **Purpose**: Enables O(1) lookup for user registration verification
 
 ### Fields
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `militaryPersonalNumberHash` | `string` | ✅ | SHA-256 hash of מספר אישי + salt |
-| `salt` | `string` | ✅ | Unique salt for this record |
+| `militaryPersonalNumberHash` | `string` | ✅ | SHA-256 hash of מספר אישי (also used as document ID) |
 | `phoneNumber` | `string` | ✅ | Pre-assigned phone for MFA (+972-XX-XXXXXXX) |
 | `firstName` | `string` | ✅ | Expected first name |
 | `lastName` | `string` | ✅ | Expected last name |

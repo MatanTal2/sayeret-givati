@@ -1,8 +1,7 @@
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, addDoc, query, getDocs, deleteDoc, serverTimestamp, Timestamp, writeBatch, DocumentReference } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, query, getDocs, deleteDoc, serverTimestamp, Timestamp, writeBatch, DocumentReference, setDoc } from 'firebase/firestore';
 import {
   AdminConfig,
-  HashResult,
   PersonnelFormData,
   ValidationResult,
   AuthorizedPersonnel,
@@ -25,27 +24,18 @@ export class SecurityUtils {
   /**
    * Generate a secure hash of military personal number using Web Crypto API
    */
-  static async hashMilitaryId(militaryId: string, salt?: string): Promise<HashResult> {
+  static async hashMilitaryId(militaryId: string): Promise<string> {
     try {
-      if (!salt) {
-        // Generate random salt
-        const saltArray = new Uint8Array(SECURITY_CONFIG.SALT_LENGTH);
-        crypto.getRandomValues(saltArray);
-        salt = Array.from(saltArray)
-          .map(b => b.toString(16).padStart(2, '0'))
-          .join('');
-      }
-
       // Create hash using Web Crypto API
       const encoder = new TextEncoder();
-      const data = encoder.encode(militaryId + salt);
+      const data = encoder.encode(militaryId);
       const hashBuffer = await crypto.subtle.digest(SECURITY_CONFIG.HASH_ALGORITHM, data);
       const hashArray = new Uint8Array(hashBuffer);
       const hash = Array.from(hashArray)
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
 
-      return { hash, salt };
+      return hash;
     } catch (error) {
       throw new AdminError(`Failed to hash military ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -54,9 +44,9 @@ export class SecurityUtils {
   /**
    * Verify a military personal number against a stored hash
    */
-  static async verifyMilitaryId(militaryId: string, storedHash: string, salt: string): Promise<boolean> {
+  static async verifyMilitaryId(militaryId: string, storedHash: string): Promise<boolean> {
     try {
-      const { hash } = await this.hashMilitaryId(militaryId, salt);
+      const hash = await this.hashMilitaryId(militaryId);
       return hash === storedHash;
     } catch (error) {
       console.error('Failed to verify military ID:', error);
@@ -259,20 +249,18 @@ export class ValidationUtils {
 export class AdminFirestoreService {
   /**
    * Check if military personal number already exists (by checking hashed version)
+   * Uses O(1) document lookup with hash ID as document ID
    */
   static async checkMilitaryIdExists(militaryId: string): Promise<boolean> {
     try {
-      const personnelQuery = query(collection(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION));
-      const querySnapshot = await getDocs(personnelQuery);
+      // Generate hash to use as document ID
+      const hash = await SecurityUtils.hashMilitaryId(militaryId);
+      
+      // Direct document lookup with O(1) complexity
+      const docRef = doc(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION, hash);
+      const docSnapshot = await getDoc(docRef);
 
-      for (const doc of querySnapshot.docs) {
-        const data = doc.data();
-        if (await SecurityUtils.verifyMilitaryId(militaryId, data.militaryPersonalNumberHash, data.salt)) {
-          return true;
-        }
-      }
-
-      return false;
+      return docSnapshot.exists();
     } catch {
       throw new AdminError('Failed to check for duplicate military ID', 'FIRESTORE_ERROR');
     }
@@ -319,7 +307,7 @@ export class AdminFirestoreService {
       }
 
       // Hash the military personal number
-      const { hash, salt } = await SecurityUtils.hashMilitaryId(formData.militaryPersonalNumber);
+      const hash = await SecurityUtils.hashMilitaryId(formData.militaryPersonalNumber);
 
       // Normalize phone number to international format
       const normalizedPhone = ValidationUtils.toInternationalFormat(formData.phoneNumber);
@@ -327,7 +315,6 @@ export class AdminFirestoreService {
       // Create the authorized personnel document
       const personnelDoc = {
         militaryPersonalNumberHash: hash,
-        salt: salt,
         phoneNumber: normalizedPhone,
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
@@ -336,13 +323,13 @@ export class AdminFirestoreService {
         createdBy: 'system_admin' // TODO: Replace with actual admin user ID
       };
 
-      // Add to Firestore
-      const docRef = await addDoc(collection(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION), personnelDoc);
+      // Add to Firestore using hash as document ID for O(1) lookup
+      const docRef = doc(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION, hash);
+      await setDoc(docRef, personnelDoc);
 
       const addedPersonnel: AuthorizedPersonnel = {
         id: docRef.id,
         militaryPersonalNumberHash: hash,
-        salt: salt,
         phoneNumber: normalizedPhone,
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
@@ -442,13 +429,13 @@ export class AdminFirestoreService {
     for (let i = 0; i < validPersonnel.length; i += BATCH_SIZE) {
       const batch = writeBatch(db);
       const batchPersonnel = validPersonnel.slice(i, i + BATCH_SIZE);
-      const batchDocs: { person: AuthorizedPersonnelData; docRef: DocumentReference; hash: string; salt: string }[] = [];
+      const batchDocs: { person: AuthorizedPersonnelData; docRef: DocumentReference; hash: string }[] = [];
 
       try {
         // Prepare all batch operations
         for (const person of batchPersonnel) {
           // Hash the military personal number
-          const { hash, salt } = await SecurityUtils.hashMilitaryId(person.militaryPersonalNumber);
+          const hash = await SecurityUtils.hashMilitaryId(person.militaryPersonalNumber);
           
           // Normalize phone number to international format
           const normalizedPhone = ValidationUtils.toInternationalFormat(person.phoneNumber);
@@ -456,7 +443,6 @@ export class AdminFirestoreService {
           // Create the authorized personnel document
           const personnelDoc = {
             militaryPersonalNumberHash: hash,
-            salt: salt,
             phoneNumber: normalizedPhone,
             firstName: person.firstName.trim(),
             lastName: person.lastName.trim(),
@@ -469,10 +455,10 @@ export class AdminFirestoreService {
             createdBy: 'system_admin' // TODO: Replace with actual admin user ID
           };
 
-          const docRef = doc(collection(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION));
+          const docRef = doc(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION, hash);
           batch.set(docRef, personnelDoc);
           
-          batchDocs.push({ person, docRef, hash, salt });
+          batchDocs.push({ person, docRef, hash });
         }
 
         // Commit the batch

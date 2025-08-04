@@ -11,9 +11,14 @@ service cloud.firestore {
       allow read, write, delete: if request.auth != null && userId.matches('^TEST-.*');
     }
     
-    // Authorized personnel collection - for admin management
+    // Authorized personnel collection - for admin management and registration verification
     match /authorized_personnel/{documentId} {
-      allow read, write, create, delete: if request.auth != null;
+      // Allow read access for registration verification (server-side API)
+      // This is needed for military ID verification during user registration
+      allow read: if true;
+      
+      // Restrict write operations to authenticated users only (admin panel)
+      allow write, create, delete: if request.auth != null;
     }
     
     // Admin config collection - for admin authentication

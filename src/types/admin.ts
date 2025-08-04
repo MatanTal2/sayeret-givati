@@ -42,7 +42,6 @@ export interface AuthorizedPersonnelData {
 export interface AuthorizedPersonnel {
   id?: string;
   militaryPersonalNumberHash: string;
-  salt: string;
   phoneNumber: string;
   firstName: string;
   lastName: string;
@@ -60,10 +59,7 @@ export interface AuthorizedPersonnel {
   approvedAt?: Timestamp; // When role was approved
 }
 
-export interface HashResult {
-  hash: string;
-  salt: string;
-}
+
 
 // UI state types
 export interface FormMessage {

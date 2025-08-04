@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SecurityUtils } from '@/lib/adminUtils';
-import { collection, query, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { ADMIN_CONFIG } from '@/constants/admin';
 
@@ -27,46 +27,39 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('🔍 Verifying military ID:', cleanMilitaryId);
+    console.log('📊 Collection name:', ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION);
 
-    // Query the authorized_personnel collection
-    const personnelQuery = query(collection(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION));
-    const querySnapshot = await getDocs(personnelQuery);
-
-    // Check each document to find matching hashed military ID
-    for (const doc of querySnapshot.docs) {
-      const data = doc.data();
+    try {
+      // Generate hash to use as document ID for O(1) lookup
+      const hash = await SecurityUtils.hashMilitaryId(cleanMilitaryId);
+      console.log('🔨 Generated hash:', hash);
       
-      try {
-        // Verify if the provided military ID matches this document's hashed ID
-        const isMatch = await SecurityUtils.verifyMilitaryId(
-          cleanMilitaryId, 
-          data.militaryPersonalNumberHash, 
-          data.salt
-        );
-
-        if (isMatch) {
-          console.log('✅ Military ID found in authorized personnel');
-          
-          // Return the personnel data needed for registration
-          return NextResponse.json({
-            success: true,
-            personnel: {
-              phoneNumber: data.phoneNumber,
-              firstName: data.firstName,
-              lastName: data.lastName,
-              rank: data.rank
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Error verifying military ID hash:', error);
-        // Continue to next document if hash verification fails
-        continue;
+      // Direct document lookup using hash as document ID
+      const docRef = doc(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION, hash);
+      const docSnapshot = await getDoc(docRef);
+      
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        console.log('✅ Military ID found in authorized personnel');
+        
+        // Return the personnel data needed for registration
+        return NextResponse.json({
+          success: true,
+          personnel: {
+            phoneNumber: data.phoneNumber,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            rank: data.rank
+          }
+        });
       }
+      
+      // Military ID not found in authorized personnel
+      console.log('❌ Military ID not found in authorized personnel');
+    } catch (error) {
+      console.error('Error generating hash or accessing document:', error);
+      console.log('❌ Error during military ID verification');
     }
-
-    // Military ID not found in authorized personnel
-    console.log('❌ Military ID not found in authorized personnel');
     return NextResponse.json(
       { 
         success: false,

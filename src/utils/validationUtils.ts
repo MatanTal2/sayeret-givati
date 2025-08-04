@@ -288,7 +288,7 @@ export class PhoneUtils {
     const prefix = normalizedPhone.slice(0, 3);
     const suffix = normalizedPhone.slice(-4);
     
-    return `${prefix}-***${suffix}`;
+    return `${suffix}`+ "***-" + `${prefix}`;
   }
 
   /**
