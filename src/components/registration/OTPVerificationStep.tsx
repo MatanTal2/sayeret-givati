@@ -15,16 +15,55 @@ export default function OTPVerificationStep({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(false);
   const [backendError, setBackendError] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleVerifyOTP = useCallback(() => {
-    // TODO: Implement OTP verification with backend
-    console.log('TODO: verify OTP', otpCode);
-    // Placeholder for backend integration
-    if (onVerifySuccess) {
-      onVerifySuccess();
+  const handleVerifyOTP = useCallback(async () => {
+    if (!isValid || isVerifying || !otpCode || otpCode.length !== 6) return;
+
+    setIsVerifying(true);
+    setBackendError(null);
+
+    try {
+      console.log('🔍 Verifying OTP code');
+      
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          phoneNumber,
+          otpCode 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        console.log('✅ OTP verified successfully');
+        
+        // Clear the form
+        setOtpCode('');
+        setBackendError(null);
+        
+        // Call success callback to move to next step
+        if (onVerifySuccess) {
+          onVerifySuccess();
+        }
+      } else {
+        // Handle verification failure
+        const errorMessage = data.error || 'קוד האימות שגוי';
+        console.log('❌ OTP verification failed:', errorMessage);
+        setBackendError(errorMessage);
+      }
+    } catch (error) {
+      console.error('🚨 Error verifying OTP:', error);
+      setBackendError('שגיאת חיבור. אנא בדוק את החיבור לאינטרנט ונסה שוב.');
+    } finally {
+      setIsVerifying(false);
     }
-  }, [otpCode, onVerifySuccess]);
+  }, [phoneNumber, otpCode, isValid, isVerifying, onVerifySuccess]);
 
   // Real-time validation
   useEffect(() => {
@@ -52,12 +91,37 @@ export default function OTPVerificationStep({
     setBackendError(null);
   };
 
-  const handleResendCode = () => {
-    // TODO: Implement resend OTP
-    console.log('TODO: resend OTP');
+  const handleResendCode = async () => {
+    setBackendError(null);
     setOtpCode('');
     setValidationError(null);
-    setBackendError(null);
+
+    try {
+      console.log('📤 Resending OTP to:', phoneNumber);
+      
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phoneNumber }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        console.log('✅ OTP resent successfully');
+        // Could show a success message here if needed
+      } else {
+        const errorMessage = data.error || 'Failed to resend OTP';
+        console.log('❌ OTP resend failed:', errorMessage);
+        setBackendError(errorMessage);
+      }
+    } catch (error) {
+      console.error('🚨 Error resending OTP:', error);
+      setBackendError('שגיאת חיבור. אנא בדוק את החיבור לאינטרנט ונסה שוב.');
+    }
+
     inputRef.current?.focus();
   };
 
@@ -140,20 +204,32 @@ export default function OTPVerificationStep({
           <button
             type="button"
             onClick={handleVerifyOTP}
-            disabled={!isValid}
+            disabled={!isValid || isVerifying}
             className={`w-full py-3 px-4 font-semibold rounded-xl btn-press focus-ring
                      flex items-center justify-center gap-2
                      transition-all duration-200 ${
-              isValid
+              isValid && !isVerifying
                 ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-lg'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
             data-testid="verify-otp-button"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            {TEXT_CONSTANTS.AUTH.VERIFY_OTP_CODE}
+            {isVerifying ? (
+              <>
+                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                מאמת קוד...
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {TEXT_CONSTANTS.AUTH.VERIFY_OTP_CODE}
+              </>
+            )}
           </button>
 
           {/* Resend Code Link */}

@@ -23,6 +23,10 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
   const [userFirstName, setUserFirstName] = useState<string>('');
   const [userLastName, setUserLastName] = useState<string>('');
   
+  // OTP-related state
+  const [isSendingOTP, setIsSendingOTP] = useState(false);
+  const [otpSendError, setOtpSendError] = useState<string | null>(null);
+  
   // Form data for new steps
   const [personalDetailsData, setPersonalDetailsData] = useState<PersonalDetailsData | null>(null);
   const [accountDetailsData, setAccountDetailsData] = useState<AccountDetailsData | null>(null);
@@ -46,6 +50,40 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
     // Only allow digits
     const cleanValue = value.replace(/[^0-9]/g, '');
     setPersonalNumber(cleanValue);
+  };
+
+  // Send OTP to user's phone number
+  const sendOTPToUser = async (phoneNumber: string) => {
+    setIsSendingOTP(true);
+    setOtpSendError(null);
+
+    try {
+      console.log('📤 Sending OTP to:', phoneNumber);
+      
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phoneNumber }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        console.log('✅ OTP sent successfully');
+        console.log('📊 Attempts remaining:', data.attemptsRemaining);
+      } else {
+        const errorMessage = data.error || 'Failed to send OTP';
+        console.log('❌ OTP sending failed:', errorMessage);
+        setOtpSendError(errorMessage);
+      }
+    } catch (error) {
+      console.error('🚨 Error sending OTP:', error);
+      setOtpSendError('שגיאת חיבור. אנא בדוק את החיבור לאינטרנט ונסה שוב.');
+    } finally {
+      setIsSendingOTP(false);
+    }
   };
 
   const handleVerifyPersonalNumber = async () => {
@@ -77,6 +115,9 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
         
         console.log('📞 Phone number:', data.personnel.phoneNumber);
         console.log('👤 Name:', data.personnel.firstName, data.personnel.lastName);
+        
+        // Auto-send OTP before moving to verification step
+        await sendOTPToUser(data.personnel.phoneNumber);
         
         // Move to OTP verification step
         updateCurrentStep('otp');
@@ -232,8 +273,18 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
               </p>
             )}
             
+            {/* OTP Send Error */}
+            {otpSendError && (
+              <p 
+                className="text-sm text-red-600 text-center px-1"
+                data-testid="otp-send-error"
+              >
+                {otpSendError}
+              </p>
+            )}
+            
             {/* Helper Text */}
-            {!validationError && (
+            {!validationError && !otpSendError && (
               <p className="text-sm text-gray-500 text-center">
                 {TEXT_CONSTANTS.AUTH.PERSONAL_NUMBER_HELPER}
               </p>
@@ -244,23 +295,23 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
           <button
             type="button"
             onClick={handleVerifyPersonalNumber}
-            disabled={!isValid || isVerifying}
+            disabled={!isValid || isVerifying || isSendingOTP}
             className={`w-full py-3 px-4 font-semibold rounded-xl btn-press focus-ring
                      flex items-center justify-center gap-2
                      transition-all duration-200 ${
-              isValid && !isVerifying
+              isValid && !isVerifying && !isSendingOTP
                 ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-lg'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
             data-testid="verify-button"
           >
-            {isVerifying ? (
+            {isVerifying || isSendingOTP ? (
               <>
                 <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                מאמת...
+                {isSendingOTP ? 'שולח קוד...' : 'מאמת...'}
               </>
             ) : (
               <>
