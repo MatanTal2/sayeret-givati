@@ -64,4 +64,5 @@ export interface AccountDetailsStepProps {
   password?: string;
   consent?: boolean;
   onSubmit?: (data: AccountDetailsData) => void;
+  isSubmitting?: boolean;
 }

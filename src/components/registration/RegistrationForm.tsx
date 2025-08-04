@@ -30,6 +30,9 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
   const [isSendingOTP, setIsSendingOTP] = useState(false);
   const [otpSendError, setOtpSendError] = useState<string | null>(null);
   
+  // Registration submission state
+  const [isSubmittingRegistration, setIsSubmittingRegistration] = useState(false);
+  
   // Form data for new steps
   const [personalDetailsData, setPersonalDetailsData] = useState<PersonalDetailsData | null>(null);
   const [accountDetailsData, setAccountDetailsData] = useState<AccountDetailsData | null>(null);
@@ -61,7 +64,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
     setOtpSendError(null);
 
     try {
-      console.log('📤 Sending OTP to:', phoneNumber);
+
       
       const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
@@ -74,15 +77,13 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       const data = await response.json();
 
       if (response.ok && data.success) {
-        console.log('✅ OTP sent successfully');
-        console.log('📊 Attempts remaining:', data.attemptsRemaining);
+
       } else {
         const errorMessage = data.error || 'Failed to send OTP';
-        console.log('❌ OTP sending failed:', errorMessage);
+
         setOtpSendError(errorMessage);
       }
-    } catch (error) {
-      console.error('🚨 Error sending OTP:', error);
+    } catch {
       setOtpSendError('שגיאת חיבור. אנא בדוק את החיבור לאינטרנט ונסה שוב.');
     } finally {
       setIsSendingOTP(false);
@@ -96,7 +97,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
     setValidationError(null);
 
     try {
-      console.log('🔍 Verifying personal number:', personalNumber);
+  
       
       const response = await fetch('/api/auth/verify-military-id', {
         method: 'POST',
@@ -109,15 +110,14 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       const data = await response.json();
 
       if (response.ok && data.success) {
-        console.log('✅ Personal number verified successfully');
+
         
         // Store the personnel data from authorized_personnel collection
         setUserPhoneNumber(data.personnel.phoneNumber);
         setUserFirstName(data.personnel.firstName);
         setUserLastName(data.personnel.lastName);
         
-        console.log('📞 Phone number:', data.personnel.phoneNumber);
-        console.log('👤 Name:', data.personnel.firstName, data.personnel.lastName);
+
         
         // Auto-send OTP before moving to verification step
         await sendOTPToUser(data.personnel.phoneNumber);
@@ -127,11 +127,10 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       } else {
         // Handle verification failure
         const errorMessage = data.error || 'Failed to verify military ID';
-        console.log('❌ Personal number verification failed:', errorMessage);
+
         setValidationError(errorMessage);
       }
-    } catch (error) {
-      console.error('🚨 Error verifying personal number:', error);
+    } catch {
       setValidationError('Connection error. Please check your internet connection and try again.');
     } finally {
       setIsVerifying(false);
@@ -139,19 +138,20 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
   };
 
   const handleOTPVerifySuccess = () => {
-    console.log('OTP verification successful');
     updateCurrentStep('personal');
   };
 
   const handlePersonalDetailsSubmit = (data: PersonalDetailsData) => {
-    console.log('Personal details submitted:', data);
     setPersonalDetailsData(data);
     updateCurrentStep('account');
   };
 
   const handleAccountDetailsSubmit = async (data: AccountDetailsData) => {
-    console.log('🚀 Starting user registration process');
+    if (isSubmittingRegistration) return; // Prevent multiple clicks
+    
+    setIsSubmittingRegistration(true);
     setAccountDetailsData(data);
+    setValidationError(null);
     
     // Combine all registration data including military ID
     const completeRegistrationData = {
@@ -161,26 +161,18 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       militaryPersonalNumber: personalNumber // Include military ID
     };
     
-    // Don't log sensitive data like passwords
-    console.log('📝 Registration data prepared for user:', completeRegistrationData.email);
-    
     try {
-      let firebaseUser = null;
       let isExistingAuthUser = false;
 
       // Step 1: Create Firebase Auth user first
       try {
-        console.log('🔐 Creating Firebase Auth user with email and password');
-        const userCredential = await createUserWithEmailAndPassword(
+        await createUserWithEmailAndPassword(
           auth,
           completeRegistrationData.email,
           completeRegistrationData.password
         );
-        firebaseUser = userCredential.user;
-        console.log('✅ Firebase Auth user created successfully! UID:', firebaseUser.uid);
       } catch (authError: unknown) {
         if (authError instanceof Error && authError.message.includes('email-already-in-use')) {
-          console.log('📝 Firebase Auth user already exists - proceeding with Firestore profile creation');
           isExistingAuthUser = true;
           // Don't throw error, continue to Firestore profile creation
         } else {
@@ -190,7 +182,6 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       }
       
       // Step 2: Create Firestore user profile (or verify it exists)
-      console.log('📤 Creating/verifying user profile in Firestore');
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -202,19 +193,10 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       const result = await response.json();
 
       if (response.ok && result.success) {
-        console.log('✅ User profile verified/created successfully! Profile ID:', result.uid);
-        
-        if (isExistingAuthUser) {
-          console.log('🎉 Registration completed with existing Firebase Auth user and Firestore profile!');
-        } else {
-          console.log('🎉 Complete registration successful! Firebase UID:', firebaseUser?.uid, 'Profile ID:', result.uid);
-        }
-        
         // User is automatically logged in if Firebase Auth user was created
         // If existing auth user, they may need to login manually
         updateCurrentStep('success');
       } else {
-        console.error('❌ Firestore profile creation failed:', result.error);
         if (isExistingAuthUser) {
           setValidationError('Profile verification failed. If you already have an account, please try logging in.');
         } else {
@@ -222,8 +204,6 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
         }
       }
     } catch (error) {
-      console.error('🚨 Error during registration:', error);
-      
       // Handle specific Firebase Auth errors
       if (error instanceof Error) {
         if (error.message.includes('weak-password')) {
@@ -236,12 +216,12 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       } else {
         setValidationError('Connection error. Please check your internet connection and try again.');
       }
+    } finally {
+      setIsSubmittingRegistration(false);
     }
   };
 
   const handleContinueToSystem = () => {
-    console.log('✅ Registration completed! Redirecting to home page...');
-    
     // Call the success callback to close modal and redirect
     if (onRegistrationSuccess) {
       onRegistrationSuccess();
@@ -279,6 +259,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
         password={accountDetailsData?.password || ''}
         consent={accountDetailsData?.consent || false}
         onSubmit={handleAccountDetailsSubmit}
+        isSubmitting={isSubmittingRegistration}
       />
     );
   }
