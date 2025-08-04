@@ -27,14 +27,14 @@ Stores soldier profiles, authentication data, and role-based permissions for the
 
 ### Document ID
 
-- **Format**: `{firebase_auth_uid}` or `TEST-{firebase_auth_uid}` for test users
+- **Format**: `{hash_id_uid}` or `TEST-{hash_id_uid}` for test users
 - **Example**: `abc123xyz789` or `TEST-abc123xyz789`
 
 ### Fields
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `uid` | `string` | ✅ | Firebase Authentication UID (matches document ID) |
+| `uid` | `string` | ✅ | Hash military Id UID (matches document ID) |
 | `email` | `string` | ✅ | Soldier's military email address |
 | `firstName` | `string` | ✅ | First name in Hebrew or English |
 | `lastName` | `string` | ✅ | Last name in Hebrew or English |
