@@ -7,69 +7,14 @@ import Header from './components/Header';
 
 import AuthModal from '@/components/auth/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { getFeatureRoutes } from '@/utils/navigationUtils';
 import { TEXT_CONSTANTS } from '@/constants/text';
 
 export default function HomePage() {
   const { showAuthModal, setShowAuthModal } = useAuth();
 
-  const features = [
-    {
-      title: TEXT_CONSTANTS.FEATURES.SOLDIER_MANAGEMENT.TITLE,
-      description: TEXT_CONSTANTS.FEATURES.SOLDIER_MANAGEMENT.DESCRIPTION,
-      icon: "✓",
-      href: "/status",
-      available: true,
-      color: "bg-purple-600"
-    },
-    {
-      title: TEXT_CONSTANTS.FEATURES.SOLDIER_TRACKING.TITLE,
-      description: TEXT_CONSTANTS.FEATURES.SOLDIER_TRACKING.DESCRIPTION,
-      icon: "📊",
-      href: "/tracking",
-      available: false,
-      color: "bg-gray-400"
-    },
-    {
-      title: TEXT_CONSTANTS.FEATURES.LOGISTICS.TITLE,
-      description: TEXT_CONSTANTS.FEATURES.LOGISTICS.DESCRIPTION,
-      icon: "📦",
-      href: "/logistics",
-      available: false,
-      color: "bg-gray-400"
-    },
-    {
-      title: TEXT_CONSTANTS.FEATURES.EQUIPMENT.TITLE,
-      description: TEXT_CONSTANTS.FEATURES.EQUIPMENT.DESCRIPTION,
-      icon: "🔢",
-      href: "/equipment", 
-      available: false,
-      color: "bg-gray-400"
-    },
-    {
-      title: TEXT_CONSTANTS.FEATURES.CONVOYS.TITLE,
-      description: TEXT_CONSTANTS.FEATURES.CONVOYS.DESCRIPTION,
-      icon: "🚗",
-      href: "/convoys",
-      available: false,
-      color: "bg-gray-400"
-    },
-    {
-      title: TEXT_CONSTANTS.FEATURES.GUARD_SCHEDULER.TITLE,
-      description: TEXT_CONSTANTS.FEATURES.GUARD_SCHEDULER.DESCRIPTION,
-      icon: "⏰",
-      href: "/guard-scheduler",
-      available: false,
-      color: "bg-gray-400"
-    },
-    {
-      title: TEXT_CONSTANTS.FEATURES.ADDITIONAL_TOOLS.TITLE,
-      description: TEXT_CONSTANTS.FEATURES.ADDITIONAL_TOOLS.DESCRIPTION,
-      icon: "🔧",
-      href: "/tools",
-      available: false,
-      color: "bg-gray-400"
-    }
-  ];
+  // Use centralized feature routes configuration
+  const features = getFeatureRoutes();
 
   return (
     <div className="min-h-screen bg-gray-50 relative" dir="rtl">
