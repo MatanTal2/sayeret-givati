@@ -165,13 +165,66 @@ export const TEXT_CONSTANTS = {
     SAVE_SUCCESS: 'השמירה בוצעה בהצלחה'
   },
 
+  // Settings Page
+  SETTINGS: {
+    PAGE_TITLE: 'הגדרות',
+    PAGE_SUBTITLE: 'ניהול הגדרות אישיות ומערכת',
+    
+    // Profile Settings Section
+    PROFILE_SETTINGS: 'הגדרות פרופיל',
+    PROFILE_IMAGE: 'תמונת פרופיל',
+    CHANGE_PROFILE_IMAGE: 'שנה תמונת פרופיל',
+    UPDATE_PHONE: 'עדכן מספר טלפון',
+    CHANGE_PASSWORD: 'שנה סיסמה',
+    
+    // Account Security Section
+    ACCOUNT_SECURITY: 'אבטחת חשבון',
+    LINKED_PHONE: 'טלפון מקושר',
+    PHONE_NUMBER: 'מספר טלפון:',
+    
+    // Notifications Section
+    NOTIFICATIONS: 'התראות',
+    EMAIL_NOTIFICATIONS: 'התראות אימייל',
+    EMAIL_NOTIFICATIONS_DESC: 'קבל עדכונים חשובים באימייל',
+    EQUIPMENT_TRANSFER_ALERTS: 'התראות העברת ציוד',
+    EQUIPMENT_TRANSFER_DESC: 'קבל התראות על בקשות והעברות ציוד',
+    TRANSFER_REQUESTS: 'בקשות העברה',
+    PENDING_TRANSFERS: 'העברות ממתינות',
+    
+    // Language & Display Section  
+    LANGUAGE_DISPLAY: 'שפה ותצוגה',
+    LANGUAGE_SELECTOR: 'בחירת שפה',
+    LANGUAGE_HEBREW: 'עברית',
+    LANGUAGE_ENGLISH: 'English',
+    THEME_SWITCHER: 'מצב תצוגה',
+    THEME_LIGHT: 'בהיר',
+    THEME_DARK: 'כהה',
+    
+    // Privacy & Permissions Section
+    PRIVACY_PERMISSIONS: 'פרטיות והרשאות',
+    REQUEST_PERMISSION: 'בקש הרשאה',
+    REQUEST_PERMISSION_DESC: 'שלח בקשה למנהל המערכת לקבלת הרשאות נוספות',
+    DELETE_ACCOUNT: 'מחק חשבון',
+    DELETE_ACCOUNT_WARNING: 'פעולה זו בלתי הפיכה',
+    
+    // Placeholders and labels
+    COMING_SOON: 'בקרוב',
+    NOT_CONFIGURED: 'לא מוגדר',
+    SAVE_CHANGES: 'שמור שינויים',
+    CANCEL: 'ביטול',
+    ENABLED: 'מופעל',
+    DISABLED: 'מבוטל'
+  },
+
   // Accessibility
   ARIA_LABELS: {
     CLOSE_MODAL: 'סגור חלון',
     SHOW_PASSWORD: 'הצג סיסמה',
     HIDE_PASSWORD: 'הסתר סיסמה',
     LOGO: 'לוגו סיירת גבעתי',
-    MAIN_MENU: 'תפריט ראשי'
+    MAIN_MENU: 'תפריט ראשי',
+    NOTIFICATION_BUTTON: 'התראות',
+    EQUIPMENT_NOTIFICATIONS: 'התראות ציוד'
   }
 } as const;
 

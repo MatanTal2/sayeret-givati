@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { TEXT_CONSTANTS } from '@/constants/text';
-import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, LogInIcon } from 'lucide-react';
+import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, LogInIcon, BellIcon } from 'lucide-react';
 import { UserDataService } from '@/lib/userDataService';
 import { FirestoreUserProfile } from '@/types/user';
 import Link from 'next/link';
@@ -154,7 +154,8 @@ export default function AuthButton() {
     e.preventDefault();
     e.stopPropagation();
     setIsMenuOpen(false);
-    // TODO: Navigate to settings page
+    // Navigate to settings page
+    window.location.href = '/settings';
   }, []);
 
   const handleLogout = useCallback(async (e: React.MouseEvent) => {
@@ -163,6 +164,15 @@ export default function AuthButton() {
     setIsMenuOpen(false);
     await logout();
   }, [logout]);
+
+  const handleButtonClick = useCallback((action: string) => {
+    // TODO: Implement actual actions when backend is ready
+    console.log(`${action} clicked - UI only, no backend action`);
+    if (action === 'notifications') {
+      // TODO: Open notifications panel or navigate to notifications page
+      alert('התראות העברת ציוד - תכונה זו תהיה זמינה בקרוב');
+    }
+  }, []);
 
   // Loading state
   if (isLoading) {
@@ -196,16 +206,34 @@ export default function AuthButton() {
     );
   }
 
-  // Signed-in state - Profile Menu
+  // Signed-in state - Profile Menu with Notifications
   return (
     <div 
-      className="relative"
+      className="relative flex items-center gap-2"
       style={{
         position: 'relative',
         zIndex: 50,
         pointerEvents: 'auto'
       }}
     >
+      {/* Equipment Transfer Notification Button */}
+      <button
+        type="button"
+        onClick={() => handleButtonClick('notifications')}
+        className="relative p-2 rounded-full bg-gray-100 hover:bg-gray-200 
+                   focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 text-gray-600 
+                   hover:text-gray-900 transition-colors duration-200"
+        aria-label={TEXT_CONSTANTS.ARIA_LABELS.EQUIPMENT_NOTIFICATIONS}
+        title="התראות העברת ציוד"
+      >
+        <BellIcon className="w-5 h-5" />
+        {/* Notification Badge - TODO: Replace with actual count when backend is ready */}
+        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+          3
+        </span>
+      </button>
+      
+      {/* Profile Menu Button */}
       <button
         ref={buttonRef}
         type="button"
