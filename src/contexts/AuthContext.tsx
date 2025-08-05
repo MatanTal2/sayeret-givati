@@ -4,6 +4,8 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { ADMIN_CONFIG, ADMIN_MESSAGES } from '@/constants/admin';
+import { UserDataService } from '@/lib/userDataService';
+import { EnhancedAuthUser } from '@/types/user';
 
 // Types
 export interface AuthUser {
@@ -16,6 +18,9 @@ export interface AuthUser {
   firstName?: string;
   lastName?: string;
 }
+
+// Enhanced user type that includes Firestore data
+export type { EnhancedAuthUser, FirestoreUserProfile } from '@/types/user';
 
 export interface AuthCredentials {
   email: string;
@@ -30,6 +35,7 @@ export interface FormMessage {
 export interface AuthContextType {
   // State
   user: AuthUser | null;
+  enhancedUser: EnhancedAuthUser | null; // Full user data from Firestore
   isAuthenticated: boolean;
   isLoading: boolean;
   message: FormMessage | null;
@@ -54,6 +60,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [enhancedUser, setEnhancedUser] = useState<EnhancedAuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState<FormMessage | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -61,7 +68,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Computed values
   const isAuthenticated = user !== null;
 
-  // Initialize auth state listener (reused from useAdminAuth)
+  // Initialize auth state listener with Firestore data fetching
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
       if (firebaseUser) {
@@ -75,15 +82,57 @@ export function AuthProvider({ children }: AuthProviderProps) {
           userType,
         };
 
-        // TODO: For personnel users, fetch additional data from Firestore
-        // (military ID, rank, etc.) in future steps
-        
         setUser(authUser);
+
+        // For personnel users, fetch additional data from Firestore
+        if (userType === 'personnel' && firebaseUser.email) {
+          try {
+            console.log('🔍 Fetching user data from Firestore...');
+            const userDataResult = await UserDataService.fetchUserDataByEmail(firebaseUser.email);
+            
+            if (userDataResult.success && userDataResult.userData) {
+              const firestoreData = userDataResult.userData;
+              
+              // Create enhanced user object with all data
+              const enhanced: EnhancedAuthUser = {
+                ...authUser,
+                firstName: firestoreData.firstName,
+                lastName: firestoreData.lastName,
+                gender: firestoreData.gender,
+                birthday: firestoreData.birthday,
+                phoneNumber: firestoreData.phoneNumber,
+                rank: firestoreData.rank,
+                role: firestoreData.role,
+                status: firestoreData.status,
+                militaryPersonalNumberHash: firestoreData.militaryPersonalNumberHash,
+                permissions: firestoreData.permissions,
+                joinDate: firestoreData.joinDate,
+                profileImage: firestoreData.profileImage,
+                testUser: firestoreData.testUser,
+                initials: UserDataService.generateInitials(firestoreData)
+              };
+              
+              setEnhancedUser(enhanced);
+              console.log('✅ Enhanced user data loaded');
+            } else {
+              console.log('⚠️ Could not fetch user data from Firestore, using Firebase Auth data only');
+              setEnhancedUser(authUser);
+            }
+          } catch (error) {
+            console.error('❌ Error fetching user data:', error);
+            setEnhancedUser(authUser);
+          }
+        } else {
+          // For admin users, use basic auth data
+          setEnhancedUser(authUser);
+        }
+        
         // Clear any previous login messages when successfully authenticated
         setMessage(null);
       } else {
         // User is signed out
         setUser(null);
+        setEnhancedUser(null);
       }
       
       setIsLoading(false);
@@ -187,6 +236,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const contextValue: AuthContextType = {
     // State
     user,
+    enhancedUser,
     isAuthenticated,
     isLoading,
     message,

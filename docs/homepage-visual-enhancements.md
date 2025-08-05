@@ -7,10 +7,12 @@ This document outlines the visual enhancements made to the homepage, including l
 ## 1. Logo Size Enhancement
 
 ### Changes Made
+
 - **File**: `src/app/page.tsx`
 - **Enhancement**: Increased background logo size by 30%
 
-#### Before:
+#### Before
+
 ```tsx
 <Image 
   src="/sayeret-givati-logo.png" 
@@ -23,7 +25,8 @@ This document outlines the visual enhancements made to the homepage, including l
 />
 ```
 
-#### After:
+#### After
+
 ```tsx
 <Image 
   src="/sayeret-givati-logo.png" 
@@ -36,7 +39,8 @@ This document outlines the visual enhancements made to the homepage, including l
 />
 ```
 
-### Result:
+### Result
+
 ✅ Background logo is now 30% larger (400px → 520px)
 ✅ Maintains aspect ratio and responsiveness
 ✅ Logo remains subtle with opacity-5
@@ -46,6 +50,7 @@ This document outlines the visual enhancements made to the homepage, including l
 ### Changes Made
 
 #### CSS Animation (`src/app/globals.css`)
+
 Added new wave animation that slides white color across purple text:
 
 ```css
@@ -77,17 +82,20 @@ Added new wave animation that slides white color across purple text:
 ```
 
 #### Header Component Update (`src/app/components/Header.tsx`)
+
 - **Added**: `enableWaveEffect?: boolean` prop
 - **Updated**: Both mobile and desktop title elements to conditionally apply wave effect
 
-#### Mobile Title:
+#### Mobile Title
+
 ```tsx
 <h1 className={`text-2xl font-bold ${enableWaveEffect ? 'wave-text' : 'text-gray-900'}`}>
   {title}
 </h1>
 ```
 
-#### Desktop Title:
+#### Desktop Title
+
 ```tsx
 <h1 className={`text-3xl font-bold ${enableWaveEffect ? 'wave-text' : 'text-gray-900'}`}>
   {title}
@@ -95,6 +103,7 @@ Added new wave animation that slides white color across purple text:
 ```
 
 #### Homepage Implementation (`src/app/page.tsx`)
+
 Enabled wave effect specifically for homepage:
 
 ```tsx
@@ -108,29 +117,33 @@ Enabled wave effect specifically for homepage:
 
 ### Wave Effect Details
 
-#### Animation Behavior:
+#### Animation Behavior
+
 - **Duration**: 2 seconds
 - **Timing**: ease-in-out (smooth start and end)
 - **Trigger**: Automatically plays on page load/refresh
-- **Colors**: 
+- **Colors**:
   - Base: Purple (#7c3aed) - matches color schema
   - Wave: White (#ffffff) - slides across the text
   - Purple remains the dominant color
 
-#### Visual Effect:
+#### Visual Effect
+
 1. Text starts as purple
 2. White "wave" slides from left to right across the text
 3. Text returns to purple
 4. Animation completes after 2 seconds
 
-#### Browser Support:
+#### Browser Support
+
 - Uses `background-clip: text` for the effect
 - Includes `-webkit-background-clip` for WebKit browsers
 - Fallback to normal purple text if not supported
 
 ## Technical Implementation
 
-### Files Modified:
+### Files Modified
+
 1. **`src/app/page.tsx`**:
    - Increased logo size from 400px to 520px
    - Added `enableWaveEffect={true}` to Header
@@ -143,14 +156,16 @@ Enabled wave effect specifically for homepage:
    - Added `.wave-text` CSS class with gradient and animation
    - Added `@keyframes waveSlide` animation definition
 
-### Design Considerations:
+### Design Considerations
+
 - ✅ Wave effect only applies to homepage (not other pages)
 - ✅ Maintains accessibility with proper text contrast
 - ✅ Animation is subtle and professional
 - ✅ Purple color schema is preserved
 - ✅ Responsive design maintained for mobile and desktop
 
-### Testing Checklist:
+### Testing Checklist
+
 ✅ Logo appears 30% larger on homepage
 ✅ Wave effect plays on page load/refresh
 ✅ Wave effect only appears on homepage
