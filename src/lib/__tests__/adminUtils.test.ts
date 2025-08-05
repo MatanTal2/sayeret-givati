@@ -3,12 +3,14 @@ import { getDocs, addDoc, writeBatch, doc } from 'firebase/firestore';
 
 // Mock Web Crypto API
 const mockDigest = jest.fn();
+const mockGetRandomValues = jest.fn();
 
 Object.defineProperty(global, 'crypto', {
   value: {
     subtle: {
       digest: mockDigest,
     },
+    getRandomValues: mockGetRandomValues,
   },
 });
 
@@ -31,7 +33,6 @@ jest.mock('firebase/firestore', () => ({
 
 describe('SecurityUtils', () => {
   let mockDigest: jest.SpyInstance;
-  let mockGetRandomValues: jest.SpyInstance;
 
   beforeEach(() => {
     // Ensure crypto API is available
@@ -44,7 +45,6 @@ describe('SecurityUtils', () => {
       };
     }
     mockDigest = jest.spyOn(global.crypto.subtle, 'digest');
-    mockGetRandomValues = jest.spyOn(global.crypto, 'getRandomValues');
   });
 
   afterEach(() => {
