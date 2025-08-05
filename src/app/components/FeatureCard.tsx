@@ -20,10 +20,7 @@ export default function FeatureCard({
   const CardContent = () => (
     <div className={`
       relative p-8 rounded-2xl shadow-lg transition-all duration-300 h-48
-      ${available 
-        ? `${color} hover:shadow-xl hover:scale-105 cursor-pointer text-white` 
-        : 'bg-gray-200 cursor-not-allowed text-gray-500'
-      }
+      ${color} hover:shadow-xl hover:scale-105 cursor-pointer text-white
     `}>
       <div className="text-center">
         <div className="text-3xl mb-4">{icon}</div>
@@ -38,13 +35,10 @@ export default function FeatureCard({
     </div>
   );
 
-  if (available) {
-    return (
-      <Link href={href}>
-        <CardContent />
-      </Link>
-    );
-  }
-
-  return <CardContent />;
+  // All cards are now clickable regardless of availability
+  return (
+    <Link href={href}>
+      <CardContent />
+    </Link>
+  );
 } 

@@ -14,6 +14,7 @@ import { MdDownload } from "react-icons/md";
 import { Download } from "lucide-react";
 import SoldiersTableDesktop from '../components/SoldiersTableDesktop';
 import SoldiersTableMobile from '../components/SoldiersTableMobile';
+import AuthGuard from '@/components/auth/AuthGuard';
 // import { 
 //   createToggleAllVisibleHandler,
 //   createSelectAllHandler,
@@ -651,7 +652,8 @@ export default function StatusPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 relative" dir="rtl">
+    <AuthGuard>
+      <div className="min-h-screen bg-gray-50 relative" dir="rtl">
       {/* Header with Logo and Navigation */}
       <header className="bg-white shadow-sm border-b border-gray-200 mb-6">
         <div className="max-w-6xl mx-auto px-4 py-4">
@@ -1166,6 +1168,7 @@ export default function StatusPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AuthGuard>
   );
 } 
