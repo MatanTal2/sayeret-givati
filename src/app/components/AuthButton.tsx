@@ -55,21 +55,31 @@ export default function AuthButton() {
     }
   }, [isMenuOpen]);
 
-  // Get user initials from first and last name, fallback to email
+  // Get user initials from first and last name, with proper fallbacks
   const getUserInitials = useCallback(() => {
+    // Priority 1: Use firstName and lastName if available
     if (user?.firstName && user?.lastName) {
       return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
     }
+    
+    // Priority 2: Use displayName if available
     if (user?.displayName) {
-      const names = user.displayName.split(' ');
-      return names.length > 1 
-        ? `${names[0].charAt(0)}${names[names.length - 1].charAt(0)}`.toUpperCase()
-        : names[0].substring(0, 2).toUpperCase();
+      const names = user.displayName.trim().split(' ').filter(name => name.length > 0);
+      if (names.length >= 2) {
+        return `${names[0].charAt(0)}${names[names.length - 1].charAt(0)}`.toUpperCase();
+      } else if (names.length === 1) {
+        return names[0].substring(0, 2).toUpperCase();
+      }
     }
+    
+    // Priority 3: Use email initial as fallback
     if (user?.email) {
-      return user.email.substring(0, 2).toUpperCase();
+      const emailInitial = user.email.charAt(0).toUpperCase();
+      return `${emailInitial}U`; // U for User
     }
-    return 'XX';
+    
+    // Last resort: Default icon symbol
+    return '👤';
   }, [user]);
 
   // Get user first name for display
@@ -79,6 +89,22 @@ export default function AuthButton() {
     if (user?.email) return user.email.split('@')[0];
     return TEXT_CONSTANTS.PROFILE.DEFAULT_USER;
   }, [user]);
+
+  // Get user last name for desktop greeting
+  const getUserLastName = useCallback(() => {
+    if (user?.lastName) return user.lastName;
+    if (user?.displayName) {
+      const names = user.displayName.trim().split(' ').filter(name => name.length > 0);
+      return names.length >= 2 ? names[names.length - 1] : null;
+    }
+    return null;
+  }, [user]);
+
+  // Get desktop greeting display
+  const getDesktopGreeting = useCallback(() => {
+    const lastName = getUserLastName();
+    return lastName ? `${lastName}, שלום` : getUserFirstName();
+  }, [getUserLastName, getUserFirstName]);
 
   const handleLoginClick = useCallback(() => {
     setShowAuthModal(true);
@@ -161,7 +187,7 @@ export default function AuthButton() {
         className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 
                    focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 text-gray-900 
                    transition-colors duration-200 cursor-pointer select-none"
-        aria-label={`פרופיל של ${getUserFirstName()}`}
+        aria-label={`פרופיל של ${getUserLastName() || getUserFirstName()}`}
         aria-expanded={isMenuOpen}
         aria-haspopup="true"
         id="profile-menu-button"
@@ -183,7 +209,7 @@ export default function AuthButton() {
           className="font-medium text-base hidden sm:inline select-none text-right"
           style={{ pointerEvents: 'none' }}
         >
-          {getUserFirstName()}
+          {getDesktopGreeting()}
         </span>
         <ChevronDownIcon 
           className={`w-5 h-5 transition-transform duration-200 shrink-0 ${

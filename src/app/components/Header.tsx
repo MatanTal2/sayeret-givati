@@ -8,6 +8,7 @@ interface HeaderProps {
   backLink?: string;
   backText?: string;
   showAuth?: boolean; // New prop to control auth button display
+  enableWaveEffect?: boolean; // New prop to enable wave effect on title
 }
 
 export default function Header({ 
@@ -15,7 +16,8 @@ export default function Header({
   subtitle, 
   backLink = "/", 
   backText = "← חזרה לעמוד הבית",
-  showAuth = true // Default to showing auth button
+  showAuth = true, // Default to showing auth button
+  enableWaveEffect = false // Default to no wave effect
 }: HeaderProps) {
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 mb-6">
@@ -46,7 +48,7 @@ export default function Header({
           
           {/* Mobile: Headline */}
           <div className="text-center mb-2">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className={`text-2xl font-bold ${enableWaveEffect ? 'wave-text' : 'text-gray-900'}`}>
               {title}
             </h1>
           </div>
@@ -101,7 +103,7 @@ export default function Header({
           
           {/* Desktop: Headline only (no subtitle) */}
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className={`text-3xl font-bold ${enableWaveEffect ? 'wave-text' : 'text-gray-900'}`}>
               {title}
             </h1>
           </div>

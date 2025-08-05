@@ -5,13 +5,11 @@ import Image from 'next/image';
 import FeatureCard from './components/FeatureCard';
 import Header from './components/Header';
 
-import AuthModal from '@/components/auth/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { getFeatureRoutes } from '@/utils/navigationUtils';
 import { TEXT_CONSTANTS } from '@/constants/text';
 
 export default function HomePage() {
-  const { showAuthModal, setShowAuthModal } = useAuth();
 
   // Use centralized feature routes configuration
   const features = getFeatureRoutes();
@@ -23,6 +21,7 @@ export default function HomePage() {
         title="מערכת ניהול - מסייעת סיירת גבעתי"
         subtitle="פלטפורמה מרכזית לניהול פעילויות הסיירת"
         showAuth={true}
+        enableWaveEffect={true}
       />
 
       {/* Background Logo */}
@@ -30,8 +29,8 @@ export default function HomePage() {
         <Image 
           src="/sayeret-givati-logo.png" 
           alt="לוגו סיירת גבעתי" 
-          width={400} 
-          height={400}
+          width={520} 
+          height={520}
           priority
           className="object-contain"
           style={{ width: "auto", height: "auto" }}
@@ -57,7 +56,7 @@ export default function HomePage() {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {features.map((feature, index) => (
-                <div key={index} className={`fade-in stagger-${index + 1}`}>
+                <div key={index}>
                   <FeatureCard
                     title={feature.title}
                     description={feature.description}
@@ -110,18 +109,6 @@ export default function HomePage() {
         </footer>
       </main>
 
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)}
-        onRegistrationSuccess={() => {
-          // Close modal and redirect to home
-          setShowAuthModal(false);
-          console.log('🎉 Registration successful! Welcome to Sayeret Givati!');
-          // Optional: Add a success toast notification here
-          // Optional: Redirect to dashboard if needed
-        }}
-      />
     </div>
   );
 }
