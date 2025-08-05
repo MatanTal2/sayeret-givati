@@ -3,14 +3,12 @@ import { getDocs, addDoc, writeBatch, doc } from 'firebase/firestore';
 
 // Mock Web Crypto API
 const mockDigest = jest.fn();
-const mockGetRandomValues = jest.fn();
 
 Object.defineProperty(global, 'crypto', {
   value: {
     subtle: {
       digest: mockDigest,
     },
-    getRandomValues: mockGetRandomValues,
   },
 });
 
