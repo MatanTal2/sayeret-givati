@@ -25,7 +25,7 @@ describe('SecurityUtils', () => {
   beforeEach(() => {
     // Ensure crypto API is available
     if (typeof global.crypto === 'undefined') {
-      (global as any).crypto = {
+      (global as Record<string, unknown>).crypto = {
         subtle: {
           digest: jest.fn(),
         },
