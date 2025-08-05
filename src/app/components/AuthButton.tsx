@@ -4,9 +4,12 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, LogInIcon } from 'lucide-react';
+import { UserDataService } from '@/lib/userDataService';
+import { FirestoreUserProfile } from '@/types/user';
+import Link from 'next/link';
 
 export default function AuthButton() {
-  const { user, isAuthenticated, isLoading, logout, setShowAuthModal } = useAuth();
+  const { user, enhancedUser, isAuthenticated, isLoading, logout, setShowAuthModal } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   // Refs for both button and menu to properly handle outside clicks
@@ -55,14 +58,29 @@ export default function AuthButton() {
     }
   }, [isMenuOpen]);
 
-  // Get user initials from first and last name, with proper fallbacks
+  // Get user initials using enhanced user data or fallback methods
   const getUserInitials = useCallback(() => {
-    // Priority 1: Use firstName and lastName if available
+    // Priority 1: Use computed initials from enhanced user data (Firestore)
+    if (enhancedUser?.initials) {
+      return enhancedUser.initials;
+    }
+    
+    // Priority 2: Use enhanced user firstName and lastName
+    if (enhancedUser?.firstName && enhancedUser?.lastName) {
+      return UserDataService.generateInitials({
+        firstName: enhancedUser.firstName,
+        lastName: enhancedUser.lastName,
+        email: enhancedUser.email || '',
+        uid: enhancedUser.uid
+      } as FirestoreUserProfile);
+    }
+    
+    // Priority 3: Use basic user firstName and lastName
     if (user?.firstName && user?.lastName) {
       return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
     }
     
-    // Priority 2: Use displayName if available
+    // Priority 4: Use displayName if available
     if (user?.displayName) {
       const names = user.displayName.trim().split(' ').filter(name => name.length > 0);
       if (names.length >= 2) {
@@ -72,7 +90,7 @@ export default function AuthButton() {
       }
     }
     
-    // Priority 3: Use email initial as fallback
+    // Priority 5: Use email initial as fallback
     if (user?.email) {
       const emailInitial = user.email.charAt(0).toUpperCase();
       return `${emailInitial}U`; // U for User
@@ -80,31 +98,42 @@ export default function AuthButton() {
     
     // Last resort: Default icon symbol
     return '👤';
-  }, [user]);
+  }, [user, enhancedUser]);
 
-  // Get user first name for display
+  // Get user first name for display using enhanced data
   const getUserFirstName = useCallback(() => {
+    if (enhancedUser?.firstName) return enhancedUser.firstName;
     if (user?.firstName) return user.firstName;
     if (user?.displayName) return user.displayName.split(' ')[0];
     if (user?.email) return user.email.split('@')[0];
     return TEXT_CONSTANTS.PROFILE.DEFAULT_USER;
-  }, [user]);
+  }, [user, enhancedUser]);
 
-  // Get user last name for desktop greeting
+  // Get user last name for desktop greeting using enhanced data
   const getUserLastName = useCallback(() => {
+    if (enhancedUser?.lastName) return enhancedUser.lastName;
     if (user?.lastName) return user.lastName;
     if (user?.displayName) {
       const names = user.displayName.trim().split(' ').filter(name => name.length > 0);
       return names.length >= 2 ? names[names.length - 1] : null;
     }
     return null;
-  }, [user]);
+  }, [user, enhancedUser]);
 
-  // Get desktop greeting display
+  // Get desktop greeting display using UserDataService if enhanced data available
   const getDesktopGreeting = useCallback(() => {
+    if (enhancedUser?.firstName && enhancedUser?.lastName) {
+      return UserDataService.generateDisplayName({
+        firstName: enhancedUser.firstName,
+        lastName: enhancedUser.lastName,
+        email: enhancedUser.email || '',
+        uid: enhancedUser.uid
+      } as FirestoreUserProfile);
+    }
+    
     const lastName = getUserLastName();
     return lastName ? `${lastName}, שלום` : getUserFirstName();
-  }, [getUserLastName, getUserFirstName]);
+  }, [enhancedUser, getUserLastName, getUserFirstName]);
 
   const handleLoginClick = useCallback(() => {
     setShowAuthModal(true);
@@ -116,11 +145,9 @@ export default function AuthButton() {
     setIsMenuOpen(prev => !prev);
   }, []);
 
-  const handleProfileClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleProfileClick = useCallback(() => {
     setIsMenuOpen(false);
-    // TODO: Navigate to profile page
+    // Navigation to profile page handled by Link component
   }, []);
 
   const handleSettingsClick = useCallback((e: React.MouseEvent) => {
@@ -237,8 +264,8 @@ export default function AuthButton() {
             pointerEvents: 'auto'
           }}
         >
-          <button
-            type="button"
+          <Link
+            href="/profile"
             className="w-full text-right px-4 py-2 text-gray-900 hover:bg-gray-100 
                        focus:bg-gray-100 transition-colors duration-150 flex items-center gap-2 
                        cursor-pointer"
@@ -248,7 +275,7 @@ export default function AuthButton() {
           >
             <UserIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
             <span className="text-right">{TEXT_CONSTANTS.PROFILE.MY_PROFILE}</span>
-          </button>
+          </Link>
           
           <button
             type="button"
