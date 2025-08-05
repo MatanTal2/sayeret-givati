@@ -5,7 +5,6 @@ import Image from 'next/image';
 import FeatureCard from './components/FeatureCard';
 import Header from './components/Header';
 
-import { useAuth } from '@/contexts/AuthContext';
 import { getFeatureRoutes } from '@/utils/navigationUtils';
 import { TEXT_CONSTANTS } from '@/constants/text';
 
