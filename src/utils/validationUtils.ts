@@ -265,7 +265,8 @@ export class PhoneUtils {
   /**
    * Mask phone number showing only first 3 and last 4 digits
    * @param phoneNumber - The phone number to mask (e.g., "0521234567")
-   * @returns Masked phone number (e.g., "052-***4567")
+   * @returns Masked phone number (e.g., "4567***-052")
+   * @note Returns in reverse order to handle Hebrew RTL text direction issues in UI
    */
   static maskPhoneNumber(phoneNumber: string): string {
     // Clean the phone number (remove spaces, dashes, etc.)
@@ -284,11 +285,11 @@ export class PhoneUtils {
       return phoneNumber; // Return original if invalid
     }
     
-    // Format: 052-***4567
+    // Format: 4567***-052 (reversed for Hebrew RTL display)
     const prefix = normalizedPhone.slice(0, 3);
     const suffix = normalizedPhone.slice(-4);
     
-    return `${suffix}`+ "***-" + `${prefix}`;
+    return `${suffix}***-${prefix}`;
   }
 
   /**
