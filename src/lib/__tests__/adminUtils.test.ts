@@ -1,19 +1,6 @@
 import { AdminFirestoreService, SecurityUtils, ValidationUtils } from '../adminUtils';
 import { getDocs, addDoc, writeBatch, doc } from 'firebase/firestore';
 
-// Mock Web Crypto API
-const mockDigest = jest.fn();
-const mockGetRandomValues = jest.fn();
-
-Object.defineProperty(global, 'crypto', {
-  value: {
-    subtle: {
-      digest: mockDigest,
-    },
-    getRandomValues: mockGetRandomValues,
-  },
-});
-
 jest.mock('@/lib/firebase', () => ({
   db: {},
 }));
@@ -32,8 +19,25 @@ jest.mock('firebase/firestore', () => ({
 }));
 
 describe('SecurityUtils', () => {
+  let mockDigest: jest.SpyInstance;
+  let mockGetRandomValues: jest.SpyInstance;
+
+  beforeEach(() => {
+    // Ensure crypto API is available
+    if (typeof global.crypto === 'undefined') {
+      (global as Record<string, unknown>).crypto = {
+        subtle: {
+          digest: jest.fn(),
+        },
+        getRandomValues: jest.fn(),
+      };
+    }
+    mockDigest = jest.spyOn(global.crypto.subtle, 'digest');
+    mockGetRandomValues = jest.spyOn(global.crypto, 'getRandomValues');
+  });
+
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('hashMilitaryId', () => {
