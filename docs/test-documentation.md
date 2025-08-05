@@ -336,3 +336,73 @@ npx jest --runInBand --no-cache --verbose
 # Check Jest configuration
 npx jest --showConfig
 ```
+
+---
+
+## listing all 39 skipped test names organized by category
+
+- OTP Flow Tests (4 tests)
+- Admin Utils Tests (3 tests)
+- Registration Step Dots Tests (2 tests)
+- Registration Success Step Tests (7 tests)
+- Registration Flow Integration Tests (6 tests)
+- Registration Form Tests (17 tests)
+
+## Skipped Tests
+
+### OTP Flow Tests
+
+- should send SMS with correct Twilio API call
+- should handle Twilio API errors gracefully
+- should use correct SMS message format
+- should require all Twilio environment variables
+
+### Admin Utils Tests
+
+- should return true if a duplicate military ID is found
+- should return false if no duplicate military ID is found
+- should add a new person if the military ID does not exist
+
+### Registration Step Dots Tests
+
+- should highlight step 3 for details
+- should mark previous steps as completed
+
+### Registration Success Step Tests
+
+- should render success checkmark icon
+- should have proper success message styling
+- should show success icon with gradient background
+- should have proper spacing and layout classes
+- should show final step UI elements
+- should provide clear success feedback
+- should have proper visual hierarchy
+
+### Registration Flow Integration Tests
+
+- should complete full registration flow with valid inputs
+- should show correct step indicators throughout flow
+- should handle step navigation appropriately
+- should preserve form state during navigation
+- should handle step navigation errors gracefully
+- should handle controlled input components across the flow
+
+### Registration Form Tests
+
+- should complete full registration flow successfully
+- should handle rapid step transitions
+- should preserve user data across step transitions
+- should handle step navigation without data loss
+- should transition to OTP step when verify button clicked
+- should show OTP step with back navigation
+- should return to personal number step when back button clicked
+- should preserve personal number when navigating back
+- should maintain form state across navigation
+- should transition to details step after OTP verification
+- should pass user data to details step
+- should transition to success step after registration completion
+- should show success step with continue button
+- should handle continue from success step
+- should preserve user data throughout the flow
+- should prevent form submission with invalid details
+- should show validation errors at appropriate steps

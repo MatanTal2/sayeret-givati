@@ -9,16 +9,39 @@ service cloud.firestore {
       allow read: if request.auth != null; // Allow reading other users for UI
       // Allow test documents with TEST- prefix for development/testing
       allow read, write, delete: if request.auth != null && userId.matches('^TEST-.*');
+      
+      // Allow server-side user creation during registration
+      // This is needed for creating user profiles before Firebase Auth user exists
+      allow create: if true;
     }
     
-    // Authorized personnel collection - for admin management
+    // Authorized personnel collection - for admin management and registration verification
     match /authorized_personnel/{documentId} {
-      allow read, write, create, delete: if request.auth != null;
+      // Allow read access for registration verification (server-side API)
+      // This is needed for military ID verification during user registration
+      allow read: if true;
+      
+      // Restrict write operations to authenticated users only (admin panel)
+      allow write, create, delete: if request.auth != null;
     }
     
     // Admin config collection - for admin authentication
     match /admin_config/{documentId} {
       allow read, write: if request.auth != null;
+    }
+    
+    // OTP sessions collection - for phone verification during registration
+    match /otp_sessions/{phoneNumber} {
+      // Allow server-side operations for OTP verification
+      // These operations happen during registration before user authentication
+      allow read, write, create, delete: if true;
+    }
+    
+    // OTP rate limiting collection - for preventing spam
+    match /otp_rate_limits/{phoneNumber} {
+      // Allow server-side operations for rate limiting
+      // These operations happen during registration before user authentication  
+      allow read, write, create, delete: if true;
     }
     
     // Test collection - for development testing only

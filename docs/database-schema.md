@@ -27,17 +27,20 @@ Stores soldier profiles, authentication data, and role-based permissions for the
 
 ### Document ID
 
-- **Format**: `{firebase_auth_uid}` or `TEST-{firebase_auth_uid}` for test users
+- **Format**: `{hash_id_uid}` or `TEST-{hash_id_uid}` for test users
 - **Example**: `abc123xyz789` or `TEST-abc123xyz789`
 
 ### Fields
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `uid` | `string` | ✅ | Firebase Authentication UID (matches document ID) |
+| `uid` | `string` | ✅ | Hash military Id UID (matches document ID) |
 | `email` | `string` | ✅ | Soldier's military email address |
 | `firstName` | `string` | ✅ | First name in Hebrew or English |
 | `lastName` | `string` | ✅ | Last name in Hebrew or English |
+| `gender` | `string` | ❌ | Gender (e.g., "male", "female") |
+| `birthday` | `timestamp` | ❌ | Date of birth |
+| `profileImage` | `string` | ❌ | Profile image URL or storage path |
 | `rank` | `string` | ✅ | Military rank (e.g., "רב סמל", "סגן", "רס״ן") |
 | `role` | `UserRole` | ✅ | Permission level (see UserRole enum) |
 | `phoneNumber` | `string` | ❌ | Israeli phone number (+972-XX-XXXXXXX) for OTP |
@@ -115,19 +118,20 @@ Stores pre-authorized military personnel allowed to register in the system. Used
 
 ### Document ID
 
-- **Format**: Auto-generated UUID
-- **Example**: `auth_abc123xyz789`
+- **Format**: SHA-256 hash of military personal number (מספר אישי)
+- **Example**: `7a3b8c9d2e1f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d`
+- **Purpose**: Enables O(1) lookup for user registration verification
 
 ### Fields
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `militaryPersonalNumberHash` | `string` | ✅ | SHA-256 hash of מספר אישי + salt |
-| `salt` | `string` | ✅ | Unique salt for this record |
+| `militaryPersonalNumberHash` | `string` | ✅ | SHA-256 hash of מספר אישי (also used as document ID) |
 | `phoneNumber` | `string` | ✅ | Pre-assigned phone for MFA (+972-XX-XXXXXXX) |
 | `firstName` | `string` | ✅ | Expected first name |
 | `lastName` | `string` | ✅ | Expected last name |
 | `rank` | `string` | ✅ | Expected military rank |
+| `registered` | `boolean` | ❌ | Flag indicating complete registration (Firebase Auth + Firestore profile) |
 | `createdAt` | `timestamp` | ✅ | When record was added |
 | `createdBy` | `string` | ✅ | Who authorized this person |
 

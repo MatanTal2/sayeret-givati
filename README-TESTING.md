@@ -41,10 +41,12 @@ This document outlines the comprehensive unit testing setup added to the Sayeret
 Tests for localStorage-based caching system:
 
 **Functions Tested:**
+
 - `getCachedData()` - Retrieval with TTL validation
 - `setCachedData()` - Storage with error handling
 
 **Test Coverage:**
+
 - ✅ Valid data retrieval
 - ✅ Expired data cleanup  
 - ✅ JSON parsing error handling
@@ -57,12 +59,14 @@ Tests for localStorage-based caching system:
 Tests for Hebrew date/time formatting:
 
 **Functions Tested:**
+
 - `formatReportDate()` - Hebrew locale date formatting
 - `formatReportTime()` - Hebrew locale time formatting  
 - `formatLastUpdated()` - Smart relative date display
 - `formatCacheErrorDate()` - Error message timestamps
 
 **Test Coverage:**
+
 - ✅ Hebrew locale formatting validation
 - ✅ Jerusalem timezone handling
 - ✅ Today vs. previous days logic
@@ -74,11 +78,13 @@ Tests for Hebrew date/time formatting:
 Tests for soldier status mapping logic:
 
 **Functions Tested:**
+
 - `mapRawStatusToStructured()` - Convert sheet data to app format
 - `mapStructuredStatusToRaw()` - Convert app data to sheet format
 - `getAvailableStatuses()` - Status options provider
 
 **Test Coverage:**
+
 - ✅ Standard status mapping (בית, משמר)
 - ✅ Custom status handling (אחר with customStatus)
 - ✅ Round-trip conversion consistency
@@ -90,6 +96,7 @@ Tests for soldier status mapping logic:
 Tests for Google Sheets API integration:
 
 **Test Coverage:**
+
 - ✅ Status mapping integration with API
 - ✅ Data formatting for Google Sheets
 - ✅ Request validation logic
@@ -102,6 +109,7 @@ Tests for Google Sheets API integration:
 Tests for TypeScript interface validation:
 
 **Test Coverage:**
+
 - ✅ Required field validation
 - ✅ Optional field handling (customStatus, notes, isManuallyAdded)
 - ✅ Different status combinations
@@ -146,7 +154,7 @@ npm test -- --verbose
 
 ## Test Organization
 
-```
+``` ascii
 src/
 ├── lib/
 │   ├── __tests__/
@@ -216,23 +224,27 @@ coverageThreshold: {
 ## Test Principles
 
 ### 1. Unit Test Isolation
+
 - Each test focuses on a single function
 - Dependencies are mocked
 - No external API calls in unit tests
 
 ### 2. Comprehensive Edge Cases  
+
 - Empty/null inputs
 - Error conditions
 - Boundary values
 - Hebrew text handling
 
 ### 3. Business Logic Validation
+
 - Status mapping consistency
 - Date formatting accuracy
 - Cache TTL behavior
 - Data persistence
 
 ### 4. Type Safety
+
 - TypeScript interface compliance
 - Required vs optional fields
 - Array operations
@@ -242,16 +254,19 @@ coverageThreshold: {
 ### Common Issues
 
 1. **Jest types not found**
+
    ```bash
    npm install --save-dev @types/jest
    ```
 
 2. **Test timeout**
+
    ```bash
    npm test -- --testTimeout=10000
    ```
 
 3. **Cache between tests**
+
    ```bash
    npm test -- --clearCache
    ```
@@ -316,4 +331,4 @@ The testing infrastructure provides comprehensive coverage of all utility functi
 - **Maintainable**: Clear structure and naming
 - **Comprehensive**: Edge cases and error scenarios covered
 
-This foundation ensures code quality and prevents regressions as the application evolves. 
+This foundation ensures code quality and prevents regressions as the application evolves.

@@ -168,7 +168,14 @@ export default function HomePage() {
       {/* Auth Modal */}
       <AuthModal 
         isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
+        onClose={() => setShowAuthModal(false)}
+        onRegistrationSuccess={() => {
+          // Close modal and redirect to home
+          setShowAuthModal(false);
+          console.log('🎉 Registration successful! Welcome to Sayeret Givati!');
+          // Optional: Add a success toast notification here
+          // Optional: Redirect to dashboard if needed
+        }}
       />
     </div>
   );

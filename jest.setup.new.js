@@ -3,6 +3,9 @@ const { TextEncoder, TextDecoder } = require('util');
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
+// Import React Testing Library custom matchers
+require('@testing-library/jest-dom');
+
 // Mock Firebase environment variables for tests only
 process.env.NEXT_PUBLIC_FIREBASE_API_KEY = 'mock-api-key-for-tests';
 process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = 'mock-auth-domain-for-tests';
