@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "preinstall": "node -v && npm -v && ls -l node_modules/react && ls -l node_modules/react-dom",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
