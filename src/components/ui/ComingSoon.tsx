@@ -20,10 +20,10 @@ export default function ComingSoon({
   showBackButton = true 
 }: ComingSoonProps) {
   return (
-    <div className="min-h-screen bg-page flex items-center justify-center p-4" dir="rtl">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4" dir="rtl">
       <div className="max-w-lg w-full">
         {/* Coming Soon Card */}
-        <div className="bg-card rounded-2xl shadow-xl p-8 text-center">
+        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
           {/* Construction Icon */}
           <div className="mx-auto w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-6">
             <svg className="w-10 h-10 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -32,7 +32,7 @@ export default function ComingSoon({
           </div>
 
           {/* Title */}
-          <h1 className="text-3xl font-bold text-primary mb-4">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
             {title}
           </h1>
 

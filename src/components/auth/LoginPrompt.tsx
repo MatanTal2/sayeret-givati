@@ -15,10 +15,10 @@ export default function LoginPrompt() {
   };
 
   return (
-    <div className="min-h-screen bg-page flex items-center justify-center p-4" dir="rtl">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4" dir="rtl">
       <div className="max-w-md w-full">
         {/* Login Prompt Card */}
-        <div className="bg-card rounded-2xl shadow-xl p-8 text-center">
+        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
           {/* Lock Icon */}
           <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-6">
             <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,12 +27,12 @@ export default function LoginPrompt() {
           </div>
 
           {/* Title */}
-          <h2 className="text-2xl font-bold text-primary mb-4">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
             {TEXT_CONSTANTS.STATUS.REQUIRES_AUTH}
           </h2>
 
           {/* Description */}
-          <p className="text-secondary mb-8 leading-relaxed">
+          <p className="text-gray-600 mb-8 leading-relaxed">
             כדי לגשת לתכונה זו, עליך להתחבר למערכת עם הפרטים שלך.
             <br />
             ההתחברות מאבטחת ומוגנת לחלוטין.

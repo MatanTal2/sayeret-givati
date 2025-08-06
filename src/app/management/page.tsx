@@ -267,7 +267,7 @@ function ManagementContent() {
   // Access denied for users without proper roles
   if (!hasManagementAccess()) {
     return (
-      <div className="min-h-screen bg-page" dir="rtl">
+      <div className="min-h-screen bg-gray-50" dir="rtl">
         <Header 
           title="ניהול מערכת"
           subtitle="גישה מוגבלת"
@@ -275,15 +275,15 @@ function ManagementContent() {
         />
         
         <main className="max-w-4xl mx-auto px-4 py-8">
-          <div className="bg-card rounded-lg shadow-md border border-primary p-8 text-center">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center">
             <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
               <Shield className="w-8 h-8 text-red-600" />
             </div>
-            <h2 className="text-2xl font-bold text-primary mb-2">אין הרשאה לגישה</h2>
-            <p className="text-secondary mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">אין הרשאה לגישה</h2>
+            <p className="text-gray-600 mb-6">
               דף זה מיועד למשתמשים עם הרשאות ניהול בלבד (קצין, מפקד או מנהל מערכת).
             </p>
-            <p className="text-sm text-tertiary">
+            <p className="text-sm text-gray-500">
               התפקיד הנוכחי שלך: {enhancedUser?.role || 'לא זוהה'}
             </p>
           </div>
@@ -295,7 +295,7 @@ function ManagementContent() {
   const activeTabData = MANAGEMENT_TABS.find(tab => tab.id === activeTab);
 
   return (
-    <div className="min-h-screen bg-page" dir="rtl">
+    <div className="min-h-screen bg-gray-50" dir="rtl">
       <Header 
         title="ניהול מערכת"
         subtitle="כלי ניהול מתקדמים לסיירת גבעתי"
@@ -304,7 +304,7 @@ function ManagementContent() {
       
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* Welcome message */}
-        <div className="bg-card rounded-lg shadow-sm border border-primary p-6 mb-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
               <Settings className="w-5 h-5 text-purple-600" />
