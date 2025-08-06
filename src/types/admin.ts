@@ -51,6 +51,7 @@ export interface AuthorizedPersonnel {
   approvedRole: string; // Role approved by admin (defaults to 'soldier')
   roleStatus: 'pending' | 'approved' | 'rejected'; // Role approval status
   status: 'active' | 'inactive' | 'transferred' | 'discharged'; // Default: 'active'
+  registered: boolean; // Whether user has completed registration (false by default, true after email/password signup)
   joinDate: Timestamp; // Registration date
   testUser?: boolean; // Flag for development/testing accounts
   createdAt: Timestamp;

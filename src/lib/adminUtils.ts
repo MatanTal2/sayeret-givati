@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, query, getDocs, deleteDoc, serverTimestamp, Timestamp, writeBatch, DocumentReference, setDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, getDocs, deleteDoc, updateDoc, serverTimestamp, Timestamp, writeBatch, DocumentReference, setDoc } from 'firebase/firestore';
 import {
   AdminConfig,
   PersonnelFormData,
@@ -319,6 +319,11 @@ export class AdminFirestoreService {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         rank: formData.rank.trim(),
+        registered: false, // Default to false until user completes registration
+        approvedRole: 'soldier', // Default role
+        roleStatus: 'approved' as const, // Default approved status
+        status: 'active' as const, // Default active status
+        joinDate: serverTimestamp(),
         createdAt: serverTimestamp(),
         createdBy: 'system_admin' // TODO: Replace with actual admin user ID
       };
@@ -334,6 +339,7 @@ export class AdminFirestoreService {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         rank: formData.rank.trim(),
+        registered: false, // Default to false until user completes registration
         approvedRole: 'soldier', // Default role for all new users
         roleStatus: 'approved', // Auto-approve basic soldier role
         status: 'active', // Default status
@@ -447,6 +453,7 @@ export class AdminFirestoreService {
             firstName: person.firstName.trim(),
             lastName: person.lastName.trim(),
             rank: person.rank.trim(),
+            registered: false, // Default to false until user completes registration
             approvedRole: 'soldier', // Default role for all new users
             roleStatus: 'approved', // Auto-approve basic soldier role
             status: 'active', // Default status
@@ -526,6 +533,83 @@ export class AdminFirestoreService {
         success: false,
         message: ADMIN_MESSAGES.PERSONNEL_DELETE_FAILED,
         error: error instanceof AdminError ? error : new AdminError('Failed to delete personnel', 'DELETE_ERROR')
+      };
+    }
+  }
+
+  /**
+   * Get registration status of authorized personnel
+   */
+  static async getRegistrationStatus(militaryIdHash: string): Promise<boolean | null> {
+    try {
+      const docRef = doc(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION, militaryIdHash);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        return data.registered ?? false; // Default to false if field doesn't exist
+      }
+      
+      return null; // Personnel not found
+    } catch (error) {
+      console.error('❌ Error checking registration status:', error);
+      throw new AdminError('Failed to check registration status', 'FIRESTORE_ERROR');
+    }
+  }
+
+  /**
+   * Get all personnel with their registration status for admin dashboard
+   */
+  static async getAllPersonnelWithRegistrationStatus(): Promise<(AuthorizedPersonnel & { registered: boolean })[]> {
+    try {
+      const personnelCollection = collection(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION);
+      const snapshot = await getDocs(personnelCollection);
+      
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        registered: doc.data().registered ?? false // Ensure backward compatibility
+      } as AuthorizedPersonnel & { registered: boolean }));
+    } catch (error) {
+      console.error('❌ Error fetching personnel with registration status:', error);
+      throw new AdminError('Failed to fetch personnel data', 'FIRESTORE_ERROR');
+    }
+  }
+
+  /**
+   * Update registration status manually (for admin use)
+   */
+  static async updateRegistrationStatus(militaryIdHash: string, registered: boolean): Promise<PersonnelOperationResult> {
+    try {
+      const docRef = doc(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION, militaryIdHash);
+      const docSnap = await getDoc(docRef);
+      
+      if (!docSnap.exists()) {
+        return {
+          success: false,
+          message: 'Personnel not found',
+          error: new AdminError('Personnel not found', 'NOT_FOUND')
+        };
+      }
+
+      await updateDoc(docRef, {
+        registered,
+        updatedAt: serverTimestamp()
+      });
+
+      const updatedData = docSnap.data() as AuthorizedPersonnel;
+      
+      return {
+        success: true,
+        personnel: { ...updatedData, registered },
+        message: `Registration status updated to ${registered ? 'registered' : 'unregistered'}`
+      };
+    } catch (error) {
+      console.error('❌ Error updating registration status:', error);
+      return {
+        success: false,
+        message: 'Failed to update registration status',
+        error: error instanceof Error ? error : new AdminError('Unknown error', 'UNKNOWN_ERROR')
       };
     }
   }
