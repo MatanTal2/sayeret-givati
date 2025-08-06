@@ -6,6 +6,8 @@ import AuthGuard from '@/components/auth/AuthGuard';
 import Header from '@/app/components/Header';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
+import ThemeToggle from '@/components/ui/ThemeToggle';
+import { useTheme } from '@/contexts/ThemeContext';
 import { 
   UserIcon, 
   PhoneIcon, 
@@ -28,13 +30,13 @@ import {
  */
 export default function SettingsPage() {
   const { enhancedUser } = useAuth();
+  const { theme } = useTheme();
   
   // TODO: Replace with actual state management when backend is implemented
   const [settings, setSettings] = useState({
     emailNotifications: true,
     equipmentTransferAlerts: false,
-    language: 'hebrew',
-    theme: 'light'
+    language: 'hebrew'
   });
 
   // Profile image state
@@ -67,7 +69,7 @@ export default function SettingsPage() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gray-50" dir="rtl">
+      <div className="min-h-screen bg-page" dir="rtl">
         {/* Header */}
         <Header 
           title={TEXT_CONSTANTS.SETTINGS.PAGE_TITLE}
@@ -77,19 +79,19 @@ export default function SettingsPage() {
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Profile Settings Section */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="bg-card rounded-2xl shadow-lg p-6 mb-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <UserIcon className="w-5 h-5 text-purple-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-primary">
                 {TEXT_CONSTANTS.SETTINGS.PROFILE_SETTINGS}
               </h2>
             </div>
 
             <div className="space-y-6">
               {/* Profile Image */}
-              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
+                              <div className="flex items-center justify-between p-4 border border-primary rounded-xl bg-card">
                 <div className="flex items-center gap-4">
                   <ProfileImageUpload
                     currentImageUrl={profileImageUrl}
@@ -157,12 +159,12 @@ export default function SettingsPage() {
           </div>
 
           {/* Account Security Section */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="bg-card rounded-2xl shadow-lg p-6 mb-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-green-100 rounded-lg">
                 <ShieldCheckIcon className="w-5 h-5 text-green-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-primary">
                 {TEXT_CONSTANTS.SETTINGS.ACCOUNT_SECURITY}
               </h2>
             </div>
@@ -183,19 +185,19 @@ export default function SettingsPage() {
           </div>
 
           {/* Notifications Section */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="bg-card rounded-2xl shadow-lg p-6 mb-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <BellIcon className="w-5 h-5 text-blue-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-primary">
                 {TEXT_CONSTANTS.SETTINGS.NOTIFICATIONS}
               </h2>
             </div>
 
             <div className="space-y-4">
               {/* Email Notifications */}
-              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
+                              <div className="flex items-center justify-between p-4 border border-primary rounded-xl bg-card">
                 <div className="flex items-center gap-4">
                   <MailIcon className="w-5 h-5 text-gray-400" />
                   <div>
@@ -223,7 +225,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Equipment Transfer Alerts */}
-              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
+                              <div className="flex items-center justify-between p-4 border border-primary rounded-xl bg-card">
                 <div className="flex items-center gap-4">
                   <PackageIcon className="w-5 h-5 text-gray-400" />
                   <div>
@@ -253,19 +255,19 @@ export default function SettingsPage() {
           </div>
 
           {/* Language & Display Section */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="bg-card rounded-2xl shadow-lg p-6 mb-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-orange-100 rounded-lg">
                 <GlobeIcon className="w-5 h-5 text-orange-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-primary">
                 {TEXT_CONSTANTS.SETTINGS.LANGUAGE_DISPLAY}
               </h2>
             </div>
 
             <div className="space-y-4">
               {/* Language Selector */}
-              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
+                              <div className="flex items-center justify-between p-4 border border-primary rounded-xl bg-card">
                 <div className="flex items-center gap-4">
                   <GlobeIcon className="w-5 h-5 text-gray-400" />
                   <div>
@@ -289,38 +291,31 @@ export default function SettingsPage() {
               </div>
 
               {/* Theme Switcher */}
-              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
+              <div className="flex items-center justify-between p-4 border border-primary rounded-xl bg-card">
                 <div className="flex items-center gap-4">
-                  <PaletteIcon className="w-5 h-5 text-gray-400" />
+                  <PaletteIcon className="w-5 h-5 text-tertiary" />
                   <div>
-                    <h3 className="font-medium text-gray-900">
+                    <h3 className="font-medium text-primary">
                       {TEXT_CONSTANTS.SETTINGS.THEME_SWITCHER}
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      {settings.theme === 'light' ? TEXT_CONSTANTS.SETTINGS.THEME_LIGHT : TEXT_CONSTANTS.SETTINGS.THEME_DARK}
+                    <p className="text-sm text-secondary">
+                      {theme === 'light' ? TEXT_CONSTANTS.SETTINGS.THEME_LIGHT : 
+                       theme === 'dark' ? TEXT_CONSTANTS.SETTINGS.THEME_DARK : 'מערכת'}
                     </p>
                   </div>
                 </div>
-                <select
-                  value={settings.theme}
-                  onChange={(e) => setSettings(prev => ({ ...prev, theme: e.target.value }))}
-                  disabled
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-100 text-gray-400 cursor-not-allowed"
-                >
-                  <option value="light">{TEXT_CONSTANTS.SETTINGS.THEME_LIGHT}</option>
-                  <option value="dark">{TEXT_CONSTANTS.SETTINGS.THEME_DARK}</option>
-                </select>
+                <ThemeToggle variant="select" showLabel={false} />
               </div>
             </div>
           </div>
 
           {/* Privacy & Permissions Section */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="bg-card rounded-2xl shadow-lg p-6 mb-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-red-100 rounded-lg">
                 <LockIcon className="w-5 h-5 text-red-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-primary">
                 {TEXT_CONSTANTS.SETTINGS.PRIVACY_PERMISSIONS}
               </h2>
             </div>

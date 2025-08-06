@@ -14,7 +14,7 @@ export default function HomePage() {
   const features = getFeatureRoutes();
 
   return (
-    <div className="min-h-screen bg-gray-50 relative" dir="rtl">
+    <div className="min-h-screen bg-page relative" dir="rtl">
       {/* Header with Auth Button */}
       <Header 
         title="מערכת ניהול - מסייעת סיירת גבעתי"

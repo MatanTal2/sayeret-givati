@@ -7,6 +7,7 @@ import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, LogInIcon, BellIcon, Se
 import { UserDataService } from '@/lib/userDataService';
 import { FirestoreUserProfile } from '@/types/user';
 import { UserRole } from '@/types/equipment';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 import Link from 'next/link';
 
 export default function AuthButton() {
@@ -286,8 +287,8 @@ export default function AuthButton() {
       {isMenuOpen && (
         <div 
           ref={menuRef}
-          className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl 
-                     border border-gray-200 py-2 z-[9999] overflow-visible"
+          className="absolute right-0 top-full mt-2 w-48 bg-card rounded-xl shadow-xl 
+                     border border-primary py-2 z-[9999] overflow-visible"
           role="menu"
           aria-labelledby="profile-menu-button"
           style={{ 
@@ -301,8 +302,8 @@ export default function AuthButton() {
         >
           <Link
             href="/profile"
-            className="w-full text-right px-4 py-2 text-gray-900 hover:bg-gray-100 
-                       focus:bg-gray-100 transition-colors duration-150 flex items-center gap-2 
+            className="w-full text-right px-4 py-2 text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary
+                       focus:bg-gray-100 dark:focus:bg-dark-bg-tertiary transition-colors duration-150 flex items-center gap-2 
                        cursor-pointer"
             onClick={handleProfileClick}
             role="menuitem"
@@ -314,8 +315,8 @@ export default function AuthButton() {
           
           <button
             type="button"
-            className="w-full text-right px-4 py-2 text-gray-900 hover:bg-gray-100 
-                       focus:bg-gray-100 transition-colors duration-150 flex items-center gap-2 
+            className="w-full text-right px-4 py-2 text-primary hover:bg-gray-100 dark:hover:bg-dark-bg-tertiary
+                       focus:bg-gray-100 dark:focus:bg-dark-bg-tertiary transition-colors duration-150 flex items-center gap-2 
                        cursor-pointer"
             onClick={handleSettingsClick}
             role="menuitem"
@@ -340,14 +341,24 @@ export default function AuthButton() {
               <span className="text-right">ניהול</span>
             </Link>
           )}
+
+          {/* Theme Toggle Section */}
+          <div className="px-4 py-2 border-t border-gray-200 dark:border-dark-border-primary">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-dark-text-secondary">ערכת נושא</span>
+              </div>
+              <ThemeToggle variant="switch" showLabel={false} className="scale-75" />
+            </div>
+          </div>
           
-          <hr className="border-t border-gray-200 my-1" role="separator" />
+          <hr className="border-t border-gray-200 dark:border-dark-border-primary my-1" role="separator" />
           
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full text-right px-4 py-2 text-red-600 hover:bg-red-50 
-                       focus:bg-red-50 transition-colors duration-150 flex items-center gap-2 
+            className="w-full text-right px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20
+                       focus:bg-red-50 dark:focus:bg-red-900/20 transition-colors duration-150 flex items-center gap-2 
                        cursor-pointer"
             role="menuitem"
             tabIndex={0}

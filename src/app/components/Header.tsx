@@ -20,7 +20,7 @@ export default function Header({
   enableWaveEffect = false // Default to no wave effect
 }: HeaderProps) {
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 mb-6">
+    <header className="bg-card shadow-sm border-b border-primary mb-6">
       <div className="max-w-6xl mx-auto px-4 py-4">
         
         {/* Mobile Layout */}
@@ -48,14 +48,14 @@ export default function Header({
           
           {/* Mobile: Headline */}
           <div className="text-center mb-2">
-            <h1 className={`text-2xl font-bold ${enableWaveEffect ? 'wave-text' : 'text-gray-900'}`}>
+            <h1 className={`text-2xl font-bold ${enableWaveEffect ? 'wave-text' : 'text-primary'}`}>
               {title}
             </h1>
           </div>
           
           {/* Mobile: Subtitle */}
           <div className="text-center mb-4">
-            <p className="text-base text-gray-700 font-medium">{subtitle}</p>
+            <p className="text-base text-secondary font-medium">{subtitle}</p>
           </div>
           
           {/* Mobile: Back link (if no auth) */}
@@ -63,7 +63,7 @@ export default function Header({
             <div className="flex justify-center">
               <Link 
                 href={backLink}
-                className="px-4 py-2 text-purple-600 hover:text-purple-800 font-medium transition-colors"
+                className="px-4 py-2 text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 font-medium transition-colors"
               >
                 {backText}
               </Link>
@@ -94,7 +94,7 @@ export default function Header({
             {!showAuth && (
               <Link 
                 href={backLink}
-                className="px-4 py-2 text-purple-600 hover:text-purple-800 font-medium transition-colors"
+                className="px-4 py-2 text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 font-medium transition-colors"
               >
                 <span className="hidden md:inline">{backText}</span>
               </Link>
@@ -103,7 +103,7 @@ export default function Header({
           
           {/* Desktop: Headline only (no subtitle) */}
           <div className="text-center">
-            <h1 className={`text-3xl font-bold ${enableWaveEffect ? 'wave-text' : 'text-gray-900'}`}>
+            <h1 className={`text-3xl font-bold ${enableWaveEffect ? 'wave-text' : 'text-primary'}`}>
               {title}
             </h1>
           </div>
