@@ -2,6 +2,24 @@
 // Based on military צלם (serialized equipment) requirements
 
 export interface Equipment {
+  id: string; // Unique equipment ID (also serves as Firestore document ID)
+  itemTypeId: string; // References a template from itemTypes collection
+  category: string; // Equipment category (from template)
+  model: string; // Equipment model (from template)
+  manufacturer: string; // Manufacturer name (from template)
+  assignmentType: 'team' | 'personal'; // Assignment type (from template)
+  equipmentDepot: string; // Storage depot (from template or edited by user)
+  assignedUserId: string; // User ID of assigned person
+  assignedUserName?: string; // Optional display name of assigned user
+  status: string; // Current status (default from template or user override)
+  registeredAt: string; // ISO date string - when equipment was registered
+  imageUrl?: string; // Firebase Storage URL for current item photo
+  createdAt?: string; // ISO date string - when document was created
+  updatedAt?: string; // ISO date string - when document was last updated
+}
+
+// Legacy Equipment interface for backward compatibility
+export interface LegacyEquipment {
   id: string; // Serial number (מספר סידורי) - also serves as Firestore document ID
   productName: string; // Name of the item (שם פריט)
   category: string; // Type/category (קטגוריה)
@@ -196,4 +214,49 @@ export enum EquipmentPermission {
   APPROVE_RETIREMENT = 'approve_retirement',
   EXPORT_DATA = 'export_data',
   MANAGE_USERS = 'manage_users'
+}
+
+// Item Types for equipment templates
+export interface ItemType {
+  id: string; // Document ID (e.g., "TEMPLATE_RADIO_PRC-152")
+  category: string; // Equipment category (e.g., "radio", "optics", "extraction_gear")
+  model: string; // Equipment model (e.g., "PRC-152", "ACOG 4x32")
+  manufacturer: string; // Manufacturer name (e.g., "Harris", "Trijicon")
+  assignmentType: 'team' | 'personal'; // Assignment type
+  defaultDepot: string; // Default storage depot (e.g., "Radio Depot")
+  defaultImageUrl?: string; // Optional default image URL
+  defaultStatus: string; // Default status when item is first created (e.g., "work")
+  createdAt?: string; // ISO date string
+  updatedAt?: string; // ISO date string
+}
+
+// Form interface for creating new item types
+export interface NewItemTypeForm {
+  category: string;
+  model: string;
+  manufacturer: string;
+  assignmentType: 'team' | 'personal';
+  defaultDepot: string;
+  defaultImageUrl?: string;
+  defaultStatus: string;
+}
+
+// Common equipment categories used in the system
+export enum EquipmentCategory {
+  RADIO = 'radio',
+  OPTICS = 'optics',
+  EXTRACTION_GEAR = 'extraction_gear',
+  WEAPONS = 'weapons',
+  PROTECTIVE_GEAR = 'protective_gear',
+  COMMUNICATION = 'communication',
+  NAVIGATION = 'navigation',
+  MEDICAL = 'medical',
+  TOOLS = 'tools',
+  GENERAL = 'general'
+}
+
+// Assignment types for equipment
+export enum AssignmentType {
+  TEAM = 'team',
+  PERSONAL = 'personal'
 } 

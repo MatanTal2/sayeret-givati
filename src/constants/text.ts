@@ -216,6 +216,105 @@ export const TEXT_CONSTANTS = {
     DISABLED: 'מבוטל'
   },
 
+  // Management Page
+  MANAGEMENT: {
+    // Main Page
+    PAGE_TITLE: 'ניהול מערכת',
+    PAGE_SUBTITLE: 'כלי ניהול מתקדמים לסיירת גבעתי',
+    ACCESS_DENIED_SUBTITLE: 'גישה מוגבלת',
+    WELCOME_MESSAGE: 'שלום',
+    DEFAULT_ADMIN_NAME: 'מנהל',
+    WELCOME_DESCRIPTION: 'ברוך הבא למרכז הניהול של מערכת סיירת גבעתי. כאן תוכל לנהל משתמשים, הרשאות וביצועים מתקדמים.',
+    FOOTER_TEXT: 'מערכת ניהול סיירת גבעתי • גרסה 1.0 • פותח ע"י מתן טל',
+    
+    // Access Control
+    ACCESS_DENIED_TITLE: 'אין הרשאה לגישה',
+    ACCESS_DENIED_MESSAGE: 'דף זה מיועד למשתמשים עם הרשאות ניהול בלבד (קצין, מפקד או מנהל מערכת).',
+    CURRENT_ROLE_LABEL: 'התפקיד הנוכחי שלך:',
+    ADMIN_ROLE_TEXT: 'מנהל מערכת',
+    ROLE_NOT_IDENTIFIED: 'לא זוהה',
+    ROLE_LABEL: 'תפקיד:',
+    
+    // Placeholder Content
+    UNDER_DEVELOPMENT: 'בפיתוח',
+    FEATURE_COMING_SOON: 'תכונה זו נמצאת כרגע בפיתוח ותהיה זמינה בקרוב.',
+    
+    // Management Tabs
+    TABS: {
+      USERS: {
+        LABEL: 'ניהול משתמשים',
+        DESCRIPTION: 'ניהול משתמשים, הרשאות ותפקידים'
+      },
+      PERMISSIONS: {
+        LABEL: 'הרשאות',
+        DESCRIPTION: 'ניהול הרשאות מערכת ובקרת גישה'
+      },
+      ENFORCE_TRANSFER: {
+        LABEL: 'העברת ציוד כפויה',
+        DESCRIPTION: 'ביצוע העברות ציוד בחירום וכפייה'
+      },
+      SYSTEM_CONFIG: {
+        LABEL: 'הגדרות מערכת',
+        DESCRIPTION: 'הגדרות כלליות ותצורת מערכת'
+      },
+      DATA_MANAGEMENT: {
+        LABEL: 'ניהול נתונים',
+        DESCRIPTION: 'גיבוי, שחזור ואחזקת נתונים'
+      },
+      AUDIT_LOGS: {
+        LABEL: 'יומני ביקורת',
+        DESCRIPTION: 'מעקב פעילות ויומני מערכת'
+      },
+      ITEM_TYPES: {
+        LABEL: 'ניהול סוגי פריטים',
+        DESCRIPTION: 'ניהול תבניות ציוד - הוספה, עריכה וארגון של סוגי פריטים'
+      },
+      SEND_EMAIL: {
+        LABEL: 'שליחת אימייל למשתמשים',
+        DESCRIPTION: 'שליחת הודעות אימייל לקבוצות משתמשים או משתמשים ספציפיים'
+      }
+    },
+    
+    // Email Tab
+    EMAIL: {
+      RECIPIENT_SELECTION: 'בחירת נמענים',
+      ALL_USERS: 'כל המשתמשים במערכת',
+      BY_ROLE: 'לפי תפקיד',
+      SPECIFIC_USERS: 'משתמשים ספציפיים (בפיתוח)',
+      
+      MESSAGE_CONTENT: 'תוכן ההודעה',
+      URGENT_MESSAGE: 'הודעה דחופה (עדיפות גבוהה)',
+      SUBJECT_LABEL: 'נושא ההודעה',
+      SUBJECT_PLACEHOLDER: 'הכנס נושא להודעה...',
+      MESSAGE_LABEL: 'תוכן ההודעה',
+      MESSAGE_PLACEHOLDER: 'כתוב את תוכן ההודעה כאן...',
+      
+      PREVIEW_AND_SEND: 'תצוגה מקדימה ושליחה',
+      RECIPIENTS_PREVIEW: 'נמענים:',
+      SUBJECT_PREVIEW: 'נושא:',
+      MESSAGE_PREVIEW: 'הודעה:',
+      ALL_USERS_TEXT: 'כל המשתמשים',
+      SELECTED_ROLES_TEXT: 'תפקידים נבחרים:',
+      SPECIFIC_USERS_TEXT: 'משתמשים ספציפיים',
+      NO_SUBJECT: '(ללא נושא)',
+      NO_CONTENT: '(ללא תוכן)',
+      URGENT_INDICATOR: ' - דחוף!',
+      
+      DEMO_WARNING: '⚠️ זהו ממשק הדמייה בלבד. לא יישלחו אימיילים אמיתיים.',
+      SEND_BUTTON: 'שלח הודעה',
+      SUCCESS_MESSAGE: 'הודעת האימייל נשלחה בהצלחה! (זהו הדמייה בלבד)',
+      
+      // Role Options
+      ROLES: {
+        SOLDIERS: 'חיילים',
+        OFFICERS: 'קצינים',
+        COMMANDERS: 'מפקדים',
+        EQUIPMENT_MANAGERS: 'מנהלי ציוד',
+        ADMINS: 'מנהלי מערכת'
+      }
+    }
+  },
+
   // Accessibility
   ARIA_LABELS: {
     CLOSE_MODAL: 'סגור חלון',
@@ -229,4 +328,4 @@ export const TEXT_CONSTANTS = {
 } as const;
 
 // Export individual sections for easier imports
-export const { BUTTONS, AUTH, FEATURES, ADMIN, ERRORS, SUCCESS, ARIA_LABELS } = TEXT_CONSTANTS; 
+export const { BUTTONS, AUTH, FEATURES, ADMIN, ERRORS, SUCCESS, MANAGEMENT, ARIA_LABELS } = TEXT_CONSTANTS; 

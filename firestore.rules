@@ -49,24 +49,32 @@ service cloud.firestore {
       allow read, write: if request.auth != null && isAuthorizedUser(request.auth.uid);
     }
     
-    // Equipment collection
+    // Equipment collection - military equipment management
     match /equipment/{equipmentId} {
-      // Allow read access to authenticated users
-      allow read: if request.auth != null && isAuthorizedUser(request.auth.uid);
+      // Allow read access to authenticated and authorized users only
+      allow read: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && canAccessEquipment(request.auth.uid);
       
-      // Allow write access only to authorized users
+      // Allow creation only by authenticated, authorized users with proper validation
       allow create: if request.auth != null 
         && isAuthorizedUser(request.auth.uid)
-        && validateEquipmentCreate(request.resource.data);
+        && canManageEquipment(request.auth.uid)
+        && validateEquipmentCreate(request.resource.data)
+        && validateRequiredEquipmentFields(request.resource.data);
       
+      // Allow updates only by authenticated, authorized users with validation
       allow update: if request.auth != null 
         && isAuthorizedUser(request.auth.uid)
-        && validateEquipmentUpdate(resource.data, request.resource.data);
+        && canManageEquipment(request.auth.uid)
+        && validateEquipmentUpdate(resource.data, request.resource.data)
+        && validateRequiredEquipmentFields(request.resource.data);
       
-      // Allow deletion ONLY for test documents (DEBUG- or TEST- prefix)
+      // Allow deletion ONLY for test documents by authorized equipment managers
       allow delete: if request.auth != null 
         && isAuthorizedUser(request.auth.uid)
-        && (equipmentId.matches('DEBUG-.*') || equipmentId.matches('TEST-.*'));
+        && canManageEquipment(request.auth.uid)
+        && (equipmentId.matches('TEST-.*') || equipmentId.matches('DEBUG-.*'));
     }
     
     // Retirement requests
@@ -75,6 +83,34 @@ service cloud.firestore {
       allow create: if request.auth != null && isAuthorizedUser(request.auth.uid);
       allow update: if request.auth != null && canApproveRetirement(request.auth.uid);
       allow delete: if false;
+    }
+    
+    // Item types collection - equipment templates for the system
+    match /itemTypes/{itemTypeId} {
+      // Allow read access to authenticated and authorized users for equipment management
+      allow read: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && canAccessEquipment(request.auth.uid);
+      
+      // Allow creation only by authenticated, authorized equipment managers/admins
+      allow create: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && canManageItemTypes(request.auth.uid)
+        && validateItemTypeCreate(request.resource.data)
+        && validateRequiredItemTypeFields(request.resource.data);
+      
+      // Allow updates only by authenticated, authorized equipment managers/admins  
+      allow update: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && canManageItemTypes(request.auth.uid)
+        && validateItemTypeUpdate(resource.data, request.resource.data)
+        && validateRequiredItemTypeFields(request.resource.data);
+      
+      // Allow deletion only for test documents by authorized equipment managers
+      allow delete: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && canManageItemTypes(request.auth.uid)
+        && (itemTypeId.matches('TEST-.*') || itemTypeId.matches('DEBUG-.*'));
     }
     
     // Helper functions
@@ -91,23 +127,87 @@ service cloud.firestore {
       return role in ['equipment_manager', 'commander'];
     }
     
-    function validateEquipmentCreate(data) {
-      return data.keys().hasAll(['id', 'productName', 'category', 'currentHolder', 'assignedUnit', 'status', 'condition'])
+    function canManageItemTypes(uid) {
+      let role = getUserRole(uid);
+      return role in ['equipment_manager', 'commander', 'admin'];
+    }
+    
+    function canAccessEquipment(uid) {
+      // All authenticated users can read equipment, but write access is restricted
+      let role = getUserRole(uid);
+      return role in ['soldier', 'officer', 'equipment_manager', 'commander', 'admin'];
+    }
+    
+    function canManageEquipment(uid) {
+      // Only equipment managers, commanders, and admins can create/update equipment
+      let role = getUserRole(uid);
+      return role in ['equipment_manager', 'commander', 'admin'];
+    }
+    
+    function validateItemTypeCreate(data) {
+      return data.keys().hasAll(['id', 'category', 'model', 'manufacturer', 'assignmentType', 'defaultDepot', 'defaultStatus'])
         && data.id is string
-        && data.productName is string
         && data.category is string
-        && data.currentHolder is string
-        && data.assignedUnit is string
-        && data.status in ['active', 'lost', 'broken', 'maintenance', 'retired', 'pending_transfer', 'pending_retirement']
-        && data.condition in ['excellent', 'good', 'fair', 'poor', 'damaged', 'broken'];
+        && data.model is string
+        && data.manufacturer is string
+        && data.assignmentType in ['team', 'personal']
+        && data.defaultDepot is string
+        && data.defaultStatus is string;
+    }
+    
+    function validateItemTypeUpdate(before, after) {
+      // Ensure required fields are not removed and ID cannot be changed
+      return after.keys().hasAll(['id', 'category', 'model', 'manufacturer', 'assignmentType', 'defaultDepot', 'defaultStatus'])
+        && after.id == before.id // Cannot change ID
+        && after.createdAt == before.createdAt; // Cannot change creation date
+    }
+    
+    function validateRequiredItemTypeFields(data) {
+      // Validate that all required fields are present and have correct types/values
+      return data.id is string && data.id.size() > 0
+        && data.category is string && data.category.size() > 0
+        && data.model is string && data.model.size() > 0
+        && data.manufacturer is string && data.manufacturer.size() > 0
+        && data.assignmentType in ['team', 'personal']
+        && data.defaultDepot is string && data.defaultDepot.size() > 0
+        && data.defaultStatus is string && data.defaultStatus.size() > 0;
+    }
+    
+    function validateRequiredEquipmentFields(data) {
+      // Validate that all required fields are present and have correct types/values
+      return data.id is string && data.id.size() > 0
+        && data.itemTypeId is string && data.itemTypeId.size() > 0
+        && data.category is string && data.category.size() > 0
+        && data.assignmentType in ['team', 'personal']
+        && data.status is string && data.status.size() > 0
+        && data.assignedUserId is string && data.assignedUserId.size() > 0
+        && data.equipmentDepot is string && data.equipmentDepot.size() > 0;
+    }
+    
+    function validateEquipmentCreate(data) {
+      return data.keys().hasAll(['id', 'itemTypeId', 'category', 'model', 'manufacturer', 'assignmentType', 'equipmentDepot', 'assignedUserId', 'status', 'registeredAt'])
+        && data.id is string
+        && data.itemTypeId is string
+        && data.category is string
+        && data.model is string
+        && data.manufacturer is string
+        && data.assignmentType in ['team', 'personal']
+        && data.equipmentDepot is string
+        && data.assignedUserId is string
+        && data.status is string
+        && data.registeredAt != null;
     }
     
     function validateEquipmentUpdate(before, after) {
-      // Ensure required fields are not removed
-      return after.keys().hasAll(['id', 'productName', 'category', 'currentHolder', 'assignedUnit', 'status', 'condition'])
+      // Ensure required fields are not removed and core data cannot be changed
+      return after.keys().hasAll(['id', 'itemTypeId', 'category', 'model', 'manufacturer', 'assignmentType', 'equipmentDepot', 'assignedUserId', 'status', 'registeredAt'])
         && after.id == before.id // Cannot change ID
-        && after.createdAt == before.createdAt // Cannot change creation date
-        && after.trackingHistory.size() >= before.trackingHistory.size(); // Can only add to history, not remove
+        && after.itemTypeId == before.itemTypeId // Cannot change item type reference
+        && after.category == before.category // Cannot change category
+        && after.model == before.model // Cannot change model
+        && after.manufacturer == before.manufacturer // Cannot change manufacturer
+        && after.registeredAt == before.registeredAt // Cannot change registration date
+        && after.createdAt == before.createdAt; // Cannot change creation date
     }
   }
 } 

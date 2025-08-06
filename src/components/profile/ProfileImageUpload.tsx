@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { CameraIcon, UserIcon, UploadIcon } from 'lucide-react';
+import { CameraIcon, UserIcon } from 'lucide-react';
 import { ProfileImageUploadProps, ImageUploadState } from '@/types/profile';
 
 /**
@@ -153,7 +153,7 @@ export default function ProfileImageUpload({
           </div>
         </div>
 
-        {/* Upload Button for larger sizes */}
+        {/* Upload Button for larger sizes 
         {size !== 'small' && (
           <button
             onClick={handleImageSelect}
@@ -167,7 +167,7 @@ export default function ProfileImageUpload({
               <UploadIcon className="w-4 h-4" />
             )}
           </button>
-        )}
+        )}*/}
       </div>
 
       {/* Hidden File Input */}

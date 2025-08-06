@@ -8,14 +8,14 @@ This document defines the complete Firestore database structure for the Sayeret 
 
 | Collection | Purpose | Status | Priority |
 |------------|---------|---------|----------|
-| [`authorized_personnel`](#authorized_personnel-collection) | Pre-authorized personnel for registration | 📋 Planned | Core |
+| [`authorized_personnel`](#authorized_personnel-collection) | Pre-authorized personnel for registration | ✅ Implemented | Core |
 | [`users`](#users-collection) | Soldier profiles and authentication | ✅ Implemented | Core |
-| [`equipment`](#equipment-collection) | Military equipment tracking | 📋 Planned | High |
+| [`itemTypes`](#itemtypes-collection) | Equipment templates and categories | ✅ Implemented | High |
+| [`equipment`](#equipment-collection) | Military equipment tracking | ✅ Implemented | High |
 | [`transfers`](#transfers-collection) | Equipment transfer history | 📋 Planned | High |
 | [`retirement_requests`](#retirement_requests-collection) | Equipment retirement workflow | 📋 Planned | Medium |
 | [`daily_reports`](#daily_reports-collection) | Daily equipment status reports | 📋 Planned | Medium |
 | [`units`](#units-collection) | Military unit information | 📋 Planned | Low |
-| [`categories`](#categories-collection) | Equipment categories and types | 📋 Planned | Low |
 
 ---
 
@@ -143,104 +143,179 @@ Stores pre-authorized military personnel allowed to register in the system. Used
 
 ---
 
+## 🏷️ `itemTypes` Collection
+
+### Purpose
+
+Contains equipment templates that serve as blueprints for creating individual equipment items. Templates ensure consistency in equipment categorization and provide default values for new equipment creation.
+
+### Document ID
+
+- **Format**: `TEMPLATE_{CATEGORY}_{MODEL_IDENTIFIER}`
+- **Examples**: `TEMPLATE_RADIO_PRC-152`, `TEMPLATE_OPTICS_ACOG`, `TEMPLATE_EXTRACTION_ROPE_30M`
+
+### Fields
+
+| Field | Type | Required | Description | Example |
+|-------|------|----------|-------------|---------|
+| `id` | `string` | ✅ | Unique template identifier (also document ID) | `"TEMPLATE_RADIO_PRC-152"` |
+| `category` | `string` | ✅ | Equipment category | `"radio"` |
+| `model` | `string` | ✅ | Equipment model name | `"PRC-152"` |
+| `manufacturer` | `string` | ✅ | Manufacturer name | `"Harris"` |
+| `assignmentType` | `'team' \| 'personal'` | ✅ | Assignment type | `"team"` |
+| `defaultDepot` | `string` | ✅ | Default storage depot | `"Radio Depot"` |
+| `defaultImageUrl` | `string` | ❌ | Optional default image URL | `"https://storage.googleapis.com/..."` |
+| `defaultStatus` | `string` | ✅ | Default status for new items | `"work"` |
+| `createdAt` | `timestamp` | ❌ | Creation timestamp (auto-generated) | Auto-set |
+| `updatedAt` | `timestamp` | ❌ | Last update timestamp (auto-generated) | Auto-set |
+
+### Security Rules
+
+- **Read**: All authenticated users with equipment access permissions
+- **Write**: Only `equipment_manager`, `commander`, and `admin` roles
+- **Delete**: Only test documents with `TEST-` or `DEBUG-` prefixes
+
+---
+
 ## 🎖️ `equipment` Collection
 
 ### Purpose
 
-Tracks all military equipment items including weapons, communication devices, protective gear, and their complete custody chain.
+Tracks individual military equipment items based on itemTypes templates. Each equipment document represents a specific piece of equipment with unique identification, assignment, and status tracking.
 
 ### Document ID
 
-- **Format**: Equipment serial number
-- **Example**: `M4-12345`, `RAD-5678`, `VEST-9999`
+- **Format**: `EQ-{CATEGORY}-{NUMBER}`
+- **Examples**: `EQ-RADIO-001`, `EQ-OPTICS-001`, `EQ-ROPE-001`
 
 ### Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `id` | `string` | ✅ | Equipment serial number (same as document ID) |
-| `productName` | `string` | ✅ | Equipment name (e.g., "M4 Carbine", "Radio Set") |
-| `category` | `string` | ✅ | Equipment category (weapons, communication, protective) |
-| `subcategory` | `string` | ❌ | Specific type within category |
-| `model` | `string` | ❌ | Equipment model/variant |
-| `manufacturer` | `string` | ❌ | Equipment manufacturer |
-| `acquisitionDate` | `timestamp` | ✅ | Date equipment was acquired |
-| `acquisitionCost` | `number` | ❌ | Original cost in ILS |
-| `currentHolder` | `string` | ✅ | Current responsible person (user UID) |
-| `assignedUnit` | `string` | ✅ | Currently assigned unit |
-| `status` | `EquipmentStatus` | ✅ | Current operational status |
-| `condition` | `EquipmentCondition` | ✅ | Physical condition |
-| `location` | `string` | ✅ | Current physical location |
-| `lastSeen` | `timestamp` | ✅ | Last confirmed sighting/check |
-| `lastReportUpdate` | `timestamp` | ✅ | Last daily report update |
-| `notes` | `string` | ❌ | General notes about the equipment |
-| `maintenanceNotes` | `string` | ❌ | Maintenance history and notes |
-| `warrantyExpiry` | `timestamp` | ❌ | Warranty expiration date |
-| `nextMaintenanceDate` | `timestamp` | ❌ | Scheduled maintenance date |
-| `qrCode` | `string` | ❌ | QR code for quick scanning |
-| `trackingHistory` | `array` | ✅ | Complete audit trail (see TrackingEntry) |
-| `createdAt` | `timestamp` | ✅ | Document creation timestamp |
-| `updatedAt` | `timestamp` | ✅ | Last update timestamp |
+| Field | Type | Required | Description | Example |
+|-------|------|----------|-------------|---------|
+| `id` | `string` | ✅ | Unique equipment identifier (also document ID) | `"EQ-RADIO-001"` |
+| `itemTypeId` | `string` | ✅ | Reference to itemTypes template | `"TEMPLATE_RADIO_PRC-152"` |
+| `category` | `string` | ✅ | Equipment category (from template) | `"radio"` |
+| `model` | `string` | ✅ | Equipment model (from template) | `"PRC-152"` |
+| `manufacturer` | `string` | ✅ | Manufacturer name (from template) | `"Harris"` |
+| `assignmentType` | `'team' \| 'personal'` | ✅ | Assignment type (from template) | `"team"` |
+| `equipmentDepot` | `string` | ✅ | Storage depot (from template or override) | `"Radio Depot"` |
+| `assignedUserId` | `string` | ✅ | User ID of assigned person/team | `"user-001"` |
+| `assignedUserName` | `string` | ❌ | Display name of assigned user | `"דני כהן"` |
+| `status` | `string` | ✅ | Current status (from template or override) | `"active"` |
+| `registeredAt` | `timestamp` | ✅ | When equipment was registered | Auto-set |
+| `imageUrl` | `string` | ❌ | Firebase Storage URL for item photo | `"https://storage.googleapis.com/..."` |
+| `createdAt` | `timestamp` | ❌ | Document creation timestamp (auto-generated) | Auto-set |
+| `updatedAt` | `timestamp` | ❌ | Last update timestamp (auto-generated) | Auto-set |
 
-### Sub-Objects
+### Template Integration
 
-#### `TrackingEntry`
+Equipment items are created based on itemTypes templates following this process:
 
-```typescript
+1. **Template Selection**: User selects an itemType template
+2. **Field Population**: Core fields (category, model, manufacturer, etc.) populated from template
+3. **User Customization**: User adds specific assignment and identification details
+4. **Document Creation**: Equipment document created with combined template and user data
+
+### Security Rules
+
+- **Read**: All authenticated users with equipment access permissions
+- **Write**: Only `equipment_manager`, `commander`, and `admin` roles
+- **Delete**: Only test documents with `TEST-` or `DEBUG-` prefixes
+
+### Sample Equipment Document
+
+```json
 {
-  holder: string;              // User UID
-  fromDate: timestamp;         // Start of custody
-  toDate?: timestamp;          // End of custody (null if current)
-  action: EquipmentAction;     // What happened
-  updatedBy: string;           // Who made the change
-  location: string;            // Where the equipment was
-  notes?: string;              // Additional notes
-  approval?: ApprovalEntry;    // Approval details if required
-  timestamp: timestamp;        // When this entry was created
+  "id": "EQ-RADIO-001",
+  "itemTypeId": "TEMPLATE_RADIO_PRC-152",
+  "category": "radio",
+  "model": "PRC-152",
+  "manufacturer": "Harris",
+  "assignmentType": "team",
+  "equipmentDepot": "Radio Depot",
+  "assignedUserId": "user-001",
+  "assignedUserName": "דני כהן",
+  "status": "active",
+  "registeredAt": "2024-01-15T10:30:00Z",
+  "imageUrl": "https://storage.googleapis.com/sayeret-givati/equipment/radio-prc152-001.jpg",
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z"
 }
 ```
 
-#### `ApprovalEntry`
+---
 
-```typescript
-{
-  approvedBy: string;          // Approver user UID
-  approvedAt: timestamp;       // Approval timestamp
-  approvalType: ApprovalType;  // How approval was given
-  phoneLast4?: string;         // Last 4 digits of phone (for OTP)
-  emergencyOverride?: {        // Emergency override details
-    overrideBy: string;
-    overrideReason: string;
-    originalHolder: string;
-    overrideAt: timestamp;
-    justification: string;
-  };
-}
-```
+## 📊 Equipment System Workflow
 
-### Enums
+### Adding Equipment Process
 
-#### `EquipmentStatus`
+1. **Template Selection**: User selects from available itemTypes
+2. **Form Pre-fill**: System populates template fields automatically
+3. **User Input**: User adds equipment-specific details (ID, assignment, etc.)
+4. **Validation**: System validates required fields and data types
+5. **Creation**: Equipment document created in Firestore
+6. **Confirmation**: User receives success feedback with equipment ID
 
-- `active` - In normal use
-- `lost` - Missing/lost equipment
-- `stolen` - Reported stolen
-- `broken` - Damaged/non-functional
-- `maintenance` - Under repair
-- `retired` - Removed from service
-- `pending_transfer` - Transfer in progress
-- `pending_retirement` - Retirement request pending
+### Template Management Process
 
-#### `EquipmentCondition`
+1. **Template Creation**: Admin creates new equipment templates
+2. **Category Assignment**: Template assigned to appropriate category
+3. **Default Values**: Default depot, status, and other values set
+4. **Availability**: Template immediately available for equipment creation
+5. **Updates**: Templates can be modified (affects future equipment only)
 
-- `excellent` - Perfect condition
-- `good` - Minor wear, fully functional
-- `fair` - Noticeable wear, functional
-- `poor` - Significant wear, limited function
-- `damaged` - Partially damaged but usable
-- `broken` - Non-functional
+---
 
-#### `EquipmentAction`
+## 📚 Related Documentation
+
+For detailed implementation guides and workflows, see:
+
+- [Equipment Schema & Workflow Documentation](./equipment-schema-and-workflow.md) - Complete schema details and step-by-step workflows
+- [Equipment Collection Documentation](./equipment-collection.md) - Detailed equipment collection information
+- [ItemTypes Collection Documentation](./item-types-collection.md) - Template management documentation
+- [Firestore Security & Indexes](./firestore-security-and-indexes.md) - Security rules and database optimization
+- [Firestore Deployment Guide](./firestore-deployment-guide.md) - Deployment instructions
+
+## 🚀 Implementation Status
+
+### Completed ✅
+
+- **User Authentication**: Complete registration and login system
+- **ItemTypes Collection**: Equipment template management system
+- **Equipment Collection**: Individual equipment tracking system
+- **Security Rules**: Comprehensive role-based access control
+- **Database Indexes**: Optimized query performance
+- **Admin Interface**: Template and equipment management UI
+
+### Planned 📋
+
+- **Equipment Transfers**: Transfer history and approval workflow
+- **Retirement Requests**: Equipment retirement management
+- **Daily Reports**: Equipment status reporting system
+- **Units Management**: Military unit organization
+- **Analytics Dashboard**: Equipment usage and performance metrics
+
+## 🔐 Security Overview
+
+The database implements comprehensive security measures:
+
+- **Authentication**: All operations require Firebase Authentication
+- **Authorization**: Role-based permissions for different user types
+- **Data Validation**: Strict field validation and type checking
+- **Access Control**: Collection-level and operation-level restrictions
+- **Audit Trail**: Comprehensive logging of all equipment operations
+
+## 🎯 Performance Optimization
+
+- **Indexed Queries**: All common query patterns are indexed
+- **Efficient Pagination**: Cursor-based pagination for large datasets
+- **Caching Strategy**: Template and user data caching
+- **Regional Replication**: Data replicated for global availability
+
+---
+
+*Last Updated: January 2025*  
+*Status: Current - Schema Implemented and Deployed*
 
 - `initial_assignment` - First assignment to user
 - `transfer` - Transferred between users

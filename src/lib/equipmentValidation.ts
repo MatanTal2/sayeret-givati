@@ -2,13 +2,13 @@
 // Reusable validation functions for forms and data integrity
 
 import { 
-  Equipment,
+  // Equipment,            // Commented out - used by legacy functions
   NewEquipmentForm,
-  TransferEquipmentForm,
-  BulkTransferForm,
-  EquipmentCondition,
-  EquipmentStatus,
-  UserRole
+  // TransferEquipmentForm,  // Commented out - used by legacy functions
+  // BulkTransferForm,     // Commented out - used by legacy functions
+  EquipmentCondition
+  // EquipmentStatus,      // Commented out - used by legacy functions
+  // UserRole              // Commented out - used by legacy functions
 } from '../types/equipment';
 
 export interface ValidationResult {
@@ -90,7 +90,9 @@ export function validateNewEquipmentForm(form: Partial<NewEquipmentForm>): Valid
 
 /**
  * Validates equipment transfer form data
+ * NOTE: This function is for legacy Equipment schema - currently disabled
  */
+/*
 export function validateTransferForm(
   form: Partial<TransferEquipmentForm>,
   currentEquipment: Equipment,
@@ -152,10 +154,12 @@ export function validateTransferForm(
     warnings: Object.keys(warnings).length > 0 ? warnings : undefined
   };
 }
+*/
 
 /**
  * Validates bulk transfer form data
  */
+/* Disabled - legacy Equipment schema
 export function validateBulkTransferForm(
   form: Partial<BulkTransferForm>,
   equipmentList: Equipment[],
@@ -234,6 +238,7 @@ export function validateBulkTransferForm(
     warnings: Object.keys(warnings).length > 0 ? warnings : undefined
   };
 }
+*/
 
 /**
  * Validates equipment ID format

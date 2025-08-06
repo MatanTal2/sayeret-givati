@@ -8,7 +8,9 @@ export const ADMIN_CONFIG = {
   FIRESTORE_ADMIN_COLLECTION: 'admin_config',
   FIRESTORE_ADMIN_DOC: 'system_admin',
   FIRESTORE_PERSONNEL_COLLECTION: 'authorized_personnel',
-  FIRESTORE_USERS_COLLECTION: 'users'
+  FIRESTORE_USERS_COLLECTION: 'users',
+  FIRESTORE_ITEM_TYPES_COLLECTION: 'itemTypes',
+  FIRESTORE_EQUIPMENT_COLLECTION: 'equipment'
 } as const;
 
 // Validation patterns

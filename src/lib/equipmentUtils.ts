@@ -2,7 +2,7 @@
 // Generic, reusable functions for equipment management
 
 import { 
-  Equipment, 
+  // Equipment,        // Commented out - used by legacy functions
   EquipmentHistoryEntry, 
   EquipmentAction, 
   EquipmentStatus, 
@@ -10,9 +10,9 @@ import {
   ApprovalType,
   UserRole,
   EquipmentPermission,
-  EquipmentUserContext,
-  EquipmentFilter,
-  EquipmentSort
+  EquipmentUserContext
+  // EquipmentFilter,  // Commented out - used by legacy functions
+  // EquipmentSort     // Commented out - used by legacy functions
 } from '../types/equipment';
 
 /**
@@ -60,7 +60,9 @@ export function createHistoryEntry(
 
 /**
  * Creates a new equipment item with proper initialization
+ * NOTE: This function is for legacy Equipment schema - currently disabled
  */
+/* 
 export function createNewEquipment(
   id: string,
   productName: string,
@@ -99,11 +101,14 @@ export function createNewEquipment(
     updatedAt: now
   };
 }
+*/
 
 /**
  * Updates equipment with new holder and creates history entry
  * Generic transfer function
+ * NOTE: This function is for legacy Equipment schema - currently disabled
  */
+/*
 export function transferEquipment(
   equipment: Equipment,
   newHolder: string,
@@ -152,10 +157,13 @@ export function transferEquipment(
     updatedAt: now
   };
 }
+*/
 
 /**
  * Updates equipment status and creates history entry
+ * NOTE: This function is for legacy Equipment schema - currently disabled
  */
+/*
 export function updateEquipmentStatus(
   equipment: Equipment,
   newStatus: EquipmentStatus,
@@ -179,9 +187,13 @@ export function updateEquipmentStatus(
   };
 }
 
+*/
+
 /**
  * Updates equipment condition and creates history entry
+ * NOTE: This function is for legacy Equipment schema - currently disabled
  */
+/*
 export function updateEquipmentCondition(
   equipment: Equipment,
   newCondition: EquipmentCondition,
@@ -204,10 +216,13 @@ export function updateEquipmentCondition(
     updatedAt: now
   };
 }
+*/
 
 /**
  * Performs daily check-in for equipment
+ * NOTE: This function is for legacy Equipment schema - currently disabled
  */
+/*
 export function performDailyCheckIn(
   equipment: Equipment,
   checkedBy: string,
@@ -229,6 +244,7 @@ export function performDailyCheckIn(
     updatedAt: now
   };
 }
+*/
 
 /**
  * Validates equipment ID format
@@ -329,7 +345,9 @@ export function hasPermission(
 
 /**
  * Filters equipment list based on user permissions and filters
+ * NOTE: This function is for legacy Equipment schema - currently disabled
  */
+/*
 export function filterEquipmentList(
   equipment: Equipment[],
   userContext: EquipmentUserContext,
@@ -396,10 +414,13 @@ export function filterEquipmentList(
   
   return filtered;
 }
+*/
 
 /**
  * Sorts equipment list
+ * NOTE: This function is for legacy Equipment schema - currently disabled
  */
+/*
 export function sortEquipmentList(
   equipment: Equipment[],
   sort: EquipmentSort
@@ -450,6 +471,7 @@ export function sortEquipmentList(
     return 0;
   });
 }
+*/
 
 /**
  * Formats date for display in Hebrew locale
@@ -500,7 +522,9 @@ export function getConditionDisplayText(condition: EquipmentCondition): string {
 
 /**
  * Determines if equipment needs attention (overdue check-in, etc.)
+ * NOTE: This function is for legacy Equipment schema - currently disabled
  */
+/*
 export function needsAttention(equipment: Equipment): {
   needsAttention: boolean;
   reason?: string;
@@ -534,4 +558,5 @@ export function needsAttention(equipment: Equipment): {
   }
   
   return { needsAttention: false, priority: 'low' };
-} 
+}
+*/ 
