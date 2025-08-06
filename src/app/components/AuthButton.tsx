@@ -15,9 +15,11 @@ export default function AuthButton() {
 
   // Helper function to check if user has management access
   const hasManagementAccess = useCallback(() => {
-    if (!enhancedUser?.role) return false;
-    return [UserRole.OFFICER, UserRole.COMMANDER, 'admin'].includes(enhancedUser.role as UserRole | 'admin');
-  }, [enhancedUser?.role]);
+    if (!enhancedUser) return false;
+    // Check if user is admin (userType) or has officer/commander role
+    return enhancedUser.userType === 'admin' || 
+           [UserRole.OFFICER, UserRole.COMMANDER].includes(enhancedUser.role as UserRole);
+  }, [enhancedUser]);
   
   // Refs for both button and menu to properly handle outside clicks
   const buttonRef = useRef<HTMLButtonElement>(null);

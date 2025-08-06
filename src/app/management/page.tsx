@@ -256,12 +256,14 @@ function EmailTabContent() {
 
 function ManagementContent() {
   const { enhancedUser } = useAuth();
-  const [activeTab, setActiveTab] = useState(MANAGEMENT_TABS[0].id);
+  const [activeTab, setActiveTab] = useState<string>(MANAGEMENT_TABS[0].id);
 
   // Check if user has management access
   const hasManagementAccess = () => {
-    if (!enhancedUser?.role) return false;
-    return [UserRole.OFFICER, UserRole.COMMANDER, 'admin'].includes(enhancedUser.role as UserRole | 'admin');
+    if (!enhancedUser) return false;
+    // Check if user is admin (userType) or has officer/commander role
+    return enhancedUser.userType === 'admin' || 
+           [UserRole.OFFICER, UserRole.COMMANDER].includes(enhancedUser.role as UserRole);
   };
 
   // Access denied for users without proper roles
@@ -284,7 +286,7 @@ function ManagementContent() {
               דף זה מיועד למשתמשים עם הרשאות ניהול בלבד (קצין, מפקד או מנהל מערכת).
             </p>
             <p className="text-sm text-gray-500">
-              התפקיד הנוכחי שלך: {enhancedUser?.role || 'לא זוהה'}
+              התפקיד הנוכחי שלך: {enhancedUser?.userType === 'admin' ? 'מנהל מערכת' : enhancedUser?.role || 'לא זוהה'}
             </p>
           </div>
         </main>
@@ -314,7 +316,7 @@ function ManagementContent() {
                 שלום, {enhancedUser?.firstName || 'מנהל'}
               </h1>
               <p className="text-gray-600 text-sm">
-                תפקיד: {enhancedUser?.role === 'admin' ? 'מנהל מערכת' : enhancedUser?.role || 'לא זוהה'}
+                תפקיד: {enhancedUser?.userType === 'admin' ? 'מנהל מערכת' : enhancedUser?.role || 'לא זוהה'}
               </p>
             </div>
           </div>
