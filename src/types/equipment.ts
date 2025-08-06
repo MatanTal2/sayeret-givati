@@ -108,7 +108,8 @@ export enum UserRole {
   SOLDIER = 'soldier',
   OFFICER = 'officer',
   EQUIPMENT_MANAGER = 'equipment_manager',
-  COMMANDER = 'commander'
+  COMMANDER = 'commander',
+  ADMIN = 'admin'
 }
 
 // Form interfaces for UI components

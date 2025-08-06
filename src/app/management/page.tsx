@@ -261,9 +261,9 @@ function ManagementContent() {
   // Check if user has management access
   const hasManagementAccess = () => {
     if (!enhancedUser) return false;
-    // Check if user is admin (userType) or has officer/commander role
+    // Check if user is admin (userType) or has officer/commander/admin role
     return enhancedUser.userType === 'admin' || 
-           [UserRole.OFFICER, UserRole.COMMANDER].includes(enhancedUser.role as UserRole);
+           (enhancedUser.role && [UserRole.OFFICER, UserRole.COMMANDER, UserRole.ADMIN].includes(enhancedUser.role as UserRole));
   };
 
   // Access denied for users without proper roles

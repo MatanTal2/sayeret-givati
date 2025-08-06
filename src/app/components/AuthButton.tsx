@@ -16,9 +16,9 @@ export default function AuthButton() {
   // Helper function to check if user has management access
   const hasManagementAccess = useCallback(() => {
     if (!enhancedUser) return false;
-    // Check if user is admin (userType) or has officer/commander role
-    return enhancedUser.userType === 'admin' || 
-           [UserRole.OFFICER, UserRole.COMMANDER].includes(enhancedUser.role as UserRole);
+    // Check if user is admin (userType) or has officer/commander/admin role
+    return enhancedUser.userType === UserRole.ADMIN || 
+           (enhancedUser.role && [UserRole.OFFICER, UserRole.COMMANDER, UserRole.ADMIN].includes(enhancedUser.role as UserRole));
   }, [enhancedUser]);
   
   // Refs for both button and menu to properly handle outside clicks
@@ -225,13 +225,13 @@ export default function AuthButton() {
         pointerEvents: 'auto'
       }}
     >
-      {/* Equipment Transfer Notification Button */}
+      {/* Equipment Transfer Notification Button - order-2 on mobile, order-1 on desktop */}
       <button
         type="button"
         onClick={() => handleButtonClick('notifications')}
         className="relative p-2 rounded-full bg-gray-100 hover:bg-gray-200 
                    focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 text-gray-600 
-                   hover:text-gray-900 transition-colors duration-200"
+                   hover:text-gray-900 transition-colors duration-200 order-2 sm:order-1"
         aria-label={TEXT_CONSTANTS.ARIA_LABELS.EQUIPMENT_NOTIFICATIONS}
         title="התראות העברת ציוד"
       >
@@ -242,7 +242,7 @@ export default function AuthButton() {
         </span>
       </button>
       
-      {/* Profile Menu Button */}
+      {/* Profile Menu Button - order-1 on mobile, order-2 on desktop */}
       <button
         ref={buttonRef}
         type="button"
@@ -250,7 +250,7 @@ export default function AuthButton() {
         onKeyDown={handleKeyDown}
         className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 
                    focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 text-gray-900 
-                   transition-colors duration-200 cursor-pointer select-none"
+                   transition-colors duration-200 cursor-pointer select-none order-1 sm:order-2"
         aria-label={`פרופיל של ${getUserLastName() || getUserFirstName()}`}
         aria-expanded={isMenuOpen}
         aria-haspopup="true"

@@ -299,6 +299,18 @@ export function getUserPermissions(role: UserRole): EquipmentPermission[] {
       EquipmentPermission.APPROVE_RETIREMENT,
       EquipmentPermission.EXPORT_DATA,
       EquipmentPermission.MANAGE_USERS
+    ],
+    [UserRole.ADMIN]: [
+      EquipmentPermission.VIEW_ALL,
+      EquipmentPermission.TRANSFER_EQUIPMENT,
+      EquipmentPermission.UPDATE_STATUS,
+      EquipmentPermission.APPROVE_TRANSFERS,
+      EquipmentPermission.EMERGENCY_OVERRIDE,
+      EquipmentPermission.BULK_OPERATIONS,
+      EquipmentPermission.RETIRE_EQUIPMENT,
+      EquipmentPermission.APPROVE_RETIREMENT,
+      EquipmentPermission.EXPORT_DATA,
+      EquipmentPermission.MANAGE_USERS
     ]
   };
   
