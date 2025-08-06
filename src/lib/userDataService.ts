@@ -4,7 +4,7 @@
 
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
-import { FirestoreUserProfile, UserFetchResult } from '@/types/user';
+import { FirestoreUserProfile, UserFetchResult, CommunicationPreferences } from '@/types/user';
 import { ADMIN_CONFIG } from '@/constants/admin';
 
 export class UserDataService {
@@ -101,5 +101,30 @@ export class UserDataService {
    */
   static getFirstName(userData: FirestoreUserProfile): string {
     return userData.firstName || userData.email.split('@')[0];
+  }
+
+  /**
+   * Get communication preferences with fallback to defaults
+   */
+  static getCommunicationPreferences(userData: FirestoreUserProfile): CommunicationPreferences {
+    if (userData.communicationPreferences) {
+      return userData.communicationPreferences;
+    }
+
+    // Return default preferences if not set
+    return {
+      emailNotifications: true,
+      equipmentTransferAlerts: true,
+      systemUpdates: false,
+      schedulingAlerts: true,
+      emergencyNotifications: true
+    };
+  }
+
+  /**
+   * Check if user has communication preferences configured
+   */
+  static hasConfiguredPreferences(userData: FirestoreUserProfile): boolean {
+    return userData.communicationPreferences !== undefined;
   }
 }

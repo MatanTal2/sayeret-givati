@@ -6,6 +6,20 @@ import { Timestamp } from 'firebase/firestore';
 import { UserRole } from '@/types/equipment';
 
 /**
+ * Communication preferences for user notifications and alerts
+ */
+export interface CommunicationPreferences {
+  emailNotifications: boolean;
+  equipmentTransferAlerts: boolean;
+  systemUpdates: boolean;
+  schedulingAlerts: boolean;
+  emergencyNotifications: boolean;
+  // Meta fields for tracking preference changes
+  lastUpdated?: Timestamp;
+  updatedBy?: string; // uid of user who made the change
+}
+
+/**
  * Enhanced AuthUser interface that includes Firestore user data
  */
 export interface EnhancedAuthUser {
@@ -29,6 +43,9 @@ export interface EnhancedAuthUser {
   joinDate?: Timestamp;
   profileImage?: string;
   testUser?: boolean;
+  
+  // Communication preferences
+  communicationPreferences?: CommunicationPreferences;
   
   // Computed fields
   initials?: string;
@@ -55,6 +72,7 @@ export interface FirestoreUserProfile {
   updatedAt: Timestamp;
   profileImage?: string;
   testUser?: boolean;
+  communicationPreferences?: CommunicationPreferences;
 }
 
 /**
