@@ -110,3 +110,10 @@ export function routeIsComingSoon(href: string): boolean {
   const route = routes.find(r => r.href === href);
   return route?.isComingSoon ?? false;
 }
+
+/**
+ * Check if a route is a management route requiring elevated permissions
+ */
+export function routeRequiresManagementAccess(href: string): boolean {
+  return href === '/management';
+}
