@@ -1,7 +1,8 @@
 import { db } from '@/lib/firebase';
-import { doc, setDoc, serverTimestamp, getDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, serverTimestamp, getDoc, Timestamp } from 'firebase/firestore';
 import { SecurityUtils } from '@/lib/adminUtils';
 import { UserRole } from '@/types/equipment';
+import { CommunicationPreferences } from '@/types/user';
 import { ADMIN_CONFIG } from '@/constants/admin';
 
 /**
@@ -39,6 +40,7 @@ export interface UserProfile {
   updatedAt: Timestamp;
   profileImage?: string;
   testUser?: boolean;
+  communicationPreferences?: CommunicationPreferences;
 }
 
 /**
@@ -87,6 +89,16 @@ export class UserService {
       }
 
       // 4. Create user profile document in Firestore
+      const defaultCommunicationPreferences: CommunicationPreferences = {
+        emailNotifications: true, // Default to enabled for important system notifications
+        equipmentTransferAlerts: true, // Default to enabled for equipment-related alerts
+        systemUpdates: false, // Default to disabled for non-critical updates
+        schedulingAlerts: true, // Default to enabled for scheduling notifications
+        emergencyNotifications: true, // Always default to enabled for emergency alerts
+        lastUpdated: serverTimestamp() as Timestamp,
+        updatedBy: militaryIdHash // Self-created during registration
+      };
+
       const userProfile: UserProfile = {
         uid: militaryIdHash, // Use military ID hash as document ID
         email: registrationData.email,
@@ -102,7 +114,8 @@ export class UserService {
         permissions: ['equipment:view'], // Default soldier permissions
         joinDate: serverTimestamp() as Timestamp,
         createdAt: serverTimestamp() as Timestamp,
-        updatedAt: serverTimestamp() as Timestamp
+        updatedAt: serverTimestamp() as Timestamp,
+        communicationPreferences: defaultCommunicationPreferences
       };
 
       // 5. Save user profile to Firestore using hash as document ID
@@ -175,7 +188,10 @@ export class UserService {
   private static async markAsRegistered(militaryIdHash: string): Promise<void> {
     try {
       const personnelDocRef = doc(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION, militaryIdHash);
-      await setDoc(personnelDocRef, { registered: true }, { merge: true });
+      await updateDoc(personnelDocRef, { 
+        registered: true,
+        updatedAt: serverTimestamp()
+      });
       console.log('✅ Marked user as registered in authorized_personnel');
     } catch (error) {
       console.error('⚠️ Failed to mark user as registered (non-critical):', error);

@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import AuthGuard from '@/components/auth/AuthGuard';
 import Header from '@/app/components/Header';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
 import { 
   UserIcon, 
   PhoneIcon, 
@@ -36,6 +37,9 @@ export default function SettingsPage() {
     theme: 'light'
   });
 
+  // Profile image state
+  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(enhancedUser?.profileImage);
+
   // TODO: Replace with actual data when backend is implemented
   const mockPhoneNumber = enhancedUser?.phoneNumber || '+972-50-123-4567';
   const mockPendingTransfers = 3; // Placeholder for notification badge
@@ -52,6 +56,13 @@ export default function SettingsPage() {
   const handleButtonClick = (action: string) => {
     // TODO: Implement actual actions when backend is ready
     console.log(`${action} clicked - UI only, no backend action`);
+  };
+
+  // Handle profile image update
+  const handleImageUpdate = (newImageUrl: string) => {
+    setProfileImageUrl(newImageUrl);
+    // TODO: Update image in Firestore
+    console.log('Profile image updated in settings:', newImageUrl);
   };
 
   return (
@@ -78,27 +89,25 @@ export default function SettingsPage() {
 
             <div className="space-y-6">
               {/* Profile Image */}
-              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                    {enhancedUser?.initials || '👤'}
-                  </div>
+                  <ProfileImageUpload
+                    currentImageUrl={profileImageUrl}
+                    onImageUpdate={handleImageUpdate}
+                    size="small"
+                  />
                   <div>
                     <h3 className="font-medium text-gray-900">
                       {TEXT_CONSTANTS.SETTINGS.PROFILE_IMAGE}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      {TEXT_CONSTANTS.SETTINGS.COMING_SOON}
+                      לחץ על התמונה להעלאת תמונה חדשה
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleButtonClick('changeProfileImage')}
-                  disabled
-                  className="px-4 py-2 text-sm bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed"
-                >
-                  {TEXT_CONSTANTS.SETTINGS.CHANGE_PROFILE_IMAGE}
-                </button>
+                <div className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                  ✅ פעיל
+                </div>
               </div>
 
               {/* Update Phone Number */}

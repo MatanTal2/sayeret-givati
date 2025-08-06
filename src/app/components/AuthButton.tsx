@@ -3,14 +3,23 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { TEXT_CONSTANTS } from '@/constants/text';
-import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, LogInIcon, BellIcon } from 'lucide-react';
+import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, LogInIcon, BellIcon, Settings2Icon } from 'lucide-react';
 import { UserDataService } from '@/lib/userDataService';
 import { FirestoreUserProfile } from '@/types/user';
+import { UserRole } from '@/types/equipment';
 import Link from 'next/link';
 
 export default function AuthButton() {
   const { user, enhancedUser, isAuthenticated, isLoading, logout, setShowAuthModal } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Helper function to check if user has management access
+  const hasManagementAccess = useCallback(() => {
+    if (!enhancedUser) return false;
+    // Check if user is admin (userType) or has officer/commander role
+    return enhancedUser.userType === 'admin' || 
+           [UserRole.OFFICER, UserRole.COMMANDER].includes(enhancedUser.role as UserRole);
+  }, [enhancedUser]);
   
   // Refs for both button and menu to properly handle outside clicks
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -317,6 +326,22 @@ export default function AuthButton() {
             <CogIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
             <span className="text-right">{TEXT_CONSTANTS.PROFILE.SETTINGS}</span>
           </button>
+
+          {/* Management menu item - only visible for officer, commander, or admin roles */}
+          {hasManagementAccess() && (
+            <Link
+              href="/management"
+              className="w-full text-right px-4 py-2 text-gray-900 hover:bg-gray-100 
+                         focus:bg-gray-100 transition-colors duration-150 flex items-center gap-2 
+                         cursor-pointer"
+              onClick={() => setIsMenuOpen(false)}
+              role="menuitem"
+              tabIndex={0}
+            >
+              <Settings2Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span className="text-right">ניהול</span>
+            </Link>
+          )}
           
           <hr className="border-t border-gray-200 my-1" role="separator" />
           

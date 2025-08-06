@@ -109,6 +109,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 joinDate: firestoreData.joinDate,
                 profileImage: firestoreData.profileImage,
                 testUser: firestoreData.testUser,
+                communicationPreferences: firestoreData.communicationPreferences,
                 initials: UserDataService.generateInitials(firestoreData)
               };
               
