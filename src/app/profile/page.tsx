@@ -1,13 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthGuard from '@/components/auth/AuthGuard';
 import Header from '@/app/components/Header';
-import { UserDataService } from '@/lib/userDataService';
-import { FirestoreUserProfile } from '@/types/user';
+// Removed unused imports
 import { UserRole } from '@/types/equipment';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
+import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
+import PhoneNumberUpdate from '@/components/profile/PhoneNumberUpdate';
 
 /**
  * User Profile Page
@@ -15,6 +17,8 @@ import { he } from 'date-fns/locale';
  */
 export default function ProfilePage() {
   const { enhancedUser, user } = useAuth();
+  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(enhancedUser?.profileImage);
+  const [phoneNumber, setPhoneNumber] = useState<string>(enhancedUser?.phoneNumber || '');
 
   // Format date helper
   const formatDate = (date: Date | { toDate: () => Date } | string | null | undefined) => {
@@ -40,6 +44,20 @@ export default function ProfilePage() {
     return value || fallback;
   };
 
+  // Handle profile image update
+  const handleImageUpdate = (newImageUrl: string) => {
+    setProfileImageUrl(newImageUrl);
+    // TODO: Update image in Firestore
+    console.log('Profile image updated:', newImageUrl);
+  };
+
+  // Handle phone number update
+  const handlePhoneUpdate = (newPhoneNumber: string) => {
+    setPhoneNumber(newPhoneNumber);
+    // TODO: Update phone number in both users and authorized_personnel collections
+    console.log('Phone number updated:', newPhoneNumber);
+  };
+
   return (
     <AuthGuard>
       <div className="min-h-screen bg-gray-50" dir="rtl">
@@ -54,20 +72,12 @@ export default function ProfilePage() {
           {/* Profile Header */}
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
             <div className="flex items-center gap-6">
-              {/* Profile Avatar */}
-              <div className="w-24 h-24 bg-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                {enhancedUser?.initials || 
-                 (enhancedUser?.firstName && enhancedUser?.lastName 
-                   ? UserDataService.generateInitials({
-                       firstName: enhancedUser.firstName,
-                       lastName: enhancedUser.lastName,
-                       email: enhancedUser.email || '',
-                       uid: enhancedUser.uid
-                     } as FirestoreUserProfile)
-                   : '👤'
-                 )
-                }
-              </div>
+              {/* Profile Avatar with Upload */}
+              <ProfileImageUpload
+                currentImageUrl={profileImageUrl}
+                onImageUpdate={handleImageUpdate}
+                size="medium"
+              />
 
               {/* Basic Info */}
               <div className="flex-1">
@@ -191,16 +201,17 @@ export default function ProfilePage() {
                 פרטי קשר
               </h2>
               
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">אימייל</label>
                   <div className="text-gray-900">{getDisplayValue(enhancedUser?.email || user?.email)}</div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">מספר טלפון</label>
-                  <div className="text-gray-900">{getDisplayValue(enhancedUser?.phoneNumber)}</div>
-                </div>
+                {/* Phone Number Update Component */}
+                <PhoneNumberUpdate
+                  currentPhoneNumber={phoneNumber}
+                  onPhoneUpdate={handlePhoneUpdate}
+                />
               </div>
             </div>
 
