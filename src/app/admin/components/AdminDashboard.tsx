@@ -4,9 +4,12 @@ import { useState } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { ADMIN_TABS } from '@/constants/admin';
 import { AdminTabType } from '@/types/admin';
+import { CONFIRMATIONS } from '@/constants/text';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import AddPersonnel from './AddPersonnel';
 import BulkUpload from './BulkUpload';
 import ViewPersonnel from './ViewPersonnel';
+import UpdatePersonnel from './UpdatePersonnel';
 import SystemStats from './SystemStats';
 
 interface AdminDashboardProps {
@@ -15,10 +18,19 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<AdminTabType>('add-personnel');
-  const { logout } = useAdminAuth();
+  const { 
+    showLogoutModal, 
+    requestLogout, 
+    confirmLogout, 
+    cancelLogout 
+  } = useAdminAuth();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogoutRequest = () => {
+    requestLogout();
+  };
+
+  const handleLogoutConfirm = async () => {
+    await confirmLogout();
     onLogout();
   };
 
@@ -36,7 +48,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             </p>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={handleLogoutRequest}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md
                        focus:ring-2 focus:ring-red-500 focus:ring-offset-2
                        transition-colors"
@@ -88,12 +100,27 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 
                 {tab.id === 'view-personnel' && <ViewPersonnel />}
                 
+                {tab.id === 'update-personnel' && <UpdatePersonnel />}
+                
                 {tab.id === 'system-stats' && <SystemStats />}
               </div>
             );
           })}
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        title={CONFIRMATIONS.LOGOUT_TITLE}
+        message={CONFIRMATIONS.LOGOUT_MESSAGE}
+        confirmText={CONFIRMATIONS.LOGOUT_CONFIRM}
+        cancelText={CONFIRMATIONS.LOGOUT_CANCEL}
+        onConfirm={handleLogoutConfirm}
+        onCancel={cancelLogout}
+        variant="warning"
+        icon="🚪"
+      />
     </div>
   );
 } 

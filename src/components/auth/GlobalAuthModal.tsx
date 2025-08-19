@@ -16,9 +16,13 @@ export default function GlobalAuthModal() {
       onClose={() => setShowAuthModal(false)}
       onRegistrationSuccess={() => {
         // Close modal after successful registration
-        // User stays on the current page they were trying to access
         setShowAuthModal(false);
         console.log('🎉 Registration successful! Welcome to Sayeret Givati!');
+        
+        // Refresh the page to get updated user data after successful registration
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
       }}
     />
   );

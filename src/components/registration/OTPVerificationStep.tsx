@@ -16,6 +16,7 @@ export default function OTPVerificationStep({
   const [isValid, setIsValid] = useState(false);
   const [backendError, setBackendError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [hasAutoAttempted, setHasAutoAttempted] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleVerifyOTP = useCallback(async () => {
@@ -53,13 +54,15 @@ export default function OTPVerificationStep({
         }
       } else {
         // Handle verification failure
-        const errorMessage = data.error || 'קוד האימות שגוי';
+        const errorMessage = data.error || TEXT_CONSTANTS.AUTH.OTP_WRONG_CODE;
         console.log('❌ OTP verification failed:', errorMessage);
         setBackendError(errorMessage);
+        setHasAutoAttempted(true);
       }
     } catch (error) {
       console.error('🚨 Error verifying OTP:', error);
-      setBackendError('שגיאת חיבור. אנא בדוק את החיבור לאינטרנט ונסה שוב.');
+      setBackendError(TEXT_CONSTANTS.AUTH.OTP_CONNECTION_ERROR);
+      setHasAutoAttempted(true);
     } finally {
       setIsVerifying(false);
     }
@@ -70,12 +73,14 @@ export default function OTPVerificationStep({
     const validation = validateOTP(otpCode);
     setValidationError(validation.errorMessage);
     setIsValid(validation.isValid);
-    
-    // Auto-verify when 6 digits are entered
-    if (validation.isValid && otpCode.length === 6) {
+  }, [otpCode]);
+
+  // Auto-verify effect - separate to avoid infinite loops
+  useEffect(() => {
+    if (isValid && otpCode.length === 6 && !hasAutoAttempted && !isVerifying) {
       handleVerifyOTP();
     }
-  }, [otpCode, handleVerifyOTP]);
+  }, [otpCode, isValid, hasAutoAttempted, isVerifying, handleVerifyOTP]);
 
   // Focus input on mount
   useEffect(() => {
@@ -89,12 +94,15 @@ export default function OTPVerificationStep({
     setOtpCode(cleanValue);
     // Clear backend errors when user types
     setBackendError(null);
+    // Reset auto-attempt flag when user changes input
+    setHasAutoAttempted(false);
   };
 
   const handleResendCode = async () => {
     setBackendError(null);
     setOtpCode('');
     setValidationError(null);
+    setHasAutoAttempted(false);
 
     try {
       console.log('📤 Resending OTP to:', phoneNumber);
@@ -113,13 +121,13 @@ export default function OTPVerificationStep({
         console.log('✅ OTP resent successfully');
         // Could show a success message here if needed
       } else {
-        const errorMessage = data.error || 'Failed to resend OTP';
+        const errorMessage = data.error || TEXT_CONSTANTS.AUTH.OTP_RESEND_FAILED;
         console.log('❌ OTP resend failed:', errorMessage);
         setBackendError(errorMessage);
       }
     } catch (error) {
       console.error('🚨 Error resending OTP:', error);
-      setBackendError('שגיאת חיבור. אנא בדוק את החיבור לאינטרנט ונסה שוב.');
+      setBackendError(TEXT_CONSTANTS.AUTH.OTP_CONNECTION_ERROR);
     }
 
     inputRef.current?.focus();
@@ -220,7 +228,7 @@ export default function OTPVerificationStep({
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                מאמת קוד...
+                {TEXT_CONSTANTS.AUTH.OTP_VERIFYING}
               </>
             ) : (
               <>

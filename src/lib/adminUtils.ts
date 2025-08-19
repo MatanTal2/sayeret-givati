@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, query, getDocs, deleteDoc, updateDoc, serverTimestamp, Timestamp, writeBatch, DocumentReference, setDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, getDocs, deleteDoc, updateDoc, serverTimestamp, Timestamp, writeBatch, DocumentReference, setDoc, where } from 'firebase/firestore';
 import {
   AdminConfig,
   PersonnelFormData,
@@ -8,6 +8,7 @@ import {
   AuthorizedPersonnelData,
   PersonnelOperationResult
 } from '@/types/admin';
+import { UserType } from '@/types/user';
 import {
   ADMIN_CONFIG,
   VALIDATION_PATTERNS,
@@ -319,6 +320,7 @@ export class AdminFirestoreService {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         rank: formData.rank.trim(),
+        userType: formData.userType || UserType.USER, // Include userType with default fallback
         registered: false, // Default to false until user completes registration
         approvedRole: 'soldier', // Default role
         roleStatus: 'approved' as const, // Default approved status
@@ -339,6 +341,7 @@ export class AdminFirestoreService {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         rank: formData.rank.trim(),
+        userType: formData.userType || UserType.USER, // Include userType with default fallback
         registered: false, // Default to false until user completes registration
         approvedRole: 'soldier', // Default role for all new users
         roleStatus: 'approved', // Auto-approve basic soldier role
@@ -370,6 +373,183 @@ export class AdminFirestoreService {
         message: ADMIN_MESSAGES.PERSONNEL_ADD_FAILED,
         error: error instanceof AdminError ? error : new AdminError('Unknown error occurred', 'UNKNOWN_ERROR')
       };
+    }
+  }
+
+  /**
+   * Update authorized personnel information
+   */
+  static async updateAuthorizedPersonnel(
+    personnelId: string, 
+    updateData: {
+      firstName?: string;
+      lastName?: string;
+      rank?: string;
+      phoneNumber?: string;
+      userType?: string;
+    }
+  ): Promise<PersonnelOperationResult> {
+    try {
+      // Validate the update data (only fields that are provided)
+      const validationErrors: Record<string, string> = {};
+
+      if (updateData.firstName !== undefined) {
+        const firstNameError = ValidationUtils.validateFirstName(updateData.firstName);
+        if (firstNameError) validationErrors.firstName = firstNameError;
+      }
+
+      if (updateData.lastName !== undefined) {
+        const lastNameError = ValidationUtils.validateLastName(updateData.lastName);
+        if (lastNameError) validationErrors.lastName = lastNameError;
+      }
+
+      if (updateData.rank !== undefined) {
+        const rankError = ValidationUtils.validateRank(updateData.rank);
+        if (rankError) validationErrors.rank = rankError;
+      }
+
+      if (updateData.phoneNumber !== undefined) {
+        const phoneError = ValidationUtils.validatePhoneNumber(updateData.phoneNumber);
+        if (phoneError) validationErrors.phoneNumber = phoneError;
+      }
+
+      if (updateData.userType !== undefined) {
+        // Validate userType (basic validation)
+        const validUserTypes = ['user', 'admin', 'officer', 'commander'];
+        if (!validUserTypes.includes(updateData.userType)) {
+          validationErrors.userType = 'Invalid user type';
+        }
+      }
+
+      // If there are validation errors, return them
+      if (Object.keys(validationErrors).length > 0) {
+        return {
+          success: false,
+          message: Object.values(validationErrors)[0], // Return first error
+          error: new AdminError('Validation failed', 'VALIDATION_ERROR')
+        };
+      }
+
+      // Check if personnel exists
+      const docRef = doc(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION, personnelId);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        return {
+          success: false,
+          message: 'Personnel not found',
+          error: new AdminError('Personnel not found', 'NOT_FOUND')
+        };
+      }
+
+      // If phone number is being updated, check for duplicates (excluding current personnel)
+      if (updateData.phoneNumber !== undefined) {
+        const allPersonnel = await this.getAllAuthorizedPersonnel();
+        const phoneExists = allPersonnel.some(p => 
+          p.id !== personnelId && p.phoneNumber === updateData.phoneNumber
+        );
+
+        if (phoneExists) {
+          return {
+            success: false,
+            message: 'Phone number already exists for another personnel',
+            error: new AdminError('Phone number duplicate', 'DUPLICATE_PHONE')
+          };
+        }
+      }
+
+      // Prepare update data with timestamp
+      const updateFields = {
+        ...updateData,
+        updatedAt: Timestamp.now(),
+        updatedBy: 'admin' // TODO: Get actual admin user ID when auth is implemented
+      };
+
+      // Update the document
+      await updateDoc(docRef, updateFields);
+
+      // Get updated personnel data for sync and success message
+      const currentPersonnel = docSnap.data() as AuthorizedPersonnel;
+      const updatedPersonnel = { ...currentPersonnel, ...updateData };
+      
+      // If user is registered, sync changes to users collection
+      if (currentPersonnel.registered && (updateData.firstName || updateData.lastName || updateData.rank || updateData.phoneNumber || updateData.userType)) {
+        await this.syncAuthorizedPersonnelToUser(personnelId, updateData);
+      }
+
+      const fullName = `${updateData.firstName || currentPersonnel.firstName} ${updateData.lastName || currentPersonnel.lastName}`;
+
+      return {
+        success: true,
+        message: `✅ Successfully updated ${fullName}`,
+        personnel: {
+          ...updatedPersonnel,
+          id: personnelId
+        } as AuthorizedPersonnel
+      };
+
+    } catch (error) {
+      console.error('Error updating authorized personnel:', error);
+      return {
+        success: false,
+        message: 'Failed to update personnel. Please try again.',
+        error: error instanceof AdminError ? error : new AdminError('Unknown error occurred', 'UNKNOWN_ERROR')
+      };
+    }
+  }
+
+  /**
+   * Sync authorized personnel changes to users collection
+   * Only updates if user is registered (has completed Firebase Auth registration)
+   */
+  private static async syncAuthorizedPersonnelToUser(
+    militaryIdHash: string,
+    updateData: {
+      firstName?: string;
+      lastName?: string;
+      rank?: string;
+      phoneNumber?: string;
+      userType?: string;
+    }
+  ): Promise<void> {
+    try {
+      // Find the user in users collection by militaryPersonalNumberHash
+      const usersCollection = collection(db, ADMIN_CONFIG.FIRESTORE_USERS_COLLECTION);
+      const userQuery = query(usersCollection, where('militaryPersonalNumberHash', '==', militaryIdHash));
+      
+      const userSnapshot = await getDocs(userQuery);
+      
+      // Get the first matching user document
+      let userDocId: string | null = null;
+      if (!userSnapshot.empty) {
+        userDocId = userSnapshot.docs[0].id;
+      }
+
+      if (!userDocId) {
+        console.warn(`⚠️ No user found in users collection for militaryIdHash: ${militaryIdHash}`);
+        return;
+      }
+
+      // Prepare user update data (only fields that exist in users collection)
+      const userUpdateData = {
+        updatedAt: Timestamp.now()
+      };
+      
+      if (updateData.firstName) Object.assign(userUpdateData, { firstName: updateData.firstName });
+      if (updateData.lastName) Object.assign(userUpdateData, { lastName: updateData.lastName });
+      if (updateData.rank) Object.assign(userUpdateData, { rank: updateData.rank });
+      if (updateData.phoneNumber) Object.assign(userUpdateData, { phoneNumber: updateData.phoneNumber });
+      if (updateData.userType) Object.assign(userUpdateData, { userType: updateData.userType });
+
+      // Update user document
+      const userDocRef = doc(db, ADMIN_CONFIG.FIRESTORE_USERS_COLLECTION, userDocId);
+      await updateDoc(userDocRef, userUpdateData);
+      
+      console.log(`✅ Successfully synced changes to user: ${userDocId}`);
+
+    } catch (error) {
+      console.error('⚠️ Failed to sync changes to users collection (non-critical):', error);
+      // Don't throw error - sync failure shouldn't break the main update operation
     }
   }
 
@@ -453,6 +633,7 @@ export class AdminFirestoreService {
             firstName: person.firstName.trim(),
             lastName: person.lastName.trim(),
             rank: person.rank.trim(),
+            userType: person.userType || 'user', // Include userType with default fallback
             registered: false, // Default to false until user completes registration
             approvedRole: 'soldier', // Default role for all new users
             roleStatus: 'approved', // Auto-approve basic soldier role

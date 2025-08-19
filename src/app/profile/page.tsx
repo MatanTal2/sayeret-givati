@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
 import PhoneNumberUpdate from '@/components/profile/PhoneNumberUpdate';
+import { TEXT_CONSTANTS } from '@/constants/text';
 
 /**
  * User Profile Page
@@ -22,7 +23,7 @@ export default function ProfilePage() {
 
   // Format date helper
   const formatDate = (date: Date | { toDate: () => Date } | string | null | undefined) => {
-    if (!date) return 'לא זמין';
+    if (!date) return TEXT_CONSTANTS.PROFILE.NOT_AVAILABLE;
     
     try {
       // Handle Firestore Timestamp
@@ -35,12 +36,12 @@ export default function ProfilePage() {
       return format(jsDate, 'dd/MM/yyyy', { locale: he });
     } catch (error) {
       console.error('Error formatting date:', error);
-      return 'תאריך לא חוקי';
+      return TEXT_CONSTANTS.PROFILE.INVALID_DATE;
     }
   };
 
   // Get display values with fallbacks
-  const getDisplayValue = (value: string | undefined, fallback = 'לא זמין') => {
+  const getDisplayValue = (value: string | undefined, fallback: string = TEXT_CONSTANTS.PROFILE.NOT_AVAILABLE) => {
     return value || fallback;
   };
 
@@ -63,8 +64,8 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-gray-50" dir="rtl">
         {/* Header */}
         <Header 
-          title="הפרופיל שלי"
-          subtitle="צפייה ועריכת פרטים אישיים"
+          title={TEXT_CONSTANTS.PROFILE.PAGE_TITLE}
+          subtitle={TEXT_CONSTANTS.PROFILE.PAGE_SUBTITLE}
           showAuth={true}
         />
 
@@ -86,11 +87,11 @@ export default function ProfilePage() {
                     enhancedUser?.firstName && enhancedUser?.lastName 
                       ? `${enhancedUser.firstName} ${enhancedUser.lastName}`
                       : undefined,
-                    user?.displayName || user?.email?.split('@')[0] || 'משתמש'
+                    user?.displayName || user?.email?.split('@')[0] || TEXT_CONSTANTS.PROFILE.DEFAULT_USER
                   )}
                 </h1>
                 <p className="text-lg text-gray-600 mb-1">
-                  {getDisplayValue(enhancedUser?.rank, 'ללא דרגה')}
+                  {getDisplayValue(enhancedUser?.rank, TEXT_CONSTANTS.PROFILE.NO_RANK)}
                 </p>
                 <p className="text-gray-500">
                   {getDisplayValue(enhancedUser?.email || user?.email)}
@@ -104,7 +105,7 @@ export default function ProfilePage() {
                     ? 'bg-green-100 text-green-800' 
                     : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {enhancedUser.status === 'active' ? 'פעיל' : 'לא פעיל'}
+                  {enhancedUser.status === 'active' ? TEXT_CONSTANTS.PROFILE.ACTIVE : TEXT_CONSTANTS.PROFILE.INACTIVE}
                 </div>
               )}
             </div>
@@ -118,31 +119,31 @@ export default function ProfilePage() {
                 <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                פרטים אישיים
+                {TEXT_CONSTANTS.PROFILE.PERSONAL_INFO}
               </h2>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">שם פרטי</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{TEXT_CONSTANTS.PROFILE.FIRST_NAME}</label>
                   <div className="text-gray-900">{getDisplayValue(enhancedUser?.firstName)}</div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">שם משפחה</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{TEXT_CONSTANTS.PROFILE.LAST_NAME}</label>
                   <div className="text-gray-900">{getDisplayValue(enhancedUser?.lastName)}</div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">מין</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{TEXT_CONSTANTS.PROFILE.GENDER}</label>
                   <div className="text-gray-900">
-                    {enhancedUser?.gender === 'male' ? 'זכר' : 
-                     enhancedUser?.gender === 'female' ? 'נקבה' : 
+                    {enhancedUser?.gender === 'male' ? TEXT_CONSTANTS.PROFILE.MALE : 
+                     enhancedUser?.gender === 'female' ? TEXT_CONSTANTS.PROFILE.FEMALE : 
                      getDisplayValue(enhancedUser?.gender)}
                   </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">תאריך לידה</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{TEXT_CONSTANTS.PROFILE.BIRTH_DATE}</label>
                   <div className="text-gray-900">{formatDate(enhancedUser?.birthday)}</div>
                 </div>
               </div>
@@ -154,38 +155,38 @@ export default function ProfilePage() {
                 <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
-                פרטים צבאיים
+                {TEXT_CONSTANTS.PROFILE.MILITARY_INFO}
               </h2>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">דרגה</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{TEXT_CONSTANTS.PROFILE.RANK}</label>
                   <div className="text-gray-900">{getDisplayValue(enhancedUser?.rank)}</div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">תפקיד</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{TEXT_CONSTANTS.PROFILE.ROLE}</label>
                   <div className="text-gray-900">
-                    {enhancedUser?.role === UserRole.SOLDIER ? 'חייל' : 
-                     enhancedUser?.role === UserRole.COMMANDER ? 'מפקד' : 
-                     enhancedUser?.role === UserRole.OFFICER ? 'קצין' :
-                     enhancedUser?.role === UserRole.EQUIPMENT_MANAGER ? 'מנהל ציוד' :
+                    {enhancedUser?.role === UserRole.SOLDIER ? TEXT_CONSTANTS.PROFILE.SOLDIER : 
+                     enhancedUser?.role === UserRole.COMMANDER ? TEXT_CONSTANTS.PROFILE.COMMANDER : 
+                     enhancedUser?.role === UserRole.OFFICER ? TEXT_CONSTANTS.PROFILE.OFFICER :
+                     enhancedUser?.role === UserRole.EQUIPMENT_MANAGER ? TEXT_CONSTANTS.PROFILE.EQUIPMENT_MANAGER :
                      getDisplayValue(enhancedUser?.role ? String(enhancedUser.role) : undefined)}
                   </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">תאריך כניסה ליחידה</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{TEXT_CONSTANTS.PROFILE.JOIN_DATE}</label>
                   <div className="text-gray-900">{formatDate(enhancedUser?.joinDate)}</div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">סטטוס</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{TEXT_CONSTANTS.PROFILE.STATUS}</label>
                   <div className="text-gray-900">
-                    {enhancedUser?.status === 'active' ? 'פעיל' : 
-                     enhancedUser?.status === 'inactive' ? 'לא פעיל' : 
-                     enhancedUser?.status === 'transferred' ? 'הועבר' : 
-                     enhancedUser?.status === 'discharged' ? 'שוחרר' : 
+                    {enhancedUser?.status === 'active' ? TEXT_CONSTANTS.PROFILE.ACTIVE : 
+                     enhancedUser?.status === 'inactive' ? TEXT_CONSTANTS.PROFILE.INACTIVE : 
+                     enhancedUser?.status === 'transferred' ? TEXT_CONSTANTS.PROFILE.TRANSFERRED : 
+                     enhancedUser?.status === 'discharged' ? TEXT_CONSTANTS.PROFILE.DISCHARGED : 
                      getDisplayValue(enhancedUser?.status)}
                   </div>
                 </div>
@@ -198,12 +199,12 @@ export default function ProfilePage() {
                 <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                פרטי קשר
+                {TEXT_CONSTANTS.PROFILE.CONTACT_INFO}
               </h2>
               
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">אימייל</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{TEXT_CONSTANTS.PROFILE.EMAIL}</label>
                   <div className="text-gray-900">{getDisplayValue(enhancedUser?.email || user?.email)}</div>
                 </div>
                 
@@ -221,20 +222,23 @@ export default function ProfilePage() {
                 <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                מידע מערכת
+                {TEXT_CONSTANTS.PROFILE.SYSTEM_INFO}
               </h2>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">מזהה ייחודי</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{TEXT_CONSTANTS.PROFILE.UNIQUE_ID}</label>
                   <div className="text-gray-900 font-mono text-sm">{getDisplayValue(enhancedUser?.uid || user?.uid)}</div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">סוג משתמש</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{TEXT_CONSTANTS.PROFILE.USER_TYPE}</label>
                   <div className="text-gray-900">
-                    {user?.userType === 'admin' ? 'מנהל מערכת' : 
-                     user?.userType === 'personnel' ? 'חייל' : 
+                    {user?.userType === 'admin' ? TEXT_CONSTANTS.PROFILE.ADMIN :
+                     user?.userType === 'system_manager' ? TEXT_CONSTANTS.PROFILE.SYSTEM_MANAGER :
+                     user?.userType === 'manager' ? TEXT_CONSTANTS.PROFILE.MANAGER :
+                     user?.userType === 'team_leader' ? TEXT_CONSTANTS.PROFILE.TEAM_LEADER :
+                     user?.userType === 'user' ? TEXT_CONSTANTS.PROFILE.USER : 
                      getDisplayValue(user?.userType ? String(user.userType) : undefined)}
                   </div>
                 </div>
@@ -242,7 +246,7 @@ export default function ProfilePage() {
                 {enhancedUser?.testUser && (
                   <div>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                      חשבון בדיקה
+                      {TEXT_CONSTANTS.PROFILE.TEST_ACCOUNT}
                     </span>
                   </div>
                 )}
@@ -257,11 +261,11 @@ export default function ProfilePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div>
-                <h3 className="text-sm font-medium text-blue-900 mb-1">מקור הנתונים</h3>
+                <h3 className="text-sm font-medium text-blue-900 mb-1">{TEXT_CONSTANTS.PROFILE.DATA_SOURCE_TITLE}</h3>
                 <p className="text-sm text-blue-700">
                   {enhancedUser?.firstName ? 
-                    'הנתונים מגיעים ממסד הנתונים של המערכת ומתעדכנים אוטומטית.' :
-                    'חלק מהנתונים מגיעים מחשבון האימות. להשלמת הפרטים, פנה למנהל המערכת.'
+                    TEXT_CONSTANTS.PROFILE.DATA_SOURCE_SYSTEM :
+                    TEXT_CONSTANTS.PROFILE.DATA_SOURCE_AUTH
                   }
                 </p>
               </div>

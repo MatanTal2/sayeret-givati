@@ -305,8 +305,11 @@ describe('AccountDetailsStep', () => {
     it('should display consent text', () => {
       render(<AccountDetailsStep {...defaultProps} />);
       
-      const consentLabel = screen.getByLabelText(/אני מסכים/);
-      expect(consentLabel).toBeInTheDocument();
+      // Check for the consent text parts and policy link
+      expect(screen.getByText((content) => {
+        return content.includes('אני מסכים/ה ל');
+      })).toBeInTheDocument();
+      expect(screen.getByText('תנאי השימוש ומדיניות הפרטיות')).toBeInTheDocument();
     });
   });
 

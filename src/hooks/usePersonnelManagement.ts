@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { AuthorizedPersonnelData, FormMessage, AuthorizedPersonnel, PersonnelFormData } from '@/types/admin';
+import { AuthorizedPersonnelData, FormMessage, AuthorizedPersonnel, PersonnelFormData, PersonnelOperationResult } from '@/types/admin';
 import { ValidationUtils, AdminFirestoreService } from '@/lib/adminUtils';
 
 interface UsePersonnelManagementReturn {
@@ -12,6 +12,13 @@ interface UsePersonnelManagementReturn {
   updateFormField: (field: keyof AuthorizedPersonnelData, value: string) => void;
   addPersonnel: () => Promise<void>;
   addPersonnelBulk: (personnel: PersonnelFormData[]) => Promise<void>;
+  updatePersonnel: (personnelId: string, updateData: {
+    firstName?: string;
+    lastName?: string;
+    rank?: string;
+    phoneNumber?: string;
+    userType?: string;
+  }) => Promise<PersonnelOperationResult>;
   deletePersonnel: (personnelId: string) => Promise<void>;
   fetchPersonnel: () => Promise<void>;
   clearMessage: () => void;
@@ -142,6 +149,58 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     setIsLoading(false);
   };
 
+  const updatePersonnel = async (
+    personnelId: string, 
+    updateData: {
+      firstName?: string;
+      lastName?: string;
+      rank?: string;
+      phoneNumber?: string;
+      userType?: string;
+    }
+  ): Promise<PersonnelOperationResult> => {
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const result = await AdminFirestoreService.updateAuthorizedPersonnel(personnelId, updateData);
+
+      if (result.success) {
+        setMessage({
+          text: result.message,
+          type: 'success'
+        });
+
+        // Refresh personnel list to get updated data
+        await fetchPersonnel();
+      } else {
+        setMessage({
+          text: result.message,
+          type: 'error'
+        });
+      }
+
+      setIsLoading(false);
+      return result;
+
+    } catch (error) {
+      console.error('Error updating personnel:', error);
+      const errorResult: PersonnelOperationResult = {
+        success: false,
+        message: 'Failed to update personnel. Please try again.',
+        error: error instanceof Error ? error : new Error('Unknown error')
+      };
+
+      setMessage({
+        text: errorResult.message,
+        type: 'error'
+      });
+
+      setIsLoading(false);
+      return errorResult;
+    }
+  };
+
   const deletePersonnel = async (personnelId: string) => {
     setIsLoading(true);
     setMessage(null);
@@ -183,6 +242,7 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     resetForm,
     addPersonnel,
     addPersonnelBulk,
+    updatePersonnel,
     deletePersonnel,
     fetchPersonnel,
     clearMessage

@@ -1,4 +1,5 @@
 import { MILITARY_RANKS } from '@/types/admin';
+import { UserType } from '@/types/user';
 
 // Admin configuration
 export const ADMIN_CONFIG = {
@@ -57,6 +58,15 @@ export const RANK_OPTIONS = MILITARY_RANKS.map(rank => ({
   label: rank
 }));
 
+// User types for dropdown
+export const USER_TYPE_OPTIONS = [
+  { value: UserType.USER, label: 'User' },
+  { value: UserType.TEAM_LEADER, label: 'Team Leader' },
+  { value: UserType.MANAGER, label: 'Manager' },
+  { value: UserType.SYSTEM_MANAGER, label: 'System Manager' },
+  { value: UserType.ADMIN, label: 'Admin' }
+];
+
 // Admin tabs configuration
 export const ADMIN_TABS = [
   {
@@ -73,6 +83,11 @@ export const ADMIN_TABS = [
     id: 'view-personnel' as const,
     name: '📋 View Personnel', 
     description: 'View and manage authorized personnel list.'
+  },
+  {
+    id: 'update-personnel' as const,
+    name: '✏️ Update Personnel',
+    description: 'Search and update personnel information including name, rank, phone number, and user type.'
   },
   {
     id: 'system-stats' as const,

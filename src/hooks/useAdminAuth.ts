@@ -10,15 +10,20 @@ interface UseAdminAuthReturn {
   isAuthenticated: boolean;
   isLoading: boolean;
   message: FormMessage | null;
+  showLogoutModal: boolean;
   login: (credentials: AdminCredentials) => Promise<void>;
-  logout: () => void;
+  requestLogout: () => void;
+  confirmLogout: () => Promise<void>;
+  cancelLogout: () => void;
   checkSession: () => void;
+  clearMessage: () => void;
 }
 
 export function useAdminAuth(): UseAdminAuthReturn {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState<FormMessage | null>(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [, setCurrentUser] = useState<User | null>(null);
 
   // Listen to Firebase Auth state changes
@@ -111,20 +116,28 @@ export function useAdminAuth(): UseAdminAuthReturn {
     setIsLoading(false);
   };
 
-  const logout = async () => {
-    if (confirm(ADMIN_MESSAGES.LOGOUT_CONFIRM)) {
-      try {
-        await signOut(auth);
-        setIsAuthenticated(false);
-        setMessage(null);
-      } catch (error) {
-        console.error('Logout error:', error);
-        setMessage({
-          text: 'Logout failed. Please try again.',
-          type: 'error'
-        });
-      }
+  const requestLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
+    try {
+      await signOut(auth);
+      setIsAuthenticated(false);
+      setMessage(null);
+      setShowLogoutModal(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+      setMessage({
+        text: 'Logout failed. Please try again.',
+        type: 'error'
+      });
+      setShowLogoutModal(false);
     }
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   const clearMessage = () => {
@@ -135,9 +148,12 @@ export function useAdminAuth(): UseAdminAuthReturn {
     isAuthenticated,
     isLoading,
     message,
+    showLogoutModal,
     login,
-    logout,
+    requestLogout,
+    confirmLogout,
+    cancelLogout,
     checkSession,
     clearMessage
-  } as UseAdminAuthReturn & { clearMessage: () => void };
+  };
 } 

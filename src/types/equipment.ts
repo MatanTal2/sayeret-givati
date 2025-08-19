@@ -9,6 +9,7 @@ export interface Equipment {
   signedBy: string; // Who signed the item in initially
   currentHolder: string; // Current holder's name
   assignedUnit: string; // Assigned unit or platoon
+  assignedTeam?: string; // Assigned team within the unit (for team-based permissions)
   status: EquipmentStatus; // Current status
   location: string; // Physical location
   condition: EquipmentCondition; // Current condition
@@ -106,9 +107,12 @@ export enum RetirementStatus {
 
 export enum UserRole {
   SOLDIER = 'soldier',
+  TEAM_LEADER = 'team_leader',
+  SQUAD_LEADER = 'squad_leader', 
+  SERGEANT = 'sergeant',
   OFFICER = 'officer',
-  EQUIPMENT_MANAGER = 'equipment_manager',
-  COMMANDER = 'commander'
+  COMMANDER = 'commander',
+  EQUIPMENT_MANAGER = 'equipment_manager'
 }
 
 // Form interfaces for UI components
@@ -179,7 +183,9 @@ export interface EquipmentSort {
 export interface EquipmentUserContext {
   userId: string;
   role: UserRole;
+  userType?: string; // Admin UserType gets all permissions
   unit: string;
+  team?: string; // Team identifier for team-based permissions
   permissions: EquipmentPermission[];
 }
 
@@ -187,7 +193,11 @@ export enum EquipmentPermission {
   VIEW_ALL = 'view_all',
   VIEW_UNIT_ONLY = 'view_unit_only',
   TRANSFER_EQUIPMENT = 'transfer_equipment',
+  TRANSFER_OWN_EQUIPMENT = 'transfer_own_equipment',
+  TRANSFER_TEAM_EQUIPMENT = 'transfer_team_equipment',
   UPDATE_STATUS = 'update_status',
+  UPDATE_OWN_EQUIPMENT = 'update_own_equipment',
+  UPDATE_TEAM_EQUIPMENT = 'update_team_equipment',
   APPROVE_TRANSFERS = 'approve_transfers',
   EMERGENCY_OVERRIDE = 'emergency_override',
   BULK_OPERATIONS = 'bulk_operations',

@@ -8,10 +8,12 @@ import { UserDataService } from '@/lib/userDataService';
 import { FirestoreUserProfile } from '@/types/user';
 import { UserRole } from '@/types/equipment';
 import Link from 'next/link';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 
 export default function AuthButton() {
   const { user, enhancedUser, isAuthenticated, isLoading, logout, setShowAuthModal } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   // Helper function to check if user has management access
   const hasManagementAccess = useCallback(() => {
@@ -179,7 +181,7 @@ export default function AuthButton() {
     console.log(`${action} clicked - UI only, no backend action`);
     if (action === 'notifications') {
       // TODO: Open notifications panel or navigate to notifications page
-      alert('התראות העברת ציוד - תכונה זו תהיה זמינה בקרוב');
+      setShowNotificationModal(true);
     }
   }, []);
 
@@ -359,6 +361,21 @@ export default function AuthButton() {
           </button>
         </div>
       )}
+
+      {/* Notifications Coming Soon Modal */}
+      <ConfirmationModal
+        isOpen={showNotificationModal}
+        title={TEXT_CONSTANTS.CONFIRMATIONS.NOTIFICATIONS_COMING_SOON_TITLE}
+        message={TEXT_CONSTANTS.CONFIRMATIONS.NOTIFICATIONS_COMING_SOON_MESSAGE}
+        confirmText={TEXT_CONSTANTS.CONFIRMATIONS.OK}
+        cancelText={TEXT_CONSTANTS.CONFIRMATIONS.CLOSE}
+        onConfirm={() => setShowNotificationModal(false)}
+        onCancel={() => setShowNotificationModal(false)}
+        variant="info"
+        icon="🔔"
+        singleButton={true}
+        useHomePageStyle={true}
+      />
     </div>
   );
 } 

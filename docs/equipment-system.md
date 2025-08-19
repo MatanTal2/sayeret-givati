@@ -6,10 +6,10 @@ The Equipment Tracking System (צלם) is designed to manage military equipment 
 
 ## Core Concepts
 
-- **צלם (Tzelem)**: Military items with serial numbers that require sign-out/sign-in tracking
+- **צלם (Tzelem)**: Military items with unique serial numbers that require sign-out/sign-in tracking
 - **Accountability**: Every equipment item must have a designated holder at all times
 - **Audit Trail**: Complete history of all transfers and status changes
-- **Security**: OTP-based approval system for transfers and critical operations
+- **Security**: In-app notification–based approval system for transfers and critical operations
 
 ## Firestore Database Structure
 
@@ -17,22 +17,22 @@ The Equipment Tracking System (צלם) is designed to manage military equipment 
 
 #### 1. `equipment` Collection
 
-**Document ID**: Equipment serial number (e.g., `M4-12345`, `RAD-5678`)
+**Document ID**: Equipment serial number (e.g., `M4-12345`, `RAD-5678`) while the digits are the ID of the item.
 
 **Document Structure**:
 
 ```typescript
 {
-  id: string;                    // Serial number (same as document ID)
+  id: string;                    // Serial number (id digits same as document ID)
   productName: string;           // Item name (e.g., "M4 Rifle", "Radio Set")
   category: string;              // Equipment category
   dateSigned: string;            // ISO date - initial sign-in
   signedBy: string;              // Who initially signed the item
   currentHolder: string;         // Current responsible person
   assignedUnit: string;          // Unit/platoon assignment
-  status: EquipmentStatus;       // Current status (active/lost/broken/etc.)
+  status: EquipmentStatus;       // Current status (active/returned/lost/etc.)
   location: string;              // Physical location
-  condition: EquipmentCondition; // Physical condition
+  condition: EquipmentCondition; // Physical condition (broken/part working/etc.)
   notes?: string;                // Optional notes
   lastReportUpdate: string;      // ISO date - last daily check
   trackingHistory: Array<{       // Complete audit trail
@@ -46,7 +46,6 @@ The Equipment Tracking System (צלם) is designed to manage military equipment 
       approvedBy: string;
       approvedAt: string;
       approvalType: ApprovalType;
-      phoneLast4?: string;
       emergencyOverride?: {
         overrideBy: string;
         overrideReason: string;
@@ -64,20 +63,30 @@ The Equipment Tracking System (צלם) is designed to manage military equipment 
 
 #### 2. `users` Collection
 
-**Document ID**: User ID from Firebase Auth
+**Document ID**: Firebase Auth UID
 
 **Document Structure**:
 
 ```typescript
 {
   uid: string;                   // Firebase Auth UID
-  name: string;                  // Full name
+  email: string;                 // User email from Firebase Auth
+  firstName: string;             // First name
+  lastName: string;              // Last name
+  displayName?: string;          // Full display name
+  userType: 'admin' | 'system_manager' | 'manager' | 'team_leader' | 'user'; // High-level user categorization
   unit: string;                  // Assigned unit/platoon
-  role: UserRole;                // Permission level
+  role: UserRole;                // Specific permission role within personnel
+  rank?: string;                 // Military rank
+  status: UserStatus;            // Active, inactive, transferred, discharged
   phoneNumber?: string;          // For OTP verification
-  permissions: EquipmentPermission[]; // Computed permissions
-  createdAt: string;
-  updatedAt: string;
+  permissions: EquipmentPermission[]; // Computed permissions based on role
+  militaryPersonalNumberHash?: string; // SHA-256 hash reference
+  profileImage?: string;         // Profile image URL
+  
+  joinDate: string;              // ISO date when joined unit
+  createdAt: string;             // ISO date
+  updatedAt: string;             // ISO date
 }
 ```
 
@@ -123,10 +132,88 @@ The Equipment Tracking System (צלם) is designed to manage military equipment 
 
 ### UserRole
 
-- `soldier`: Basic user, limited permissions
+- `soldier`: Basic user, can only update equipment they personally hold
+- `team_leader`: Team leader with team equipment access
+- `squad_leader`: Squad leader with enhanced permissions
+- `sergeant`: Sergeant with squad-level permissions
 - `officer`: Enhanced permissions, can approve transfers
 - `equipment_manager`: Full equipment management access
 - `commander`: Full system access including user management
+
+### EquipmentPermission
+
+- `VIEW_ALL`: Can view all equipment across units
+- `VIEW_UNIT_ONLY`: Can only view equipment from user's unit
+- `TRANSFER_EQUIPMENT`: Can initiate equipment transfers (any equipment with permission)
+- `TRANSFER_OWN_EQUIPMENT`: Can only transfer equipment they personally hold (for soldiers)
+- `TRANSFER_TEAM_EQUIPMENT`: Can transfer equipment for their team and themselves (for team leaders)
+- `UPDATE_STATUS`: Can update equipment status (any equipment with permission)
+- `UPDATE_OWN_EQUIPMENT`: Can only update equipment they personally hold (for soldiers)
+- `UPDATE_TEAM_EQUIPMENT`: Can update equipment for their team and themselves (for team leaders)
+- `APPROVE_TRANSFERS`: Can approve transfer requests
+- `EMERGENCY_OVERRIDE`: Can perform emergency transfers
+- `BULK_OPERATIONS`: Can perform bulk operations
+- `RETIRE_EQUIPMENT`: Can initiate retirement requests
+- `APPROVE_RETIREMENT`: Can approve retirement requests
+- `EXPORT_DATA`: Can export equipment data
+- `MANAGE_USERS`: Can manage user permissions
+
+#### Permission Hierarchy
+
+**UserType Override System:**
+The permission system has a two-tier hierarchy where UserType overrides UserRole permissions:
+
+**UserType Priority (System Access Level)**:
+
+1. **Admin & System Manager**: ALL permissions regardless of military role
+2. **Manager**: Enhanced permissions for management operations
+3. **Team Leader UserType**: Inherits from military role + management capabilities
+4. **User**: Follows military role permissions exactly
+
+**Military Role Permissions (when UserType doesn't override)**:
+
+**Soldier (Most Restrictive)**:
+
+- `VIEW_UNIT_ONLY`: Can see equipment from their unit only
+- `TRANSFER_OWN_EQUIPMENT`: Can only transfer equipment they personally hold (with approval)
+- `UPDATE_OWN_EQUIPMENT`: Can only update status of equipment they personally hold
+
+**Team Leader Role**:
+
+- `VIEW_UNIT_ONLY`: Can see equipment from their unit only
+- `TRANSFER_TEAM_EQUIPMENT`: Can transfer equipment for their team and themselves (with approval)
+- `UPDATE_TEAM_EQUIPMENT`: Can update status of equipment for their team and themselves
+- `APPROVE_TRANSFERS`: Can approve transfer requests
+
+**Squad Leader & Sergeant**:
+
+- `VIEW_ALL`: Can see all equipment
+- Enhanced permissions for their scope
+
+**Officer & Equipment Manager & Commander**:
+
+- Full permissions including emergency overrides and user management
+
+**Admin Override Examples**:
+
+- Admin with Soldier role = ALL permissions (admin override)
+- Manager with Soldier role = Enhanced permissions (manager override)  
+- User with Commander role = Commander permissions (no override)
+
+### UserStatus
+
+- `active`: Currently serving in the unit
+- `inactive`: Temporarily inactive (leave, training, etc.)
+- `transferred`: Transferred to another unit
+- `discharged`: Completed military service
+
+### UserType
+
+- `admin`: System administrator with full access
+- `system_manager`: System manager with high-level administrative permissions
+- `manager`: Manager with department/unit management permissions
+- `team_leader`: Team leader with team management permissions
+- `user`: Regular user with basic access permissions
 
 ### ApprovalType
 

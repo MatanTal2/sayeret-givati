@@ -5,14 +5,14 @@ import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { ADMIN_CONFIG, ADMIN_MESSAGES } from '@/constants/admin';
 import { UserDataService } from '@/lib/userDataService';
-import { EnhancedAuthUser } from '@/types/user';
+import { EnhancedAuthUser, UserType } from '@/types/user';
 
 // Types
 export interface AuthUser {
   uid: string;
   email?: string;
   displayName?: string;
-  userType: 'admin' | 'personnel' | null;
+  userType: UserType | null;
   militaryId?: string;
   rank?: string;
   firstName?: string;
@@ -72,8 +72,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
       if (firebaseUser) {
-        // Determine user type based on email
-        const userType = firebaseUser.email === ADMIN_CONFIG.EMAIL ? 'admin' : 'personnel';
+        // Initially set userType based on admin email, will be updated from Firestore if available
+        let userType: UserType | null = firebaseUser.email === ADMIN_CONFIG.EMAIL ? UserType.ADMIN : null;
         
         const authUser: AuthUser = {
           uid: firebaseUser.uid,
@@ -84,18 +84,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         setUser(authUser);
 
-        // For personnel users, fetch additional data from Firestore
-        if (userType === 'personnel' && firebaseUser.email) {
+        // For non-admin users, fetch additional data from Firestore
+        if (userType !== UserType.ADMIN) {
           try {
             console.log('🔍 Fetching user data from Firestore...');
-            const userDataResult = await UserDataService.fetchUserDataByEmail(firebaseUser.email);
+            const userDataResult = await UserDataService.fetchUserDataByUid(firebaseUser.uid);
             
             if (userDataResult.success && userDataResult.userData) {
               const firestoreData = userDataResult.userData;
               
+              // Update userType from Firestore data
+              userType = firestoreData.userType;
+              
               // Create enhanced user object with all data
               const enhanced: EnhancedAuthUser = {
                 ...authUser,
+                userType, // Use the updated userType from Firestore
                 firstName: firestoreData.firstName,
                 lastName: firestoreData.lastName,
                 gender: firestoreData.gender,

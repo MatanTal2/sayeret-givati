@@ -293,6 +293,115 @@ export class PhoneUtils {
   }
 
   /**
+   * Format phone number for international delivery
+   * Ensures phone number is in E.164 format (+972XXXXXXXXX)
+   */
+  static formatPhoneNumber(phoneNumber: string): string {
+    // Remove all non-digit characters
+    const cleanNumber = phoneNumber.replace(/[^0-9]/g, '');
+
+    // Handle Israeli phone numbers
+    if (cleanNumber.startsWith('972')) {
+      // Already has country code
+      return `+${cleanNumber}`;
+    } else if (cleanNumber.startsWith('0')) {
+      // Remove leading 0 and add +972
+      return `+972${cleanNumber.substring(1)}`;
+    } else if (cleanNumber.length === 9) {
+      // 9-digit number without leading 0
+      return `+972${cleanNumber}`;
+    } else {
+      // Return as is with + prefix
+      return `+${cleanNumber}`;
+    }
+  }
+
+  /**
+   * Validate phone number format
+   */
+  static validatePhoneNumber(phoneNumber: string): {
+    isValid: boolean;
+    error?: string;
+    formattedNumber?: string;
+  } {
+    try {
+      const formatted = this.formatPhoneNumber(phoneNumber);
+      
+      // Basic validation for Israeli numbers
+      if (formatted.startsWith('+972')) {
+        const numberPart = formatted.substring(4); // Remove +972
+        if (numberPart.length === 9 && /^[5-9]/.test(numberPart)) {
+          return {
+            isValid: true,
+            formattedNumber: formatted
+          };
+        }
+      }
+
+      // For other international numbers, do basic length check
+      if (formatted.length >= 10 && formatted.length <= 15) {
+        return {
+          isValid: true,
+          formattedNumber: formatted
+        };
+      }
+
+      return {
+        isValid: false,
+        error: 'Invalid phone number format'
+      };
+
+    } catch {
+      return {
+        isValid: false,
+        error: 'Error validating phone number'
+      };
+    }
+  }
+
+  /**
+   * Format phone number for display (converts +972XXXXXXXXX to 0XX-XXXXXXX)
+   * @param phone - The phone number to format
+   * @returns Formatted phone number for display
+   */
+  static formatPhoneForDisplay(phone: string): string {
+    if (!phone) return '';
+    
+    // Convert +972XXXXXXXXX to 0XX-XXXXXXX format for display
+    if (phone.startsWith('+972')) {
+      const number = phone.slice(4); // Remove +972
+      return `0${number.slice(0, 2)}-${number.slice(2)}`;
+    }
+    
+    // If already in display format or other format, return as is
+    return phone;
+  }
+
+  /**
+   * Normalize phone number for search (removes dashes, spaces, and formats consistently)
+   * @param phone - The phone number to normalize
+   * @returns Normalized phone number without formatting characters
+   */
+  static normalizePhoneForSearch(phone: string): string {
+    if (!phone) return '';
+    
+    // Remove all non-digit characters except +
+    const cleaned = phone.replace(/[^\d+]/g, '');
+    
+    // Convert +972XXXXXXXXX to 0XXXXXXXXX format for consistent searching
+    if (cleaned.startsWith('+972')) {
+      return '0' + cleaned.slice(4);
+    }
+    
+    // If starts with 972, convert to 0XXXXXXXXX
+    if (cleaned.startsWith('972') && cleaned.length === 12) {
+      return '0' + cleaned.slice(3);
+    }
+    
+    return cleaned;
+  }
+
+  /**
    * Validate OTP code
    * @param code - The OTP code to validate
    * @returns ValidationResult with isValid status and error message
@@ -330,4 +439,6 @@ export const validateGender = FormValidationUtils.validateGender;
 export const validateBirthdate = FormValidationUtils.validateBirthdate;
 export const validateConsent = FormValidationUtils.validateConsent;
 export const maskPhoneNumber = PhoneUtils.maskPhoneNumber;
+export const formatPhoneForDisplay = PhoneUtils.formatPhoneForDisplay;
+export const normalizePhoneForSearch = PhoneUtils.normalizePhoneForSearch;
 export const validateOTP = PhoneUtils.validateOTP;

@@ -1,3 +1,5 @@
+import { PhoneUtils } from '@/utils/validationUtils';
+
 /**
  * Twilio SMS Service for OTP delivery
  */
@@ -34,7 +36,7 @@ export class TwilioService {
       this.validateConfig();
 
       // Prepare the message
-      const message = `קוד האימות שלך: ${otpCode}\n\nקוד זה תקף למשך 5 דקות בלבד.\nצה"ל - יחידת סיירת גבעתי`;
+      const message = `קוד האימות שלך: ${otpCode}\n\nקוד זה תקף למשך 5 דקות בלבד.\nמסייעת סיירת גבעתי\n\nלכל שאלה שלחו מייל: mesayaat.sayeret.givati@gmail.com`;
 
       // Create Twilio client (using basic auth)
       const auth = Buffer.from(`${this.ACCOUNT_SID}:${this.AUTH_TOKEN}`).toString('base64');
@@ -79,68 +81,21 @@ export class TwilioService {
 
   /**
    * Format phone number for international delivery
-   * Ensures phone number is in E.164 format (+972XXXXXXXXX)
+   * @deprecated Use PhoneUtils.formatPhoneNumber instead
    */
   static formatPhoneNumber(phoneNumber: string): string {
-    // Remove all non-digit characters
-    const cleanNumber = phoneNumber.replace(/[^0-9]/g, '');
-
-    // Handle Israeli phone numbers
-    if (cleanNumber.startsWith('972')) {
-      // Already has country code
-      return `+${cleanNumber}`;
-    } else if (cleanNumber.startsWith('0')) {
-      // Remove leading 0 and add +972
-      return `+972${cleanNumber.substring(1)}`;
-    } else if (cleanNumber.length === 9) {
-      // 9-digit number without leading 0
-      return `+972${cleanNumber}`;
-    } else {
-      // Return as is with + prefix
-      return `+${cleanNumber}`;
-    }
+    return PhoneUtils.formatPhoneNumber(phoneNumber);
   }
 
   /**
    * Validate phone number format
+   * @deprecated Use PhoneUtils.validatePhoneNumber instead
    */
   static validatePhoneNumber(phoneNumber: string): {
     isValid: boolean;
     error?: string;
     formattedNumber?: string;
   } {
-    try {
-      const formatted = this.formatPhoneNumber(phoneNumber);
-      
-      // Basic validation for Israeli numbers
-      if (formatted.startsWith('+972')) {
-        const numberPart = formatted.substring(4); // Remove +972
-        if (numberPart.length === 9 && /^[5-9]/.test(numberPart)) {
-          return {
-            isValid: true,
-            formattedNumber: formatted
-          };
-        }
-      }
-
-      // For other international numbers, do basic length check
-      if (formatted.length >= 10 && formatted.length <= 15) {
-        return {
-          isValid: true,
-          formattedNumber: formatted
-        };
-      }
-
-      return {
-        isValid: false,
-        error: 'Invalid phone number format'
-      };
-
-    } catch {
-      return {
-        isValid: false,
-        error: 'Error validating phone number'
-      };
-    }
+    return PhoneUtils.validatePhoneNumber(phoneNumber);
   }
 }

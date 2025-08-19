@@ -260,15 +260,54 @@ export function validateEquipmentId(id: string): { isValid: boolean; error?: str
 }
 
 /**
- * Gets user permissions based on role
+ * Gets user permissions based on role and user type
  * Generic permission system that can be extended
+ * Admin UserType gets all permissions regardless of role
  */
-export function getUserPermissions(role: UserRole): EquipmentPermission[] {
+export function getUserPermissions(role: UserRole, userType?: string): EquipmentPermission[] {
+  // High-level UserTypes get ALL permissions regardless of military role
+  if (userType === 'admin' || userType === 'system_manager') {
+    return Object.values(EquipmentPermission);
+  }
+  
+  // Manager UserType gets enhanced permissions
+  if (userType === 'manager') {
+    return [
+      EquipmentPermission.VIEW_ALL,
+      EquipmentPermission.TRANSFER_EQUIPMENT,
+      EquipmentPermission.UPDATE_STATUS,
+      EquipmentPermission.APPROVE_TRANSFERS,
+      EquipmentPermission.BULK_OPERATIONS,
+      EquipmentPermission.RETIRE_EQUIPMENT,
+      EquipmentPermission.APPROVE_RETIREMENT,
+      EquipmentPermission.EXPORT_DATA
+    ];
+  }
   const permissions: Record<UserRole, EquipmentPermission[]> = {
     [UserRole.SOLDIER]: [
       EquipmentPermission.VIEW_UNIT_ONLY,
+      EquipmentPermission.TRANSFER_OWN_EQUIPMENT,
+      EquipmentPermission.UPDATE_OWN_EQUIPMENT
+    ],
+    [UserRole.TEAM_LEADER]: [
+      EquipmentPermission.VIEW_UNIT_ONLY,
+      EquipmentPermission.TRANSFER_TEAM_EQUIPMENT,
+      EquipmentPermission.UPDATE_TEAM_EQUIPMENT,
+      EquipmentPermission.APPROVE_TRANSFERS
+    ],
+    [UserRole.SQUAD_LEADER]: [
+      EquipmentPermission.VIEW_ALL,
       EquipmentPermission.TRANSFER_EQUIPMENT,
-      EquipmentPermission.UPDATE_STATUS
+      EquipmentPermission.UPDATE_STATUS,
+      EquipmentPermission.APPROVE_TRANSFERS,
+      EquipmentPermission.EXPORT_DATA
+    ],
+    [UserRole.SERGEANT]: [
+      EquipmentPermission.VIEW_ALL,
+      EquipmentPermission.TRANSFER_EQUIPMENT,
+      EquipmentPermission.UPDATE_STATUS,
+      EquipmentPermission.APPROVE_TRANSFERS,
+      EquipmentPermission.EXPORT_DATA
     ],
     [UserRole.OFFICER]: [
       EquipmentPermission.VIEW_ALL,
@@ -307,12 +346,67 @@ export function getUserPermissions(role: UserRole): EquipmentPermission[] {
 
 /**
  * Checks if user has specific permission
+ * Admin UserType automatically has all permissions
  */
 export function hasPermission(
   userContext: EquipmentUserContext,
   permission: EquipmentPermission
 ): boolean {
+  // High-level UserTypes have all permissions
+  if (userContext.userType === 'admin' || userContext.userType === 'system_manager') {
+    return true;
+  }
   return userContext.permissions.includes(permission);
+}
+
+/**
+ * Checks if user can update specific equipment based on ownership and permissions
+ */
+export function canUpdateEquipment(
+  userContext: EquipmentUserContext,
+  equipment: Equipment,
+  action: 'status' | 'transfer' | 'condition'
+): boolean {
+  // High-level UserTypes can do everything
+  if (userContext.userType === 'admin' || userContext.userType === 'system_manager') {
+    return true;
+  }
+  // Check if user has the general permission first (for higher roles - squad leader and above)
+  const hasGeneralPermission = 
+    action === 'status' && hasPermission(userContext, EquipmentPermission.UPDATE_STATUS) ||
+    action === 'transfer' && hasPermission(userContext, EquipmentPermission.TRANSFER_EQUIPMENT) ||
+    action === 'condition' && hasPermission(userContext, EquipmentPermission.UPDATE_STATUS);
+
+  // If user has general permission (squad leader and above), allow
+  if (hasGeneralPermission) {
+    return true;
+  }
+
+  // Check ownership (user holds the equipment)
+  const isOwnEquipment = !!(equipment.currentHolder === userContext.userId);
+  
+  // Check team membership (equipment belongs to user's team)
+  const isTeamEquipment = !!(userContext.team && equipment.assignedTeam === userContext.team);
+
+  // Handle team leader permissions
+  if (action === 'status' && hasPermission(userContext, EquipmentPermission.UPDATE_TEAM_EQUIPMENT)) {
+    return isOwnEquipment || isTeamEquipment;
+  }
+
+  if (action === 'transfer' && hasPermission(userContext, EquipmentPermission.TRANSFER_TEAM_EQUIPMENT)) {
+    return isOwnEquipment || isTeamEquipment;
+  }
+
+  // Handle soldier permissions
+  if (action === 'status' && hasPermission(userContext, EquipmentPermission.UPDATE_OWN_EQUIPMENT)) {
+    return isOwnEquipment;
+  }
+
+  if (action === 'transfer' && hasPermission(userContext, EquipmentPermission.TRANSFER_OWN_EQUIPMENT)) {
+    return isOwnEquipment;
+  }
+
+  return false;
 }
 
 /**

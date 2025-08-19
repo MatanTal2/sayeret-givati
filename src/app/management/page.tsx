@@ -5,51 +5,52 @@ import { useAuth } from '@/contexts/AuthContext';
 import AuthGuard from '@/components/auth/AuthGuard';
 import Header from '@/app/components/Header';
 import { UserRole } from '@/types/equipment';
+import { MANAGEMENT } from '@/constants/text';
 import { Users, Shield, ArrowRightLeft, Settings, Database, UserCheck, Mail } from 'lucide-react';
 
 // Management tabs configuration
 const MANAGEMENT_TABS = [
   {
     id: 'users',
-    label: 'ניהול משתמשים',
+    label: MANAGEMENT.TABS.USERS,
     icon: Users,
-    description: 'ניהול משתמשים, הרשאות ותפקידים'
+    description: MANAGEMENT.TAB_DESCRIPTIONS.USERS
   },
   {
     id: 'permissions',
-    label: 'הרשאות',
+    label: MANAGEMENT.TABS.PERMISSIONS,
     icon: Shield,
-    description: 'ניהול הרשאות מערכת ובקרת גישה'
+    description: MANAGEMENT.TAB_DESCRIPTIONS.PERMISSIONS
   },
   {
     id: 'enforce-transfer',
-    label: 'העברת ציוד כפויה',
+    label: MANAGEMENT.TABS.ENFORCE_TRANSFER,
     icon: ArrowRightLeft,
-    description: 'ביצוע העברות ציוד בחירום וכפייה'
+    description: MANAGEMENT.TAB_DESCRIPTIONS.ENFORCE_TRANSFER
   },
   {
     id: 'system-config',
-    label: 'הגדרות מערכת',
+    label: MANAGEMENT.TABS.SYSTEM_CONFIG,
     icon: Settings,
-    description: 'הגדרות כלליות ותצורת מערכת'
+    description: MANAGEMENT.TAB_DESCRIPTIONS.SYSTEM_CONFIG
   },
   {
     id: 'data-management',
-    label: 'ניהול נתונים',
+    label: MANAGEMENT.TABS.DATA_MANAGEMENT,
     icon: Database,
-    description: 'גיבוי, שחזור ואחזקת נתונים'
+    description: MANAGEMENT.TAB_DESCRIPTIONS.DATA_MANAGEMENT
   },
   {
     id: 'audit-logs',
-    label: 'יומני ביקורת',
+    label: MANAGEMENT.TABS.AUDIT_LOGS,
     icon: UserCheck,
-    description: 'מעקב פעילות ויומני מערכת'
+    description: MANAGEMENT.TAB_DESCRIPTIONS.AUDIT_LOGS
   },
   {
     id: 'send-email',
-    label: 'שליחת אימייל למשתמשים',
+    label: MANAGEMENT.TABS.SEND_EMAIL,
     icon: Mail,
-    description: 'שליחת הודעות אימייל לקבוצות משתמשים או משתמשים ספציפיים'
+    description: MANAGEMENT.TAB_DESCRIPTIONS.SEND_EMAIL
   }
 ] as const;
 
@@ -62,11 +63,11 @@ function EmailTabContent() {
   const [isUrgent, setIsUrgent] = useState(false);
 
   const roleOptions = [
-    { value: 'soldier', label: 'חיילים' },
-    { value: 'officer', label: 'קצינים' },
-    { value: 'commander', label: 'מפקדים' },
-    { value: 'equipment_manager', label: 'מנהלי ציוד' },
-    { value: 'admin', label: 'מנהלי מערכת' }
+    { value: 'soldier', label: MANAGEMENT.EMAIL.ROLE_SOLDIERS },
+    { value: 'officer', label: MANAGEMENT.EMAIL.ROLE_OFFICERS },
+    { value: 'commander', label: MANAGEMENT.EMAIL.ROLE_COMMANDERS },
+    { value: 'equipment_manager', label: MANAGEMENT.EMAIL.ROLE_EQUIPMENT_MANAGERS },
+    { value: 'admin', label: MANAGEMENT.EMAIL.ROLE_ADMINS }
   ];
 
   const handleSendEmail = () => {
@@ -78,14 +79,14 @@ function EmailTabContent() {
       message,
       isUrgent
     });
-    alert('הודעת האימייל נשלחה בהצלחה! (זהו הדמייה בלבד)');
+    alert(MANAGEMENT.EMAIL.SEND_SUCCESS);
   };
 
   return (
     <div className="space-y-6">
       {/* Recipient Selection */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">בחירת נמענים</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{MANAGEMENT.EMAIL.RECIPIENTS_TITLE}</h3>
         
         <div className="space-y-4">
           <div className="flex items-center space-x-3 space-x-reverse">
@@ -99,7 +100,7 @@ function EmailTabContent() {
               className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
             />
             <label htmlFor="all-users" className="text-sm font-medium text-gray-700">
-              כל המשתמשים במערכת
+              {MANAGEMENT.EMAIL.ALL_USERS}
             </label>
           </div>
 
@@ -114,7 +115,7 @@ function EmailTabContent() {
               className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
             />
             <label htmlFor="by-role" className="text-sm font-medium text-gray-700">
-              לפי תפקיד
+              {MANAGEMENT.EMAIL.BY_ROLE}
             </label>
           </div>
 
@@ -154,7 +155,7 @@ function EmailTabContent() {
               className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
             />
             <label htmlFor="specific-users" className="text-sm font-medium text-gray-700">
-              משתמשים ספציפיים (בפיתוח)
+              {MANAGEMENT.EMAIL.SPECIFIC_USERS}
             </label>
           </div>
         </div>
@@ -162,7 +163,7 @@ function EmailTabContent() {
 
       {/* Email Content */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">תוכן ההודעה</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{MANAGEMENT.EMAIL.MESSAGE_CONTENT_TITLE}</h3>
         
         <div className="space-y-4">
           {/* Priority */}
@@ -175,21 +176,21 @@ function EmailTabContent() {
               className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
             />
             <label htmlFor="urgent" className="text-sm font-medium text-gray-700">
-              הודעה דחופה (עדיפות גבוהה)
+              {MANAGEMENT.EMAIL.URGENT_MESSAGE}
             </label>
           </div>
 
           {/* Subject */}
           <div>
             <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-              נושא ההודעה
+              {MANAGEMENT.EMAIL.SUBJECT_LABEL}
             </label>
             <input
               type="text"
               id="subject"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="הכנס נושא להודעה..."
+              placeholder={MANAGEMENT.EMAIL.SUBJECT_PLACEHOLDER}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
             />
           </div>
@@ -197,13 +198,13 @@ function EmailTabContent() {
           {/* Message */}
           <div>
             <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-              תוכן ההודעה
+              {MANAGEMENT.EMAIL.MESSAGE_LABEL}
             </label>
             <textarea
               id="message"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="כתוב את תוכן ההודעה כאן..."
+              placeholder={MANAGEMENT.EMAIL.MESSAGE_PLACEHOLDER}
               rows={8}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
             />
@@ -213,28 +214,28 @@ function EmailTabContent() {
 
       {/* Preview & Send */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">תצוגה מקדימה ושליחה</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{MANAGEMENT.EMAIL.PREVIEW_TITLE}</h3>
         
         <div className="bg-gray-50 rounded-lg p-4 mb-4">
           <div className="text-sm text-gray-600 mb-2">
-            <strong>נמענים:</strong> {
-              recipients === 'all' ? 'כל המשתמשים' :
-              recipients === 'by-role' ? `תפקידים נבחרים: ${selectedRoles.join(', ')}` :
-              'משתמשים ספציפיים'
+            <strong>{MANAGEMENT.EMAIL.RECIPIENTS_PREVIEW}</strong> {
+              recipients === 'all' ? MANAGEMENT.EMAIL.ALL_USERS_PREVIEW :
+              recipients === 'by-role' ? `${MANAGEMENT.EMAIL.SELECTED_ROLES_PREVIEW} ${selectedRoles.join(', ')}` :
+              MANAGEMENT.EMAIL.SPECIFIC_USERS_PREVIEW
             }
           </div>
           <div className="text-sm text-gray-600 mb-2">
-            <strong>נושא:</strong> {subject || '(ללא נושא)'}
-            {isUrgent && <span className="text-red-600 font-semibold"> - דחוף!</span>}
+            <strong>{MANAGEMENT.EMAIL.SUBJECT_PREVIEW}</strong> {subject || MANAGEMENT.EMAIL.NO_SUBJECT}
+            {isUrgent && <span className="text-red-600 font-semibold">{MANAGEMENT.EMAIL.URGENT_INDICATOR}</span>}
           </div>
           <div className="text-sm text-gray-600">
-            <strong>הודעה:</strong> {message || '(ללא תוכן)'}
+            <strong>{MANAGEMENT.EMAIL.MESSAGE_PREVIEW}</strong> {message || MANAGEMENT.EMAIL.NO_CONTENT}
           </div>
         </div>
 
         <div className="flex justify-between items-center">
           <div className="text-sm text-gray-500">
-            ⚠️ זהו ממשק הדמייה בלבד. לא יישלחו אימיילים אמיתיים.
+            {MANAGEMENT.EMAIL.DEMO_WARNING}
           </div>
           <button
             onClick={handleSendEmail}
@@ -246,7 +247,7 @@ function EmailTabContent() {
             }`}
           >
             <Mail className="w-4 h-4 inline-block ml-2" />
-            שלח הודעה
+            {MANAGEMENT.EMAIL.SEND_BUTTON}
           </button>
         </div>
       </div>
@@ -271,8 +272,8 @@ function ManagementContent() {
     return (
       <div className="min-h-screen bg-gray-50" dir="rtl">
         <Header 
-          title="ניהול מערכת"
-          subtitle="גישה מוגבלת"
+          title={MANAGEMENT.PAGE_TITLE}
+          subtitle={MANAGEMENT.PAGE_SUBTITLE_LIMITED}
           showAuth={true}
         />
         
@@ -281,12 +282,12 @@ function ManagementContent() {
             <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
               <Shield className="w-8 h-8 text-red-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">אין הרשאה לגישה</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{MANAGEMENT.ACCESS_DENIED.TITLE}</h2>
             <p className="text-gray-600 mb-6">
-              דף זה מיועד למשתמשים עם הרשאות ניהול בלבד (קצין, מפקד או מנהל מערכת).
+              {MANAGEMENT.ACCESS_DENIED.MESSAGE}
             </p>
             <p className="text-sm text-gray-500">
-              התפקיד הנוכחי שלך: {enhancedUser?.userType === 'admin' ? 'מנהל מערכת' : enhancedUser?.role || 'לא זוהה'}
+              {MANAGEMENT.ACCESS_DENIED.CURRENT_ROLE} {enhancedUser?.userType === 'admin' ? MANAGEMENT.DEFAULT_MANAGER : enhancedUser?.role || MANAGEMENT.ROLE_NOT_IDENTIFIED}
             </p>
           </div>
         </main>
@@ -299,8 +300,8 @@ function ManagementContent() {
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
       <Header 
-        title="ניהול מערכת"
-        subtitle="כלי ניהול מתקדמים לסיירת גבעתי"
+        title={MANAGEMENT.PAGE_TITLE}
+        subtitle={MANAGEMENT.PAGE_SUBTITLE}
         showAuth={true}
       />
       
@@ -313,15 +314,15 @@ function ManagementContent() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">
-                שלום, {enhancedUser?.firstName || 'מנהל'}
+                {MANAGEMENT.WELCOME_GREETING}, {enhancedUser?.firstName || MANAGEMENT.DEFAULT_MANAGER}
               </h1>
               <p className="text-gray-600 text-sm">
-                תפקיד: {enhancedUser?.userType === 'admin' ? 'מנהל מערכת' : enhancedUser?.role || 'לא זוהה'}
+                {MANAGEMENT.ROLE_LABEL}: {enhancedUser?.userType === 'admin' ? MANAGEMENT.DEFAULT_MANAGER : enhancedUser?.role || MANAGEMENT.ROLE_NOT_IDENTIFIED}
               </p>
             </div>
           </div>
           <p className="text-gray-700">
-            ברוך הבא למרכז הניהול של מערכת סיירת גבעתי. כאן תוכל לנהל משתמשים, הרשאות וביצועים מתקדמים.
+            {MANAGEMENT.WELCOME_MESSAGE}
           </p>
         </div>
 
@@ -374,10 +375,10 @@ function ManagementContent() {
                       <activeTabData.icon className="w-8 h-8 text-gray-400" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                      {activeTabData.label} - בפיתוח
+                      {activeTabData.label} - {MANAGEMENT.DEVELOPMENT.IN_DEVELOPMENT}
                     </h3>
                     <p className="text-gray-500 mb-4">
-                      תכונה זו נמצאת כרגע בפיתוח ותהיה זמינה בקרוב.
+                      {MANAGEMENT.DEVELOPMENT.FEATURE_COMING_SOON}
                     </p>
                     <div className="text-sm text-gray-400">
                       {activeTabData.description}
@@ -391,7 +392,7 @@ function ManagementContent() {
 
         {/* Footer Info */}
         <div className="mt-6 text-center text-sm text-gray-500">
-          מערכת ניהול סיירת גבעתי • גרסה 1.0 • פותח עבור צה״ל
+          {MANAGEMENT.FOOTER_TEXT}
         </div>
       </main>
     </div>
