@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OTPManager } from '@/lib/otpUtils';
 import { PhoneUtils } from '@/utils/validationUtils';
 import { TwilioService } from '@/lib/twilioService';
+import { TEXT_CONSTANTS } from '@/constants/text';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           success: false,
-          error: 'Phone number is required and must be a string' 
+          error: TEXT_CONSTANTS.AUTH.OTP_PHONE_REQUIRED 
         },
         { status: 400 }
       );
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           success: false,
-          error: phoneValidation.error || 'Invalid phone number format' 
+          error: phoneValidation.error || TEXT_CONSTANTS.AUTH.OTP_INVALID_PHONE_FORMAT 
         },
         { status: 400 }
       );
@@ -41,10 +42,14 @@ export async function POST(request: NextRequest) {
         minute: '2-digit'
       });
 
+      const errorMessage = resetTimeFormatted 
+        ? TEXT_CONSTANTS.AUTH.OTP_RATE_LIMITED.replace('{resetTime}', resetTimeFormatted)
+        : TEXT_CONSTANTS.AUTH.OTP_RATE_LIMITED_FALLBACK;
+
       return NextResponse.json(
         { 
           success: false,
-          error: `יותר מדי ניסיונות. נסה שוב ב-${resetTimeFormatted || 'מספר דקות'}`,
+          error: errorMessage,
           rateLimited: true,
           resetTime: rateLimitCheck.resetTime
         },
@@ -65,7 +70,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           success: false,
-          error: 'שגיאה בשליחת הודעה. אנא נסה שוב מאוחר יותר.',
+          error: TEXT_CONSTANTS.AUTH.OTP_SMS_SEND_ERROR,
           details: process.env.NODE_ENV === 'development' ? smsResult.error : undefined
         },
         { status: 500 }
@@ -75,7 +80,7 @@ export async function POST(request: NextRequest) {
     // Success response (without exposing OTP code)
     return NextResponse.json({
       success: true,
-      message: 'קוד אימות נשלח בהצלחה',
+      message: TEXT_CONSTANTS.AUTH.OTP_SENT_SUCCESS,
       phoneNumber: formattedPhoneNumber,
       attemptsRemaining: rateLimitCheck.attemptsRemaining,
       expiresInMinutes: 5
@@ -87,7 +92,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         success: false,
-        error: 'שגיאה פנימית במערכת. אנא נסה שוב מאוחר יותר.',
+        error: TEXT_CONSTANTS.AUTH.OTP_INTERNAL_ERROR,
         details: process.env.NODE_ENV === 'development' ? error : undefined
       },
       { status: 500 }
@@ -97,7 +102,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json(
-    { error: 'Method not allowed. Use POST to send OTP.' },
+    { error: TEXT_CONSTANTS.AUTH.OTP_METHOD_NOT_ALLOWED },
     { status: 405 }
   );
 }

@@ -61,6 +61,16 @@ export const TEXT_CONSTANTS = {
     OTP_RESEND_FAILED: 'שליחת הקוד מחדש נכשלה',
     OTP_VERIFYING: 'מאמת קוד...',
     
+    // OTP API Messages
+    OTP_PHONE_REQUIRED: 'Phone number is required and must be a string',
+    OTP_INVALID_PHONE_FORMAT: 'Invalid phone number format',
+    OTP_RATE_LIMITED: 'יותר מדי ניסיונות. נסה שוב ב-{resetTime}',
+    OTP_RATE_LIMITED_FALLBACK: 'יותר מדי ניסיונות. נסה שוב במספר דקות',
+    OTP_SMS_SEND_ERROR: 'שגיאה בשליחת הודעה. אנא נסה שוב מאוחר יותר.',
+    OTP_SENT_SUCCESS: 'קוד אימות נשלח בהצלחה',
+    OTP_INTERNAL_ERROR: 'שגיאה פנימית במערכת. אנא נסה שוב מאוחר יותר.',
+    OTP_METHOD_NOT_ALLOWED: 'Method not allowed. Use POST to send OTP.',
+    
     // System Policy Content
     SYSTEM_POLICY_TITLE: 'תנאי השימוש ומדיניות הפרטיות',
     SYSTEM_POLICY_CONTENT: `מערכת ניהול סיירת גבעתי
