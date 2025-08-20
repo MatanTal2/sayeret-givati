@@ -3,6 +3,8 @@
 import { useState, useCallback } from 'react';
 import { AuthorizedPersonnelData, FormMessage, AuthorizedPersonnel, PersonnelFormData, PersonnelOperationResult } from '@/types/admin';
 import { ValidationUtils, AdminFirestoreService } from '@/lib/adminUtils';
+import { PersonnelCache } from '@/lib/personnelCache';
+import { TEXT_CONSTANTS } from '@/constants/text';
 
 interface UsePersonnelManagementReturn {
   formData: AuthorizedPersonnelData;
@@ -20,9 +22,14 @@ interface UsePersonnelManagementReturn {
     userType?: string;
   }) => Promise<PersonnelOperationResult>;
   deletePersonnel: (personnelId: string) => Promise<void>;
-  fetchPersonnel: () => Promise<void>;
+  fetchPersonnel: (forceRefresh?: boolean) => Promise<void>;
   clearMessage: () => void;
   resetForm: () => void;
+  cacheInfo: {
+    isValid: boolean;
+    ageInHours: number;
+    lastManualRefresh: Date | null;
+  };
 }
 
 const initialFormData: AuthorizedPersonnelData = {
@@ -108,12 +115,44 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     setIsLoading(false);
   };
 
-  const fetchPersonnel = useCallback(async () => {
+  const fetchPersonnel = useCallback(async (forceRefresh: boolean = false) => {
     setIsLoading(true);
+    setMessage(null);
 
     try {
+      // Check cache first unless forcing refresh
+      if (!forceRefresh) {
+        const cachedData = PersonnelCache.getCachedData();
+        if (cachedData) {
+          setPersonnel(cachedData.data);
+          setMessage({
+            text: TEXT_CONSTANTS.CONFIRMATIONS.PERSONNEL_DATA_CACHED_MESSAGE,
+            type: 'info'
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Fetch from database
       const fetchedPersonnel = await AdminFirestoreService.getAllAuthorizedPersonnel();
       setPersonnel(fetchedPersonnel);
+      
+      // Cache the fresh data
+      PersonnelCache.setCachedData(fetchedPersonnel, forceRefresh);
+      
+      // Show appropriate message
+      if (forceRefresh) {
+        setMessage({
+          text: TEXT_CONSTANTS.CONFIRMATIONS.PERSONNEL_DATA_REFRESHED_MESSAGE,
+          type: 'success'
+        });
+      } else {
+        setMessage({
+          text: TEXT_CONSTANTS.CONFIRMATIONS.PERSONNEL_CACHE_EXPIRED_MESSAGE,
+          type: 'info'
+        });
+      }
     } catch (error) {
       console.error('Error fetching personnel:', error);
       setMessage({
@@ -233,6 +272,13 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     setIsLoading(false);
   };
 
+  // Get cache information
+  const cacheInfo = {
+    isValid: PersonnelCache.isCacheValid(),
+    ageInHours: PersonnelCache.getCacheAge(),
+    lastManualRefresh: PersonnelCache.getLastManualRefresh()
+  };
+
   return {
     formData,
     isLoading,
@@ -245,6 +291,7 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     updatePersonnel,
     deletePersonnel,
     fetchPersonnel,
-    clearMessage
+    clearMessage,
+    cacheInfo
   };
 }

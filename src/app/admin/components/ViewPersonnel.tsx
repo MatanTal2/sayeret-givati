@@ -413,7 +413,7 @@ export default function ViewPersonnel() {
       {/* Refresh Button */}
       <div className="text-center">
         <button
-          onClick={fetchPersonnel}
+          onClick={() => fetchPersonnel(true)}
           disabled={isLoading}
           className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 
                      text-white font-medium py-2 px-4 rounded-md

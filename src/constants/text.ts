@@ -458,6 +458,14 @@ export const TEXT_CONSTANTS = {
     NOTIFICATIONS_COMING_SOON_TITLE: 'תכונה בפיתוח',
     NOTIFICATIONS_COMING_SOON_MESSAGE: 'התראות העברת ציוד - תכונה זו תהיה זמינה בקרוב',
     
+    // Admin Personnel Data Refresh
+    PERSONNEL_DATA_CACHED_TITLE: 'נתונים מוכנים',
+    PERSONNEL_DATA_CACHED_MESSAGE: 'הנתונים נטענו מהמטמון המקומי',
+    PERSONNEL_DATA_REFRESHED_TITLE: 'נתונים עודכנו',
+    PERSONNEL_DATA_REFRESHED_MESSAGE: 'רשימת הכוח אדם עודכנה מהמאגר',
+    PERSONNEL_CACHE_EXPIRED_TITLE: 'נתונים עודכנו',
+    PERSONNEL_CACHE_EXPIRED_MESSAGE: 'המטמון פג תוקף - הנתונים נטענו מחדש',
+    
     // Common buttons
     OK: 'אישור',
     CANCEL: 'ביטול',
