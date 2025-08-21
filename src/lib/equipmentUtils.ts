@@ -81,7 +81,7 @@ export function createNewEquipment(
     signedBy,
     currentHolder: signedBy,
     assignedUnit,
-    status: EquipmentStatus.ACTIVE,
+    status: EquipmentStatus.AVAILABLE,
     location,
     condition,
     notes,
@@ -552,13 +552,12 @@ export function formatEquipmentDate(dateString: string): string {
  */
 export function getStatusDisplayText(status: EquipmentStatus): string {
   const statusTexts: Record<EquipmentStatus, string> = {
-    [EquipmentStatus.ACTIVE]: 'פעיל',
+    [EquipmentStatus.AVAILABLE]: 'זמין',
+    [EquipmentStatus.IN_USE]: 'בשימוש',
+    [EquipmentStatus.MAINTENANCE]: 'בתחזוקה',
+    [EquipmentStatus.REPAIR]: 'בתיקון',
     [EquipmentStatus.LOST]: 'אבוד',
-    [EquipmentStatus.BROKEN]: 'שבור',
-    [EquipmentStatus.MAINTENANCE]: 'תחזוקה',
-    [EquipmentStatus.RETIRED]: 'הוצא משירות',
-    [EquipmentStatus.PENDING_TRANSFER]: 'ממתין להעברה',
-    [EquipmentStatus.PENDING_RETIREMENT]: 'ממתין להוצאה משירות'
+    [EquipmentStatus.RETIRED]: 'הוחזר'
   };
   
   return statusTexts[status] || status;
@@ -569,12 +568,12 @@ export function getStatusDisplayText(status: EquipmentStatus): string {
  */
 export function getConditionDisplayText(condition: EquipmentCondition): string {
   const conditionTexts: Record<EquipmentCondition, string> = {
-    [EquipmentCondition.EXCELLENT]: 'מעולה',
+    [EquipmentCondition.NEW]: 'חדש',
+    [EquipmentCondition.EXCELLENT]: 'מצוין',
     [EquipmentCondition.GOOD]: 'טוב',
-    [EquipmentCondition.FAIR]: 'סביר',
+    [EquipmentCondition.FAIR]: 'בסדר',
     [EquipmentCondition.POOR]: 'גרוע',
-    [EquipmentCondition.DAMAGED]: 'פגום',
-    [EquipmentCondition.BROKEN]: 'שבור'
+    [EquipmentCondition.NEEDS_REPAIR]: 'דורש תיקון'
   };
   
   return conditionTexts[condition] || condition;
@@ -597,8 +596,8 @@ export function needsAttention(equipment: Equipment): {
     return { needsAttention: true, reason: 'ציוד אבוד', priority: 'high' };
   }
   
-  if (equipment.status === EquipmentStatus.BROKEN) {
-    return { needsAttention: true, reason: 'ציוד שבור', priority: 'high' };
+  if (equipment.status === EquipmentStatus.REPAIR) {
+    return { needsAttention: true, reason: 'ציוד בתיקון', priority: 'high' };
   }
   
   // Medium priority issues
@@ -606,7 +605,7 @@ export function needsAttention(equipment: Equipment): {
     return { needsAttention: true, reason: 'לא עודכן למעלה מ-7 ימים', priority: 'medium' };
   }
   
-  if (equipment.condition === EquipmentCondition.POOR || equipment.condition === EquipmentCondition.DAMAGED) {
+  if (equipment.condition === EquipmentCondition.POOR || equipment.condition === EquipmentCondition.NEEDS_REPAIR) {
     return { needsAttention: true, reason: 'מצב הציוד דורש תשומת לב', priority: 'medium' };
   }
   

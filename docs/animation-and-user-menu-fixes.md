@@ -61,15 +61,15 @@ This document outlines the fixes applied to resolve card animation flicker on pa
 
 - ## `src/app/components/AuthButton.tsx`: Enhanced user display logic
 
-#### Improvements Made
+### Improvements Made
 
-##### 1. Enhanced Initials Logic (`getUserInitials`)
+#### 1. Enhanced Initials Logic (`getUserInitials`)
 
 **Priority Order:**
 
 1. **firstName + lastName**: `"JD"` (John Doe)
 2. **displayName**: `"JD"` (John Doe) or `"JO"` (John)
-3. **email fallback**: `"JU"` (john@example.com → J + User)
+3. **email fallback**: `"JU"` (<john@example.com> → J + User)
 4. **default symbol**: `"👤"` (user icon)
 
 ##### 2. Added Desktop Greeting (`getDesktopGreeting`)

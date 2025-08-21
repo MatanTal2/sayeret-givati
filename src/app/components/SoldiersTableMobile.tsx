@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import { BsFillHouseFill } from "react-icons/bs";
 import { GiTank } from "react-icons/gi";
 import { MdNotListedLocation } from "react-icons/md";
@@ -93,7 +94,7 @@ export default function SoldiersTableMobile({
                   }
                 </span>
               </div>
-              <span className={`text-purple-700 transform transition-transform ${showTeamFilter ? 'rotate-180' : ''}`}>▼</span>
+              <ChevronDown className={`h-5 w-5 text-purple-700 transition-transform duration-200 ${showTeamFilter ? 'rotate-180' : ''}`} />
             </button>
             {showTeamFilter && (
               <div className="filter-dropdown absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-b-md shadow-lg z-20">
@@ -147,7 +148,7 @@ export default function SoldiersTableMobile({
                   }
                 </span>
               </div>
-              <span className={`text-purple-700 transform transition-transform ${showStatusFilter ? 'rotate-180' : ''}`}>▼</span>
+              <ChevronDown className={`h-5 w-5 text-purple-700 transition-transform duration-200 ${showStatusFilter ? 'rotate-180' : ''}`} />
             </button>
             {showStatusFilter && (
               <div className="filter-dropdown absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-b-md shadow-lg z-20">

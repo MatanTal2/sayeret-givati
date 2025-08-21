@@ -198,7 +198,90 @@ export const TEXT_CONSTANTS = {
     },
     EQUIPMENT: {
       TITLE: 'צלם',
-      DESCRIPTION: 'ניהול ציוד צבאי עם מספר סידורי'
+      DESCRIPTION: 'ניהול ציוד צבאי עם מספר סידורי',
+      
+      // Status Text
+      STATUS_AVAILABLE: 'זמין',
+      STATUS_IN_USE: 'בשימוש',
+      STATUS_MAINTENANCE: 'בתחזוקה',
+      STATUS_REPAIR: 'בתיקון',
+      STATUS_LOST: 'אבוד',
+      STATUS_RETIRED: 'הוחזר',
+      
+      // Condition Text
+      CONDITION_NEW: 'חדש',
+      CONDITION_EXCELLENT: 'מצוין',
+      CONDITION_GOOD: 'טוב',
+      CONDITION_FAIR: 'בסדר',
+      CONDITION_POOR: 'גרוע',
+      CONDITION_NEEDS_REPAIR: 'דורש תיקון',
+      
+      // UI Labels
+      SERIAL_NUMBER: 'מספר סידורי',
+      PRODUCT_NAME: 'שם פריט',
+      CATEGORY: 'קטגוריה',
+      CURRENT_HOLDER: 'מחזיק נוכחי',
+      ASSIGNED_UNIT: 'יחידה משובצת',
+      LOCATION: 'מיקום',
+      LAST_CHECK: 'בדיקה אחרונה',
+      DATE_SIGNED: 'תאריך קבלה',
+      NOTES: 'הערות',
+      
+      // Actions
+      TRANSFER_EQUIPMENT: 'העבר ציוד',
+      UPDATE_STATUS: 'עדכן סטטוס',
+      UPDATE_CONDITION: 'עדכן מצב',
+      DAILY_CHECK: 'בדיקה יומית',
+      VIEW_HISTORY: 'הצג היסטוריה',
+      
+      // Messages
+      NO_EQUIPMENT: 'אין ציוד רשום במערכת',
+      LOADING_EQUIPMENT: 'טוען ציוד...',
+      ERROR_LOADING: 'שגיאה בטעינת הציוד',
+      REFRESHING: 'מרענן...',
+      REFRESH: 'רענן',
+      TRY_AGAIN: 'נסה שוב',
+      REFRESH_PAGE: 'רענן דף',
+      
+      // Empty State Messages
+      NO_ITEMS_FOUND: 'לא נמצאו פריטים התואמים לחיפוש',
+      CHANGE_SEARCH_PARAMS: 'נסה לשנות את פרמטרי החיפוש או הסינון',
+      ADD_EQUIPMENT_TO_START: 'הוסף פריטי ציוד למערכת כדי להתחיל בניהול',
+      SEARCH_TIP: 'טיפ: נסה חיפוש רחב יותר או בדוק את הפילטרים',
+      
+      // Error Messages
+      UNEXPECTED_ERROR: 'אירעה שגיאה לא צפויה בטעינת רכיב הציוד',
+      TECHNICAL_DETAILS: 'פרטים טכניים',
+      CONTACT_ADMIN: 'אם הבעיה נמשכת, פנה למנהל המערכת',
+      
+      // Search and Filters
+      SEARCH_PLACEHOLDER: 'חיפוש לפי מספר סידורי, שם פריט, מחזיק...',
+      ALL_STATUSES: 'כל הסטטוסים',
+      ALL_CONDITIONS: 'כל המצבים',
+      CARDS_VIEW: 'כרטיסים',
+      TABLE_VIEW: 'טבלה',
+      SHOWING_RESULTS: 'מציג {count} מתוך {total} פריטי ציוד',
+      NO_EQUIPMENT_FILTERED: 'טרם נוסף ציוד למערכת',
+      
+      // Time Formatting
+      HOURS_AGO: 'לפני {hours} שעות',
+      DAYS_AGO: 'לפני {days} ימים',
+      SIGNED_BY: 'על ידי {name}',
+      
+      // Development Status
+      STEP_INTERFACE_DEV: 'Step 1.2 - Interface Development',
+      STATUS_UI_COMPLETED: 'Step 1.2 - Basic Equipment Interface (UI Components Completed)',
+      NEXT_FORMS_ACTIONS: 'Next: Forms & Actions Implementation',
+      
+      // Table Headers
+      TABLE_SERIAL: 'מס\' סידורי',
+      TABLE_ITEM: 'פריט',
+      TABLE_HOLDER: 'מחזיק',
+      TABLE_STATUS: 'סטטוס',
+      TABLE_CONDITION: 'מצב',
+      TABLE_LOCATION: 'מיקום',
+      TABLE_ACTIONS: 'פעולות',
+      TABLE_LAST_CHECK: 'בדיקה אחרונה'
     },
     CONVOYS: {
       TITLE: 'שיירות',
@@ -483,6 +566,15 @@ export const TEXT_CONSTANTS = {
     EQUIPMENT_NOTIFICATIONS: 'התראות ציוד'
   }
 } as const;
+
+export const TEXT_FMT = {
+  GREETING: (name: string) => `שלום, ${name}!`,
+  ITEMS_COUNT: (n: number) => `יש ${n} פריטים`,
+  HOURS_AGO: (hours: number) => `לפני ${hours} שעות`,
+  DAYS_AGO: (days: number) => `לפני ${days} ימים`,
+  SIGNED_BY: (name: string) => `על ידי ${name}`,
+  SHOWING_RESULTS: (count: number, total: number) => `מציג ${count} מתוך ${total} פריטי ציוד`,
+};
 
 // Export individual sections for easier imports
 export const { BUTTONS, AUTH, FEATURES, ADMIN, ERRORS, SUCCESS, MANAGEMENT, CONFIRMATIONS, ARIA_LABELS } = TEXT_CONSTANTS; 

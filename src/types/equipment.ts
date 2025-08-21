@@ -60,22 +60,21 @@ export interface RetirementRequest {
 
 // Enums for type safety
 export enum EquipmentStatus {
-  ACTIVE = 'active',
-  LOST = 'lost',
-  BROKEN = 'broken',
+  AVAILABLE = 'available',
+  IN_USE = 'in_use',
   MAINTENANCE = 'maintenance',
-  RETIRED = 'retired',
-  PENDING_TRANSFER = 'pending_transfer',
-  PENDING_RETIREMENT = 'pending_retirement'
+  REPAIR = 'repair',
+  LOST = 'lost',
+  RETIRED = 'retired'
 }
 
 export enum EquipmentCondition {
+  NEW = 'new',
   EXCELLENT = 'excellent',
   GOOD = 'good',
   FAIR = 'fair',
   POOR = 'poor',
-  DAMAGED = 'damaged',
-  BROKEN = 'broken'
+  NEEDS_REPAIR = 'needs_repair'
 }
 
 export enum EquipmentAction {
