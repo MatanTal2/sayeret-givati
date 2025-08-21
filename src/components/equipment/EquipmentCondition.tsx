@@ -7,12 +7,14 @@ interface EquipmentConditionProps {
   condition: ConditionType;
   size?: 'sm' | 'md' | 'lg';
   showIcon?: boolean;
+  variant?: 'filled' | 'outlined';
 }
 
 export default function EquipmentCondition({ 
   condition, 
   size = 'md', 
-  showIcon = true 
+  showIcon = true,
+  variant = 'filled'
 }: EquipmentConditionProps) {
   // Condition to display text mapping
   const getConditionText = (condition: ConditionType): string => {
@@ -36,21 +38,21 @@ export default function EquipmentCondition({
 
   // Condition to color mapping - using semantic colors
   const getConditionColor = (condition: ConditionType): string => {
-    switch (condition) {
-      case ConditionType.NEW:
-        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200';
-      case ConditionType.EXCELLENT:
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case ConditionType.GOOD:
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case ConditionType.FAIR:
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case ConditionType.POOR:
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
-      case ConditionType.NEEDS_REPAIR:
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+    const colorMap = {
+      [ConditionType.NEW]: 'emerald',
+      [ConditionType.EXCELLENT]: 'green', 
+      [ConditionType.GOOD]: 'blue',
+      [ConditionType.FAIR]: 'yellow',
+      [ConditionType.POOR]: 'orange',
+      [ConditionType.NEEDS_REPAIR]: 'red'
+    };
+    
+    const color = colorMap[condition] || 'gray';
+    
+    if (variant === 'outlined') {
+      return `bg-transparent text-${color}-700 border border-${color}-700`;
+    } else {
+      return `bg-${color}-100 text-${color}-800 dark:bg-${color}-900 dark:text-${color}-200`;
     }
   };
 

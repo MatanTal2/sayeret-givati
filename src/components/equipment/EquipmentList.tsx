@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ChevronDown } from "lucide-react";
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Equipment, EquipmentStatus, EquipmentCondition } from '@/types/equipment';
 import { TEXT_CONSTANTS, TEXT_FMT } from '@/constants/text';
 import EquipmentCard from './EquipmentCard';
 import StatusComponent from './EquipmentStatus';
 import ConditionComponent from './EquipmentCondition';
+import SelectAllCheckbox from '@/app/components/SelectAllCheckbox';
 
 interface EquipmentListProps {
   equipment: Equipment[];
@@ -38,6 +39,19 @@ export default function EquipmentList({
   const [sortField, setSortField] = useState<SortField>('lastReportUpdate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [showProductNameFilter, setShowProductNameFilter] = useState(false);
+  const [showHolderFilter, setShowHolderFilter] = useState(false);
+  const [selectedProductNames, setSelectedProductNames] = useState<string[]>([]);
+  const [selectedHolders, setSelectedHolders] = useState<string[]>([]);
+  const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<Set<string>>(new Set());
+  
+  // Refs for click outside detection
+  const productNameFilterRef = useRef<HTMLTableHeaderCellElement>(null);
+  const holderFilterRef = useRef<HTMLTableHeaderCellElement>(null);
+
+  // Get unique values for filters
+  const uniqueProductNames = [...new Set(equipment.map(item => item.productName))].sort();
+  const uniqueHolders = [...new Set(equipment.map(item => item.currentHolder))].sort();
 
   // Filter and sort equipment
   const filteredAndSortedEquipment = equipment
@@ -62,6 +76,16 @@ export default function EquipmentList({
       
       // Condition filter
       if (conditionFilter !== 'all' && item.condition !== conditionFilter) {
+        return false;
+      }
+      
+      // Product name filter
+      if (selectedProductNames.length > 0 && !selectedProductNames.includes(item.productName)) {
+        return false;
+      }
+      
+      // Holder filter
+      if (selectedHolders.length > 0 && !selectedHolders.includes(item.currentHolder)) {
         return false;
       }
       
@@ -131,8 +155,12 @@ export default function EquipmentList({
   };
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return '↕️';
-    return sortOrder === 'asc' ? '↑' : '↓';
+    if (sortField !== field) {
+      return <ArrowUpDown className="inline w-4 h-4 ml-1 text-purple-500" />;
+    }
+    return sortOrder === 'asc' 
+      ? <ArrowUp className="inline w-4 h-4 ml-1 text-purple-700" />
+      : <ArrowDown className="inline w-4 h-4 ml-1 text-purple-700" />;
   };
 
   // Toggle row expansion
@@ -145,6 +173,101 @@ export default function EquipmentList({
     }
     setExpandedRows(newExpandedRows);
   };
+
+  // Filter handlers
+  const handleProductNameFilterChange = (productName: string, checked: boolean) => {
+    if (checked) {
+      setSelectedProductNames([...selectedProductNames, productName]);
+    } else {
+      setSelectedProductNames(selectedProductNames.filter(p => p !== productName));
+    }
+  };
+
+  const handleHolderFilterChange = (holder: string, checked: boolean) => {
+    if (checked) {
+      setSelectedHolders([...selectedHolders, holder]);
+    } else {
+      setSelectedHolders(selectedHolders.filter(h => h !== holder));
+    }
+  };
+
+  const clearProductNameFilters = () => setSelectedProductNames([]);
+  const clearHolderFilters = () => setSelectedHolders([]);
+
+  // Selection handlers
+  const toggleEquipmentSelection = (equipmentId: string) => {
+    const newSelected = new Set(selectedEquipmentIds);
+    if (newSelected.has(equipmentId)) {
+      newSelected.delete(equipmentId);
+    } else {
+      newSelected.add(equipmentId);
+    }
+    setSelectedEquipmentIds(newSelected);
+  };
+
+  const toggleAllVisible = () => {
+    const visibleIds = new Set(filteredAndSortedEquipment.map(item => item.id));
+    const allVisibleSelected = filteredAndSortedEquipment.every(item => selectedEquipmentIds.has(item.id));
+    
+    if (allVisibleSelected) {
+      // Deselect all visible
+      const newSelected = new Set(selectedEquipmentIds);
+      visibleIds.forEach(id => newSelected.delete(id));
+      setSelectedEquipmentIds(newSelected);
+    } else {
+      // Select all visible
+      const newSelected = new Set(selectedEquipmentIds);
+      visibleIds.forEach(id => newSelected.add(id));
+      setSelectedEquipmentIds(newSelected);
+    }
+  };
+
+  // Selection state for "select all" checkbox
+  const allVisibleSelected = filteredAndSortedEquipment.length > 0 && filteredAndSortedEquipment.every(item => selectedEquipmentIds.has(item.id));
+  const someVisibleSelected = filteredAndSortedEquipment.some(item => selectedEquipmentIds.has(item.id));
+
+  // Update dropdown positions when they open
+  const [dropdownPositions, setDropdownPositions] = useState({
+    productName: { top: 0, left: 0, width: 200 },
+    holder: { top: 0, left: 0, width: 200 }
+  });
+
+  useEffect(() => {
+    if (showProductNameFilter && productNameFilterRef.current) {
+      const rect = productNameFilterRef.current.getBoundingClientRect();
+      setDropdownPositions(prev => ({
+        ...prev,
+        productName: { top: rect.bottom, left: rect.left, width: rect.width }
+      }));
+    }
+  }, [showProductNameFilter]);
+
+  useEffect(() => {
+    if (showHolderFilter && holderFilterRef.current) {
+      const rect = holderFilterRef.current.getBoundingClientRect();
+      setDropdownPositions(prev => ({
+        ...prev,
+        holder: { top: rect.bottom, left: rect.left, width: rect.width }
+      }));
+    }
+  }, [showHolderFilter]);
+
+  // Close filters when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (productNameFilterRef.current && !productNameFilterRef.current.contains(event.target as Node)) {
+        setShowProductNameFilter(false);
+      }
+      if (holderFilterRef.current && !holderFilterRef.current.contains(event.target as Node)) {
+        setShowHolderFilter(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -272,6 +395,11 @@ export default function EquipmentList({
       {/* Results Count */}
       <div className="text-sm text-gray-600">
         {TEXT_FMT.SHOWING_RESULTS(filteredAndSortedEquipment.length, equipment.length)}
+        {selectedEquipmentIds.size > 0 && (
+          <div className="text-sm text-purple-600 font-medium mt-1">
+            נבחרו {selectedEquipmentIds.size} מתוך {filteredAndSortedEquipment.length}
+          </div>
+        )}
       </div>
 
       {/* Equipment Display */}
@@ -302,11 +430,28 @@ export default function EquipmentList({
         </div>
       ) : (
         /* Table View */
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden min-h-[500px]">
+                     <div className="overflow-x-auto">
+             <table className="w-full table-fixed">
+               <colgroup>
+                 <col className="w-12" />  {/* בחירה */}
+                 <col className="w-20" />  {/* פרטים */}
+                 <col className="w-24" />  {/* מספר סידורי */}
+                 <col className="w-40" />  {/* פריט */}
+                 <col className="w-40" />  {/* מחזיק */}
+                 <col className="w-28" />  {/* סטטוס */}
+                 <col className="w-32" />  {/* פעולות */}
+               </colgroup>
               <thead className="bg-purple-50 border-b border-purple-200">
                 <tr>
+                  <th className="px-3 py-4 text-center text-xs font-medium text-purple-700 uppercase tracking-wider">
+                    <SelectAllCheckbox
+                      allSelected={allVisibleSelected}
+                      someSelected={someVisibleSelected}
+                      onToggle={toggleAllVisible}
+                      className="w-4 h-4"
+                    />
+                  </th>
                   <th className="px-6 py-4 text-right text-xs font-medium text-purple-700 uppercase tracking-wider">
                     פרטים
                   </th>
@@ -316,17 +461,105 @@ export default function EquipmentList({
                   >
                     {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TABLE_SERIAL} {getSortIcon('id')}
                   </th>
-                  <th 
-                    className="px-6 py-4 text-right text-xs font-medium text-purple-700 uppercase tracking-wider cursor-pointer hover:bg-purple-100"
-                    onClick={() => handleSort('productName')}
-                  >
-                    {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TABLE_ITEM} {getSortIcon('productName')}
+                  <th className="px-6 py-4 text-right text-xs font-medium text-purple-700 uppercase tracking-wider relative" ref={productNameFilterRef}>
+                    <div className="flex items-center justify-between">
+                      <div 
+                        className="flex items-center cursor-pointer hover:bg-purple-100 px-2 py-1 rounded"
+                        onClick={() => handleSort('productName')}
+                      >
+                        <span>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.TABLE_ITEM}</span>
+                        {getSortIcon('productName')}
+                      </div>
+                      <button
+                        onClick={() => setShowProductNameFilter(!showProductNameFilter)}
+                        className="mr-2 px-2 py-1 text-purple-700 hover:bg-purple-100 rounded transition-colors"
+                      >
+                        <ChevronDown className={`h-4 w-4 text-purple-700 transition-transform duration-200 ${showProductNameFilter ? 'rotate-180' : ''}`} />
+                      </button>
+                    </div>
+                    {showProductNameFilter && (
+                      <div className="fixed bg-white border border-gray-200 rounded-md shadow-lg z-50" 
+                           style={{
+                             top: dropdownPositions.productName.top,
+                             left: dropdownPositions.productName.left,
+                             minWidth: dropdownPositions.productName.width
+                           }}>
+                        <div className="p-3 max-h-48 overflow-y-auto">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-semibold text-gray-700">בחר פריטים:</span>
+                            <button
+                              onClick={clearProductNameFilters}
+                              className="text-xs text-purple-600 hover:text-purple-800"
+                            >
+                              נקה הכל
+                            </button>
+                          </div>
+                          <div className="space-y-2">
+                            {uniqueProductNames.map(productName => (
+                              <label key={productName} className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedProductNames.includes(productName)}
+                                  onChange={(e) => handleProductNameFilterChange(productName, e.target.checked)}
+                                  className="text-purple-600 focus:ring-purple-500"
+                                />
+                                <span className="text-sm text-gray-700">{productName}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </th>
-                  <th 
-                    className="px-6 py-4 text-right text-xs font-medium text-purple-700 uppercase tracking-wider cursor-pointer hover:bg-purple-100"
-                    onClick={() => handleSort('currentHolder')}
-                  >
-                    {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TABLE_HOLDER} {getSortIcon('currentHolder')}
+                  <th className="px-6 py-4 text-right text-xs font-medium text-purple-700 uppercase tracking-wider relative" ref={holderFilterRef}>
+                    <div className="flex items-center justify-between">
+                      <div 
+                        className="flex items-center cursor-pointer hover:bg-purple-100 px-2 py-1 rounded"
+                        onClick={() => handleSort('currentHolder')}
+                      >
+                        <span>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.TABLE_HOLDER}</span>
+                        {getSortIcon('currentHolder')}
+                      </div>
+                      <button
+                        onClick={() => setShowHolderFilter(!showHolderFilter)}
+                        className="mr-2 px-2 py-1 text-purple-700 hover:bg-purple-100 rounded transition-colors"
+                      >
+                        <ChevronDown className={`h-4 w-4 text-purple-700 transition-transform duration-200 ${showHolderFilter ? 'rotate-180' : ''}`} />
+                      </button>
+                    </div>
+                    {showHolderFilter && (
+                      <div className="fixed bg-white border border-gray-200 rounded-md shadow-lg z-50"
+                           style={{
+                             top: dropdownPositions.holder.top,
+                             left: dropdownPositions.holder.left,
+                             minWidth: dropdownPositions.holder.width
+                           }}>
+                        <div className="p-3 max-h-48 overflow-y-auto">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-semibold text-gray-700">בחר מחזיקים:</span>
+                            <button
+                              onClick={clearHolderFilters}
+                              className="text-xs text-purple-600 hover:text-purple-800"
+                            >
+                              נקה הכל
+                            </button>
+                          </div>
+                          <div className="space-y-2">
+                            {uniqueHolders.map(holder => (
+                              <label key={holder} className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedHolders.includes(holder)}
+                                  onChange={(e) => handleHolderFilterChange(holder, e.target.checked)}
+                                  className="text-purple-600 focus:ring-purple-500"
+                                />
+                                <span className="text-sm text-gray-700">{holder}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </th>
                   <th 
                     className="px-6 py-4 text-right text-xs font-medium text-purple-700 uppercase tracking-wider cursor-pointer hover:bg-purple-100"
@@ -344,6 +577,14 @@ export default function EquipmentList({
                   <React.Fragment key={item.id}>
                     {/* Main Row - Minimal Info */}
                     <tr className="hover:bg-gray-50">
+                      <td className="px-3 py-4 whitespace-nowrap text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedEquipmentIds.has(item.id)}
+                          onChange={() => toggleEquipmentSelection(item.id)}
+                          className="text-purple-600 focus:ring-purple-500 w-4 h-4"
+                        />
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                                                  <button
                            onClick={() => toggleRowExpansion(item.id)}
@@ -391,7 +632,7 @@ export default function EquipmentList({
                     {/* Expanded Row - Additional Details */}
                     {expandedRows.has(item.id) && (
                       <tr>
-                        <td colSpan={6} className="px-6 py-4 bg-gray-50">
+                        <td colSpan={7} className="px-6 py-4 bg-gray-50">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
                             <div>
                               <h4 className="font-medium text-gray-900 mb-2">פרטי מיקום ומצב</h4>

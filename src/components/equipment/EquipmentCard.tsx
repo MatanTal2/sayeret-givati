@@ -110,8 +110,8 @@ export default function EquipmentCard({
         {/* Right: Status, Condition & Actions */}
         <div className="flex items-center gap-2">
           <div className="flex flex-col gap-1">
-            <EquipmentStatus status={equipment.status} size="sm" />
-            <EquipmentCondition condition={equipment.condition} size="sm" showIcon={false} />
+            <EquipmentStatus status={equipment.status} size="sm" variant="outlined" />
+            <EquipmentCondition condition={equipment.condition} size="sm" showIcon={false} variant="outlined" />
           </div>
           
           <div className="flex gap-1">

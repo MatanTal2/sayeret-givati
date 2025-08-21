@@ -7,7 +7,9 @@ import { TEXT_CONSTANTS } from '@/constants/text';
 import EquipmentErrorBoundary from '@/components/equipment/EquipmentErrorBoundary';
 import EquipmentList from '@/components/equipment/EquipmentList';
 import EquipmentLoadingState from '@/components/equipment/EquipmentLoadingState';
+import AddEquipmentModal from '@/components/equipment/AddEquipmentModal';
 import { useEquipment } from '@/hooks/useEquipment';
+import { Equipment } from '@/types/equipment';
 
 /**
  * Equipment Page - צלם
@@ -20,9 +22,11 @@ export default function EquipmentPage() {
     loading,
     error,
     refreshEquipment,
+    addEquipment,
   } = useEquipment();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Handle refresh with loading state
   const handleRefresh = async () => {
@@ -52,6 +56,18 @@ export default function EquipmentPage() {
     // TODO: Open history modal/view in future steps
   };
 
+  // Handle add equipment
+  const handleAddEquipment = async (equipmentData: Omit<Equipment, 'createdAt' | 'updatedAt' | 'history'>) => {
+    try {
+      await addEquipment(equipmentData);
+      // Refresh the list to show the new equipment
+      await refreshEquipment();
+    } catch (error) {
+      console.error('Error adding equipment:', error);
+      throw error; // Re-throw to let the modal handle the error
+    }
+  };
+
   return (
     <AuthGuard>
       <EquipmentErrorBoundary>
@@ -69,6 +85,14 @@ export default function EquipmentPage() {
               
               {/* Page Controls */}
               <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors shadow-sm"
+                  >
+                    ➕ {TEXT_CONSTANTS.FEATURES.EQUIPMENT.ADD_NEW}
+                  </button>
+                </div>
                 <div>
                   {/* Development Badge */}
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
@@ -126,6 +150,14 @@ export default function EquipmentPage() {
               </div>
             </div>
           </main>
+
+          {/* Add Equipment Modal */}
+          <AddEquipmentModal
+            isOpen={showAddModal}
+            onClose={() => setShowAddModal(false)}
+            onSubmit={handleAddEquipment}
+            loading={loading}
+          />
         </div>
       </EquipmentErrorBoundary>
     </AuthGuard>

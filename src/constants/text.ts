@@ -199,6 +199,7 @@ export const TEXT_CONSTANTS = {
     EQUIPMENT: {
       TITLE: 'צלם',
       DESCRIPTION: 'ניהול ציוד צבאי עם מספר סידורי',
+      ADD_NEW: 'הוסף ציוד',
       
       // Status Text
       STATUS_AVAILABLE: 'זמין',
@@ -417,17 +418,21 @@ export const TEXT_CONSTANTS = {
     TABS: {
       USERS: 'ניהול משתמשים',
       PERMISSIONS: 'הרשאות',
+      TEMPLATE_MANAGEMENT: 'ניהול תבניות ציוד',
+      EQUIPMENT_CREATION: 'יצירת ציוד חדש',
       ENFORCE_TRANSFER: 'העברת ציוד כפויה',
       SYSTEM_CONFIG: 'הגדרות מערכת',
       DATA_MANAGEMENT: 'ניהול נתונים',
       AUDIT_LOGS: 'יומני ביקורת',
-      SEND_EMAIL: 'שליחת אימייל למשתמשים'
+      SEND_EMAIL: 'שליחת אימייל'
     },
     
     // Tab Descriptions
     TAB_DESCRIPTIONS: {
       USERS: 'ניהול משתמשים, הרשאות ותפקידים',
       PERMISSIONS: 'ניהול הרשאות מערכת ובקרת גישה',
+      TEMPLATE_MANAGEMENT: 'יצירה ועריכה של תבניות ציוד, ניהול קטגוריות ותת-קטגוריות',
+      EQUIPMENT_CREATION: 'הוספת ציוד חדש למערכת מתבניות או באופן ידני',
       ENFORCE_TRANSFER: 'ביצוע העברות ציוד בחירום וכפייה',
       SYSTEM_CONFIG: 'הגדרות כלליות ותצורת מערכת',
       DATA_MANAGEMENT: 'גיבוי, שחזור ואחזקת נתונים',

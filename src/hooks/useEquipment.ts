@@ -113,6 +113,7 @@ interface UseEquipmentReturn {
   loading: boolean;
   error: string | null;
   refreshEquipment: () => Promise<void>;
+  addEquipment: (equipmentData: Omit<Equipment, 'createdAt' | 'updatedAt' | 'history'>) => Promise<void>;
   transferEquipment: (equipmentId: string, newHolder: string, newUnit?: string) => Promise<void>;
   updateEquipmentStatus: (equipmentId: string, newStatus: EquipmentStatus) => Promise<void>;
   updateEquipmentCondition: (equipmentId: string, newCondition: EquipmentCondition) => Promise<void>;
@@ -150,6 +151,29 @@ export function useEquipment(): UseEquipmentReturn {
       setError(`שגיאה בטעינת הציוד: ${errorMessage}`);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  // Add new equipment
+  const addEquipment = useCallback(async (equipmentData: Omit<Equipment, 'createdAt' | 'updatedAt' | 'history'>) => {
+    try {
+      await simulateDelay(500);
+      
+      const newEquipment: Equipment = {
+        ...equipmentData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        trackingHistory: equipmentData.trackingHistory || [] // Use provided or initialize empty history
+      };
+      
+      setEquipment(prev => [newEquipment, ...prev]); // Add to beginning of list
+      
+      // TODO: Replace with actual Firestore call
+      // await EquipmentFirestoreService.createEquipment(newEquipment);
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'שגיאה לא ידועה';
+      throw new Error(`שגיאה ביצירת הציוד: ${errorMessage}`);
     }
   }, []);
 
@@ -294,6 +318,7 @@ export function useEquipment(): UseEquipmentReturn {
     loading,
     error,
     refreshEquipment,
+    addEquipment,
     transferEquipment,
     updateEquipmentStatus,
     updateEquipmentCondition,
