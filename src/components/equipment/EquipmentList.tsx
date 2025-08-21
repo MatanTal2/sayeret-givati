@@ -433,15 +433,15 @@ export default function EquipmentList({
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden min-h-[500px]">
                      <div className="overflow-x-auto">
              <table className="w-full table-fixed">
-               <colgroup>
-                 <col className="w-12" />  {/* בחירה */}
-                 <col className="w-20" />  {/* פרטים */}
-                 <col className="w-24" />  {/* מספר סידורי */}
-                 <col className="w-40" />  {/* פריט */}
-                 <col className="w-40" />  {/* מחזיק */}
-                 <col className="w-28" />  {/* סטטוס */}
-                 <col className="w-32" />  {/* פעולות */}
-               </colgroup>
+                             <colgroup>
+                <col className="w-12" />
+                <col className="w-20" />
+                <col className="w-24" />
+                <col className="w-40" />
+                <col className="w-40" />
+                <col className="w-28" />
+                <col className="w-32" />
+              </colgroup>
               <thead className="bg-purple-50 border-b border-purple-200">
                 <tr>
                   <th className="px-3 py-4 text-center text-xs font-medium text-purple-700 uppercase tracking-wider">

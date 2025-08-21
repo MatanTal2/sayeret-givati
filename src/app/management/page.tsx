@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthGuard from '@/components/auth/AuthGuard';
 import Header from '@/app/components/Header';
 import { UserRole } from '@/types/equipment';
 import { MANAGEMENT } from '@/constants/text';
 import { canManageTemplates } from '@/types/templateSystem';
-import { Users, Shield, ArrowRightLeft, Settings, Database, UserCheck, Mail, Layers, Package, LucideIcon, Menu, X, ChevronRight } from 'lucide-react';
+import { Users, Shield, ArrowRightLeft, Settings, Database, UserCheck, Mail, Layers, Package, LucideIcon, Menu, X, ChevronRight, LogOut, User, Home, ChevronDown } from 'lucide-react';
 
 // Template interface for management
 interface TemplateData {
@@ -1829,195 +1829,236 @@ function EmailTabContent() {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [isUrgent, setIsUrgent] = useState(false);
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const [priority, setPriority] = useState('normal');
 
-  const roleOptions = [
-    { value: 'soldier', label: MANAGEMENT.EMAIL.ROLE_SOLDIERS },
-    { value: 'officer', label: MANAGEMENT.EMAIL.ROLE_OFFICERS },
-    { value: 'commander', label: MANAGEMENT.EMAIL.ROLE_COMMANDERS },
-    { value: 'equipment_manager', label: MANAGEMENT.EMAIL.ROLE_EQUIPMENT_MANAGERS },
-    { value: 'admin', label: MANAGEMENT.EMAIL.ROLE_ADMINS }
+  const userTypes = [
+    { value: 'admin', label: 'אדמין' },
+    { value: 'system_manager', label: 'מנהל מערכת' },
+    { value: 'manager', label: 'מנהל' },
+    { value: 'team_leader', label: 'מפקד צוות' },
+    { value: 'soldier', label: 'חייל' }
+  ];
+
+  const teams = [
+    { value: 'platoon_a', label: 'פלוגה א' },
+    { value: 'platoon_b', label: 'פלוגה ב' },
+    { value: 'platoon_c', label: 'פלוגה ג' },
+    { value: 'headquarters', label: 'מטה' },
+    { value: 'support', label: 'תמיכה' }
   ];
 
   const handleSendEmail = () => {
-    // This is UI only - no actual email sending
-    console.log('Email would be sent:', {
+    const emailData = {
       recipients,
-      selectedRoles,
       subject,
       message,
-      isUrgent
-    });
-    alert(MANAGEMENT.EMAIL.SEND_SUCCESS);
+      selectedRoles,
+      selectedTeams,
+      priority,
+      recipientCount: getRecipientCount()
+    };
+    
+    console.log('Sending email:', emailData);
+    alert(`הודעה נשלחה בהצלחה ל-${emailData.recipientCount} נמענים!`);
+  };
+
+  const getRecipientCount = () => {
+    if (recipients === 'all') return 'כל המשתמשים';
+    if (recipients === 'roles') return `${selectedRoles.length} תפקידים`;
+    if (recipients === 'teams') return `${selectedTeams.length} צוותים`;
+    return 'בחירה מותאמת';
   };
 
   return (
-    <div className="space-y-6">
-      {/* Recipient Selection */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">{MANAGEMENT.EMAIL.RECIPIENTS_TITLE}</h3>
-        
-        <div className="space-y-4">
-          <div className="flex items-center space-x-3 space-x-reverse">
-            <input
-              type="radio"
-              id="all-users"
-              name="recipients"
-              value="all"
-              checked={recipients === 'all'}
-              onChange={(e) => setRecipients(e.target.value)}
-              className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
-            />
-            <label htmlFor="all-users" className="text-sm font-medium text-gray-700">
-              {MANAGEMENT.EMAIL.ALL_USERS}
-            </label>
-          </div>
+    <div className="space-y-4">
+      {/* Header */}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900">שליחת מייל למשתמשים</h3>
+        <p className="text-sm text-gray-600">שלח הודעות לקבוצות משתמשים או לכל המערכת</p>
+      </div>
 
-          <div className="flex items-center space-x-3 space-x-reverse">
-            <input
-              type="radio"
-              id="by-role"
-              name="recipients"
-              value="by-role"
-              checked={recipients === 'by-role'}
-              onChange={(e) => setRecipients(e.target.value)}
-              className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
-            />
-            <label htmlFor="by-role" className="text-sm font-medium text-gray-700">
-              {MANAGEMENT.EMAIL.BY_ROLE}
-            </label>
-          </div>
-
-          {recipients === 'by-role' && (
-            <div className="mr-7 space-y-2">
-              {roleOptions.map((role) => (
-                <div key={role.value} className="flex items-center space-x-3 space-x-reverse">
-                  <input
-                    type="checkbox"
-                    id={role.value}
-                    checked={selectedRoles.includes(role.value)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedRoles([...selectedRoles, role.value]);
-                      } else {
-                        setSelectedRoles(selectedRoles.filter(r => r !== role.value));
-                      }
-                    }}
-                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                  />
-                  <label htmlFor={role.value} className="text-sm text-gray-600">
-                    {role.label}
-                  </label>
-                </div>
-              ))}
+      {/* Email Form */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Left Column */}
+          <div className="space-y-4">
+            {/* Recipients */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">נמענים</label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                value={recipients}
+                onChange={(e) => setRecipients(e.target.value)}
+              >
+                <option value="all">כל המשתמשים</option>
+                <option value="roles">לפי תפקידים</option>
+                <option value="teams">לפי צוותים</option>
+                <option value="custom">בחירה מותאמת</option>
+              </select>
             </div>
-          )}
 
-          <div className="flex items-center space-x-3 space-x-reverse">
-            <input
-              type="radio"
-              id="specific-users"
-              name="recipients"
-              value="specific"
-              checked={recipients === 'specific'}
-              onChange={(e) => setRecipients(e.target.value)}
-              className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
-            />
-            <label htmlFor="specific-users" className="text-sm font-medium text-gray-700">
-              {MANAGEMENT.EMAIL.SPECIFIC_USERS}
-            </label>
+            {/* Role Selection (if roles selected) */}
+            {recipients === 'roles' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">תפקידים</label>
+                <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded p-2">
+                  {userTypes.map(userType => (
+                    <div key={userType.value} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedRoles.includes(userType.value)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedRoles([...selectedRoles, userType.value]);
+                          } else {
+                            setSelectedRoles(selectedRoles.filter(r => r !== userType.value));
+                          }
+                        }}
+                        className="text-purple-600 focus:ring-purple-500 ml-2"
+                      />
+                      <span className="text-sm text-gray-700">{userType.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Team Selection (if teams selected) */}
+            {recipients === 'teams' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">צוותים</label>
+                <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded p-2">
+                  {teams.map(team => (
+                    <div key={team.value} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedTeams.includes(team.value)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedTeams([...selectedTeams, team.value]);
+                          } else {
+                            setSelectedTeams(selectedTeams.filter(t => t !== team.value));
+                          }
+                        }}
+                        className="text-purple-600 focus:ring-purple-500 ml-2"
+                      />
+                      <span className="text-sm text-gray-700">{team.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Priority */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">עדיפות</label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+              >
+                <option value="low">נמוכה</option>
+                <option value="normal">רגילה</option>
+                <option value="high">גבוהה</option>
+                <option value="urgent">דחוף</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-4">
+            {/* Subject */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">נושא</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="נושא ההודעה..."
+              />
+            </div>
+
+            {/* Message */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">הודעה</label>
+              <textarea
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                rows={4}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="תוכן ההודעה..."
+              />
+            </div>
+
+            {/* Send Button */}
+            <div className="flex gap-2">
+              <button
+                onClick={handleSendEmail}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors"
+              >
+                📧 שלח הודעה
+              </button>
+              <button
+                onClick={() => {
+                  setSubject('');
+                  setMessage('');
+                  setRecipients('all');
+                  setSelectedRoles([]);
+                  setSelectedTeams([]);
+                  setPriority('normal');
+                }}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition-colors"
+              >
+                נקה טופס
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Email Content */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">{MANAGEMENT.EMAIL.MESSAGE_CONTENT_TITLE}</h3>
-        
-        <div className="space-y-4">
-          {/* Priority */}
-          <div className="flex items-center space-x-3 space-x-reverse">
-            <input
-              type="checkbox"
-              id="urgent"
-              checked={isUrgent}
-              onChange={(e) => setIsUrgent(e.target.checked)}
-              className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
-            />
-            <label htmlFor="urgent" className="text-sm font-medium text-gray-700">
-              {MANAGEMENT.EMAIL.URGENT_MESSAGE}
-            </label>
-          </div>
-
-          {/* Subject */}
-          <div>
-            <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-              {MANAGEMENT.EMAIL.SUBJECT_LABEL}
-            </label>
-            <input
-              type="text"
-              id="subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder={MANAGEMENT.EMAIL.SUBJECT_PLACEHOLDER}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
-            />
-          </div>
-
-          {/* Message */}
-          <div>
-            <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-              {MANAGEMENT.EMAIL.MESSAGE_LABEL}
-            </label>
-            <textarea
-              id="message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={MANAGEMENT.EMAIL.MESSAGE_PLACEHOLDER}
-              rows={8}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
-            />
-          </div>
+      {/* Quick Templates */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <h4 className="text-md font-medium text-gray-900 mb-3">תבניות מהירות</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {[
+            { title: 'תזכורת ציוד', content: 'תזכורת להחזרת ציוד עד סוף השבוע' },
+            { title: 'עדכון מערכת', content: 'המערכת תעודכן היום בשעה 23:00' },
+            { title: 'הודעה כללית', content: 'הודעה חשובה לכל המשתמשים' }
+          ].map((template, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setSubject(template.title);
+                setMessage(template.content);
+              }}
+              className="p-3 text-right border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors"
+            >
+              <div className="font-medium text-gray-900 text-sm">{template.title}</div>
+              <div className="text-gray-600 text-xs mt-1">{template.content}</div>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Preview & Send */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">{MANAGEMENT.EMAIL.PREVIEW_TITLE}</h3>
-        
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
-          <div className="text-sm text-gray-600 mb-2">
-            <strong>{MANAGEMENT.EMAIL.RECIPIENTS_PREVIEW}</strong> {
-              recipients === 'all' ? MANAGEMENT.EMAIL.ALL_USERS_PREVIEW :
-              recipients === 'by-role' ? `${MANAGEMENT.EMAIL.SELECTED_ROLES_PREVIEW} ${selectedRoles.join(', ')}` :
-              MANAGEMENT.EMAIL.SPECIFIC_USERS_PREVIEW
-            }
-          </div>
-          <div className="text-sm text-gray-600 mb-2">
-            <strong>{MANAGEMENT.EMAIL.SUBJECT_PREVIEW}</strong> {subject || MANAGEMENT.EMAIL.NO_SUBJECT}
-            {isUrgent && <span className="text-red-600 font-semibold">{MANAGEMENT.EMAIL.URGENT_INDICATOR}</span>}
-          </div>
-          <div className="text-sm text-gray-600">
-            <strong>{MANAGEMENT.EMAIL.MESSAGE_PREVIEW}</strong> {message || MANAGEMENT.EMAIL.NO_CONTENT}
-          </div>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-500">
-            {MANAGEMENT.EMAIL.DEMO_WARNING}
-          </div>
-          <button
-            onClick={handleSendEmail}
-            disabled={!subject.trim() || !message.trim()}
-            className={`px-6 py-2 rounded-md font-medium transition-colors ${
-              subject.trim() && message.trim()
-                ? 'bg-purple-600 text-white hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            <Mail className="w-4 h-4 inline-block ml-2" />
-            {MANAGEMENT.EMAIL.SEND_BUTTON}
-          </button>
+      {/* Recent Emails */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <h4 className="text-md font-medium text-gray-900 mb-3">הודעות אחרונות</h4>
+        <div className="space-y-2">
+          {[
+            { subject: 'תזכורת ציוד', date: '15/01/2024', recipients: '24 משתמשים' },
+            { subject: 'עדכון מערכת', date: '14/01/2024', recipients: 'כל המשתמשים' },
+            { subject: 'הודעה דחופה', date: '13/01/2024', recipients: 'מנהלים' }
+          ].map((email, index) => (
+            <div key={index} className="flex justify-between items-center p-2 border border-gray-100 rounded">
+              <div>
+                <div className="font-medium text-gray-900 text-sm">{email.subject}</div>
+                <div className="text-gray-500 text-xs">{email.recipients}</div>
+              </div>
+              <div className="text-gray-400 text-xs">{email.date}</div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -2025,8 +2066,33 @@ function EmailTabContent() {
 }
 
 function ManagementContent() {
-  const { enhancedUser } = useAuth();
+  const { enhancedUser, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleGoHome = () => {
+    window.location.href = '/';
+  };
+
+  const handleSignOut = async () => {
+    await logout();
+    window.location.href = '/';
+  };
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Check if user has management access
   const hasManagementAccess = () => {
@@ -2104,7 +2170,10 @@ function ManagementContent() {
     <div className="min-h-screen bg-gray-50 flex" dir="rtl">
       {/* Mobile Menu Overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden animate-fade-in" />
+        <div 
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden animate-fade-in" 
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
       {/* Sidebar */}
@@ -2212,6 +2281,17 @@ function ManagementContent() {
               >
                 <Menu className="w-5 h-5" />
               </button>
+
+              {/* Logo */}
+              <button
+                onClick={handleGoHome}
+                className="flex items-center gap-2 p-2 rounded-lg hover:bg-purple-50 transition-colors"
+              >
+                <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">SG</span>
+                </div>
+                <span className="hidden sm:block text-lg font-bold text-purple-600">סיירת גבעתי</span>
+              </button>
               
               {/* Current Page Info */}
             {activeTabData && (
@@ -2227,21 +2307,89 @@ function ManagementContent() {
               )}
                 </div>
             
-            {/* User Info */}
-            <div className="hidden md:flex items-center gap-3">
-              <div className="text-right">
-                <div className="text-sm font-medium text-gray-900">
-                  {MANAGEMENT.WELCOME_GREETING}, {enhancedUser?.firstName || MANAGEMENT.DEFAULT_MANAGER}
+            {/* User Menu */}
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="text-right hidden md:block">
+                  <div className="text-sm font-medium text-gray-900">
+                    {enhancedUser?.firstName || MANAGEMENT.DEFAULT_MANAGER}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {enhancedUser?.userType === 'admin' ? 'מנהל מערכת' : enhancedUser?.role}
+                  </div>
                 </div>
-                <div className="text-xs text-gray-500">
-                  {enhancedUser?.userType === 'admin' ? 'מנהל מערכת' : enhancedUser?.role}
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <span className="text-sm font-bold text-purple-600">
+                    {(enhancedUser?.firstName?.[0] || 'M').toUpperCase()}
+                  </span>
                 </div>
-              </div>
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                <span className="text-sm font-bold text-purple-600">
-                  {(enhancedUser?.firstName?.[0] || 'M').toUpperCase()}
-                </span>
-              </div>
+                <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* User Menu Dropdown */}
+              {userMenuOpen && (
+                <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  <div className="py-2">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <div className="text-sm font-medium text-gray-900">
+                        {enhancedUser?.firstName} {enhancedUser?.lastName}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {enhancedUser?.email}
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        handleGoHome();
+                        setUserMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                    >
+                      <Home className="w-4 h-4" />
+                      <span>דף הבית</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        window.location.href = '/profile';
+                        setUserMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                    >
+                      <User className="w-4 h-4" />
+                      <span>פרופיל אישי</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        window.location.href = '/settings';
+                        setUserMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      <span>הגדרות</span>
+                    </button>
+                    
+                    <div className="border-t border-gray-100 mt-2 pt-2">
+                      <button
+                        onClick={() => {
+                          handleSignOut();
+                          setUserMenuOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>התנתק</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>
