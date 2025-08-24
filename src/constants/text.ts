@@ -444,7 +444,8 @@ export const TEXT_CONSTANTS = {
     ACCESS_DENIED: {
       TITLE: 'אין הרשאה לגישה',
       MESSAGE: 'דף זה מיועד למשתמשים עם הרשאות ניהול בלבד (קצין, מפקד או מנהל מערכת).',
-      CURRENT_ROLE: 'התפקיד הנוכחי שלך:'
+      CURRENT_ROLE: 'התפקיד הנוכחי שלך:',
+      CONTACT_ADMIN: 'לקבלת הרשאות נוספות, אנא פנה למנהל המערכת.'
     },
     
     // Email Component
