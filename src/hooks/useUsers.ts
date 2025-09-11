@@ -31,7 +31,13 @@ export function useUsers(): UseUsersReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUsers = async (_forceRefresh: boolean = false) => {
+  const fetchUsers = async (forceRefresh: boolean = false) => {
+    // Skip fetch if we already have users and not forcing refresh
+    if (!forceRefresh && users.length > 0) {
+      console.log('🔍 Using cached users data...');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
