@@ -29,6 +29,7 @@ import {
   EquipmentHistoryEntry,
   ApprovalDetails
 } from '@/types/equipment';
+import { EquipmentTemplate } from '@/data/equipmentTemplates';
 
 import { TEXT_CONSTANTS } from '@/constants/text';
 
@@ -526,7 +527,7 @@ export class EquipmentService {
    * Initialize equipment types from templates
    * Used for seeding the database with predefined equipment types
    */
-  static async seedEquipmentTypes(templates: EquipmentType[]): Promise<EquipmentServiceResult> {
+  static async seedEquipmentTypes(templates: EquipmentTemplate[]): Promise<EquipmentServiceResult> {
     try {
       const batch = writeBatch(db);
       let addedCount = 0;

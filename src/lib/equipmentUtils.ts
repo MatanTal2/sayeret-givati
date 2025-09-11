@@ -14,6 +14,7 @@ import {
   EquipmentFilter,
   EquipmentSort
 } from '../types/equipment';
+import { Timestamp, serverTimestamp } from 'firebase/firestore';
 
 /**
  * Creates a new equipment history entry
@@ -23,6 +24,7 @@ export function createHistoryEntry(
   action: EquipmentAction,
   holder: string,
   updatedBy: string,
+  location: string,
   notes?: string,
   approval?: {
     approvedBy: string;
@@ -36,13 +38,14 @@ export function createHistoryEntry(
     };
   }
 ): EquipmentHistoryEntry {
-  const now = new Date().toISOString();
+  const now = serverTimestamp() as Timestamp;
   
   return {
     holder,
     fromDate: now,
     action,
     updatedBy,
+    location,
     notes,
     timestamp: now,
     approval: approval ? {
@@ -71,13 +74,16 @@ export function createNewEquipment(
   signedBy: string,
   notes?: string
 ): Equipment {
-  const now = new Date().toISOString();
+  const now = serverTimestamp() as Timestamp;
   
   return {
     id,
+    equipmentType: 'generic', // Default type for legacy function
     productName,
     category,
+    acquisitionDate: now,
     dateSigned: now,
+    lastSeen: now,
     signedBy,
     currentHolder: signedBy,
     assignedUnit,
@@ -91,6 +97,7 @@ export function createNewEquipment(
         EquipmentAction.INITIAL_SIGN_IN,
         signedBy,
         signedBy,
+        location,
         notes,
         { approvedBy: signedBy, approvalType: ApprovalType.NO_APPROVAL_REQUIRED }
       )
@@ -123,7 +130,7 @@ export function transferEquipment(
   newLocation?: string,
   notes?: string
 ): Equipment {
-  const now = new Date().toISOString();
+  const now = serverTimestamp() as Timestamp;
   
   // Close previous history entry
   const updatedHistory = [...equipment.trackingHistory];
@@ -137,6 +144,7 @@ export function transferEquipment(
     approvalDetails.emergencyOverride ? EquipmentAction.EMERGENCY_TRANSFER : EquipmentAction.TRANSFER,
     newHolder,
     updatedBy,
+    newLocation || equipment.location,
     notes,
     approvalDetails
   );
@@ -162,12 +170,13 @@ export function updateEquipmentStatus(
   updatedBy: string,
   notes?: string
 ): Equipment {
-  const now = new Date().toISOString();
+  const now = serverTimestamp() as Timestamp;
   
   const historyEntry = createHistoryEntry(
     EquipmentAction.STATUS_UPDATE,
     equipment.currentHolder,
     updatedBy,
+    equipment.location,
     `Status changed to: ${newStatus}${notes ? ` - ${notes}` : ''}`
   );
   
@@ -188,12 +197,13 @@ export function updateEquipmentCondition(
   updatedBy: string,
   notes?: string
 ): Equipment {
-  const now = new Date().toISOString();
+  const now = serverTimestamp() as Timestamp;
   
   const historyEntry = createHistoryEntry(
     EquipmentAction.CONDITION_UPDATE,
     equipment.currentHolder,
     updatedBy,
+    equipment.location,
     `Condition changed to: ${newCondition}${notes ? ` - ${notes}` : ''}`
   );
   
@@ -213,12 +223,13 @@ export function performDailyCheckIn(
   checkedBy: string,
   notes?: string
 ): Equipment {
-  const now = new Date().toISOString();
+  const now = serverTimestamp() as Timestamp;
   
   const historyEntry = createHistoryEntry(
     EquipmentAction.DAILY_CHECK_IN,
     equipment.currentHolder,
     checkedBy,
+    equipment.location,
     notes || 'Daily check-in completed'
   );
   
@@ -469,7 +480,7 @@ export function filterEquipmentList(
   if (filters.dateRange) {
     const { start, end } = filters.dateRange;
     filtered = filtered.filter(item => {
-      const itemDate = new Date(item.lastReportUpdate);
+      const itemDate = item.lastReportUpdate instanceof Timestamp ? item.lastReportUpdate.toDate() : new Date(item.lastReportUpdate);
       const startDate = new Date(start);
       const endDate = new Date(end);
       return itemDate >= startDate && itemDate <= endDate;
@@ -508,12 +519,12 @@ export function sortEquipmentList(
         bValue = b.assignedUnit;
         break;
       case 'lastReportUpdate':
-        aValue = new Date(a.lastReportUpdate).getTime();
-        bValue = new Date(b.lastReportUpdate).getTime();
+        aValue = a.lastReportUpdate instanceof Timestamp ? a.lastReportUpdate.toDate().getTime() : new Date(a.lastReportUpdate).getTime();
+        bValue = b.lastReportUpdate instanceof Timestamp ? b.lastReportUpdate.toDate().getTime() : new Date(b.lastReportUpdate).getTime();
         break;
       case 'createdAt':
-        aValue = new Date(a.createdAt).getTime();
-        bValue = new Date(b.createdAt).getTime();
+        aValue = a.createdAt instanceof Timestamp ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime();
+        bValue = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
         break;
       default:
         return 0;
@@ -588,7 +599,7 @@ export function needsAttention(equipment: Equipment): {
   priority: 'low' | 'medium' | 'high';
 } {
   const now = new Date();
-  const lastUpdate = new Date(equipment.lastReportUpdate);
+  const lastUpdate = equipment.lastReportUpdate instanceof Timestamp ? equipment.lastReportUpdate.toDate() : new Date(equipment.lastReportUpdate);
   const daysSinceUpdate = Math.floor((now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
   
   // High priority issues

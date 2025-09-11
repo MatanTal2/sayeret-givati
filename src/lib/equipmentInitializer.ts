@@ -23,11 +23,12 @@ export async function initializeEquipmentTypes(): Promise<{
     const result = await EquipmentService.seedEquipmentTypes(EQUIPMENT_TEMPLATES);
     
     if (result.success) {
-      console.log(TEXT_CONSTANTS.FEATURES.EQUIPMENT.SEED_COMPLETE, result.data?.addedCount);
+      const seedData = result.data as { addedCount?: number } | undefined;
+      console.log(TEXT_CONSTANTS.FEATURES.EQUIPMENT.SEED_COMPLETE, seedData?.addedCount);
       return {
         success: true,
-        message: `${TEXT_CONSTANTS.FEATURES.EQUIPMENT.SEED_COMPLETE} - ${result.data?.addedCount} types added`,
-        addedCount: result.data?.addedCount
+        message: `${TEXT_CONSTANTS.FEATURES.EQUIPMENT.SEED_COMPLETE} - ${seedData?.addedCount} types added`,
+        addedCount: seedData?.addedCount || 0
       };
     } else {
       console.error('Failed to seed equipment types:', result.error);

@@ -372,7 +372,8 @@ export const TEXT_CONSTANTS = {
     INVALID_EMAIL: 'כתובת אימייל לא חוקית',
     PASSWORD_TOO_SHORT: 'סיסמה קצרה מדי',
     LOGIN_FAILED: 'התחברות נכשלה',
-    CONNECTION_ERROR: 'שגיאת חיבור'
+    CONNECTION_ERROR: 'שגיאת חיבור',
+    UNEXPECTED_ERROR: 'אירעה שגיאה לא צפויה'
   },
 
   // Success Messages

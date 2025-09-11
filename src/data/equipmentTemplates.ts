@@ -80,6 +80,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
     defaultLocation: 'כספת נשק',
     idPrefix: 'GLK',
     icon: '🔫',
+    requiresApproval: true,
+    maintenanceInterval: 30,
+    averageLifespan: 180,
     commonNotes: 'נשק קצינים - אחסון בכספת',
     customizableFields: {
       serialNumber: true,
@@ -104,6 +107,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
     defaultLocation: 'מחסן אופטיקה',
     idPrefix: 'NVG',
     icon: '🔭',
+    requiresApproval: true,
+    maintenanceInterval: 7,
+    averageLifespan: 60,
     commonNotes: 'בדיקת תקינות לפני כל שימוש',
     customizableFields: {
       serialNumber: true,
@@ -126,6 +132,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
     defaultLocation: 'מחסן אופטיקה',
     idPrefix: 'THM',
     icon: '🔭',
+    requiresApproval: true,
+    maintenanceInterval: 14,
+    averageLifespan: 72,
     commonNotes: 'טעינת סוללה לפני שימוש',
     customizableFields: {
       serialNumber: true,
@@ -150,6 +159,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
     defaultLocation: 'חדר תקשורת',
     idPrefix: 'RAD',
     icon: '📡',
+    requiresApproval: false,
+    maintenanceInterval: 1,
+    averageLifespan: 36,
     commonNotes: 'בדיקת תקשורת יומית',
     customizableFields: {
       serialNumber: true,
@@ -172,6 +184,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
     defaultLocation: 'חדר תקשורת',
     idPrefix: 'RAD',
     icon: '📡',
+    requiresApproval: false,
+    maintenanceInterval: 7,
+    averageLifespan: 48,
     commonNotes: 'קשר מפקדים - הצפנה מלאה',
     customizableFields: {
       serialNumber: true,
@@ -196,6 +211,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
     defaultLocation: 'מחסן ציוד',
     idPrefix: 'VEST',
     icon: '🛡️',
+    requiresApproval: false,
+    maintenanceInterval: 30,
+    averageLifespan: 60,
     commonNotes: 'בדיקת שלמות פלטים',
     customizableFields: {
       serialNumber: true,
@@ -218,6 +236,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
     defaultLocation: 'מחסן ציוד',
     idPrefix: 'HELM',
     icon: '⛑️',
+    requiresApproval: false,
+    maintenanceInterval: 30,
+    averageLifespan: 48,
     commonNotes: 'בדיקת רצועות ומערכת הידוק',
     customizableFields: {
       serialNumber: true,
@@ -242,6 +263,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
     defaultLocation: 'מחסן ציוד',
     idPrefix: 'BAG',
     icon: '🎒',
+    requiresApproval: false,
+    maintenanceInterval: 14,
+    averageLifespan: 24,
     commonNotes: 'בדיקת רוכסנים ורצועות',
     customizableFields: {
       serialNumber: true,
@@ -264,6 +288,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
     defaultLocation: 'מחסן ציוד',
     idPrefix: 'SLEEP',
     icon: '🛏️',
+    requiresApproval: false,
+    maintenanceInterval: 30,
+    averageLifespan: 36,
     commonNotes: 'ניקוי לאחר שימוש',
     customizableFields: {
       serialNumber: true,
@@ -288,6 +315,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
     defaultLocation: 'חניון כלי רכב',
     idPrefix: 'VEH',
     icon: '🚗',
+    requiresApproval: true,
+    maintenanceInterval: 1,
+    averageLifespan: 120,
     commonNotes: 'בדיקה יומית של נוזלים וצמיגים',
     customizableFields: {
       serialNumber: true,
@@ -312,6 +342,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
     defaultLocation: 'מחסן רפואי',
     idPrefix: 'MED',
     icon: '🏥',
+    requiresApproval: false,
+    maintenanceInterval: 7,
+    averageLifespan: 12,
     commonNotes: 'בדיקת תאריכי תפוגה חודשית',
     customizableFields: {
       serialNumber: true,
