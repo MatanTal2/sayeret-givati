@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Equipment, EquipmentStatus, EquipmentCondition } from '@/types/equipment';
 import { TEXT_CONSTANTS, TEXT_FMT } from '@/constants/text';
+import { Timestamp } from 'firebase/firestore';
 import EquipmentCard from './EquipmentCard';
 import StatusComponent from './EquipmentStatus';
 import ConditionComponent from './EquipmentCondition';
@@ -113,8 +114,8 @@ export default function EquipmentList({
           bValue = b.status;
           break;
         case 'lastReportUpdate':
-          aValue = new Date(a.lastReportUpdate).getTime();
-          bValue = new Date(b.lastReportUpdate).getTime();
+          aValue = a.lastReportUpdate instanceof Timestamp ? a.lastReportUpdate.toDate().getTime() : new Date(a.lastReportUpdate).getTime();
+          bValue = b.lastReportUpdate instanceof Timestamp ? b.lastReportUpdate.toDate().getTime() : new Date(b.lastReportUpdate).getTime();
           break;
       }
       
@@ -131,16 +132,16 @@ export default function EquipmentList({
     });
 
   // Format date for table
-  const formatDate = (dateString: string): string => {
+  const formatDate = (timestamp: Timestamp | string): string => {
     try {
-      const date = new Date(dateString);
+      const date = timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
       return date.toLocaleDateString('he-IL', {
         day: '2-digit',
         month: '2-digit',
         year: '2-digit'
       });
     } catch {
-      return dateString;
+      return 'תאריך לא ידוע';
     }
   };
 
