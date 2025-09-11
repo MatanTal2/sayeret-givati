@@ -9,7 +9,7 @@ import EquipmentList from '@/components/equipment/EquipmentList';
 import EquipmentLoadingState from '@/components/equipment/EquipmentLoadingState';
 import AddEquipmentModal from '@/components/equipment/AddEquipmentModal';
 import { useEquipment } from '@/hooks/useEquipment';
-import { Equipment, EquipmentStatus } from '@/types/equipment';
+import { Equipment } from '@/types/equipment';
 
 /**
  * Equipment Page - צלם

@@ -31,7 +31,7 @@ export function useUsers(): UseUsersReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUsers = async (forceRefresh: boolean = false) => {
+  const fetchUsers = async (_forceRefresh: boolean = false) => {
     setLoading(true);
     setError(null);
 

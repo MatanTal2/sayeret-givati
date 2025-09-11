@@ -97,10 +97,12 @@ export async function getEquipmentTypeStats(): Promise<{
   }
 }
 
-export default {
+const equipmentInitializer = {
   initializeEquipmentTypes,
   checkEquipmentTypesInitialized,
   getEquipmentTypeStats
 };
+
+export default equipmentInitializer;
 
 

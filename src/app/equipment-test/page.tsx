@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/Button';
-import { TEXT_CONSTANTS } from '@/constants/text';
+import { useState, useEffect, useCallback } from 'react';
+import Button from '@/components/ui/Button';
 import { initializeEquipmentTypes, checkEquipmentTypesInitialized, getEquipmentTypeStats } from '@/lib/equipmentInitializer';
 import { EquipmentService } from '@/lib/equipmentService';
 
@@ -13,18 +12,18 @@ import { EquipmentService } from '@/lib/equipmentService';
 export default function EquipmentTestPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState<boolean | null>(null);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<{
+    total: number;
+    active: number;
+    categories: Record<string, number>;
+  } | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
 
   const addLog = (message: string) => {
     setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
   };
 
-  useEffect(() => {
-    checkInitStatus();
-  }, []);
-
-  const checkInitStatus = async () => {
+  const checkInitStatus = useCallback(async () => {
     setIsLoading(true);
     try {
       const initialized = await checkEquipmentTypesInitialized();
@@ -42,7 +41,7 @@ export default function EquipmentTestPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const handleInitialize = async () => {
     setIsLoading(true);
@@ -96,21 +95,22 @@ export default function EquipmentTestPage() {
       addLog('Testing equipment items operations...');
       
       // Test creating a sample equipment item
+      const now = new Date();
       const testEquipment = {
         id: 'TEST-M4-001',
         equipmentType: 'rifle_m4',
         productName: 'רובה M4A1',
         category: 'נשק אישי',
-        acquisitionDate: new Date() as any,
-        dateSigned: new Date() as any,
-        lastSeen: new Date() as any,
-        lastReportUpdate: new Date() as any,
+        acquisitionDate: now as unknown as import('firebase/firestore').Timestamp,
+        dateSigned: now as unknown as import('firebase/firestore').Timestamp,
+        lastSeen: now as unknown as import('firebase/firestore').Timestamp,
+        lastReportUpdate: now as unknown as import('firebase/firestore').Timestamp,
         signedBy: 'TEST-USER',
         currentHolder: 'TEST-HOLDER',
         assignedUnit: 'TEST-UNIT',
-        status: 'available' as any,
+        status: 'available' as import('@/types/equipment').EquipmentStatus,
         location: 'TEST-LOCATION',
-        condition: 'good' as any
+        condition: 'good' as import('@/types/equipment').EquipmentCondition
       };
 
       const createResult = await EquipmentService.Items.createEquipment(
@@ -132,7 +132,7 @@ export default function EquipmentTestPage() {
           'TEST-M4-001',
           { notes: 'Updated test equipment' },
           'TEST-UPDATER',
-          'notes_update' as any,
+          'notes_update' as import('@/types/equipment').EquipmentAction,
           'Added test notes'
         );
         addLog(`Equipment update: ${updateResult.success ? '✅ Success' : '❌ Failed'}`);
@@ -147,6 +147,10 @@ export default function EquipmentTestPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    checkInitStatus();
+  }, [checkInitStatus]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -227,7 +231,7 @@ export default function EquipmentTestPage() {
             <Button
               onClick={checkInitStatus}
               disabled={isLoading}
-              variant="outline"
+              variant="ghost"
               className="w-full"
             >
               {isLoading ? 'מרענן...' : 'רענן מצב'}

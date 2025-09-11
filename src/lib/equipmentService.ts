@@ -12,29 +12,22 @@ import {
   getDoc, 
   getDocs, 
   updateDoc, 
-  deleteDoc, 
-  addDoc,
   query, 
   where, 
   orderBy, 
   limit, 
   serverTimestamp, 
   Timestamp,
-  writeBatch,
-  DocumentSnapshot,
-  QuerySnapshot
+  writeBatch
 } from 'firebase/firestore';
 
 import { 
   EquipmentType, 
   Equipment, 
-  EquipmentStatus, 
-  EquipmentCondition,
+  EquipmentStatus,
   EquipmentAction,
   EquipmentHistoryEntry,
-  ApprovalType,
-  ApprovalDetails,
-  CustomizableFields
+  ApprovalDetails
 } from '@/types/equipment';
 
 import { TEXT_CONSTANTS } from '@/constants/text';
@@ -49,7 +42,7 @@ const EQUIPMENT_COLLECTION = 'equipment';   // Individual equipment items
 export interface EquipmentServiceResult {
   success: boolean;
   message: string;
-  data?: any;
+  data?: unknown;
   error?: string;
 }
 
@@ -533,7 +526,7 @@ export class EquipmentService {
    * Initialize equipment types from templates
    * Used for seeding the database with predefined equipment types
    */
-  static async seedEquipmentTypes(templates: any[]): Promise<EquipmentServiceResult> {
+  static async seedEquipmentTypes(templates: EquipmentType[]): Promise<EquipmentServiceResult> {
     try {
       const batch = writeBatch(db);
       let addedCount = 0;

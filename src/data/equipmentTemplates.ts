@@ -3,7 +3,7 @@
  * Pre-defined configurations for common military equipment
  */
 
-import { EquipmentStatus, EquipmentCondition, EquipmentType, CustomizableFields } from '@/types/equipment';
+import { EquipmentStatus, EquipmentCondition, EquipmentType } from '@/types/equipment';
 
 // EquipmentTemplate extends EquipmentType but allows for template-specific data
 export interface EquipmentTemplate extends Omit<EquipmentType, 'createdAt' | 'updatedAt' | 'isActive' | 'sortOrder'> {
