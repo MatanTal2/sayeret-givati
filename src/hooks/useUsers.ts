@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { FirestoreUserProfile } from '@/types/user';
@@ -31,7 +31,7 @@ export function useUsers(): UseUsersReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUsers = async (forceRefresh: boolean = false) => {
+  const fetchUsers = useCallback(async (forceRefresh: boolean = false) => {
     // Skip fetch if we already have users and not forcing refresh
     if (!forceRefresh && users.length > 0) {
       console.log('🔍 Using cached users data...');
@@ -84,11 +84,11 @@ export function useUsers(): UseUsersReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [users.length]);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   return {
     users,

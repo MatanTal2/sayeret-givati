@@ -2,6 +2,7 @@
 
 import { Equipment } from '@/types/equipment';
 import { TEXT_FMT } from '@/constants/text';
+import { Timestamp } from 'firebase/firestore';
 import EquipmentStatus from './EquipmentStatus';
 import EquipmentCondition from './EquipmentCondition';
 
@@ -21,24 +22,10 @@ export default function EquipmentCard({
   compact = false 
 }: EquipmentCardProps) {
   
-  // Format date for display (consistent with app's date formatting)
-  const formatDate = (dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('he-IL', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      });
-    } catch {
-      return dateString;
-    }
-  };
-
   // Format time ago (similar to app's existing patterns)
-  const formatTimeAgo = (dateString: string): string => {
+  const formatTimeAgo = (timestamp: Timestamp | string): string => {
     try {
-      const date = new Date(dateString);
+      const date = timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
       const now = new Date();
       const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
       
@@ -49,7 +36,7 @@ export default function EquipmentCard({
         return TEXT_FMT.DAYS_AGO(diffInDays);
       }
     } catch {
-      return formatDate(dateString);
+      return 'זמן לא ידוע';
     }
   };
 
