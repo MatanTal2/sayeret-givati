@@ -9,7 +9,7 @@ import EquipmentList from '@/components/equipment/EquipmentList';
 import EquipmentLoadingState from '@/components/equipment/EquipmentLoadingState';
 import AddEquipmentModal from '@/components/equipment/AddEquipmentModal';
 import { useEquipment } from '@/hooks/useEquipment';
-import { Equipment } from '@/types/equipment';
+import { Equipment, EquipmentStatus } from '@/types/equipment';
 
 /**
  * Equipment Page - צלם
@@ -39,15 +39,19 @@ export default function EquipmentPage() {
   };
 
   // Handle transfer (placeholder - will be implemented in future steps)
-  const handleTransfer = (equipmentId: string) => {
+  const handleTransfer = async (equipmentId: string) => {
     console.log('Transfer equipment:', equipmentId);
     // TODO: Open transfer modal/form in future steps
+    // Example usage:
+    // const success = await transferEquipment(equipmentId, 'NEW_HOLDER_UID', 'UPDATER_UID', 'NEW_UNIT', 'NEW_LOCATION', 'Transfer notes');
   };
 
   // Handle status update (placeholder - will be implemented in future steps)
-  const handleUpdateStatus = (equipmentId: string) => {
+  const handleUpdateStatus = async (equipmentId: string) => {
     console.log('Update status:', equipmentId);
     // TODO: Open status update modal/form in future steps
+    // Example usage:
+    // const success = await updateEquipmentStatus(equipmentId, EquipmentStatus.MAINTENANCE, 'UPDATER_UID', 'Status change notes');
   };
 
   // Handle view history (placeholder - will be implemented in future steps)
@@ -57,11 +61,14 @@ export default function EquipmentPage() {
   };
 
   // Handle add equipment
-  const handleAddEquipment = async (equipmentData: Omit<Equipment, 'createdAt' | 'updatedAt' | 'history'>) => {
+  const handleAddEquipment = async (equipmentData: Omit<Equipment, 'createdAt' | 'updatedAt' | 'trackingHistory'>) => {
     try {
-      await addEquipment(equipmentData);
-      // Refresh the list to show the new equipment
-      await refreshEquipment();
+      // For now, use the current user as the signer (in production, get from auth context)
+      const signedBy = 'מנהל-מערכת'; // TODO: Get from authentication context
+      const success = await addEquipment(equipmentData, signedBy);
+      if (!success) {
+        throw new Error('Failed to add equipment');
+      }
     } catch (error) {
       console.error('Error adding equipment:', error);
       throw error; // Re-throw to let the modal handle the error
@@ -121,6 +128,24 @@ export default function EquipmentPage() {
                   )}
                 </button>
               </div>
+
+              {/* Development Tools */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                  <h3 className="font-semibold text-yellow-800 mb-2">🛠️ כלי פיתוח</h3>
+                  <div className="space-y-2">
+                    <a
+                      href="/equipment-test"
+                      className="inline-block bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors"
+                    >
+                      🧪 בדיקת מסד נתונים - ציוד
+                    </a>
+                    <p className="text-sm text-yellow-700">
+                      עמוד לבדיקת פונקציונליות מסד הנתונים ואתחול סוגי ציוד
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Equipment Content */}
               {loading && !equipment.length ? (

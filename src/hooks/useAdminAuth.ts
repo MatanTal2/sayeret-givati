@@ -5,6 +5,8 @@ import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { AdminCredentials, FormMessage } from '@/types/admin';
 import { ADMIN_CONFIG, ADMIN_MESSAGES } from '@/constants/admin';
+import { UserType } from '@/types/user';
+import { UserDataService } from '@/lib/userDataService';
 
 interface UseAdminAuthReturn {
   isAuthenticated: boolean;
@@ -28,14 +30,42 @@ export function useAdminAuth(): UseAdminAuthReturn {
 
   // Listen to Firebase Auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       
-      // Check if user is admin
-      if (user && user.email === ADMIN_CONFIG.EMAIL) {
-        setIsAuthenticated(true);
-        // Clear any previous login messages when successfully authenticated
-        setMessage(null);
+      if (user) {
+        try {
+          // Check if user is admin by fetching their user data
+          const userDataResult = await UserDataService.fetchUserDataByUid(user.uid);
+          
+          if (userDataResult.success && userDataResult.userData) {
+            // Check if user has admin user type
+            if (userDataResult.userData.userType === UserType.ADMIN) {
+              setIsAuthenticated(true);
+              // Clear any previous login messages when successfully authenticated
+              setMessage(null);
+            } else {
+              setIsAuthenticated(false);
+            }
+          } else {
+            // Fallback: check if user email matches admin config (for backward compatibility)
+            if (user.email === ADMIN_CONFIG.EMAIL) {
+              setIsAuthenticated(true);
+              setMessage(null);
+            } else {
+              setIsAuthenticated(false);
+            }
+          }
+        } catch (error) {
+          console.error('Error checking admin status:', error);
+          // Fallback to email check in case of error
+          if (user.email === ADMIN_CONFIG.EMAIL) {
+            setIsAuthenticated(true);
+            setMessage(null);
+          } else {
+            setIsAuthenticated(false);
+          }
+        }
       } else {
         setIsAuthenticated(false);
       }
@@ -55,36 +85,61 @@ export function useAdminAuth(): UseAdminAuthReturn {
     setIsLoading(true);
     setMessage(null);
 
-    // If admin email is not set in env, always fail
-    if (!ADMIN_CONFIG.EMAIL) {
-      setMessage({
-        text: 'Admin login is not configured. Please contact the system administrator.',
-        type: 'error'
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    // Step 1: Validate email matches admin email
-    if (credentials.email !== ADMIN_CONFIG.EMAIL) {
-      setMessage({
-        text: 'Invalid email. Please try again.', // Generic error for security
-        type: 'error'
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    // Step 2: Try Firebase Authentication
+    // Try Firebase Authentication first
     try {
-      await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+      const userCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
       
-      // If we get here, login was successful
-      // The onAuthStateChanged listener will handle setting isAuthenticated
-      setMessage({
-        text: ADMIN_MESSAGES.LOGIN_SUCCESS,
-        type: 'success'
-      });
+      // Authentication successful, now check if user is admin
+      try {
+        const userDataResult = await UserDataService.fetchUserDataByUid(userCredential.user.uid);
+        
+        if (userDataResult.success && userDataResult.userData) {
+          if (userDataResult.userData.userType === UserType.ADMIN) {
+            setMessage({
+              text: ADMIN_MESSAGES.LOGIN_SUCCESS,
+              type: 'success'
+            });
+          } else {
+            // User is authenticated but not an admin - sign them out
+            await signOut(auth);
+            setMessage({
+              text: 'Access denied. Admin privileges required.',
+              type: 'error'
+            });
+          }
+        } else {
+          // Fallback: check admin email for backward compatibility
+          if (userCredential.user.email === ADMIN_CONFIG.EMAIL) {
+            setMessage({
+              text: ADMIN_MESSAGES.LOGIN_SUCCESS,
+              type: 'success'
+            });
+          } else {
+            // Not admin and no user data found - sign them out
+            await signOut(auth);
+            setMessage({
+              text: 'Access denied. Admin privileges required.',
+              type: 'error'
+            });
+          }
+        }
+      } catch (userDataError) {
+        console.error('Error checking user admin status:', userDataError);
+        // Fallback to email check
+        if (userCredential.user.email === ADMIN_CONFIG.EMAIL) {
+          setMessage({
+            text: ADMIN_MESSAGES.LOGIN_SUCCESS,
+            type: 'success'
+          });
+        } else {
+          await signOut(auth);
+          setMessage({
+            text: 'Access denied. Admin privileges required.',
+            type: 'error'
+          });
+        }
+      }
+      
     } catch (error: unknown) {
       console.error('Login error:', error);
       

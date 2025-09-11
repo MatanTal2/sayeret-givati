@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { Equipment, EquipmentStatus, EquipmentCondition } from '@/types/equipment';
+import { Timestamp, serverTimestamp } from 'firebase/firestore';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { 
   validateEquipmentId, 
@@ -19,12 +20,13 @@ import {
 interface AddEquipmentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (equipment: Omit<Equipment, 'createdAt' | 'updatedAt' | 'history'>) => Promise<void>;
+  onSubmit: (equipment: Omit<Equipment, 'createdAt' | 'updatedAt' | 'trackingHistory'>) => Promise<void>;
   loading?: boolean;
 }
 
 interface FormData {
   serialNumber: string;
+  equipmentType: string;
   productName: string;
   category: string;
   currentHolder: string;
@@ -37,6 +39,7 @@ interface FormData {
 
 const initialFormData: FormData = {
   serialNumber: '',
+  equipmentType: '',
   productName: '',
   category: '',
   currentHolder: '',
@@ -81,6 +84,7 @@ export default function AddEquipmentModal({
     const templateData = createEquipmentFromTemplate(template);
     setFormData({
       serialNumber: templateData.id,
+      equipmentType: template.id, // Reference to the template/equipment type
       productName: templateData.productName,
       category: templateData.category,
       currentHolder: templateData.currentHolder,
@@ -167,13 +171,18 @@ export default function AddEquipmentModal({
     try {
       // Prepare equipment data with id from serial number
       const { serialNumber, ...restFormData } = formData;
+      const now = serverTimestamp() as Timestamp;
+      
       const equipmentData = {
         ...restFormData,
         id: serialNumber, // Use serial number as ID
-        dateSigned: new Date().toISOString(),
-        lastReportUpdate: new Date().toISOString(),
-        signedBy: 'מערכת', // System created
-        trackingHistory: [] // Initialize empty tracking history
+        equipmentType: formData.equipmentType || 'manual_entry', // Default for manual entries
+        acquisitionDate: now,
+        dateSigned: now,
+        lastSeen: now,
+        lastReportUpdate: now,
+        signedBy: 'מערכת', // System created - TODO: Get from auth context
+        // Remove trackingHistory - will be created by the service
       };
 
       await onSubmit(equipmentData);

@@ -3,30 +3,12 @@
  * Pre-defined configurations for common military equipment
  */
 
-import { EquipmentStatus, EquipmentCondition } from '@/types/equipment';
+import { EquipmentStatus, EquipmentCondition, EquipmentType, CustomizableFields } from '@/types/equipment';
 
-export interface EquipmentTemplate {
-  id: string;
-  name: string; // Template name
-  description: string; // Template description
-  category: string;
-  productName: string;
-  defaultStatus: EquipmentStatus;
-  defaultCondition: EquipmentCondition;
-  defaultLocation: string;
-  idPrefix: string; // Prefix for serial numbers
-  icon: string; // Emoji icon
-  commonNotes?: string;
-  // Fields that user should customize
-  customizableFields: {
-    serialNumber: boolean;
-    currentHolder: boolean;
-    assignedUnit: boolean;
-    location: boolean;
-    status: boolean;
-    condition: boolean;
-    notes: boolean;
-  };
+// EquipmentTemplate extends EquipmentType but allows for template-specific data
+export interface EquipmentTemplate extends Omit<EquipmentType, 'createdAt' | 'updatedAt' | 'isActive' | 'sortOrder'> {
+  // Template-specific fields that differ from EquipmentType
+  productName: string; // For backwards compatibility in templates
 }
 
 /**
@@ -38,6 +20,7 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
   {
     id: 'rifle_m4',
     name: 'רובה M4A1',
+    nameEnglish: 'M4A1 Rifle',
     description: 'רובה סער M4A1 סטנדרטי',
     category: 'נשק אישי',
     productName: 'רובה M4A1',
@@ -46,6 +29,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
     defaultLocation: 'מחסן נשק',
     idPrefix: 'M4',
     icon: '🔫',
+    requiresApproval: true,
+    maintenanceInterval: 7, // Weekly maintenance checks
+    averageLifespan: 120, // 10 years
     commonNotes: 'בדיקת תקינות שבועית נדרשת',
     customizableFields: {
       serialNumber: true,
@@ -60,6 +46,7 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
   {
     id: 'rifle_tavor',
     name: 'רובה תבור',
+    nameEnglish: 'Tavor TAR-21',
     description: 'רובה סער תבור TAR-21',
     category: 'נשק אישי',
     productName: 'רובה תבור TAR-21',
@@ -68,6 +55,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
     defaultLocation: 'מחסן נשק',
     idPrefix: 'TAR',
     icon: '🔫',
+    requiresApproval: true,
+    maintenanceInterval: 7, // Weekly maintenance checks
+    averageLifespan: 120, // 10 years
     commonNotes: 'ניקוי יומי נדרש',
     customizableFields: {
       serialNumber: true,

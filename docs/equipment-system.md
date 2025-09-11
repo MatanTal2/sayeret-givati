@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Equipment Tracking System (צלם) is designed to manage military equipment with serial numbers, providing comprehensive tracking of item locations, holders, transfers, and maintenance history. The system ensures accountability and provides audit trails for all equipment operations.
+The Equipment Tracking System (צלם) is designed to manage military equipment with unique serial numbers, providing comprehensive tracking of item locations, holders, transfers, and maintenance history. The system ensures accountability and provides audit trails for all equipment operations.
 
 ## Core Concepts
 
@@ -217,8 +217,9 @@ The permission system has a two-tier hierarchy where UserType overrides UserRole
 
 ### ApprovalType
 
-- `otp_sms`: SMS-based OTP verification
-- `otp_app`: In-app OTP verification
+- `in_app_notification`: In-app notification approval (primary method)
+- `otp_sms`: SMS-based OTP verification (fallback)
+- `otp_app`: In-app OTP verification (fallback)
 - `commander_override`: Emergency override by commander
 - `dual_approval`: Two-person verification
 - `no_approval_required`: For initial sign-ins
@@ -406,12 +407,6 @@ await db.collection('equipment').doc(equipment.id).update({
 - Equipment serial numbers may be sensitive military information
 - Audit trails must be immutable once created
 - User permissions should follow principle of least privilege
-
-### OTP Security
-
-- OTP codes should expire after 5 minutes
-- Limit OTP generation to prevent abuse
-- Log all OTP attempts for security monitoring
 
 ## Backup and Recovery
 

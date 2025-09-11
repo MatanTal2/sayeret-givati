@@ -282,7 +282,40 @@ export const TEXT_CONSTANTS = {
       TABLE_CONDITION: 'מצב',
       TABLE_LOCATION: 'מיקום',
       TABLE_ACTIONS: 'פעולות',
-      TABLE_LAST_CHECK: 'בדיקה אחרונה'
+      TABLE_LAST_CHECK: 'בדיקה אחרונה',
+      
+      // Equipment Service Messages
+      EQUIPMENT_TYPE_EXISTS: 'סוג ציוד זה כבר קיים במערכת',
+      EQUIPMENT_TYPE_CREATED: 'סוג הציוד נוצר בהצלחה',
+      EQUIPMENT_TYPE_NOT_FOUND: 'סוג הציוד לא נמצא',
+      EQUIPMENT_TYPE_UPDATED: 'סוג הציוד עודכן בהצלחה',
+      EQUIPMENT_EXISTS: 'ציוד עם מספר סידורי זה כבר קיים',
+      EQUIPMENT_CREATED: 'הציוד נוצר בהצלחה',
+      EQUIPMENT_NOT_FOUND: 'הציוד לא נמצא',
+      EQUIPMENT_UPDATED: 'הציוד עודכן בהצלחה',
+      EQUIPMENT_TRANSFERRED: 'הציוד הועבר בהצלחה',
+      TRANSFER_SUCCESS: 'העברת הציוד הושלמה בהצלחה',
+      INITIAL_SIGN_IN: 'קבלה ראשונית של הציוד',
+      
+      // Equipment Types and Collections
+      EQUIPMENT_TYPES_TITLE: 'סוגי ציוד',
+      EQUIPMENT_ITEMS_TITLE: 'פריטי ציוד',
+      CREATE_EQUIPMENT_TYPE: 'צור סוג ציוד חדש',
+      MANAGE_EQUIPMENT_TYPES: 'ניהול סוגי ציוד',
+      EQUIPMENT_CATALOG: 'קטלוג ציוד',
+      
+      // Database Operations
+      LOADING_EQUIPMENT_TYPES: 'טוען סוגי ציוד...',
+      SEEDING_EQUIPMENT_TYPES: 'מאתחל סוגי ציוד במערכת...',
+      SEED_COMPLETE: 'אתחול הושלם בהצלחה',
+      
+      // Validation Messages
+      INVALID_SERIAL_NUMBER: 'מספר סידורי לא תקין',
+      SERIAL_NUMBER_REQUIRED: 'מספר סידורי חובה',
+      EQUIPMENT_TYPE_REQUIRED: 'סוג ציוד חובה',
+      HOLDER_REQUIRED: 'מחזיק חובה',
+      UNIT_REQUIRED: 'יחידה חובה',
+      LOCATION_REQUIRED: 'מיקום חובה'
     },
     CONVOYS: {
       TITLE: 'שיירות',
