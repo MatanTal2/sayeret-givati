@@ -2,7 +2,11 @@
  * Template management tab component - extracted from management page
  */
 import React, { useState } from 'react';
-import { Layers } from 'lucide-react';
+import { Layers, Plus } from 'lucide-react';
+import { Button } from '@/components/ui';
+import { TEXT_CONSTANTS } from '@/constants/text';
+import EquipmentTemplateForm from '@/components/equipment/EquipmentTemplateForm';
+import { EquipmentType } from '@/types/equipment';
 
 interface TemplateData {
   id: string;
@@ -24,6 +28,7 @@ export default function TemplateManagementTab() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState('all');
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   // Mock data for templates
   const mockTemplates: TemplateData[] = [
@@ -109,7 +114,14 @@ export default function TemplateManagementTab() {
   };
 
   const handleCreateTemplate = () => {
-    console.log('Create new template');
+    setShowCreateForm(true);
+  };
+
+  const handleTemplateCreated = (template: EquipmentType) => {
+    console.log('Template created:', template);
+    // TODO: Refresh template list or add to local state
+    // For now, just close the form
+    setShowCreateForm(false);
   };
 
   return (
@@ -120,12 +132,13 @@ export default function TemplateManagementTab() {
           <h3 className="text-lg font-semibold text-gray-900">ניהול תבניות ציוד</h3>
           <p className="text-sm text-gray-600">צור, ערוך ונהל תבניות לציוד צבאי</p>
         </div>
-        <button 
+        <Button
           onClick={handleCreateTemplate}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors shadow-sm"
+          className="flex items-center gap-2"
         >
-          + הוסף תבנית חדשה
-        </button>
+          <Plus className="w-4 h-4" />
+          {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.CREATE_TEMPLATE}
+        </Button>
       </div>
 
       {/* Statistics */}
@@ -303,6 +316,13 @@ export default function TemplateManagementTab() {
           </button>
         </div>
       )}
+
+      {/* Template Creation Form */}
+      <EquipmentTemplateForm
+        isOpen={showCreateForm}
+        onClose={() => setShowCreateForm(false)}
+        onSuccess={handleTemplateCreated}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { TEXT_FMT } from '@/constants/text';
 import { Timestamp } from 'firebase/firestore';
 import EquipmentStatus from './EquipmentStatus';
 import EquipmentCondition from './EquipmentCondition';
+import DailyStatusBadge from './DailyStatusBadge';
 
 interface EquipmentCardProps {
   equipment: Equipment;
@@ -94,11 +95,12 @@ export default function EquipmentCard({
           </div>
         </div>
 
-        {/* Right: Status, Condition & Actions */}
+        {/* Right: Status, Condition, Daily Check & Actions */}
         <div className="flex items-center gap-2">
           <div className="flex flex-col gap-1">
             <EquipmentStatus status={equipment.status} size="sm" variant="outlined" />
             <EquipmentCondition condition={equipment.condition} size="sm" showIcon={false} variant="outlined" />
+            <DailyStatusBadge requiresDailyStatusCheck={equipment.requiresDailyStatusCheck || false} size="sm" variant="outlined" />
           </div>
           
           <div className="flex gap-1">

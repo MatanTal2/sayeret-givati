@@ -1,31 +1,156 @@
 /**
  * Users management tab component - extracted from management page
  */
-import React, { useState } from 'react';
-import { Users } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Users, AlertCircle, RefreshCw } from 'lucide-react';
+import { useUsers } from '@/hooks/useUsers';
+import { MANAGEMENT } from '@/constants/text';
+import { TEXT_CONSTANTS } from '@/constants/text';
 
 export default function UsersTab() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
 
-  const mockUsers = [
-    { id: '1', name: 'יוסי כהן', email: 'yossi@example.com', role: 'admin', status: 'active', lastLogin: '2024-01-15', team: 'פלוגה א' },
-    { id: '2', name: 'שרה לוי', email: 'sara@example.com', role: 'manager', status: 'active', lastLogin: '2024-01-14', team: 'פלוגה ב' },
-    { id: '3', name: 'דוד אבן', email: 'david@example.com', role: 'user', status: 'inactive', lastLogin: '2024-01-10', team: 'פלוגה ג' },
-  ];
+  // Fetch users from Firestore
+  const { users, loading, error, fetchUsers } = useUsers();
+
+  // Helper function to check if user role matches selected filter
+  const doesRoleMatch = (userRole: string, selectedFilter: string): boolean => {
+    if (selectedFilter === 'all') return true;
+    
+    // Map filter values to Hebrew role names for comparison
+    const roleMapping: { [key: string]: string[] } = {
+      'admin': ['מנהל מערכת', 'מנהל'],
+      'manager': ['מנהל', 'מפקד', 'קצין'],
+      'user': ['חייל', 'משתמש'],
+      'team_leader': ['מפקד צוות'],
+      'officer': ['קצין'],
+      'commander': ['מפקד'],
+      'equipment_manager': ['מנהל ציוד']
+    };
+    
+    const matchingRoles = roleMapping[selectedFilter] || [];
+    return matchingRoles.some(role => userRole.includes(role));
+  };
+
+  // Filter users based on search and filters
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => {
+      const matchesSearch = searchTerm === '' || 
+        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesRole = doesRoleMatch(user.role, selectedRole);
+      
+      const matchesStatus = selectedStatus === 'all' || user.status === selectedStatus;
+      
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  }, [users, searchTerm, selectedRole, selectedStatus]);
+
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const total = users.length;
+    const active = users.filter(u => u.status === 'active').length;
+    const inactive = users.filter(u => u.status === 'inactive').length;
+    const pending = users.filter(u => u.status === 'transferred').length;
+    
+    return { total, active, inactive, pending };
+  }, [users]);
+
+  // Role display mapping
+  const getRoleDisplayName = (role: string) => {
+    const roleMap: { [key: string]: string } = {
+      'admin': TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_ADMIN,
+      'manager': TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_MANAGER,
+      'user': TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_USER,
+      'team_leader': TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_TEAM_LEADER,
+      'squad_leader': TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_SQUAD_LEADER,
+      'sergeant': TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_SERGEANT,
+      'officer': TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_OFFICER,
+      'commander': TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_COMMANDER,
+      'equipment_manager': TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_EQUIPMENT_MANAGER
+    };
+    return roleMap[role.toLowerCase()] || role;
+  };
+
+  // Status display mapping
+  const getStatusDisplayName = (status: string) => {
+    const statusMap: { [key: string]: string } = {
+      'active': TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_ACTIVE,
+      'inactive': TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_INACTIVE,
+      'transferred': TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_TRANSFERRED,
+      'discharged': TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_DISCHARGED
+    };
+    return statusMap[status] || status;
+  };
+
+  // Get user initials for avatar
+  const getUserInitials = (fullName: string) => {
+    const names = fullName.trim().split(' ');
+    if (names.length >= 2) {
+      return names[0][0] + names[names.length - 1][0];
+    }
+    return names[0][0] || '?';
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <RefreshCw className="w-8 h-8 text-purple-600 animate-spin ml-3" />
+          <span className="text-lg text-gray-600">{TEXT_CONSTANTS.MANAGEMENT.USERS.LOADING_USERS}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div className="flex items-center">
+            <AlertCircle className="w-6 h-6 text-red-600 ml-3" />
+            <div>
+              <h3 className="text-lg font-medium text-red-800">{TEXT_CONSTANTS.MANAGEMENT.USERS.ERROR_LOADING_TITLE}</h3>
+              <p className="text-sm text-red-600 mt-1">{error}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => fetchUsers(true)}
+            className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+          >
+            {TEXT_CONSTANTS.MANAGEMENT.USERS.TRY_AGAIN_BUTTON}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">ניהול משתמשים</h3>
-          <p className="text-sm text-gray-600">נהל משתמשים, תפקידים והרשאות במערכת</p>
+          <h3 className="text-lg font-semibold text-gray-900">{MANAGEMENT.TABS.USERS}</h3>
+          <p className="text-sm text-gray-600">{MANAGEMENT.TAB_DESCRIPTIONS.USERS}</p>
         </div>
-        <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors shadow-sm">
-          + הוסף משתמש חדש
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => fetchUsers(true)}
+            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors shadow-sm flex items-center"
+            disabled={loading}
+          >
+            <RefreshCw className={`w-4 h-4 ml-2 ${loading ? 'animate-spin' : ''}`} />
+            {TEXT_CONSTANTS.MANAGEMENT.USERS.REFRESH_BUTTON}
+          </button>
+          <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors shadow-sm">
+            {TEXT_CONSTANTS.MANAGEMENT.USERS.ADD_USER_BUTTON}
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -35,7 +160,7 @@ export default function UsersTab() {
             <label className="block text-sm font-medium text-gray-700 mb-2">חיפוש</label>
             <input
               type="text"
-              placeholder="חפש לפי שם או אימייל..."
+              placeholder={TEXT_CONSTANTS.MANAGEMENT.USERS.SEARCH_PLACEHOLDER}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -48,10 +173,14 @@ export default function UsersTab() {
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
             >
-              <option value="all">כל התפקידים</option>
-              <option value="admin">מנהל מערכת</option>
-              <option value="manager">מנהל</option>
-              <option value="user">משתמש</option>
+              <option value="all">{TEXT_CONSTANTS.MANAGEMENT.USERS.ALL_ROLES}</option>
+              <option value="admin">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_ADMIN}</option>
+              <option value="manager">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_MANAGER}</option>
+              <option value="user">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_USER}</option>
+              <option value="team_leader">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_TEAM_LEADER}</option>
+              <option value="officer">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_OFFICER}</option>
+              <option value="commander">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_COMMANDER}</option>
+              <option value="equipment_manager">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_EQUIPMENT_MANAGER}</option>
             </select>
           </div>
           <div>
@@ -61,12 +190,18 @@ export default function UsersTab() {
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
             >
-              <option value="all">כל הסטטוסים</option>
-              <option value="active">פעיל</option>
-              <option value="inactive">לא פעיל</option>
-              <option value="pending">ממתין לאישור</option>
+              <option value="all">{TEXT_CONSTANTS.MANAGEMENT.USERS.ALL_STATUSES}</option>
+              <option value="active">{TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_ACTIVE}</option>
+              <option value="inactive">{TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_INACTIVE}</option>
+              <option value="transferred">{TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_TRANSFERRED}</option>
+              <option value="discharged">{TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_DISCHARGED}</option>
             </select>
           </div>
+        </div>
+        
+        {/* Results count */}
+        <div className="mt-4 text-sm text-gray-600">
+          {TEXT_CONSTANTS.MANAGEMENT.USERS.SHOWING_RESULTS(filteredUsers.length, users.length)}
         </div>
       </div>
 
@@ -76,54 +211,65 @@ export default function UsersTab() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">משתמש</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">תפקיד</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">צוות</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סטטוס</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">התחברות אחרונה</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">פעולות</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.USER_COLUMN}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_COLUMN}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.RANK_COLUMN}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.TEAM_COLUMN}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_COLUMN}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.ACTIONS_COLUMN}</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {mockUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center ml-3">
-                        <span className="text-sm font-bold text-purple-600">{user.name[0]}</span>
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                      user.role === 'manager' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {user.role === 'admin' ? 'מנהל מערכת' : user.role === 'manager' ? 'מנהל' : 'משתמש'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.team}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      user.status === 'active' ? 'bg-green-100 text-green-800' :
-                      user.status === 'inactive' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {user.status === 'active' ? 'פעיל' : user.status === 'inactive' ? 'לא פעיל' : 'ממתין'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.lastLogin}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                    <button className="text-blue-600 hover:text-blue-900 ml-2">ערוך</button>
-                    <button className="text-red-600 hover:text-red-900">מחק</button>
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    {users.length === 0 ? TEXT_CONSTANTS.MANAGEMENT.USERS.NO_USERS_SYSTEM : TEXT_CONSTANTS.MANAGEMENT.USERS.NO_USERS_FOUND}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredUsers.map((user) => (
+                  <tr key={user.uid} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center ml-3">
+                          <span className="text-sm font-bold text-purple-600">
+                            {getUserInitials(user.fullName)}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{user.fullName}</div>
+                          <div className="text-sm text-gray-500">{user.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        user.role.includes('admin') || user.role.includes('מנהל מערכת') ? 'bg-red-100 text-red-800' :
+                        user.role.includes('manager') || user.role.includes('מנהל') || user.role.includes('קצין') || user.role.includes('מפקד') ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {getRoleDisplayName(user.role)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.rank}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.team}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        user.status === 'active' ? 'bg-green-100 text-green-800' :
+                        user.status === 'inactive' ? 'bg-red-100 text-red-800' :
+                        user.status === 'transferred' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {getStatusDisplayName(user.status)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                      <button className="text-blue-600 hover:text-blue-900 ml-2">{TEXT_CONSTANTS.MANAGEMENT.USERS.EDIT_ACTION}</button>
+                      <button className="text-red-600 hover:text-red-900">{TEXT_CONSTANTS.MANAGEMENT.USERS.DELETE_ACTION}</button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -135,8 +281,8 @@ export default function UsersTab() {
           <div className="flex items-center">
             <Users className="w-8 h-8 text-blue-600" />
             <div className="mr-4">
-              <div className="text-2xl font-bold text-gray-900">24</div>
-              <div className="text-sm text-gray-600">סך המשתמשים</div>
+              <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+              <div className="text-sm text-gray-600">{TEXT_CONSTANTS.MANAGEMENT.USERS.TOTAL_USERS}</div>
             </div>
           </div>
         </div>
@@ -146,8 +292,8 @@ export default function UsersTab() {
               <span className="text-green-600 font-bold">✓</span>
             </div>
             <div className="mr-4">
-              <div className="text-2xl font-bold text-green-600">21</div>
-              <div className="text-sm text-gray-600">פעילים</div>
+              <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+              <div className="text-sm text-gray-600">{TEXT_CONSTANTS.MANAGEMENT.USERS.ACTIVE_USERS}</div>
             </div>
           </div>
         </div>
@@ -157,8 +303,8 @@ export default function UsersTab() {
               <span className="text-red-600 font-bold">×</span>
             </div>
             <div className="mr-4">
-              <div className="text-2xl font-bold text-red-600">2</div>
-              <div className="text-sm text-gray-600">לא פעילים</div>
+              <div className="text-2xl font-bold text-red-600">{stats.inactive}</div>
+              <div className="text-sm text-gray-600">{TEXT_CONSTANTS.MANAGEMENT.USERS.INACTIVE_USERS}</div>
             </div>
           </div>
         </div>
@@ -168,8 +314,8 @@ export default function UsersTab() {
               <span className="text-yellow-600 font-bold">⏳</span>
             </div>
             <div className="mr-4">
-              <div className="text-2xl font-bold text-yellow-600">1</div>
-              <div className="text-sm text-gray-600">ממתינים</div>
+              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+              <div className="text-sm text-gray-600">{TEXT_CONSTANTS.MANAGEMENT.USERS.TRANSFERRED_USERS}</div>
             </div>
           </div>
         </div>

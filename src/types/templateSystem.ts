@@ -20,7 +20,6 @@ export interface TemplateCategory {
   id: string;
   name: string;
   icon: string;
-  description?: string;
   order: number;
   subcategories: TemplateSubcategory[];
   isActive: boolean;
@@ -33,7 +32,6 @@ export interface TemplateCategory {
 export interface TemplateSubcategory {
   id: string;
   name: string;
-  description?: string;
   parentCategoryId: string;
   order: number;
   templates: string[]; // Array of template IDs
@@ -41,35 +39,38 @@ export interface TemplateSubcategory {
 }
 
 // Enhanced Equipment Template
-export interface ProfessionalTemplate {
-  id: string;
-  name: string;
-  description: string;
-  categoryId: string;
-  subcategoryId: string;
+// export interface ProfessionalTemplate {
+//   id: string;
+//   name: string;
+//   description: string;
+//   categoryId: string;
+//   subcategoryId: string;
   
-  // Default Values
-  defaultValues: TemplateDefaults;
+//   // Default Values
+//   defaultValues: TemplateDefaults;
   
-  // Field Configuration
-  customizableFields: CustomizableField[];
-  requiredFields: string[];
+//   // Field Configuration
+//   customizableFields: CustomizableField[];
+//   requiredFields: string[];
   
-  // Metadata
-  icon: string;
-  idPrefix: string;
-  usage: {
-    timesUsed: number;
-    lastUsed?: string;
-  };
+//   // Metadata
+//   icon: string;
+//   idPrefix: string;
+//   usage: {
+//     timesUsed: number;
+//     lastUsed?: string;
+//   };
   
-  // Management
-  isActive: boolean;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-  version: number;
-}
+//   // Daily Status Check
+//   requiresDailyStatusCheck: boolean; // New field for daily status reporting
+  
+//   // Management
+//   isActive: boolean;
+//   createdBy: string;
+//   createdAt: string;
+//   updatedAt: string;
+//   version: number;
+// }
 
 // Template Default Values
 export interface TemplateDefaults {
@@ -125,6 +126,7 @@ export interface CreateTemplateForm {
   idPrefix: string;
   customizableFields: string[]; // Array of field names
   requiredFields: string[];
+  requiresDailyStatusCheck: boolean; // New field for daily status reporting
 }
 
 // Template Usage Statistics
@@ -209,114 +211,6 @@ export function canManageTemplates(userType: string): boolean {
   return permissions.canCreateTemplate || permissions.canEditTemplate;
 }
 
-// Default Categories for Military Equipment
-export const DEFAULT_TEMPLATE_CATEGORIES: Omit<TemplateCategory, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>[] = [
-  {
-    name: 'נשקייה',
-    icon: '🔫',
-    description: 'רובים, ומקלעים אישיים',
-    order: 1,
-    isActive: true,
-    subcategories: [
-      {
-        id: 'assault_rifles',
-        name: 'רובי סער',
-        description: 'תבור, M4A1, וכדומה',
-        parentCategoryId: '',
-        order: 1,
-        templates: [],
-        isActive: true,
-      },
-      {
-        id: 'machine_guns',
-        name: 'מקלעים',
-        description: 'נגב, מא"ג, וכדומה',
-        parentCategoryId: '',
-        order: 3,
-        templates: [],
-        isActive: true,
-      }
-    ]
-  },
-  {
-    name: 'אופטיקה',
-    icon: '🔭',
-    description: 'משקפי ראיית לילה, כוונות וציוד תצפית',
-    order: 2,
-    isActive: true,
-    subcategories: [
-      {
-        id: 'night_vision',
-        name: 'משקפי ראיית לילה',
-        description: 'AN/PVS-14, AN/PVS-31',
-        parentCategoryId: '',
-        order: 1,
-        templates: [],
-        isActive: true,
-      },
-      {
-        id: 'scopes',
-        name: 'כוונות',
-        description: 'ACOG, EOTech, אלביט',
-        parentCategoryId: '',
-        order: 2,
-        templates: [],
-        isActive: true,
-      }
-    ]
-  },
-  {
-    name: 'קשר',
-    icon: '📡',
-    description: 'קשרים, מכשירי תקשורת וציוד אלקטרוני',
-    order: 3,
-    isActive: true,
-    subcategories: [
-      {
-        id: 'personal_radios',
-        name: 'קשרים אישיים',
-        description: '709, 710',
-        parentCategoryId: '',
-        order: 1,
-        templates: [],
-        isActive: true,
-      },
-      {
-        id: 'vehicle_radios',
-        name: 'קשרי רכב',
-        description: 'מגן מכלול, נר לילה וכדומה',
-        parentCategoryId: '',
-        order: 2,
-        templates: [],
-        isActive: true,
-      }
-    ]
-  },
-  {
-    name: 'הגנה אישית',
-    icon: '🛡️',
-    description: 'אפודי מגן, קסדות וציוד הגנה',
-    order: 4,
-    isActive: true,
-    subcategories: [
-      {
-        id: 'body_armor',
-        name: 'אפודי מגן',
-        description: 'אפודים קרמיים ובליסטיים',
-        parentCategoryId: '',
-        order: 1,
-        templates: [],
-        isActive: true,
-      },
-      {
-        id: 'helmets',
-        name: 'קסדות',
-        description: 'קסדות בליסטיות וקרביות',
-        parentCategoryId: '',
-        order: 2,
-        templates: [],
-        isActive: true,
-      }
-    ]
-  }
-];
+// Note: DEFAULT_TEMPLATE_CATEGORIES has been removed.
+// The application now uses Firestore data with fallback to EQUIPMENT_TEMPLATES from @/data/equipmentTemplates
+// This provides better data consistency and real-time updates.

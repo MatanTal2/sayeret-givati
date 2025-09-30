@@ -4,7 +4,7 @@
  * Following established patterns from userService.ts
  */
 
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { 
   collection, 
   doc, 
@@ -34,7 +34,7 @@ import { EquipmentTemplate } from '@/data/equipmentTemplates';
 import { TEXT_CONSTANTS } from '@/constants/text';
 
 // Collection names - following established patterns
-const EQUIPMENTS_COLLECTION = 'equipments'; // Equipment types/templates
+const EQUIPMENT_TEMPLATES_COLLECTION = 'equipmentTemplates'; // Equipment types/templates
 const EQUIPMENT_COLLECTION = 'equipment';   // Individual equipment items
 
 /**
@@ -71,28 +71,42 @@ export class EquipmentTypesService {
    * Create a new equipment type
    */
   static async createEquipmentType(
-    equipmentTypeData: Omit<EquipmentType, 'createdAt' | 'updatedAt'>
+    equipmentTypeData: Omit<EquipmentType, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<EquipmentServiceResult> {
     try {
-      const equipmentTypeDoc = doc(db, EQUIPMENTS_COLLECTION, equipmentTypeData.id);
+      // Use auto-generated document ID
+      const equipmentTypeDoc = doc(collection(db, EQUIPMENT_TEMPLATES_COLLECTION));
       
-      // Check if equipment type already exists
-      const existingDoc = await getDoc(equipmentTypeDoc);
-      if (existingDoc.exists()) {
-        return {
-          success: false,
-          message: TEXT_CONSTANTS.FEATURES.EQUIPMENT.EQUIPMENT_TYPE_EXISTS || 'Equipment type already exists',
-          error: 'EQUIPMENT_TYPE_EXISTS'
-        };
-      }
-
+      // Build equipment type object, removing undefined fields to prevent Firestore errors
       const equipmentType: EquipmentType = {
         ...equipmentTypeData,
+        id: equipmentTypeDoc.id, // Use the auto-generated ID
         createdAt: serverTimestamp() as Timestamp,
         updatedAt: serverTimestamp() as Timestamp
       };
 
-      await setDoc(equipmentTypeDoc, equipmentType);
+      // Build data object for Firestore, excluding undefined optional fields
+      const dataToSave: Record<string, unknown> = {
+        id: equipmentType.id,
+        name: equipmentType.name,
+        category: equipmentType.category,
+        subcategory: equipmentType.subcategory,
+        requiresDailyStatusCheck: equipmentType.requiresDailyStatusCheck,
+        isActive: equipmentType.isActive,
+        templateCreatorId: equipmentType.templateCreatorId,
+        createdAt: equipmentType.createdAt,
+        updatedAt: equipmentType.updatedAt
+      };
+
+      // Add optional fields only if they are defined
+      if (equipmentType.description !== undefined) {
+        dataToSave.description = equipmentType.description;
+      }
+      if (equipmentType.notes !== undefined) {
+        dataToSave.notes = equipmentType.notes;
+      }
+
+      await setDoc(equipmentTypeDoc, dataToSave);
 
       return {
         success: true,
@@ -115,7 +129,7 @@ export class EquipmentTypesService {
    */
   static async getEquipmentType(typeId: string): Promise<EquipmentServiceResult> {
     try {
-      const equipmentTypeDoc = doc(db, EQUIPMENTS_COLLECTION, typeId);
+      const equipmentTypeDoc = doc(db, EQUIPMENT_TEMPLATES_COLLECTION, typeId);
       const docSnapshot = await getDoc(equipmentTypeDoc);
 
       if (!docSnapshot.exists()) {
@@ -143,13 +157,51 @@ export class EquipmentTypesService {
   }
 
   /**
+   * Get all equipment templates from Firestore
+   */
+  static async getTemplates(): Promise<EquipmentServiceResult> {
+    try {
+      console.log('🔍 Fetching templates from Firestore');
+      
+      const querySnapshot = await getDocs(collection(db, EQUIPMENT_TEMPLATES_COLLECTION));
+      const templates: EquipmentType[] = [];
+
+      querySnapshot.forEach((doc) => {
+        templates.push({ id: doc.id, ...doc.data() } as EquipmentType);
+      });
+
+      console.log(`✅ Fetched ${templates.length} templates from Firestore`);
+      
+      return {
+        success: true,
+        message: `Successfully fetched ${templates.length} templates`,
+        data: templates
+      };
+
+    } catch (error) {
+      console.error('❌ Error fetching templates from Firestore:', error);
+      return {
+        success: false,
+        message: TEXT_CONSTANTS.ERRORS.CONNECTION_ERROR || 'Failed to fetch templates',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  /**
    * Get all equipment types
    */
   static async getEquipmentTypes(
     { activeOnly = true, category = null }: { activeOnly?: boolean; category?: string | null } = {}
   ): Promise<EquipmentTypeListResult> {
     try {
-      let q = query(collection(db, EQUIPMENTS_COLLECTION), orderBy('sortOrder'), orderBy('name'));
+      console.log('🔍 DEBUG: Starting getEquipmentTypes');
+      console.log('🔍 DEBUG: Auth state in getEquipmentTypes:', auth.currentUser ? {
+        uid: auth.currentUser.uid,
+        email: auth.currentUser.email
+      } : 'No user authenticated');
+      
+      let q = query(collection(db, EQUIPMENT_TEMPLATES_COLLECTION), orderBy('sortOrder'), orderBy('name'));
       
       // Filter by active status
       if (activeOnly) {
@@ -193,14 +245,25 @@ export class EquipmentTypesService {
     updates: Partial<Omit<EquipmentType, 'id' | 'createdAt' | 'updatedAt'>>
   ): Promise<EquipmentServiceResult> {
     try {
-      const equipmentTypeDoc = doc(db, EQUIPMENTS_COLLECTION, typeId);
+      const equipmentTypeDoc = doc(db, EQUIPMENT_TEMPLATES_COLLECTION, typeId);
       
-      const updateData = {
-        ...updates,
+      // Build update object, excluding undefined values
+      const updateData: Record<string, unknown> = {
         updatedAt: serverTimestamp()
       };
 
-      await updateDoc(equipmentTypeDoc, updateData);
+      // Add only defined fields from updates
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.category !== undefined) updateData.category = updates.category;
+      if (updates.subcategory !== undefined) updateData.subcategory = updates.subcategory;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.notes !== undefined) updateData.notes = updates.notes;
+      if (updates.requiresDailyStatusCheck !== undefined) updateData.requiresDailyStatusCheck = updates.requiresDailyStatusCheck;
+      if (updates.isActive !== undefined) updateData.isActive = updates.isActive;
+      if (updates.templateCreatorId !== undefined) updateData.templateCreatorId = updates.templateCreatorId;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await updateDoc(equipmentTypeDoc, updateData as any);
 
       return {
         success: true,
@@ -228,7 +291,8 @@ export class EquipmentItemsService {
    */
   static async createEquipment(
     equipmentData: Omit<Equipment, 'createdAt' | 'updatedAt' | 'trackingHistory'>,
-    initialHolder: string,
+    initialHolderName: string,
+    initialHolderId: string,
     signedBy: string,
     notes?: string
   ): Promise<EquipmentServiceResult> {
@@ -245,14 +309,16 @@ export class EquipmentItemsService {
         };
       }
 
-      const now = serverTimestamp() as Timestamp;
+      const now = Timestamp.fromDate(new Date());
       
       // Create initial tracking history entry
       const initialHistoryEntry: EquipmentHistoryEntry = {
-        holder: initialHolder,
+        holder: initialHolderId, // Store UID for queries
+        holderName: initialHolderName, // Cache display name for UI performance
         fromDate: now,
         action: EquipmentAction.INITIAL_SIGN_IN,
-        updatedBy: signedBy,
+        updatedBy: initialHolderId,
+        updatedByName: initialHolderName,
         location: equipmentData.location,
         notes: notes || TEXT_CONSTANTS.FEATURES.EQUIPMENT.INITIAL_SIGN_IN || 'Initial sign-in',
         timestamp: now
@@ -260,11 +326,12 @@ export class EquipmentItemsService {
 
       const equipment: Equipment = {
         ...equipmentData,
-        currentHolder: initialHolder,
+        currentHolder: initialHolderName, // Display name for UI
+        currentHolderId: initialHolderId, // UID for queries and permissions
         signedBy,
         trackingHistory: [initialHistoryEntry],
-        createdAt: now,
-        updatedAt: now
+        createdAt: serverTimestamp() as Timestamp,
+        updatedAt: serverTimestamp() as Timestamp
       };
 
       await setDoc(equipmentDoc, equipment);
@@ -321,7 +388,8 @@ export class EquipmentItemsService {
    * Get equipment list with filters
    */
   static async getEquipmentList(filters: {
-    holder?: string;
+    holder?: string; // Display name search
+    holderId?: string; // User UID for exact queries
     unit?: string;
     status?: EquipmentStatus[];
     category?: string;
@@ -332,7 +400,10 @@ export class EquipmentItemsService {
       let q = query(collection(db, EQUIPMENT_COLLECTION), orderBy('updatedAt', 'desc'));
       
       // Apply filters
-      if (filters.holder) {
+      // Prefer holderId for exact queries, fallback to holder for display name search
+      if (filters.holderId) {
+        q = query(q, where('currentHolderId', '==', filters.holderId));
+      } else if (filters.holder) {
         q = query(q, where('currentHolder', '==', filters.holder));
       }
       
@@ -389,6 +460,7 @@ export class EquipmentItemsService {
     equipmentId: string,
     updates: Partial<Omit<Equipment, 'id' | 'createdAt' | 'updatedAt' | 'trackingHistory'>>,
     updatedBy: string,
+    updatedByName: string,
     action: EquipmentAction,
     notes?: string
   ): Promise<EquipmentServiceResult> {
@@ -405,14 +477,16 @@ export class EquipmentItemsService {
       }
 
       const currentEquipment = currentDoc.data() as Equipment;
-      const now = serverTimestamp() as Timestamp;
+      const now = Timestamp.fromDate(new Date());
 
       // Create new tracking history entry
       const historyEntry: EquipmentHistoryEntry = {
-        holder: currentEquipment.currentHolder,
+        holder: currentEquipment.currentHolderId, // Use UID for consistency
+        holderName: currentEquipment.currentHolder, // Cache display name for UI performance
         fromDate: now,
         action,
         updatedBy,
+        updatedByName,
         location: updates.location || currentEquipment.location,
         notes: notes || `${action} update`,
         timestamp: now
@@ -421,7 +495,7 @@ export class EquipmentItemsService {
       const updateData = {
         ...updates,
         trackingHistory: [...currentEquipment.trackingHistory, historyEntry],
-        updatedAt: now
+        updatedAt: serverTimestamp() as Timestamp
       };
 
       await updateDoc(equipmentDoc, updateData);
@@ -447,7 +521,9 @@ export class EquipmentItemsService {
   static async transferEquipment(
     equipmentId: string,
     newHolder: string,
+    newHolderId: string,
     updatedBy: string,
+    updatedByName: string,
     approvalDetails: ApprovalDetails,
     newUnit?: string,
     newLocation?: string,
@@ -466,7 +542,7 @@ export class EquipmentItemsService {
       }
 
       const currentEquipment = currentDoc.data() as Equipment;
-      const now = serverTimestamp() as Timestamp;
+      const now = Timestamp.fromDate(new Date());
 
       // Close previous history entry
       const updatedHistory = [...currentEquipment.trackingHistory];
@@ -477,10 +553,12 @@ export class EquipmentItemsService {
 
       // Create new tracking history entry
       const transferEntry: EquipmentHistoryEntry = {
-        holder: newHolder,
+        holder: newHolderId, // Store UID for queries
+        holderName: newHolder, // Cache display name for UI performance
         fromDate: now,
         action: approvalDetails.emergencyOverride ? EquipmentAction.EMERGENCY_TRANSFER : EquipmentAction.TRANSFER,
         updatedBy,
+        updatedByName,
         location: newLocation || currentEquipment.location,
         notes: notes || TEXT_CONSTANTS.FEATURES.EQUIPMENT.EQUIPMENT_TRANSFERRED || 'Equipment transferred',
         approval: approvalDetails,
@@ -490,11 +568,12 @@ export class EquipmentItemsService {
       updatedHistory.push(transferEntry);
 
       const updateData = {
-        currentHolder: newHolder,
+        currentHolder: newHolder, // Display name for UI
+        currentHolderId: newHolderId, // UID for queries and permissions
         assignedUnit: newUnit || currentEquipment.assignedUnit,
         location: newLocation || currentEquipment.location,
         trackingHistory: updatedHistory,
-        updatedAt: now
+        updatedAt: serverTimestamp() as Timestamp
       };
 
       await updateDoc(equipmentDoc, updateData);
@@ -527,40 +606,81 @@ export class EquipmentService {
    * Initialize equipment types from templates
    * Used for seeding the database with predefined equipment types
    */
-  static async seedEquipmentTypes(templates: EquipmentTemplate[]): Promise<EquipmentServiceResult> {
+  static async seedEquipmentTypes(templates: EquipmentTemplate[], allowDuplicateHandling: boolean = false): Promise<EquipmentServiceResult> {
     try {
+      console.log('🔍 DEBUG: Starting seedEquipmentTypes');
+      console.log('🔍 DEBUG: Current user auth state:', auth.currentUser ? {
+        uid: auth.currentUser.uid,
+        email: auth.currentUser.email,
+        emailVerified: auth.currentUser.emailVerified
+      } : 'No user authenticated');
+      
+      // Check if user document exists in users collection (required by isAuthorizedUser function)
+      if (auth.currentUser) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+          console.log('🔍 DEBUG: User document exists:', userDoc.exists());
+          if (userDoc.exists()) {
+            console.log('🔍 DEBUG: User document data:', userDoc.data());
+          }
+        } catch (userCheckError) {
+          console.log('🔍 DEBUG: Error checking user document:', userCheckError);
+        }
+      }
+      
       const batch = writeBatch(db);
       let addedCount = 0;
+      const processedTemplates: EquipmentTemplate[] = [];
 
       for (const template of templates) {
-        const equipmentTypeDoc = doc(db, EQUIPMENTS_COLLECTION, template.id);
+        let finalId = template.id;
+        let equipmentTypeDoc = doc(db, EQUIPMENT_TEMPLATES_COLLECTION, finalId);
         
         // Check if already exists
         const existingDoc = await getDoc(equipmentTypeDoc);
-        if (!existingDoc.exists()) {
+        
+        if (existingDoc.exists() && allowDuplicateHandling) {
+          // For testing: generate unique ID by adding random number
+          const randomSuffix = Math.floor(Math.random() * 10000);
+          finalId = `${template.id}_${randomSuffix}`;
+          equipmentTypeDoc = doc(db, EQUIPMENT_TEMPLATES_COLLECTION, finalId);
+          console.log(`ID conflict detected for ${template.id}, using unique ID: ${finalId}`);
+        }
+        
+        if (!existingDoc.exists() || allowDuplicateHandling) {
           const equipmentType: EquipmentType = {
-            ...template,
-            // Add missing required fields with defaults
-            requiresApproval: template.requiresApproval ?? true,
+            id: finalId, // Use the potentially modified ID
+            name: template.name,
+            category: template.category,
+            subcategory: template.subcategory || '',
+            description: template.description,
+            notes: 'commonNotes' in template ? (template as { commonNotes?: string }).commonNotes : undefined,
+            requiresDailyStatusCheck: template.requiresDailyStatusCheck || false,
             isActive: true,
-            sortOrder: addedCount,
+            templateCreatorId: 'system', // System-created templates
             createdAt: serverTimestamp() as Timestamp,
             updatedAt: serverTimestamp() as Timestamp
           };
           
           batch.set(equipmentTypeDoc, equipmentType);
+          processedTemplates.push({ ...template, id: finalId });
           addedCount++;
+        } else {
+          console.log(`Skipping existing equipment type: ${template.id}`);
         }
       }
 
       if (addedCount > 0) {
         await batch.commit();
+        console.log(`Successfully added ${addedCount} equipment types`);
+      } else {
+        console.log('No new equipment types to add');
       }
 
       return {
         success: true,
         message: `${addedCount} equipment types added successfully`,
-        data: { addedCount }
+        data: { addedCount, processedTemplates }
       };
 
     } catch (error) {

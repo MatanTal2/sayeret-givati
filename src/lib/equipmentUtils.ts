@@ -22,8 +22,8 @@ import { Timestamp, serverTimestamp } from 'firebase/firestore';
  */
 export function createHistoryEntry(
   action: EquipmentAction,
-  holder: string,
-  updatedBy: string,
+  holder: string, // User UID
+  updatedBy: string, // User UID
   location: string,
   notes?: string,
   approval?: {
@@ -36,15 +36,20 @@ export function createHistoryEntry(
       originalHolder: string;
       justification: string;
     };
-  }
+  },
+  holderName?: string, // Display name (optional for UI performance)
+  updatedByName?: string // Display name (optional for UI performance)
 ): EquipmentHistoryEntry {
-  const now = serverTimestamp() as Timestamp;
+  // Use current date for history entries since serverTimestamp() can't be used in arrays
+  const now = Timestamp.fromDate(new Date());
   
   return {
     holder,
+    holderName,
     fromDate: now,
     action,
     updatedBy,
+    updatedByName,
     location,
     notes,
     timestamp: now,
@@ -72,38 +77,42 @@ export function createNewEquipment(
   location: string,
   condition: EquipmentCondition,
   signedBy: string,
+  signedById: string,
   notes?: string
 ): Equipment {
-  const now = serverTimestamp() as Timestamp;
+  const serverNow = serverTimestamp() as Timestamp;
   
   return {
     id,
     equipmentType: 'generic', // Default type for legacy function
     productName,
     category,
-    acquisitionDate: now,
-    dateSigned: now,
-    lastSeen: now,
+    acquisitionDate: serverNow,
+    dateSigned: serverNow,
+    lastSeen: serverNow,
     signedBy,
     currentHolder: signedBy,
+    currentHolderId: signedById,
     assignedUnit,
     status: EquipmentStatus.AVAILABLE,
     location,
     condition,
     notes,
-    lastReportUpdate: now,
+    lastReportUpdate: serverNow,
     trackingHistory: [
       createHistoryEntry(
         EquipmentAction.INITIAL_SIGN_IN,
-        signedBy,
-        signedBy,
+        signedById,
+        signedById,
         location,
         notes,
-        { approvedBy: signedBy, approvalType: ApprovalType.NO_APPROVAL_REQUIRED }
+        { approvedBy: signedById, approvalType: ApprovalType.NO_APPROVAL_REQUIRED },
+        signedBy, // holderName
+        signedBy  // updatedByName
       )
     ],
-    createdAt: now,
-    updatedAt: now
+    createdAt: serverNow,
+    updatedAt: serverNow
   };
 }
 
@@ -113,8 +122,9 @@ export function createNewEquipment(
  */
 export function transferEquipment(
   equipment: Equipment,
-  newHolder: string,
-  updatedBy: string,
+  newHolder: string, // Display name
+  newHolderId: string, // User UID
+  updatedBy: string, // User UID
   approvalDetails: {
     approvedBy: string;
     approvalType: ApprovalType;
@@ -128,9 +138,10 @@ export function transferEquipment(
   },
   newUnit?: string,
   newLocation?: string,
-  notes?: string
+  notes?: string,
+  updatedByName?: string // Display name (optional)
 ): Equipment {
-  const now = serverTimestamp() as Timestamp;
+  const now = Timestamp.fromDate(new Date());
   
   // Close previous history entry
   const updatedHistory = [...equipment.trackingHistory];
@@ -142,11 +153,13 @@ export function transferEquipment(
   // Add new history entry
   const newHistoryEntry = createHistoryEntry(
     approvalDetails.emergencyOverride ? EquipmentAction.EMERGENCY_TRANSFER : EquipmentAction.TRANSFER,
-    newHolder,
+    newHolderId,
     updatedBy,
     newLocation || equipment.location,
     notes,
-    approvalDetails
+    approvalDetails,
+    newHolder, // holderName
+    updatedByName // updatedByName
   );
   
   updatedHistory.push(newHistoryEntry);
@@ -154,10 +167,11 @@ export function transferEquipment(
   return {
     ...equipment,
     currentHolder: newHolder,
+    currentHolderId: newHolderId,
     assignedUnit: newUnit || equipment.assignedUnit,
     location: newLocation || equipment.location,
     trackingHistory: updatedHistory,
-    updatedAt: now
+    updatedAt: serverTimestamp() as Timestamp
   };
 }
 
@@ -168,23 +182,25 @@ export function updateEquipmentStatus(
   equipment: Equipment,
   newStatus: EquipmentStatus,
   updatedBy: string,
-  notes?: string
+  notes?: string,
+  updatedByName?: string
 ): Equipment {
-  const now = serverTimestamp() as Timestamp;
-  
   const historyEntry = createHistoryEntry(
     EquipmentAction.STATUS_UPDATE,
-    equipment.currentHolder,
+    equipment.currentHolderId,
     updatedBy,
     equipment.location,
-    `Status changed to: ${newStatus}${notes ? ` - ${notes}` : ''}`
+    `Status changed to: ${newStatus}${notes ? ` - ${notes}` : ''}`,
+    undefined, // no approval needed for status updates
+    equipment.currentHolder, // holderName
+    updatedByName // updatedByName
   );
   
   return {
     ...equipment,
     status: newStatus,
     trackingHistory: [...equipment.trackingHistory, historyEntry],
-    updatedAt: now
+    updatedAt: serverTimestamp() as Timestamp
   };
 }
 
@@ -195,23 +211,25 @@ export function updateEquipmentCondition(
   equipment: Equipment,
   newCondition: EquipmentCondition,
   updatedBy: string,
-  notes?: string
+  notes?: string,
+  updatedByName?: string
 ): Equipment {
-  const now = serverTimestamp() as Timestamp;
-  
   const historyEntry = createHistoryEntry(
     EquipmentAction.CONDITION_UPDATE,
-    equipment.currentHolder,
+    equipment.currentHolderId,
     updatedBy,
     equipment.location,
-    `Condition changed to: ${newCondition}${notes ? ` - ${notes}` : ''}`
+    `Condition changed to: ${newCondition}${notes ? ` - ${notes}` : ''}`,
+    undefined, // no approval needed for condition updates
+    equipment.currentHolder, // holderName
+    updatedByName // updatedByName
   );
   
   return {
     ...equipment,
     condition: newCondition,
     trackingHistory: [...equipment.trackingHistory, historyEntry],
-    updatedAt: now
+    updatedAt: serverTimestamp() as Timestamp
   };
 }
 
@@ -221,16 +239,20 @@ export function updateEquipmentCondition(
 export function performDailyCheckIn(
   equipment: Equipment,
   checkedBy: string,
-  notes?: string
+  notes?: string,
+  checkedByName?: string
 ): Equipment {
   const now = serverTimestamp() as Timestamp;
   
   const historyEntry = createHistoryEntry(
     EquipmentAction.DAILY_CHECK_IN,
-    equipment.currentHolder,
+    equipment.currentHolderId,
     checkedBy,
     equipment.location,
-    notes || 'Daily check-in completed'
+    notes || 'Daily check-in completed',
+    undefined, // no approval needed for check-ins
+    equipment.currentHolder, // holderName
+    checkedByName // updatedByName
   );
   
   return {
@@ -394,7 +416,7 @@ export function canUpdateEquipment(
   }
 
   // Check ownership (user holds the equipment)
-  const isOwnEquipment = !!(equipment.currentHolder === userContext.userId);
+  const isOwnEquipment = !!(equipment.currentHolderId === userContext.userId);
   
   // Check team membership (equipment belongs to user's team)
   const isTeamEquipment = !!(userContext.team && equipment.assignedTeam === userContext.team);

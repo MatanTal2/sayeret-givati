@@ -48,6 +48,7 @@ export const TEXT_CONSTANTS = {
     PERSONAL_NUMBER_HELPER: 'הזן מספר אישי בין 5-7 ספרות',
     VERIFY_PERSONAL_NUMBER: 'אמת מספר אישי',
     REGISTRATION_NOTE: 'מותר להירשם רק לחיילים מאושרים מראש',
+    ALREADY_REGISTERED: 'משתמש זה כבר רשום במערכת. אנא השתמש בעמוד ההתחברות.',
     OTP_VERIFICATION: 'אימות טלפון',
     OTP_SENT_MESSAGE: 'קוד בן 6 ספרות נשלח למספר הטלפון שלך',
     OTP_INPUT_PLACEHOLDER: 'הזן קוד 6 ספרות',
@@ -234,6 +235,15 @@ export const TEXT_CONSTANTS = {
       UPDATE_CONDITION: 'עדכן מצב',
       DAILY_CHECK: 'בדיקה יומית',
       VIEW_HISTORY: 'הצג היסטוריה',
+      SHOW_MORE_DETAILS: 'הצג עוד פרטים',
+      
+      // Tabs
+      MY_EQUIPMENT: 'הציוד שלי',
+      ADDITIONAL_EQUIPMENT: 'ציוד נוסף',
+      
+      // Advanced Filters
+      SHOW_ADVANCED_FILTERS: 'הצג סינון מתקדם',
+      HIDE_ADVANCED_FILTERS: 'הסתר סינון מתקדם',
       
       // Messages
       NO_EQUIPMENT: 'אין ציוד רשום במערכת',
@@ -259,8 +269,6 @@ export const TEXT_CONSTANTS = {
       SEARCH_PLACEHOLDER: 'חיפוש לפי מספר סידורי, שם פריט, מחזיק...',
       ALL_STATUSES: 'כל הסטטוסים',
       ALL_CONDITIONS: 'כל המצבים',
-      CARDS_VIEW: 'כרטיסים',
-      TABLE_VIEW: 'טבלה',
       SHOWING_RESULTS: 'מציג {count} מתוך {total} פריטי ציוד',
       NO_EQUIPMENT_FILTERED: 'טרם נוסף ציוד למערכת',
       
@@ -315,7 +323,74 @@ export const TEXT_CONSTANTS = {
       EQUIPMENT_TYPE_REQUIRED: 'סוג ציוד חובה',
       HOLDER_REQUIRED: 'מחזיק חובה',
       UNIT_REQUIRED: 'יחידה חובה',
-      LOCATION_REQUIRED: 'מיקום חובה'
+      LOCATION_REQUIRED: 'מיקום חובה',
+      
+      // Daily Status Check
+      REQUIRES_DAILY_CHECK: 'נדרש דיווח יומי',
+      DAILY_STATUS_CHECK: 'דיווח יומי',
+      REQUIRES_DAILY_STATUS_CHECK: 'דרוש דיווח יומי',
+      DAILY_STATUS_TOGGLE_LABEL: 'דרוש דיווח יומי',
+      
+      // Template Form
+      TEMPLATE_FORM: {
+        TITLE: 'יצירת תבנית ציוד חדשה',
+        BASIC_INFO: 'מידע בסיסי',
+        CATEGORIES: 'קטגוריות',
+        DEFAULT_VALUES: 'ערכי ברירת מחדל',
+        
+        // Fields
+        NAME: 'שם התבנית',
+        NAME_PLACEHOLDER: 'לדוגמה: רובה M4A1',
+        NAME_REQUIRED: 'שם התבנית חובה',
+        
+        DESCRIPTION: 'תיאור',
+        DESCRIPTION_PLACEHOLDER: 'תיאור מפורט של הציוד',
+        
+        PRODUCT_NAME: 'שם המוצר',
+        PRODUCT_NAME_PLACEHOLDER: 'שם המוצר כפי שיופיע במערכת',
+        PRODUCT_NAME_REQUIRED: 'שם המוצר חובה',
+        
+        ID_PREFIX: 'קידומת מזהה',
+        ID_PREFIX_REQUIRED: 'קידומת מזהה חובה',
+        ID_PREFIX_INVALID: 'קידומת מזהה חייבת להכיל 2-6 תווים באנגלית ומספרים בלבד',
+        
+        CATEGORY: 'קטגוריה',
+        CATEGORY_REQUIRED: 'קטגוריה חובה',
+        SELECT_CATEGORY: 'בחר קטגוריה',
+        
+        SUBCATEGORY: 'תת-קטגוריה',
+        SUBCATEGORY_REQUIRED: 'תת-קטגוריה חובה',
+        SELECT_SUBCATEGORY: 'בחר תת-קטגוריה',
+        
+        LOCATION: 'מיקום ברירת מחדל',
+        LOCATION_PLACEHOLDER: 'מיקום אחסון ברירת מחדל',
+        
+        COMMON_NOTES: 'הערות כלליות',
+        COMMON_NOTES_PLACEHOLDER: 'הערות שיופיעו כברירת מחדל',
+        
+        DEFAULT_STATUS: 'סטטוס ברירת מחדל',
+        DEFAULT_CONDITION: 'מצב ברירת מחדל',
+        
+        REQUIRES_DAILY_CHECK: 'דרוש דיווח יומי',
+        
+        // Actions
+        CREATE_TEMPLATE: 'צור תבנית',
+        REFRESH: 'רענן',
+        
+        // Categories Management
+        ADD_NEW_CATEGORY: 'הוסף קטגוריה חדשה',
+        ADD_NEW_SUBCATEGORY: 'הוסף תת-קטגוריה חדשה',
+        ENTER_CATEGORY_NAME: 'הזן שם קטגוריה חדשה:',
+        ENTER_SUBCATEGORY_NAME: 'הזן שם תת-קטגוריה חדשה:',
+        CATEGORY_NAME_PLACEHOLDER: 'שם הקטגוריה',
+        SUBCATEGORY_NAME_PLACEHOLDER: 'שם התת-קטגוריה',
+        ADD: 'הוסף',
+        
+        // Success Messages
+        TEMPLATE_CREATED: 'התבנית נוצרה בהצלחה',
+        CATEGORY_CREATED: 'הקטגוריה נוצרה בהצלחה',
+        SUBCATEGORY_CREATED: 'התת-קטגוריה נוצרה בהצלחה'
+      }
     },
     CONVOYS: {
       TITLE: 'שיירות',
@@ -521,6 +596,61 @@ export const TEXT_CONSTANTS = {
       SEND_SUCCESS: 'הודעת האימייל נשלחה בהצלחה! (זהו הדמייה בלבד)'
     },
     
+    // User Management
+    USERS: {
+      // Table Headers
+      USER_COLUMN: 'משתמש',
+      ROLE_COLUMN: 'תפקיד',
+      RANK_COLUMN: 'דרגה',
+      TEAM_COLUMN: 'צוות',
+      STATUS_COLUMN: 'סטטוס',
+      ACTIONS_COLUMN: 'פעולות',
+      
+      // Filters
+      SEARCH_PLACEHOLDER: 'חפש לפי שם או אימייל...',
+      ALL_ROLES: 'כל התפקידים',
+      ALL_STATUSES: 'כל הסטטוסים',
+      
+      // Status Labels
+      STATUS_ACTIVE: 'פעיל',
+      STATUS_INACTIVE: 'לא פעיל',
+      STATUS_TRANSFERRED: 'הועבר',
+      STATUS_DISCHARGED: 'שוחרר',
+      
+      // Role Labels
+      ROLE_ADMIN: 'מנהל מערכת',
+      ROLE_MANAGER: 'מנהל',
+      ROLE_USER: 'משתמש',
+      ROLE_TEAM_LEADER: 'מפקד צוות',
+      ROLE_SQUAD_LEADER: 'מפקד כיתה',
+      ROLE_SERGEANT: 'סמל',
+      ROLE_OFFICER: 'קצין',
+      ROLE_COMMANDER: 'מפקד',
+      ROLE_EQUIPMENT_MANAGER: 'מנהל ציוד',
+      
+      // Actions
+      EDIT_ACTION: 'ערוך',
+      DELETE_ACTION: 'מחק',
+      ADD_USER_BUTTON: '+ הוסף משתמש חדש',
+      REFRESH_BUTTON: 'רענן',
+      
+      // Statistics
+      TOTAL_USERS: 'סך המשתמשים',
+      ACTIVE_USERS: 'פעילים',
+      INACTIVE_USERS: 'לא פעילים',
+      TRANSFERRED_USERS: 'הועברו',
+      
+      // Loading & Error States
+      LOADING_USERS: 'טוען משתמשים...',
+      ERROR_LOADING_TITLE: 'שגיאה בטעינת המשתמשים',
+      TRY_AGAIN_BUTTON: 'נסה שוב',
+      NO_USERS_FOUND: 'לא נמצאו משתמשים התואמים לחיפוש',
+      NO_USERS_SYSTEM: 'אין משתמשים במערכת',
+      
+      // Results
+      SHOWING_RESULTS: (filtered: number, total: number) => `מציג ${filtered} מתוך ${total} משתמשים`
+    },
+
     // Development Placeholders
     DEVELOPMENT: {
       IN_DEVELOPMENT: 'בפיתוח',

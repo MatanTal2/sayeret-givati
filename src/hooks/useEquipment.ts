@@ -12,6 +12,7 @@ import {
 import { EquipmentService } from '@/lib/equipmentService';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { Timestamp, serverTimestamp } from 'firebase/firestore';
+import { auth } from '@/lib/firebase';
 
 // Equipment Hook Interface
 interface UseEquipmentReturn {
@@ -28,10 +29,10 @@ interface UseEquipmentReturn {
   // Equipment Items Operations
   refreshEquipment: () => Promise<void>;
   addEquipment: (equipmentData: Omit<Equipment, 'createdAt' | 'updatedAt' | 'trackingHistory'>, signedBy: string) => Promise<boolean>;
-  transferEquipment: (equipmentId: string, newHolder: string, updatedBy: string, newUnit?: string, newLocation?: string, notes?: string) => Promise<boolean>;
-  updateEquipmentStatus: (equipmentId: string, newStatus: EquipmentStatus, updatedBy: string, notes?: string) => Promise<boolean>;
-  updateEquipmentCondition: (equipmentId: string, newCondition: EquipmentCondition, updatedBy: string, notes?: string) => Promise<boolean>;
-  performDailyCheck: (equipmentId: string, checkedBy: string, notes?: string) => Promise<boolean>;
+  transferEquipment: (equipmentId: string, newHolder: string, newHolderId: string, updatedBy: string, updatedByName: string, newUnit?: string, newLocation?: string, notes?: string) => Promise<boolean>;
+  updateEquipmentStatus: (equipmentId: string, newStatus: EquipmentStatus, updatedBy: string, updatedByName: string, notes?: string) => Promise<boolean>;
+  updateEquipmentCondition: (equipmentId: string, newCondition: EquipmentCondition, updatedBy: string, updatedByName: string, notes?: string) => Promise<boolean>;
+  performDailyCheck: (equipmentId: string, checkedBy: string, checkedByName: string, notes?: string) => Promise<boolean>;
   
   // Equipment Types Operations
   refreshEquipmentTypes: () => Promise<void>;
@@ -117,7 +118,8 @@ export function useEquipment(): UseEquipmentReturn {
     try {
       const result = await EquipmentService.Items.createEquipment(
         equipmentData,
-        equipmentData.currentHolder,
+        equipmentData.currentHolder, // Display name
+        equipmentData.currentHolderId, // User UID
         signedBy,
         TEXT_CONSTANTS.FEATURES.EQUIPMENT.INITIAL_SIGN_IN
       );
@@ -143,7 +145,9 @@ export function useEquipment(): UseEquipmentReturn {
   const transferEquipment = useCallback(async (
     equipmentId: string,
     newHolder: string,
+    newHolderId: string,
     updatedBy: string,
+    updatedByName: string,
     newUnit?: string,
     newLocation?: string,
     notes?: string
@@ -159,7 +163,9 @@ export function useEquipment(): UseEquipmentReturn {
       const result = await EquipmentService.Items.transferEquipment(
         equipmentId,
         newHolder,
+        newHolderId,
         updatedBy,
+        updatedByName,
         approvalDetails,
         newUnit,
         newLocation,
@@ -188,6 +194,7 @@ export function useEquipment(): UseEquipmentReturn {
     equipmentId: string,
     newStatus: EquipmentStatus,
     updatedBy: string,
+    updatedByName: string,
     notes?: string
   ): Promise<boolean> => {
     try {
@@ -195,6 +202,7 @@ export function useEquipment(): UseEquipmentReturn {
         equipmentId,
         { status: newStatus },
         updatedBy,
+        updatedByName,
         EquipmentAction.STATUS_UPDATE,
         notes
       );
@@ -221,6 +229,7 @@ export function useEquipment(): UseEquipmentReturn {
     equipmentId: string,
     newCondition: EquipmentCondition,
     updatedBy: string,
+    updatedByName: string,
     notes?: string
   ): Promise<boolean> => {
     try {
@@ -228,6 +237,7 @@ export function useEquipment(): UseEquipmentReturn {
         equipmentId,
         { condition: newCondition },
         updatedBy,
+        updatedByName,
         EquipmentAction.CONDITION_UPDATE,
         notes
       );
@@ -253,6 +263,7 @@ export function useEquipment(): UseEquipmentReturn {
   const performDailyCheck = useCallback(async (
     equipmentId: string,
     checkedBy: string,
+    checkedByName: string,
     notes?: string
   ): Promise<boolean> => {
     try {
@@ -260,6 +271,7 @@ export function useEquipment(): UseEquipmentReturn {
         equipmentId,
         { lastReportUpdate: serverTimestamp() as Timestamp },
         checkedBy,
+        checkedByName,
         EquipmentAction.DAILY_CHECK_IN,
         notes || TEXT_CONSTANTS.FEATURES.EQUIPMENT.DAILY_CHECK
       );
@@ -328,10 +340,21 @@ export function useEquipment(): UseEquipmentReturn {
     return equipmentTypes.find(type => type.id === typeId);
   }, [equipmentTypes]);
 
-  // Load data on mount
+  // Listen for authentication state changes
   useEffect(() => {
-    refreshEquipment();
-    refreshEquipmentTypes();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        console.log('🔍 AUTH: User authenticated, loading equipment data');
+        refreshEquipment();
+        refreshEquipmentTypes();
+      } else {
+        console.log('🔍 AUTH: No user authenticated, clearing equipment data');
+        setEquipment([]);
+        setEquipmentTypes([]);
+      }
+    });
+
+    return () => unsubscribe();
   }, [refreshEquipment, refreshEquipmentTypes]);
 
   return {

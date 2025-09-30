@@ -3,382 +3,39 @@
  * Pre-defined configurations for common military equipment
  */
 
-import { EquipmentStatus, EquipmentCondition, EquipmentType } from '@/types/equipment';
+// No imports needed - EquipmentTemplate is now self-contained
 
-// EquipmentTemplate extends EquipmentType but allows for template-specific data
-export interface EquipmentTemplate extends Omit<EquipmentType, 'createdAt' | 'updatedAt' | 'isActive' | 'sortOrder'> {
-  // Template-specific fields that differ from EquipmentType
-  productName: string; // For backwards compatibility in templates
+// EquipmentTemplate now matches the simplified EquipmentType schema
+export interface EquipmentTemplate {
+  id: string;
+  name: string;
+  category: string;
+  subcategory: string;
+  description?: string;
+  notes?: string;
+  requiresDailyStatusCheck: boolean;
 }
 
-/**
- * Pre-defined Equipment Templates
- * Based on common military equipment in IDF units
- */
-export const EQUIPMENT_TEMPLATES: EquipmentTemplate[] = [
-  // Weapons
-  {
-    id: 'rifle_m4',
-    name: 'רובה M4A1',
-    nameEnglish: 'M4A1 Rifle',
-    description: 'רובה סער M4A1 סטנדרטי',
-    category: 'נשק אישי',
-    productName: 'רובה M4A1',
-    defaultStatus: EquipmentStatus.AVAILABLE,
-    defaultCondition: EquipmentCondition.GOOD,
-    defaultLocation: 'מחסן נשק',
-    idPrefix: 'M4',
-    icon: '🔫',
-    requiresApproval: true,
-    maintenanceInterval: 7, // Weekly maintenance checks
-    averageLifespan: 120, // 10 years
-    commonNotes: 'בדיקת תקינות שבועית נדרשת',
-    customizableFields: {
-      serialNumber: true,
-      currentHolder: true,
-      assignedUnit: true,
-      location: true,
-      status: true,
-      condition: true,
-      notes: true
-    }
-  },
-  {
-    id: 'rifle_tavor',
-    name: 'רובה תבור',
-    nameEnglish: 'Tavor TAR-21',
-    description: 'רובה סער תבור TAR-21',
-    category: 'נשק אישי',
-    productName: 'רובה תבור TAR-21',
-    defaultStatus: EquipmentStatus.AVAILABLE,
-    defaultCondition: EquipmentCondition.GOOD,
-    defaultLocation: 'מחסן נשק',
-    idPrefix: 'TAR',
-    icon: '🔫',
-    requiresApproval: true,
-    maintenanceInterval: 7, // Weekly maintenance checks
-    averageLifespan: 120, // 10 years
-    commonNotes: 'ניקוי יומי נדרש',
-    customizableFields: {
-      serialNumber: true,
-      currentHolder: true,
-      assignedUnit: true,
-      location: true,
-      status: true,
-      condition: true,
-      notes: true
-    }
-  },
-  {
-    id: 'pistol_glock',
-    name: 'אקדח גלוק',
-    description: 'אקדח גלוק 17',
-    category: 'נשק אישי',
-    productName: 'אקדח גלוק 17',
-    defaultStatus: EquipmentStatus.AVAILABLE,
-    defaultCondition: EquipmentCondition.GOOD,
-    defaultLocation: 'כספת נשק',
-    idPrefix: 'GLK',
-    icon: '🔫',
-    requiresApproval: true,
-    maintenanceInterval: 30,
-    averageLifespan: 180,
-    commonNotes: 'נשק קצינים - אחסון בכספת',
-    customizableFields: {
-      serialNumber: true,
-      currentHolder: true,
-      assignedUnit: true,
-      location: true,
-      status: true,
-      condition: true,
-      notes: true
-    }
-  },
-
-  // Optics & Electronics
-  {
-    id: 'nvg_standard',
-    name: 'משקפי ראיית לילה',
-    description: 'משקפי ראיית לילה דור 3',
-    category: 'אופטיקה',
-    productName: 'משקפי ראיית לילה AN/PVS-14',
-    defaultStatus: EquipmentStatus.AVAILABLE,
-    defaultCondition: EquipmentCondition.EXCELLENT,
-    defaultLocation: 'מחסן אופטיקה',
-    idPrefix: 'NVG',
-    icon: '🔭',
-    requiresApproval: true,
-    maintenanceInterval: 7,
-    averageLifespan: 60,
-    commonNotes: 'בדיקת תקינות לפני כל שימוש',
-    customizableFields: {
-      serialNumber: true,
-      currentHolder: true,
-      assignedUnit: true,
-      location: true,
-      status: true,
-      condition: true,
-      notes: true
-    }
-  },
-  {
-    id: 'thermal_sight',
-    name: 'כוונת תרמית',
-    description: 'כוונת תרמית FLIR',
-    category: 'אופטיקה',
-    productName: 'כוונת תרמית FLIR Scout',
-    defaultStatus: EquipmentStatus.AVAILABLE,
-    defaultCondition: EquipmentCondition.GOOD,
-    defaultLocation: 'מחסן אופטיקה',
-    idPrefix: 'THM',
-    icon: '🔭',
-    requiresApproval: true,
-    maintenanceInterval: 14,
-    averageLifespan: 72,
-    commonNotes: 'טעינת סוללה לפני שימוש',
-    customizableFields: {
-      serialNumber: true,
-      currentHolder: true,
-      assignedUnit: true,
-      location: true,
-      status: true,
-      condition: true,
-      notes: true
-    }
-  },
-
-  // Communications
-  {
-    id: 'radio_prc148',
-    name: 'קשר PRC-148',
-    description: 'קשר אלחוטי PRC-148',
-    category: 'תקשורת',
-    productName: 'קשר אלחוטי PRC-148',
-    defaultStatus: EquipmentStatus.AVAILABLE,
-    defaultCondition: EquipmentCondition.GOOD,
-    defaultLocation: 'חדר תקשורת',
-    idPrefix: 'RAD',
-    icon: '📡',
-    requiresApproval: false,
-    maintenanceInterval: 1,
-    averageLifespan: 36,
-    commonNotes: 'בדיקת תקשורת יומית',
-    customizableFields: {
-      serialNumber: true,
-      currentHolder: true,
-      assignedUnit: true,
-      location: true,
-      status: true,
-      condition: true,
-      notes: true
-    }
-  },
-  {
-    id: 'radio_prc152',
-    name: 'קשר PRC-152',
-    description: 'קשר אלחוטי PRC-152 מתקדם',
-    category: 'תקשורת',
-    productName: 'קשר אלחוטי PRC-152',
-    defaultStatus: EquipmentStatus.AVAILABLE,
-    defaultCondition: EquipmentCondition.EXCELLENT,
-    defaultLocation: 'חדר תקשורת',
-    idPrefix: 'RAD',
-    icon: '📡',
-    requiresApproval: false,
-    maintenanceInterval: 7,
-    averageLifespan: 48,
-    commonNotes: 'קשר מפקדים - הצפנה מלאה',
-    customizableFields: {
-      serialNumber: true,
-      currentHolder: true,
-      assignedUnit: true,
-      location: true,
-      status: true,
-      condition: true,
-      notes: true
-    }
-  },
-
-  // Protective Equipment
-  {
-    id: 'vest_standard',
-    name: 'אפוד מגן',
-    description: 'אפוד מגן קרמי סטנדרטי',
-    category: 'הגנה אישית',
-    productName: 'אפוד מגן קרמי Level IIIA',
-    defaultStatus: EquipmentStatus.AVAILABLE,
-    defaultCondition: EquipmentCondition.GOOD,
-    defaultLocation: 'מחסן ציוד',
-    idPrefix: 'VEST',
-    icon: '🛡️',
-    requiresApproval: false,
-    maintenanceInterval: 30,
-    averageLifespan: 60,
-    commonNotes: 'בדיקת שלמות פלטים',
-    customizableFields: {
-      serialNumber: true,
-      currentHolder: true,
-      assignedUnit: true,
-      location: true,
-      status: true,
-      condition: true,
-      notes: true
-    }
-  },
-  {
-    id: 'helmet_standard',
-    name: 'קסדה',
-    description: 'קסדה בליסטית ACH',
-    category: 'הגנה אישית',
-    productName: 'קסדה בליסטית ACH',
-    defaultStatus: EquipmentStatus.AVAILABLE,
-    defaultCondition: EquipmentCondition.GOOD,
-    defaultLocation: 'מחסן ציוד',
-    idPrefix: 'HELM',
-    icon: '⛑️',
-    requiresApproval: false,
-    maintenanceInterval: 30,
-    averageLifespan: 48,
-    commonNotes: 'בדיקת רצועות ומערכת הידוק',
-    customizableFields: {
-      serialNumber: true,
-      currentHolder: true,
-      assignedUnit: true,
-      location: true,
-      status: true,
-      condition: true,
-      notes: true
-    }
-  },
-
-  // Equipment & Gear
-  {
-    id: 'backpack_assault',
-    name: 'תיק קרבי',
-    description: 'תיק קרבי 40 ליטר',
-    category: 'ציוד אישי',
-    productName: 'תיק קרבי 40L',
-    defaultStatus: EquipmentStatus.AVAILABLE,
-    defaultCondition: EquipmentCondition.GOOD,
-    defaultLocation: 'מחסן ציוד',
-    idPrefix: 'BAG',
-    icon: '🎒',
-    requiresApproval: false,
-    maintenanceInterval: 14,
-    averageLifespan: 24,
-    commonNotes: 'בדיקת רוכסנים ורצועות',
-    customizableFields: {
-      serialNumber: true,
-      currentHolder: true,
-      assignedUnit: true,
-      location: true,
-      status: true,
-      condition: true,
-      notes: true
-    }
-  },
-  {
-    id: 'sleeping_bag',
-    name: 'שק שינה',
-    description: 'שק שינה צבאי חורף',
-    category: 'ציוד אישי',
-    productName: 'שק שינה צבאי -10°C',
-    defaultStatus: EquipmentStatus.AVAILABLE,
-    defaultCondition: EquipmentCondition.GOOD,
-    defaultLocation: 'מחסן ציוד',
-    idPrefix: 'SLEEP',
-    icon: '🛏️',
-    requiresApproval: false,
-    maintenanceInterval: 30,
-    averageLifespan: 36,
-    commonNotes: 'ניקוי לאחר שימוש',
-    customizableFields: {
-      serialNumber: true,
-      currentHolder: true,
-      assignedUnit: true,
-      location: true,
-      status: true,
-      condition: true,
-      notes: true
-    }
-  },
-
-  // Vehicles & Heavy Equipment
-  {
-    id: 'vehicle_humvee',
-    name: 'רכב הממר',
-    description: 'רכב הממר M1114',
-    category: 'רכבים',
-    productName: 'הממר M1114 משוריין',
-    defaultStatus: EquipmentStatus.AVAILABLE,
-    defaultCondition: EquipmentCondition.GOOD,
-    defaultLocation: 'חניון כלי רכב',
-    idPrefix: 'VEH',
-    icon: '🚗',
-    requiresApproval: true,
-    maintenanceInterval: 1,
-    averageLifespan: 120,
-    commonNotes: 'בדיקה יומית של נוזלים וצמיגים',
-    customizableFields: {
-      serialNumber: true,
-      currentHolder: true,
-      assignedUnit: true,
-      location: true,
-      status: true,
-      condition: true,
-      notes: true
-    }
-  },
-
-  // Medical Equipment
-  {
-    id: 'medkit_ifak',
-    name: 'ערכת עזרה ראשונה',
-    description: 'ערכת IFAK אישית',
-    category: 'ציוד רפואי',
-    productName: 'ערכת IFAK מלאה',
-    defaultStatus: EquipmentStatus.AVAILABLE,
-    defaultCondition: EquipmentCondition.NEW,
-    defaultLocation: 'מחסן רפואי',
-    idPrefix: 'MED',
-    icon: '🏥',
-    requiresApproval: false,
-    maintenanceInterval: 7,
-    averageLifespan: 12,
-    commonNotes: 'בדיקת תאריכי תפוגה חודשית',
-    customizableFields: {
-      serialNumber: true,
-      currentHolder: true,
-      assignedUnit: true,
-      location: true,
-      status: true,
-      condition: true,
-      notes: true
-    }
-  }
-];
+// EQUIPMENT_TEMPLATES removed - using only Firestore data as requested
+// Templates are now managed entirely through the database
 
 /**
- * Get templates by category
+ * Get templates by category (deprecated - use Firestore data)
+ * @deprecated Use useTemplates hook with Firestore data instead
  */
 export function getTemplatesByCategory(): Record<string, EquipmentTemplate[]> {
-  const categories: Record<string, EquipmentTemplate[]> = {};
-  
-  EQUIPMENT_TEMPLATES.forEach(template => {
-    if (!categories[template.category]) {
-      categories[template.category] = [];
-    }
-    categories[template.category].push(template);
-  });
-  
-  return categories;
+  console.warn('getTemplatesByCategory is deprecated - use Firestore data via useTemplates hook');
+  return {};
 }
 
 /**
- * Get template by ID
+ * Get template by ID (deprecated - use Firestore data)
+ * @deprecated Use useTemplates hook with Firestore data instead
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function getTemplateById(id: string): EquipmentTemplate | undefined {
-  return EQUIPMENT_TEMPLATES.find(template => template.id === id);
+  console.warn('getTemplateById is deprecated - use Firestore data via useTemplates hook');
+  return undefined;
 }
 
 /**
@@ -386,11 +43,13 @@ export function getTemplateById(id: string): EquipmentTemplate | undefined {
  */
 export function generateSerialNumber(template: EquipmentTemplate): string {
   const timestamp = Date.now().toString().slice(-6); // Last 6 digits
-  return `${template.idPrefix}-${timestamp}`;
+  const prefix = template.name.substring(0, 3).toUpperCase().replace(/\s/g, '');
+  return `${prefix}-${timestamp}`;
 }
 
 /**
- * Create equipment data from template
+ * Create equipment data from template (legacy compatibility)
+ * @deprecated Use the new EquipmentType format directly
  */
 export function createEquipmentFromTemplate(
   template: EquipmentTemplate,
@@ -399,21 +58,19 @@ export function createEquipmentFromTemplate(
     currentHolder: string;
     assignedUnit: string;
     location: string;
-    status: EquipmentStatus;
-    condition: EquipmentCondition;
     notes: string;
   }> = {}
 ) {
   return {
     id: customValues.serialNumber || generateSerialNumber(template),
-    productName: template.productName,
+    equipmentType: template.id, // Reference to the template
+    productName: template.name, // Use name as productName for compatibility
     category: template.category,
     currentHolder: customValues.currentHolder || '',
     assignedUnit: customValues.assignedUnit || '',
-    location: customValues.location || template.defaultLocation,
-    status: customValues.status || template.defaultStatus,
-    condition: customValues.condition || template.defaultCondition,
-    notes: customValues.notes || template.commonNotes || '',
+    location: customValues.location || 'מחסן', // Default location
+    notes: customValues.notes || template.notes || '',
+    requiresDailyStatusCheck: template.requiresDailyStatusCheck || false,
     dateSigned: new Date().toISOString(),
     lastReportUpdate: new Date().toISOString(),
     signedBy: 'מערכת',

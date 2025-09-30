@@ -5,27 +5,15 @@ import { Timestamp } from 'firebase/firestore';
 
 // Equipment Type Definition for equipments collection
 export interface EquipmentType {
-  id: string; // Equipment type ID (same as document ID)
+  id: string; // Equipment type ID (auto-generated document ID)
   name: string; // Hebrew name
-  nameEnglish?: string; // English name
-  description: string; // Detailed description
-  category: string; // Equipment category (weapons, communication, etc.)
-  subcategory?: string; // Specific subcategory
-  manufacturer?: string; // Default manufacturer
-  model?: string; // Default model
-  defaultStatus: EquipmentStatus; // Default status for new items
-  defaultCondition: EquipmentCondition; // Default condition for new items
-  defaultLocation: string; // Default storage location
-  idPrefix: string; // Serial number prefix (M4, RAD, etc.)
-  icon?: string; // UI icon (emoji or icon name)
-  color?: string; // UI color theme
-  requiresApproval: boolean; // Whether transfers need approval
-  maintenanceInterval?: number; // Days between maintenance checks
-  averageLifespan?: number; // Expected lifespan in months
-  commonNotes?: string; // Default notes for new items
-  customizableFields: CustomizableFields; // Which fields can be customized
-  isActive: boolean; // Whether type is available for creation
-  sortOrder: number; // Display order in UI
+  category: string; // Equipment category reference (categoryId)
+  subcategory: string; // Subcategory reference (subcategoryId)
+  description?: string; // Optional detailed description
+  notes?: string; // Optional notes - warnings/guidelines
+  requiresDailyStatusCheck: boolean; // Whether this equipment type requires daily status checks
+  isActive: boolean; // Whether type is available for creation (default true)
+  templateCreatorId: string; // UID of user who created this template
   createdAt: Timestamp; // Document creation timestamp
   updatedAt: Timestamp; // Last update timestamp
 }
@@ -43,7 +31,7 @@ export interface CustomizableFields {
 // Individual Equipment Item for equipment collection
 export interface Equipment {
   id: string; // Serial number (מספר סידורי) - also serves as Firestore document ID
-  equipmentType: string; // Reference to equipments collection (e.g., "rifle_m4")
+  equipmentType: string; // Reference to equipmentTemplates collection (e.g., "rifle_m4")
   productName: string; // Name of the item (שם פריט) - inherited from equipmentType
   category: string; // Type/category (קטגוריה) - inherited from equipmentType
   subcategory?: string; // Specific type within category
@@ -60,7 +48,8 @@ export interface Equipment {
   
   // Assignment and Status
   signedBy: string; // Who signed the item in initially
-  currentHolder: string; // Current responsible person (user UID)
+  currentHolder: string; // Current responsible person (display name only - for UI)
+  currentHolderId: string; // Current responsible person (user UID - for queries and permissions)
   assignedUnit: string; // Assigned unit or platoon
   assignedTeam?: string; // Assigned team within the unit (for team-based permissions)
   status: EquipmentStatus; // Current status
@@ -72,6 +61,7 @@ export interface Equipment {
   notes?: string; // Optional free text notes
   maintenanceNotes?: string; // Maintenance history and notes
   qrCode?: string; // QR code for quick scanning
+  requiresDailyStatusCheck?: boolean; // Whether this equipment requires daily status checks (inherited from template)
   
   // Audit Trail
   trackingHistory: EquipmentHistoryEntry[]; // Array of transfer/action records
@@ -83,10 +73,12 @@ export interface Equipment {
 
 export interface EquipmentHistoryEntry {
   holder: string; // Person involved in this action (user UID)
+  holderName?: string; // Person's display name (cached for UI performance)
   fromDate: Timestamp; // Firestore timestamp - start of this period
   toDate?: Timestamp; // Firestore timestamp - end of this period (null if current)
   action: EquipmentAction; // Type of action performed
   updatedBy: string; // Who performed this action (user UID)
+  updatedByName?: string; // Updater's display name (cached for UI performance)
   location: string; // Where the equipment was during this action
   notes?: string; // Optional notes for this action
   approval?: ApprovalDetails; // Approval information (if required)
@@ -208,7 +200,8 @@ export interface EquipmentFilter {
   searchTerm?: string;
   status?: EquipmentStatus[];
   condition?: EquipmentCondition[];
-  holder?: string;
+  holder?: string; // Display name (for UI search)
+  holderId?: string; // User UID (for exact queries)
   unit?: string;
   category?: string;
   dateRange?: {
@@ -233,7 +226,7 @@ export interface EquipmentOperationResult {
 }
 
 // Utility types
-export type EquipmentSortField = 'id' | 'productName' | 'currentHolder' | 'assignedUnit' | 'lastReportUpdate' | 'createdAt';
+export type EquipmentSortField = 'id' | 'productName' | 'currentHolder' | 'currentHolderId' | 'assignedUnit' | 'lastReportUpdate' | 'createdAt';
 export type SortDirection = 'asc' | 'desc';
 
 export interface EquipmentSort {

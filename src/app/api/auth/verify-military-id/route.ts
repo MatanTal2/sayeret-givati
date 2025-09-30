@@ -42,6 +42,18 @@ export async function POST(request: NextRequest) {
         const data = docSnapshot.data();
         console.log('✅ Military ID found in authorized personnel');
         
+        // Check if user is already registered
+        if (data.registered === true) {
+          console.log('❌ User already registered');
+          return NextResponse.json({
+            success: false,
+            error: 'משתמש זה כבר רשום במערכת. אנא השתמש בעמוד ההתחברות.',
+            alreadyRegistered: true
+          }, { status: 409 });
+        }
+        
+        console.log('✅ User not yet registered, proceeding with registration flow');
+        
         // Return the personnel data needed for registration
         return NextResponse.json({
           success: true,

@@ -127,8 +127,13 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       } else {
         // Handle verification failure
         const errorMessage = data.error || 'Failed to verify military ID';
-
-        setValidationError(errorMessage);
+        
+        // Check if user is already registered
+        if (data.alreadyRegistered) {
+          setValidationError(TEXT_CONSTANTS.AUTH.ALREADY_REGISTERED);
+        } else {
+          setValidationError(errorMessage);
+        }
       }
     } catch {
       setValidationError('Connection error. Please check your internet connection and try again.');

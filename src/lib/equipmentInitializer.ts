@@ -1,43 +1,45 @@
 /**
  * Equipment Database Initializer
- * Seeds the equipments collection with predefined equipment types
+ * Seeds the equipmentTemplates collection with predefined equipment types
+ * 
+ * NOTE: EQUIPMENT_TEMPLATES has been removed - templates are now managed through the UI
+ * This file is deprecated and kept for backward compatibility only
  */
 
 import { EquipmentService } from './equipmentService';
-import { EQUIPMENT_TEMPLATES } from '@/data/equipmentTemplates';
 import { TEXT_CONSTANTS } from '@/constants/text';
 
 /**
  * Initialize equipment types in Firestore from templates
- * This should be called once to populate the equipments collection
+ * @deprecated Templates are now managed through the UI - use TemplateManagementTab instead
  */
-export async function initializeEquipmentTypes(): Promise<{
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function initializeEquipmentTypes(allowDuplicateHandling: boolean = true): Promise<{
   success: boolean;
   message: string;
   addedCount?: number;
   error?: string;
 }> {
+  console.warn('initializeEquipmentTypes is deprecated - templates are now managed through the UI');
+  
   try {
-    console.log(TEXT_CONSTANTS.FEATURES.EQUIPMENT.SEEDING_EQUIPMENT_TYPES);
+    // Check if any templates already exist
+    const existingTemplates = await EquipmentService.Types.getEquipmentTypes();
     
-    const result = await EquipmentService.seedEquipmentTypes(EQUIPMENT_TEMPLATES);
-    
-    if (result.success) {
-      const seedData = result.data as { addedCount?: number } | undefined;
-      console.log(TEXT_CONSTANTS.FEATURES.EQUIPMENT.SEED_COMPLETE, seedData?.addedCount);
+    if (existingTemplates.success && existingTemplates.totalCount > 0) {
       return {
         success: true,
-        message: `${TEXT_CONSTANTS.FEATURES.EQUIPMENT.SEED_COMPLETE} - ${seedData?.addedCount} types added`,
-        addedCount: seedData?.addedCount || 0
-      };
-    } else {
-      console.error('Failed to seed equipment types:', result.error);
-      return {
-        success: false,
-        message: result.message,
-        error: result.error
+        message: `Templates already exist: ${existingTemplates.totalCount} templates found`,
+        addedCount: 0
       };
     }
+    
+    return {
+      success: false,
+      message: 'No templates to seed - please create templates through the UI',
+      addedCount: 0,
+      error: 'EQUIPMENT_TEMPLATES array has been removed - use the Template Management UI'
+    };
     
   } catch (error) {
     console.error('Error during equipment initialization:', error);
@@ -52,10 +54,20 @@ export async function initializeEquipmentTypes(): Promise<{
 /**
  * Check if equipment types are already initialized
  */
-export async function checkEquipmentTypesInitialized(): Promise<boolean> {
+export async function checkEquipmentTypesInitialized(checkTestTypes: boolean = false): Promise<boolean> {
   try {
     const result = await EquipmentService.Types.getEquipmentTypes();
-    return result.success && result.totalCount > 0;
+    if (!result.success || result.totalCount === 0) {
+      return false;
+    }
+    
+    // If checking for test types, verify that we have TEST- prefixed types
+    if (checkTestTypes) {
+      const hasTestTypes = result.equipmentTypes.some(type => type.id.startsWith('TEST-'));
+      return hasTestTypes;
+    }
+    
+    return true;
   } catch (error) {
     console.error('Error checking equipment types:', error);
     return false;

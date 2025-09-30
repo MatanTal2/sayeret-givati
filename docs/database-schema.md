@@ -775,11 +775,11 @@ Defines equipment categories, types, and classification system for better organi
 - `equipment.equipmentType` - For equipment type queries
 - `equipment.assignedUnit` - For unit-based equipment queries
 
-#### Equipments Collection
+#### Equipment Templates Collection
 
-- `equipments.category` - For equipment type category filtering
-- `equipments.isActive` - For active equipment types
-- `equipments.sortOrder` - For UI ordering
+- `equipmentTemplates.category` - For equipment type category filtering
+- `equipmentTemplates.isActive` - For active equipment types
+- `equipmentTemplates.sortOrder` - For UI ordering
 
 #### Other Collections
 
@@ -816,7 +816,7 @@ Defines equipment categories, types, and classification system for better organi
 ### Phase 1 (Core)
 
 1. ✅ `users` - Already implemented
-2. 📋 `equipments` - Equipment types and templates
+2. 📋 `equipmentTemplates` - Equipment types and templates
 3. 📋 `equipment` - Individual equipment items
 4. 📋 `notifications` - In-app approval system
 5. 📋 `transfers` - Transfer workflow
@@ -829,7 +829,7 @@ Defines equipment categories, types, and classification system for better organi
 ### Phase 3 (Organizational)
 
 8. 📋 `units` - Structure
-9. 📋 `categories` - Classification (may be merged with equipments)
+9. 📋 `categories` - Classification (may be merged with equipmentTemplates)
 
 ---
 

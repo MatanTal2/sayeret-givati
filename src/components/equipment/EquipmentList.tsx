@@ -5,10 +5,12 @@ import { ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Equipment, EquipmentStatus, EquipmentCondition } from '@/types/equipment';
 import { TEXT_CONSTANTS, TEXT_FMT } from '@/constants/text';
 import { Timestamp } from 'firebase/firestore';
-import EquipmentCard from './EquipmentCard';
 import StatusComponent from './EquipmentStatus';
 import ConditionComponent from './EquipmentCondition';
+import DailyStatusBadge from './DailyStatusBadge';
 import SelectAllCheckbox from '@/app/components/SelectAllCheckbox';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserType } from '@/types/user';
 
 interface EquipmentListProps {
   equipment: Equipment[];
@@ -20,7 +22,6 @@ interface EquipmentListProps {
   onRefresh?: () => void;
 }
 
-type ViewMode = 'grid' | 'table';
 type SortField = 'id' | 'productName' | 'currentHolder' | 'status' | 'lastReportUpdate';
 type SortOrder = 'asc' | 'desc';
 
@@ -33,7 +34,6 @@ export default function EquipmentList({
   onViewHistory,
   onRefresh
 }: EquipmentListProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<EquipmentStatus | 'all'>('all');
   const [conditionFilter, setConditionFilter] = useState<EquipmentCondition | 'all'>('all');
@@ -46,6 +46,19 @@ export default function EquipmentList({
   const [selectedHolders, setSelectedHolders] = useState<string[]>([]);
   const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<Set<string>>(new Set());
   
+  // Tab and user context
+  const { enhancedUser } = useAuth();
+  const [activeTab, setActiveTab] = useState<'my-equipment' | 'additional-equipment'>('my-equipment');
+  
+  // Additional filters for "additional equipment" tab
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [idFilter, setIdFilter] = useState('');
+  const [productNameFilter, setProductNameFilter] = useState('');
+  const [holderFilter, setHolderFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [subCategoryFilter, setSubCategoryFilter] = useState('');
+  
   // Refs for click outside detection
   const productNameFilterRef = useRef<HTMLTableHeaderCellElement>(null);
   const holderFilterRef = useRef<HTMLTableHeaderCellElement>(null);
@@ -54,10 +67,41 @@ export default function EquipmentList({
   const uniqueProductNames = [...new Set(equipment.map(item => item.productName))].sort();
   const uniqueHolders = [...new Set(equipment.map(item => item.currentHolder))].sort();
 
-  // Filter and sort equipment
-  const filteredAndSortedEquipment = equipment
+  // Filter equipment based on active tab and user role
+  const getFilteredEquipment = () => {
+    let baseFiltered = equipment;
+    
+    // Tab-based filtering
+    if (activeTab === 'my-equipment') {
+      // Show only equipment held by current user
+      baseFiltered = equipment.filter(item => 
+        enhancedUser && (
+          item.currentHolder === enhancedUser.uid ||
+          item.currentHolder === `${enhancedUser.firstName} ${enhancedUser.lastName}` ||
+          item.currentHolder === enhancedUser.email
+        )
+      );
+    } else {
+      // "additional-equipment" tab - role-based filtering
+      if (enhancedUser?.userType === UserType.USER || enhancedUser?.userType === UserType.TEAM_LEADER) {
+        // Show team equipment only (assuming team info is available)
+        baseFiltered = equipment.filter(item => 
+          item.assignedUnit === enhancedUser?.role || // assuming role contains team info
+          item.assignedTeam === enhancedUser?.role
+        );
+      } else {
+        // Manager, system_manager, admin - show all equipment
+        baseFiltered = equipment;
+      }
+    }
+    
+    return baseFiltered;
+  };
+
+  // Apply filters and sorting
+  const filteredAndSortedEquipment = getFilteredEquipment()
     .filter(item => {
-      // Search filter
+      // Search filter (always applied)
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         const matchesSearch = 
@@ -70,6 +114,28 @@ export default function EquipmentList({
         if (!matchesSearch) return false;
       }
       
+      // Additional filters for "additional-equipment" tab only
+      if (activeTab === 'additional-equipment') {
+        if (idFilter && !item.id.toLowerCase().includes(idFilter.toLowerCase())) {
+          return false;
+        }
+        if (productNameFilter && !item.productName.toLowerCase().includes(productNameFilter.toLowerCase())) {
+          return false;
+        }
+        if (holderFilter && !item.currentHolder.toLowerCase().includes(holderFilter.toLowerCase())) {
+          return false;
+        }
+        if (typeFilter && !item.equipmentType?.toLowerCase().includes(typeFilter.toLowerCase())) {
+          return false;
+        }
+        if (categoryFilter && !item.category.toLowerCase().includes(categoryFilter.toLowerCase())) {
+          return false;
+        }
+        if (subCategoryFilter && item.subcategory && !item.subcategory.toLowerCase().includes(subCategoryFilter.toLowerCase())) {
+          return false;
+        }
+      }
+      
       // Status filter
       if (statusFilter !== 'all' && item.status !== statusFilter) {
         return false;
@@ -80,12 +146,12 @@ export default function EquipmentList({
         return false;
       }
       
-      // Product name filter
+      // Product name filter (existing functionality)
       if (selectedProductNames.length > 0 && !selectedProductNames.includes(item.productName)) {
         return false;
       }
       
-      // Holder filter
+      // Holder filter (existing functionality)
       if (selectedHolders.length > 0 && !selectedHolders.includes(item.currentHolder)) {
         return false;
       }
@@ -304,135 +370,242 @@ export default function EquipmentList({
 
   return (
     <div className="space-y-6">
-      {/* Controls Bar */}
-      <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-        {/* Search and View Mode Toggle */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-4">
-          <div className="flex-1">
+      {/* Compact Controls Bar */}
+      <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100">
+        {/* Basic Filters - Compact Layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div>
             <input
               type="text"
-              placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.SEARCH_PLACEHOLDER}
+              placeholder="חיפוש לפי מספר סידורי..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg
                          bg-gray-50 text-gray-900 placeholder-gray-500
-                         focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white
+                         focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white
                          transition-colors"
             />
           </div>
           
-          <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`px-4 py-2 rounded-xl transition-colors font-medium ${
-                viewMode === 'grid'
-                  ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              🔲 {TEXT_CONSTANTS.FEATURES.EQUIPMENT.CARDS_VIEW}
-            </button>
-            <button
-              onClick={() => setViewMode('table')}
-              className={`px-4 py-2 rounded-xl transition-colors font-medium ${
-                viewMode === 'table'
-                  ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              📋 {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TABLE_VIEW}
-            </button>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              סטטוס
-            </label>
+          <div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as EquipmentStatus | 'all')}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg
                          bg-gray-50 text-gray-900
-                         focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white
+                         focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white
                          transition-colors"
             >
-              <option value="all">{TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}</option>
-              <option value={EquipmentStatus.AVAILABLE}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_AVAILABLE}</option>
-              <option value={EquipmentStatus.IN_USE}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_IN_USE}</option>
-              <option value={EquipmentStatus.MAINTENANCE}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_MAINTENANCE}</option>
-              <option value={EquipmentStatus.REPAIR}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_REPAIR}</option>
-              <option value={EquipmentStatus.LOST}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_LOST}</option>
-              <option value={EquipmentStatus.RETIRED}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_RETIRED}</option>
+              <option value="all">כל הסטטוסים</option>
+              <option value={EquipmentStatus.AVAILABLE}>זמין</option>
+              <option value={EquipmentStatus.IN_USE}>בשימוש</option>
+              <option value={EquipmentStatus.MAINTENANCE}>בתחזוקה</option>
+              <option value={EquipmentStatus.REPAIR}>בתיקון</option>
+              <option value={EquipmentStatus.LOST}>אבוד</option>
+              <option value={EquipmentStatus.RETIRED}>הוחזר</option>
             </select>
           </div>
-          
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              מצב
-            </label>
-            <select
-              value={conditionFilter}
-              onChange={(e) => setConditionFilter(e.target.value as EquipmentCondition | 'all')}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl
-                         bg-gray-50 text-gray-900
-                         focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white
+
+          <div>
+            <input
+              type="text"
+              placeholder="חיפוש לפי שם מוצר..."
+              value={productNameFilter}
+              onChange={(e) => setProductNameFilter(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg
+                         bg-gray-50 text-gray-900 placeholder-gray-500
+                         focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white
                          transition-colors"
+            />
+          </div>
+
+          <div className="flex items-center">
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
             >
-              <option value="all">{TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_CONDITIONS}</option>
-              <option value={EquipmentCondition.NEW}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_NEW}</option>
-              <option value={EquipmentCondition.EXCELLENT}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_EXCELLENT}</option>
-              <option value={EquipmentCondition.GOOD}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_GOOD}</option>
-              <option value={EquipmentCondition.FAIR}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_FAIR}</option>
-              <option value={EquipmentCondition.POOR}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_POOR}</option>
-              <option value={EquipmentCondition.NEEDS_REPAIR}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_NEEDS_REPAIR}</option>
-            </select>
+              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showAdvancedFilters ? 'rotate-180' : ''}`} />
+              {showAdvancedFilters ? TEXT_CONSTANTS.FEATURES.EQUIPMENT.HIDE_ADVANCED_FILTERS : TEXT_CONSTANTS.FEATURES.EQUIPMENT.SHOW_ADVANCED_FILTERS}
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Results Count */}
-      <div className="text-sm text-gray-600">
-        {TEXT_FMT.SHOWING_RESULTS(filteredAndSortedEquipment.length, equipment.length)}
-        {selectedEquipmentIds.size > 0 && (
-          <div className="text-sm text-purple-600 font-medium mt-1">
-            נבחרו {selectedEquipmentIds.size} מתוך {filteredAndSortedEquipment.length}
+        {/* Collapsible Advanced Filters */}
+        {showAdvancedFilters && (
+          <div className="mt-4 pt-4 border-t border-gray-200 transition-all duration-300 ease-in-out">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div>
+                <input
+                  type="text"
+                  placeholder="מחזיק נוכחי..."
+                  value={holderFilter}
+                  onChange={(e) => setHolderFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-colors"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  placeholder="סוג ציוד..."
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-colors"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  placeholder="קטגוריה..."
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-colors"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  placeholder="תת-קטגוריה..."
+                  value={subCategoryFilter}
+                  onChange={(e) => setSubCategoryFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-colors"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  placeholder="מספר סידורי מתקדם..."
+                  value={idFilter}
+                  onChange={(e) => setIdFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-colors"
+                />
+              </div>
+              <div>
+                <select
+                  value={conditionFilter}
+                  onChange={(e) => setConditionFilter(e.target.value as EquipmentCondition | 'all')}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-colors"
+                >
+                  <option value="all">כל המצבים</option>
+                  <option value={EquipmentCondition.NEW}>חדש</option>
+                  <option value={EquipmentCondition.EXCELLENT}>מצוין</option>
+                  <option value={EquipmentCondition.GOOD}>טוב</option>
+                  <option value={EquipmentCondition.FAIR}>בסדר</option>
+                  <option value={EquipmentCondition.POOR}>גרוע</option>
+                  <option value={EquipmentCondition.NEEDS_REPAIR}>דורש תיקון</option>
+                </select>
+              </div>
+            </div>
+            
+            {/* Clear Filters Button */}
+            <div className="mt-3 flex justify-end">
+              <button
+                onClick={() => {
+                  setIdFilter('');
+                  setProductNameFilter('');
+                  setHolderFilter('');
+                  setTypeFilter('');
+                  setCategoryFilter('');
+                  setSubCategoryFilter('');
+                  setConditionFilter('all');
+                  setStatusFilter('all');
+                  setSearchTerm('');
+                }}
+                className="px-3 py-1 text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+              >
+                נקה הכל
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Equipment Display */}
-      {filteredAndSortedEquipment.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl shadow-lg border border-gray-100">
-          <div className="text-6xl mb-4">📦</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            {TEXT_CONSTANTS.FEATURES.EQUIPMENT.NO_EQUIPMENT}
-          </h3>
-          <p className="text-gray-600">
-            {searchTerm || statusFilter !== 'all' || conditionFilter !== 'all' 
-              ? TEXT_CONSTANTS.FEATURES.EQUIPMENT.NO_ITEMS_FOUND
-              : TEXT_CONSTANTS.FEATURES.EQUIPMENT.NO_EQUIPMENT_FILTERED
-            }
-          </p>
+      {/* Results Count & Info */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm bg-gray-50 px-4 py-3 rounded-lg">
+        <div className="text-gray-600">
+          {(() => {
+            // Calculate the baseline count for the current tab
+            const baseEquipmentForTab = getFilteredEquipment();
+            return TEXT_FMT.SHOWING_RESULTS(filteredAndSortedEquipment.length, baseEquipmentForTab.length);
+          })()}
+          {selectedEquipmentIds.size > 0 && (
+            <span className="text-purple-600 font-medium mr-2">
+              • נבחרו {selectedEquipmentIds.size} פריטים
+            </span>
+          )}
         </div>
-      ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAndSortedEquipment.map((item) => (
-            <EquipmentCard
-              key={item.id}
-              equipment={item}
-              onTransfer={onTransfer}
-              onUpdateStatus={onUpdateStatus}
-              onViewHistory={onViewHistory}
-            />
-          ))}
+        
+        {/* Active Filter Info */}
+        <div className="text-xs text-gray-500">
+          {(searchTerm || idFilter || productNameFilter || holderFilter || typeFilter || categoryFilter || subCategoryFilter || statusFilter !== 'all' || conditionFilter !== 'all') && (
+            <span className="text-purple-600">סינון פעיל • </span>
+          )}
+          {activeTab === 'my-equipment' 
+            ? 'הציוד שלי'
+            : enhancedUser?.userType === UserType.USER || enhancedUser?.userType === UserType.TEAM_LEADER
+              ? 'ציוד הצוות'
+              : 'כל הציוד'
+          }
         </div>
-      ) : (
-        /* Table View */
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden min-h-[500px]">
-                     <div className="overflow-x-auto">
+      </div>
+
+      {/* Equipment Display with Tabs */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden min-h-[500px]">
+        {/* Tabs - Always visible, sticky above table header */}
+        <div className="sticky top-0 z-20 bg-white border-b border-gray-200">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab('my-equipment')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'my-equipment'
+                  ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              {TEXT_CONSTANTS.FEATURES.EQUIPMENT.MY_EQUIPMENT}
+            </button>
+            <button
+              onClick={() => setActiveTab('additional-equipment')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'additional-equipment'
+                  ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              {TEXT_CONSTANTS.FEATURES.EQUIPMENT.ADDITIONAL_EQUIPMENT}
+            </button>
+          </div>
+        </div>
+
+        {/* Content Area */}
+        {filteredAndSortedEquipment.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">📦</div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {activeTab === 'my-equipment' ? 'אין לך ציוד כרגע' : 'לא נמצא ציוד'}
+            </h3>
+            <p className="text-gray-600 text-sm">
+              {activeTab === 'my-equipment' 
+                ? 'לא נמצא ציוד שאתה מחזיק כרגע'
+                : searchTerm || idFilter || productNameFilter || holderFilter || typeFilter || categoryFilter || subCategoryFilter || statusFilter !== 'all' || conditionFilter !== 'all'
+                  ? 'נסה לשנות את הסינונים או לעבור לטאב אחר'
+                  : enhancedUser?.userType === UserType.USER || enhancedUser?.userType === UserType.TEAM_LEADER
+                    ? 'אין ציוד זמין לצוות'
+                    : 'אין ציוד במערכת'
+              }
+            </p>
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-4 text-xs text-gray-400">
+                <p>Debug: Total equipment in system: {equipment.length}</p>
+                <p>Equipment for current tab: {getFilteredEquipment().length}</p>
+                <p>After filters applied: {filteredAndSortedEquipment.length}</p>
+                <p>Active tab: {activeTab}</p>
+                <p>User: {enhancedUser?.firstName} {enhancedUser?.lastName}</p>
+                <p>User Type: {enhancedUser?.userType}</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
              <table className="w-full table-fixed">
                              <colgroup>
                 <col className="w-12" />
@@ -587,12 +760,13 @@ export default function EquipmentList({
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                                                 <button
-                           onClick={() => toggleRowExpansion(item.id)}
-                           className="w-8 h-8 flex items-center justify-center text-purple-700 hover:bg-purple-100 transition-colors"
-                         >
-                           <ChevronDown className={`h-5 w-5 text-purple-700 transition-transform duration-200 ${expandedRows.has(item.id) ? 'rotate-180' : ''}`} />
-                         </button>
+                        <button
+                          onClick={() => toggleRowExpansion(item.id)}
+                          className="flex items-center gap-2 text-purple-700 hover:bg-purple-50 px-2 py-1 rounded-md transition-colors"
+                        >
+                          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${expandedRows.has(item.id) ? 'rotate-180' : ''}`} />
+                          <span className="text-xs font-medium">{TEXT_CONSTANTS.FEATURES.EQUIPMENT.SHOW_MORE_DETAILS}</span>
+                        </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         #{item.id}
@@ -606,7 +780,10 @@ export default function EquipmentList({
                         <div className="text-xs text-gray-500">{item.assignedUnit}</div>
                       </td>
                                              <td className="px-6 py-4 whitespace-nowrap">
-                         <StatusComponent status={item.status} size="sm" variant="outlined" />
+                         <div className="flex flex-col gap-1">
+                           <StatusComponent status={item.status} size="sm" variant="outlined" />
+                           <DailyStatusBadge requiresDailyStatusCheck={item.requiresDailyStatusCheck || false} size="sm" variant="outlined" />
+                         </div>
                        </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex gap-2">
@@ -703,8 +880,8 @@ export default function EquipmentList({
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

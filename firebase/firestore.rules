@@ -1,0 +1,226 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Users collection - users can read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null; // Allow reading other users for UI
+      // Allow test documents with TEST- prefix for development/testing
+      allow read, write, delete: if request.auth != null && userId.matches('^TEST-.*');
+      
+      // Allow server-side user creation during registration
+      // This is needed for creating user profiles before Firebase Auth user exists
+      allow create: if true;
+    }
+    
+    // Authorized personnel collection - for admin management and registration verification
+    match /authorized_personnel/{documentId} {
+      // Allow read access for registration verification (server-side API)
+      // This is needed for military ID verification during user registration
+      allow read: if true;
+      
+      // Restrict write operations to authenticated users only (admin panel)
+      allow write, create, delete: if request.auth != null;
+    }
+    
+    // Admin config collection - for admin authentication
+    match /admin_config/{documentId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // OTP sessions collection - for phone verification during registration
+    match /otp_sessions/{phoneNumber} {
+      // Allow server-side operations for OTP verification
+      // These operations happen during registration before user authentication
+      allow read, write, create, delete: if true;
+    }
+    
+    // OTP rate limiting collection - for preventing spam
+    match /otp_rate_limits/{phoneNumber} {
+      // Allow server-side operations for rate limiting
+      // These operations happen during registration before user authentication  
+      allow read, write, create, delete: if true;
+    }
+    
+    // Test collection - for development testing only
+    match /test/{testId} {
+      allow read, write: if request.auth != null && isAuthorizedUser(request.auth.uid);
+    }
+    
+    // Equipment Types collection (equipmentTemplates) - Templates and metadata
+    match /equipmentTemplates/{equipmentTypeId} {
+      // TEMPORARY: Allow ALL operations for debugging - REMOVE IN PRODUCTION
+      allow read, write, create, update, delete: if true;
+    }
+    
+    // Categories collection - Equipment categories
+    match /categories/{categoryId} {
+      // Allow read access to authenticated users
+      allow read: if request.auth != null && isAuthorizedUser(request.auth.uid);
+      
+      // Allow write access to managers and admins only
+      allow create, update: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && getUserType(request.auth.uid) in ['admin', 'system_manager', 'manager'];
+      
+      // Allow delete only for admins (soft delete via isActive field is preferred)
+      allow delete: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && getUserType(request.auth.uid) == 'admin';
+    }
+    
+    // Subcategories collection - Equipment subcategories  
+    match /subcategories/{subcategoryId} {
+      // Allow read access to authenticated users
+      allow read: if request.auth != null && isAuthorizedUser(request.auth.uid);
+      
+      // Allow write access to managers and admins only
+      allow create, update: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && getUserType(request.auth.uid) in ['admin', 'system_manager', 'manager'];
+      
+      // Allow delete only for admins (soft delete via isActive field is preferred)
+      allow delete: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && getUserType(request.auth.uid) == 'admin';
+    }
+    
+    // Individual Equipment Items collection (equipment)
+    match /equipment/{equipmentId} {
+      // Allow read access to authenticated users who can access the equipment or for test operations
+      allow read: if (request.auth != null && isAuthorizedUser(request.auth.uid) 
+        && (canAccessEquipment(request.auth.uid, resource.data) 
+           || getUserRole(request.auth.uid) in ['equipment_manager', 'commander']
+           || getUserType(request.auth.uid) in ['admin', 'system_manager']))
+        || equipmentId.matches('TEST-.*')
+        || equipmentId.matches('DEBUG-.*');
+      
+      // Allow write access only to authorized users OR for test/debug operations
+      allow create: if (request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && validateEquipmentCreate(request.resource.data)
+        && request.resource.data.currentHolderId == request.auth.uid) // Can only create equipment for yourself
+        || (equipmentId.matches('TEST-.*') || equipmentId.matches('DEBUG-.*'));
+      
+      allow update: if (request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && validateEquipmentUpdate(resource.data, request.resource.data)
+        && (canAccessEquipment(request.auth.uid, resource.data) 
+           || getUserRole(request.auth.uid) in ['equipment_manager', 'commander']
+           || getUserType(request.auth.uid) in ['admin', 'system_manager']))
+        || (equipmentId.matches('TEST-.*') || equipmentId.matches('DEBUG-.*'));
+      
+      // Allow deletion ONLY for test documents (DEBUG- or TEST- prefix)
+      allow delete: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && (equipmentId.matches('DEBUG-.*') || equipmentId.matches('TEST-.*'));
+    }
+    
+    // Notifications collection - for in-app notifications
+    match /notifications/{notificationId} {
+      // Users can read notifications intended for them
+      allow read: if request.auth != null 
+        && resource.data.recipientId == request.auth.uid;
+      
+      // Users can update their own notifications (mark as read, respond to actions)
+      allow update: if request.auth != null 
+        && resource.data.recipientId == request.auth.uid
+        && validateNotificationUpdate(resource.data, request.resource.data);
+      
+      // System can create notifications (via service layer)
+      allow create: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid);
+      
+      // Allow deletion ONLY for test notifications
+      allow delete: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && notificationId.matches('TEST-.*');
+    }
+    
+    // Retirement requests
+    match /retirement_requests/{requestId} {
+      allow read: if request.auth != null && isAuthorizedUser(request.auth.uid);
+      allow create: if request.auth != null && isAuthorizedUser(request.auth.uid);
+      allow update: if request.auth != null && canApproveRetirement(request.auth.uid);
+      allow delete: if false;
+    }
+    
+    // Helper functions
+    function isAuthorizedUser(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid));
+    }
+    
+    function getUserRole(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data.role;
+    }
+    
+    function getUserType(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data.userType;
+    }
+    
+    function canApproveRetirement(uid) {
+      let role = getUserRole(uid);
+      return role in ['equipment_manager', 'commander'];
+    }
+    
+    function canAccessEquipment(uid, equipmentData) {
+      // Users can access equipment they hold
+      return equipmentData.currentHolderId == uid;
+    }
+    
+    function validateEquipmentTypeCreate(data) {
+      return data.keys().hasAll(['id', 'name', 'description', 'category', 'defaultStatus', 'defaultCondition', 'defaultLocation', 'idPrefix', 'requiresApproval', 'isActive'])
+        && data.id is string
+        && data.name is string
+        && data.description is string
+        && data.category is string
+        && data.defaultStatus in ['available', 'in_use', 'maintenance', 'lost', 'retired']
+        && data.defaultCondition in ['new', 'excellent', 'good', 'fair', 'poor', 'broken']
+        && data.defaultLocation is string
+        && data.idPrefix is string
+        && data.requiresApproval is bool
+        && data.isActive is bool;
+    }
+    
+    function validateEquipmentTypeUpdate(before, after) {
+      // Ensure required fields are not removed and ID cannot change
+      return after.keys().hasAll(['id', 'name', 'description', 'category', 'defaultStatus', 'defaultCondition', 'defaultLocation', 'idPrefix', 'requiresApproval', 'isActive'])
+        && after.id == before.id // Cannot change ID
+        && after.createdAt == before.createdAt; // Cannot change creation date
+    }
+    
+    function validateEquipmentCreate(data) {
+      return data.keys().hasAll(['id', 'equipmentType', 'productName', 'category', 'currentHolder', 'currentHolderId', 'assignedUnit', 'status', 'condition', 'location'])
+        && data.id is string
+        && data.equipmentType is string
+        && data.productName is string
+        && data.category is string
+        && data.currentHolder is string
+        && data.currentHolderId is string
+        && data.assignedUnit is string
+        && data.status in ['available', 'in_use', 'maintenance', 'lost', 'retired']
+        && data.condition in ['new', 'excellent', 'good', 'fair', 'poor', 'broken']
+        && data.location is string;
+    }
+    
+    function validateEquipmentUpdate(before, after) {
+      // Ensure required fields are not removed
+      return after.keys().hasAll(['id', 'equipmentType', 'productName', 'category', 'currentHolder', 'currentHolderId', 'assignedUnit', 'status', 'condition', 'location'])
+        && after.id == before.id // Cannot change ID
+        && after.equipmentType == before.equipmentType // Cannot change equipment type
+        && after.createdAt == before.createdAt // Cannot change creation date
+        && after.trackingHistory.size() >= before.trackingHistory.size(); // Can only add to history, not remove
+    }
+    
+    function validateNotificationUpdate(before, after) {
+      // Users can only update status, readAt, response, and respondedAt
+      return after.id == before.id // Cannot change ID
+        && after.recipientId == before.recipientId // Cannot change recipient
+        && after.senderId == before.senderId // Cannot change sender
+        && after.type == before.type // Cannot change type
+        && after.createdAt == before.createdAt; // Cannot change creation date
+    }
+  }
+} 

@@ -131,17 +131,17 @@ export default function EquipmentPage() {
 
               {/* Development Tools */}
               {process.env.NODE_ENV === 'development' && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                  <h3 className="font-semibold text-yellow-800 mb-2">🛠️ כלי פיתוח</h3>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <h3 className="font-semibold text-blue-800 mb-2">🧪 כלי פיתוח</h3>
                   <div className="space-y-2">
                     <a
-                      href="/equipment-test"
-                      className="inline-block bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors"
+                      href="/test-dashboard"
+                      className="inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                     >
-                      🧪 בדיקת מסד נתונים - ציוד
+                      🚀 מרכז בדיקות מערכת
                     </a>
-                    <p className="text-sm text-yellow-700">
-                      עמוד לבדיקת פונקציונליות מסד הנתונים ואתחול סוגי ציוד
+                    <p className="text-sm text-blue-700">
+                      ממשק מאוחד לכל בדיקות המערכת - ציוד, מסד נתונים, ואבטחה
                     </p>
                   </div>
                 </div>
