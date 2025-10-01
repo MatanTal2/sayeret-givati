@@ -77,8 +77,8 @@ export function validateNewEquipmentForm(form: Partial<NewEquipmentForm>): Valid
   }
 
   // Warnings for best practices
-  if (form.condition === EquipmentCondition.POOR || form.condition === EquipmentCondition.DAMAGED) {
-    warnings.condition = 'ציוד במצב גרוע או פגום - שקלו תחזוקה';
+  if (form.condition === EquipmentCondition.POOR || form.condition === EquipmentCondition.NEEDS_REPAIR) {
+    warnings.condition = 'ציוד במצב גרוע או דורש תיקון - שקלו תחזוקה';
   }
 
   return {
@@ -132,8 +132,8 @@ export function validateTransferForm(
     errors.general = 'לא ניתן להעביר ציוד שהוצא משירות';
   }
 
-  if (currentEquipment.status === EquipmentStatus.PENDING_TRANSFER) {
-    warnings.general = 'ציוד כבר בתהליך העברה';
+  if (currentEquipment.status === EquipmentStatus.MAINTENANCE) {
+    warnings.general = 'ציוד נמצא בתחזוקה - וודא התאמה להעברה';
   }
 
   // Role-based validations
@@ -142,8 +142,8 @@ export function validateTransferForm(
   }
 
   // Condition warnings
-  if (currentEquipment.condition === EquipmentCondition.BROKEN) {
-    warnings.condition = 'ציוד שבור - וודאו שהמחזיק החדש מודע למצב';
+  if (currentEquipment.condition === EquipmentCondition.NEEDS_REPAIR) {
+    warnings.condition = 'ציוד דורש תיקון - וודאו שהמחזיק החדש מודע למצב';
   }
 
   return {
@@ -210,7 +210,7 @@ export function validateBulkTransferForm(
             equipment.status === EquipmentStatus.RETIRED) {
           problematicItems.push(equipment.id);
         }
-        if (equipment.condition === EquipmentCondition.BROKEN) {
+        if (equipment.condition === EquipmentCondition.NEEDS_REPAIR) {
           brokenItems.push(equipment.id);
         }
         if (equipment.currentHolder === form.newHolder?.trim()) {

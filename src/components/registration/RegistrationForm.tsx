@@ -127,8 +127,13 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       } else {
         // Handle verification failure
         const errorMessage = data.error || 'Failed to verify military ID';
-
-        setValidationError(errorMessage);
+        
+        // Check if user is already registered
+        if (data.alreadyRegistered) {
+          setValidationError(TEXT_CONSTANTS.AUTH.ALREADY_REGISTERED);
+        } else {
+          setValidationError(errorMessage);
+        }
       }
     } catch {
       setValidationError('Connection error. Please check your internet connection and try again.');
@@ -162,19 +167,23 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
     };
     
     try {
-      let isExistingAuthUser = false;
-
       // Step 1: Create Firebase Auth user first
+      let firebaseAuthUid: string;
       try {
-        await createUserWithEmailAndPassword(
+        const userCredential = await createUserWithEmailAndPassword(
           auth,
           completeRegistrationData.email,
           completeRegistrationData.password
         );
+        firebaseAuthUid = userCredential.user.uid;
+        console.log('✅ Firebase Auth user created with UID:', firebaseAuthUid);
       } catch (authError: unknown) {
         if (authError instanceof Error && authError.message.includes('email-already-in-use')) {
-          isExistingAuthUser = true;
-          // Don't throw error, continue to Firestore profile creation
+          // Email already exists - this means the user already has a Firebase Auth account
+          // We cannot proceed with registration using a different password
+          setValidationError('כתובת האימייל כבר רשומה במערכת. אנא השתמש בעמוד ההתחברות או אפס את הסיסמה.');
+          setIsSubmittingRegistration(false);
+          return;
         } else {
           // For other auth errors, re-throw to be handled in outer catch
           throw authError;
@@ -182,26 +191,26 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       }
       
       // Step 2: Create Firestore user profile (or verify it exists)
+      const registrationDataWithUid = {
+        ...completeRegistrationData,
+        firebaseAuthUid
+      };
+      
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(completeRegistrationData),
+        body: JSON.stringify(registrationDataWithUid),
       });
 
       const result = await response.json();
 
       if (response.ok && result.success) {
-        // User is automatically logged in if Firebase Auth user was created
-        // If existing auth user, they may need to login manually
+        // User is automatically logged in after Firebase Auth user creation
         updateCurrentStep('success');
       } else {
-        if (isExistingAuthUser) {
-          setValidationError('Profile verification failed. If you already have an account, please try logging in.');
-        } else {
-          setValidationError(result.error || 'Profile creation failed. Please contact support.');
-        }
+        setValidationError(result.error || 'Profile creation failed. Please contact support.');
       }
     } catch (error) {
       // Handle specific Firebase Auth errors

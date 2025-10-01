@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { usePersonnelManagement } from '@/hooks/usePersonnelManagement';
+import { formatPhoneForDisplay, normalizePhoneForSearch } from '@/utils/validationUtils';
+import { UserType } from '@/types/user';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
+
 
 export default function ViewPersonnel() {
   const {
@@ -15,9 +19,21 @@ export default function ViewPersonnel() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRank, setSelectedRank] = useState('');
+  const [selectedUserType, setSelectedUserType] = useState('');
   const [registrationFilter, setRegistrationFilter] = useState<'all' | 'registered' | 'pending'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'rank' | 'created'>('created');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Delete confirmation modal state
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    personId: string | null;
+    personName: string;
+  }>({
+    isOpen: false,
+    personId: null,
+    personName: ''
+  });
 
   // Fetch personnel on component mount
   useEffect(() => {
@@ -28,13 +44,37 @@ export default function ViewPersonnel() {
   const filteredPersonnel = personnel
     .filter(person => {
       const fullName = `${person.firstName} ${person.lastName}`.toLowerCase();
-      const matchesSearch = fullName.includes(searchTerm.toLowerCase()) || 
-                           person.phoneNumber.includes(searchTerm);
+      
+      // Smart search - detect if searching for name or phone number
+      const isPhoneSearch = /[\d\-\+]/.test(searchTerm); // Contains digits, dashes, or plus
+      
+      // Name search (works with letters)
+      const matchesName = fullName.includes(searchTerm.toLowerCase());
+      
+      // Phone search (multiple formats)
+      let matchesPhone = false;
+      if (isPhoneSearch) {
+        const normalizedSearchTerm = normalizePhoneForSearch(searchTerm);
+        const normalizedPhoneNumber = normalizePhoneForSearch(person.phoneNumber);
+        const formattedPhone = formatPhoneForDisplay(person.phoneNumber);
+        
+        matchesPhone = person.phoneNumber.includes(searchTerm) ||
+                      formattedPhone.includes(searchTerm) ||
+                      (normalizedSearchTerm ? normalizedPhoneNumber.includes(normalizedSearchTerm) : false);
+      }
+      
+      const matchesSearch = matchesName || matchesPhone;
+      
       const matchesRank = !selectedRank || person.rank === selectedRank;
+      
+      // Fix userType filter to handle default 'user' value
+      const personUserType = person.userType || UserType.USER;
+      const matchesUserType = !selectedUserType || personUserType === selectedUserType;
+      
       const matchesRegistration = registrationFilter === 'all' || 
                                  (registrationFilter === 'registered' && person.registered) ||
                                  (registrationFilter === 'pending' && !person.registered);
-      return matchesSearch && matchesRank && matchesRegistration;
+      return matchesSearch && matchesRank && matchesUserType && matchesRegistration;
     })
     .sort((a, b) => {
       let comparison = 0;
@@ -58,13 +98,35 @@ export default function ViewPersonnel() {
       return sortOrder === 'asc' ? comparison : -comparison;
     });
 
-  // Get unique ranks for filter
+  // Get unique ranks and user types for filters
   const uniqueRanks = [...new Set(personnel.map(person => person.rank))].sort();
+  const uniqueUserTypes = [...new Set(personnel.map(person => person.userType || UserType.USER))].sort();
 
-  const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Are you sure you want to remove ${name} from the authorized personnel list?`)) {
-      await deletePersonnel(id);
+  const handleDeleteClick = (id: string, name: string) => {
+    setDeleteModal({
+      isOpen: true,
+      personId: id,
+      personName: name
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deleteModal.personId) {
+      await deletePersonnel(deleteModal.personId);
+      setDeleteModal({
+        isOpen: false,
+        personId: null,
+        personName: ''
+      });
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({
+      isOpen: false,
+      personId: null,
+      personName: ''
+    });
   };
 
   const formatDate = (timestamp: unknown) => {
@@ -82,14 +144,7 @@ export default function ViewPersonnel() {
     }
   };
 
-  const formatPhoneNumber = (phone: string) => {
-    // Convert +972XXXXXXXXX to 0XX-XXXXXXX format for display
-    if (phone.startsWith('+972')) {
-      const number = phone.slice(4); // Remove +972
-      return `0${number.slice(0, 2)}-${number.slice(2)}`;
-    }
-    return phone;
-  };
+
 
   return (
     <div className="space-y-6">
@@ -109,7 +164,7 @@ export default function ViewPersonnel() {
 
       {/* Search and Filter Controls */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {/* Search */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -141,6 +196,27 @@ export default function ViewPersonnel() {
               <option value="">All Ranks</option>
               {uniqueRanks.map(rank => (
                 <option key={rank} value={rank}>{rank}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* User Type Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              🔑 Filter by User Type
+            </label>
+            <select
+              value={selectedUserType}
+              onChange={(e) => setSelectedUserType(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                         bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                         focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">All User Types</option>
+              {uniqueUserTypes.map(userType => (
+                <option key={userType} value={userType}>
+                  {userType.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                </option>
               ))}
             </select>
           </div>
@@ -200,12 +276,13 @@ export default function ViewPersonnel() {
         </div>
 
         {/* Clear Filters */}
-        {(searchTerm || selectedRank || registrationFilter !== 'all') && (
+        {(searchTerm || selectedRank || selectedUserType || registrationFilter !== 'all') && (
           <div className="mt-4">
             <button
               onClick={() => {
                 setSearchTerm('');
                 setSelectedRank('');
+                setSelectedUserType('');
                 setRegistrationFilter('all');
                 clearMessage();
               }}
@@ -263,6 +340,9 @@ export default function ViewPersonnel() {
                     Phone Number
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    User Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Registration
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -289,7 +369,12 @@ export default function ViewPersonnel() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      📱 {formatPhoneNumber(person.phoneNumber)}
+                      📱 {formatPhoneForDisplay(person.phoneNumber)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                        {(person.userType || UserType.USER).replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -309,7 +394,7 @@ export default function ViewPersonnel() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
-                        onClick={() => handleDelete(person.id!, `${person.firstName} ${person.lastName}`)}
+                        onClick={() => handleDeleteClick(person.id!, `${person.firstName} ${person.lastName}`)}
                         disabled={isLoading}
                         className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 
                                    disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -328,7 +413,7 @@ export default function ViewPersonnel() {
       {/* Refresh Button */}
       <div className="text-center">
         <button
-          onClick={fetchPersonnel}
+          onClick={() => fetchPersonnel(true)}
           disabled={isLoading}
           className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 
                      text-white font-medium py-2 px-4 rounded-md
@@ -345,6 +430,20 @@ export default function ViewPersonnel() {
           )}
         </button>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        title="Confirm Deletion"
+        message={`Are you sure you want to remove ${deleteModal.personName} from the authorized personnel list?`}
+        confirmText="🗑️ Remove Personnel"
+        cancelText="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        isLoading={isLoading}
+        variant="danger"
+        additionalInfo="⚠️ Warning: This action cannot be undone. The person will need to be re-added if you want to authorize them again."
+      />
     </div>
   );
 } 

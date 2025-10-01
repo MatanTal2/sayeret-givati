@@ -5,7 +5,7 @@ import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
 
 export default function AdminPage() {
-  const { isAuthenticated, isLoading, logout } = useAdminAuth();
+  const { isAuthenticated, isLoading } = useAdminAuth();
 
   const handleLoginSuccess = () => {
     // The authentication state is managed by the hook
@@ -13,7 +13,8 @@ export default function AdminPage() {
   };
 
   const handleLogout = () => {
-    logout();
+    // Logout is now handled internally by AdminDashboard component
+    // This callback is just for any additional cleanup needed
   };
 
   if (isLoading) {

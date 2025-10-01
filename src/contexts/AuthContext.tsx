@@ -5,14 +5,14 @@ import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { ADMIN_CONFIG, ADMIN_MESSAGES } from '@/constants/admin';
 import { UserDataService } from '@/lib/userDataService';
-import { EnhancedAuthUser } from '@/types/user';
+import { EnhancedAuthUser, UserType } from '@/types/user';
 
 // Types
 export interface AuthUser {
   uid: string;
   email?: string;
   displayName?: string;
-  userType: 'admin' | 'personnel' | null;
+  userType: UserType | null;
   militaryId?: string;
   rank?: string;
   firstName?: string;
@@ -72,60 +72,74 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
       if (firebaseUser) {
-        // Determine user type based on email
-        const userType = firebaseUser.email === ADMIN_CONFIG.EMAIL ? 'admin' : 'personnel';
+        // Always fetch user data from Firestore to get the most up-to-date user type
+        // Fallback to email-based admin check only if Firestore data is unavailable
+        let userType: UserType | null = null;
         
-        const authUser: AuthUser = {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email || undefined,
-          displayName: firebaseUser.displayName || undefined,
-          userType,
-        };
-
-        setUser(authUser);
-
-        // For personnel users, fetch additional data from Firestore
-        if (userType === 'personnel' && firebaseUser.email) {
-          try {
-            console.log('🔍 Fetching user data from Firestore...');
-            const userDataResult = await UserDataService.fetchUserDataByEmail(firebaseUser.email);
+        try {
+          console.log('🔍 Fetching user data from Firestore...');
+          const userDataResult = await UserDataService.fetchUserDataByUid(firebaseUser.uid);
+          
+          if (userDataResult.success && userDataResult.userData) {
+            const firestoreData = userDataResult.userData;
+            userType = firestoreData.userType;
             
-            if (userDataResult.success && userDataResult.userData) {
-              const firestoreData = userDataResult.userData;
-              
-              // Create enhanced user object with all data
-              const enhanced: EnhancedAuthUser = {
-                ...authUser,
-                firstName: firestoreData.firstName,
-                lastName: firestoreData.lastName,
-                gender: firestoreData.gender,
-                birthday: firestoreData.birthday,
-                phoneNumber: firestoreData.phoneNumber,
-                rank: firestoreData.rank,
-                role: firestoreData.role,
-                status: firestoreData.status,
-                militaryPersonalNumberHash: firestoreData.militaryPersonalNumberHash,
-                permissions: firestoreData.permissions,
-                joinDate: firestoreData.joinDate,
-                profileImage: firestoreData.profileImage,
-                testUser: firestoreData.testUser,
-                communicationPreferences: firestoreData.communicationPreferences,
-                initials: UserDataService.generateInitials(firestoreData)
-              };
-              
-              setEnhancedUser(enhanced);
-              console.log('✅ Enhanced user data loaded');
-            } else {
-              console.log('⚠️ Could not fetch user data from Firestore, using Firebase Auth data only');
-              setEnhancedUser(authUser);
-            }
-          } catch (error) {
-            console.error('❌ Error fetching user data:', error);
+            // Create enhanced user object with all data
+            const enhanced: EnhancedAuthUser = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || undefined,
+              displayName: firebaseUser.displayName || undefined,
+              userType,
+              firstName: firestoreData.firstName,
+              lastName: firestoreData.lastName,
+              gender: firestoreData.gender,
+              birthday: firestoreData.birthday,
+              phoneNumber: firestoreData.phoneNumber,
+              rank: firestoreData.rank,
+              role: firestoreData.role,
+              status: firestoreData.status,
+              militaryPersonalNumberHash: firestoreData.militaryPersonalNumberHash,
+              permissions: firestoreData.permissions,
+              joinDate: firestoreData.joinDate,
+              profileImage: firestoreData.profileImage,
+              testUser: firestoreData.testUser,
+              communicationPreferences: firestoreData.communicationPreferences,
+              initials: UserDataService.generateInitials(firestoreData)
+            };
+            
+            setUser(enhanced);
+            setEnhancedUser(enhanced);
+            console.log('✅ Enhanced user data loaded with userType:', userType);
+          } else {
+            // Fallback: use email-based admin check if no Firestore data
+            userType = firebaseUser.email === ADMIN_CONFIG.EMAIL ? UserType.ADMIN : null;
+            
+            const authUser: AuthUser = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || undefined,
+              displayName: firebaseUser.displayName || undefined,
+              userType,
+            };
+            
+            setUser(authUser);
             setEnhancedUser(authUser);
+            console.log('⚠️ Could not fetch user data from Firestore, using Firebase Auth data only with userType:', userType);
           }
-        } else {
-          // For admin users, use basic auth data
+        } catch (error) {
+          console.error('❌ Error fetching user data:', error);
+          // Fallback: use email-based admin check if error occurs
+          userType = firebaseUser.email === ADMIN_CONFIG.EMAIL ? UserType.ADMIN : null;
+          
+          const authUser: AuthUser = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || undefined,
+            displayName: firebaseUser.displayName || undefined,
+            userType,
+          };
+          
+          setUser(authUser);
           setEnhancedUser(authUser);
+          console.log('❌ Error loading user data, using fallback with userType:', userType);
         }
         
         // Clear any previous login messages when successfully authenticated
@@ -148,17 +162,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setMessage(null);
 
     try {
-      // For admin login, validate email first
-      if (credentials.email === ADMIN_CONFIG.EMAIL) {
-        if (!ADMIN_CONFIG.EMAIL) {
-          setMessage({
-            text: 'Admin login is not configured. Please contact the system administrator.',
-            type: 'error'
-          });
-          setIsLoading(false);
-          return;
-        }
-      }
+      // Remove email-based admin validation - admin status will be checked via UserType
 
       // Attempt Firebase Authentication
       await signInWithEmailAndPassword(auth, credentials.email, credentials.password);

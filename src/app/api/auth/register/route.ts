@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
       'gender', 
       'birthdate', 
       'phoneNumber', 
-      'militaryPersonalNumber'
+      'militaryPersonalNumber',
+      'firebaseAuthUid'
     ];
     
     const missingFields = requiredFields.filter(field => !body[field]);
@@ -40,7 +41,8 @@ export async function POST(request: NextRequest) {
       gender: body.gender,
       birthdate: body.birthdate,
       phoneNumber: body.phoneNumber,
-      militaryPersonalNumber: body.militaryPersonalNumber
+      militaryPersonalNumber: body.militaryPersonalNumber,
+      firebaseAuthUid: body.firebaseAuthUid.trim()
     };
 
     console.log('📊 Registration data prepared for:', registrationData.email);

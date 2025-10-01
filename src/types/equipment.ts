@@ -1,38 +1,93 @@
 // Equipment Tracking System Types
 // Based on military צלם (serialized equipment) requirements
 
+import { Timestamp } from 'firebase/firestore';
+
+// Equipment Type Definition for equipments collection
+export interface EquipmentType {
+  id: string; // Equipment type ID (auto-generated document ID)
+  name: string; // Hebrew name
+  category: string; // Equipment category reference (categoryId)
+  subcategory: string; // Subcategory reference (subcategoryId)
+  description?: string; // Optional detailed description
+  notes?: string; // Optional notes - warnings/guidelines
+  requiresDailyStatusCheck: boolean; // Whether this equipment type requires daily status checks
+  isActive: boolean; // Whether type is available for creation (default true)
+  templateCreatorId: string; // UID of user who created this template
+  createdAt: Timestamp; // Document creation timestamp
+  updatedAt: Timestamp; // Last update timestamp
+}
+
+export interface CustomizableFields {
+  serialNumber: boolean; // Can customize serial number
+  currentHolder: boolean; // Can set initial holder
+  assignedUnit: boolean; // Can set unit assignment
+  location: boolean; // Can override location
+  status: boolean; // Can set initial status
+  condition: boolean; // Can override condition
+  notes: boolean; // Can add custom notes
+}
+
+// Individual Equipment Item for equipment collection
 export interface Equipment {
   id: string; // Serial number (מספר סידורי) - also serves as Firestore document ID
-  productName: string; // Name of the item (שם פריט)
-  category: string; // Type/category (קטגוריה)
-  dateSigned: string; // ISO date string - when item was first signed in
+  equipmentType: string; // Reference to equipmentTemplates collection (e.g., "rifle_m4")
+  productName: string; // Name of the item (שם פריט) - inherited from equipmentType
+  category: string; // Type/category (קטגוריה) - inherited from equipmentType
+  subcategory?: string; // Specific type within category
+  model?: string; // Equipment model/variant
+  manufacturer?: string; // Equipment manufacturer
+  
+  // Dates - ALL Firestore timestamps
+  acquisitionDate: Timestamp; // Date equipment was acquired
+  dateSigned: Timestamp; // When item was first signed in
+  lastSeen: Timestamp; // Last confirmed sighting/check
+  lastReportUpdate: Timestamp; // Last daily report update
+  warrantyExpiry?: Timestamp; // Warranty expiration date
+  nextMaintenanceDate?: Timestamp; // Scheduled maintenance date
+  
+  // Assignment and Status
   signedBy: string; // Who signed the item in initially
-  currentHolder: string; // Current holder's name
+  currentHolder: string; // Current responsible person (display name only - for UI)
+  currentHolderId: string; // Current responsible person (user UID - for queries and permissions)
   assignedUnit: string; // Assigned unit or platoon
+  assignedTeam?: string; // Assigned team within the unit (for team-based permissions)
   status: EquipmentStatus; // Current status
   location: string; // Physical location
   condition: EquipmentCondition; // Current condition
+  
+  // Additional Info
+  acquisitionCost?: number; // Original cost in ILS
   notes?: string; // Optional free text notes
-  lastReportUpdate: string; // ISO date string - last daily check
+  maintenanceNotes?: string; // Maintenance history and notes
+  qrCode?: string; // QR code for quick scanning
+  requiresDailyStatusCheck?: boolean; // Whether this equipment requires daily status checks (inherited from template)
+  
+  // Audit Trail
   trackingHistory: EquipmentHistoryEntry[]; // Array of transfer/action records
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
+  
+  // Metadata
+  createdAt: Timestamp; // Firestore timestamp
+  updatedAt: Timestamp; // Firestore timestamp
 }
 
 export interface EquipmentHistoryEntry {
-  holder: string; // Person involved in this action
-  fromDate: string; // ISO date string - start of this period
-  toDate?: string; // ISO date string - end of this period (null if current)
+  holder: string; // Person involved in this action (user UID)
+  holderName?: string; // Person's display name (cached for UI performance)
+  fromDate: Timestamp; // Firestore timestamp - start of this period
+  toDate?: Timestamp; // Firestore timestamp - end of this period (null if current)
   action: EquipmentAction; // Type of action performed
-  updatedBy: string; // Who performed this action
+  updatedBy: string; // Who performed this action (user UID)
+  updatedByName?: string; // Updater's display name (cached for UI performance)
+  location: string; // Where the equipment was during this action
   notes?: string; // Optional notes for this action
   approval?: ApprovalDetails; // Approval information (if required)
-  timestamp: string; // ISO date string - when this action occurred
+  timestamp: Timestamp; // Firestore timestamp - when this action occurred
 }
 
 export interface ApprovalDetails {
   approvedBy: string; // Who approved this action
-  approvedAt: string; // ISO date string - when approved
+  approvedAt: Timestamp; // Firestore timestamp - when approved
   approvalType: ApprovalType; // Method of approval
   phoneLast4?: string; // Last 4 digits of phone (for OTP verification)
   otpCode?: string; // OTP code used (for audit - should be hashed)
@@ -43,38 +98,37 @@ export interface EmergencyOverride {
   overrideBy: string; // Officer who performed override
   overrideReason: string; // Reason for emergency override
   originalHolder: string; // Who should have approved originally
-  overrideAt: string; // ISO date string - when override occurred
+  overrideAt: Timestamp; // Firestore timestamp - when override occurred
   justification: string; // Detailed justification
 }
 
 export interface RetirementRequest {
   requestedBy: string; // Who requested retirement
-  requestedAt: string; // ISO date string - when requested
+  requestedAt: Timestamp; // Firestore timestamp - when requested
   reason: string; // Reason for retirement
   approvedBy?: string; // Who approved (if approved)
-  approvedAt?: string; // ISO date string - when approved
+  approvedAt?: Timestamp; // Firestore timestamp - when approved
   status: RetirementStatus; // Current status of request
   notes?: string; // Additional notes
 }
 
 // Enums for type safety
 export enum EquipmentStatus {
-  ACTIVE = 'active',
-  LOST = 'lost',
-  BROKEN = 'broken',
+  AVAILABLE = 'available',
+  IN_USE = 'in_use',
   MAINTENANCE = 'maintenance',
-  RETIRED = 'retired',
-  PENDING_TRANSFER = 'pending_transfer',
-  PENDING_RETIREMENT = 'pending_retirement'
+  REPAIR = 'repair',
+  LOST = 'lost',
+  RETIRED = 'retired'
 }
 
 export enum EquipmentCondition {
+  NEW = 'new',
   EXCELLENT = 'excellent',
   GOOD = 'good',
   FAIR = 'fair',
   POOR = 'poor',
-  DAMAGED = 'damaged',
-  BROKEN = 'broken'
+  NEEDS_REPAIR = 'needs_repair'
 }
 
 export enum EquipmentAction {
@@ -91,6 +145,7 @@ export enum EquipmentAction {
 }
 
 export enum ApprovalType {
+  IN_APP_NOTIFICATION = 'in_app_notification',
   OTP_SMS = 'otp_sms',
   OTP_APP = 'otp_app',
   COMMANDER_OVERRIDE = 'commander_override',
@@ -106,9 +161,12 @@ export enum RetirementStatus {
 
 export enum UserRole {
   SOLDIER = 'soldier',
+  TEAM_LEADER = 'team_leader',
+  SQUAD_LEADER = 'squad_leader', 
+  SERGEANT = 'sergeant',
   OFFICER = 'officer',
-  EQUIPMENT_MANAGER = 'equipment_manager',
-  COMMANDER = 'commander'
+  COMMANDER = 'commander',
+  EQUIPMENT_MANAGER = 'equipment_manager'
 }
 
 // Form interfaces for UI components
@@ -142,7 +200,8 @@ export interface EquipmentFilter {
   searchTerm?: string;
   status?: EquipmentStatus[];
   condition?: EquipmentCondition[];
-  holder?: string;
+  holder?: string; // Display name (for UI search)
+  holderId?: string; // User UID (for exact queries)
   unit?: string;
   category?: string;
   dateRange?: {
@@ -167,7 +226,7 @@ export interface EquipmentOperationResult {
 }
 
 // Utility types
-export type EquipmentSortField = 'id' | 'productName' | 'currentHolder' | 'assignedUnit' | 'lastReportUpdate' | 'createdAt';
+export type EquipmentSortField = 'id' | 'productName' | 'currentHolder' | 'currentHolderId' | 'assignedUnit' | 'lastReportUpdate' | 'createdAt';
 export type SortDirection = 'asc' | 'desc';
 
 export interface EquipmentSort {
@@ -179,7 +238,9 @@ export interface EquipmentSort {
 export interface EquipmentUserContext {
   userId: string;
   role: UserRole;
+  userType?: string; // Admin UserType gets all permissions
   unit: string;
+  team?: string; // Team identifier for team-based permissions
   permissions: EquipmentPermission[];
 }
 
@@ -187,7 +248,11 @@ export enum EquipmentPermission {
   VIEW_ALL = 'view_all',
   VIEW_UNIT_ONLY = 'view_unit_only',
   TRANSFER_EQUIPMENT = 'transfer_equipment',
+  TRANSFER_OWN_EQUIPMENT = 'transfer_own_equipment',
+  TRANSFER_TEAM_EQUIPMENT = 'transfer_team_equipment',
   UPDATE_STATUS = 'update_status',
+  UPDATE_OWN_EQUIPMENT = 'update_own_equipment',
+  UPDATE_TEAM_EQUIPMENT = 'update_team_equipment',
   APPROVE_TRANSFERS = 'approve_transfers',
   EMERGENCY_OVERRIDE = 'emergency_override',
   BULK_OPERATIONS = 'bulk_operations',
@@ -195,4 +260,91 @@ export enum EquipmentPermission {
   APPROVE_RETIREMENT = 'approve_retirement',
   EXPORT_DATA = 'export_data',
   MANAGE_USERS = 'manage_users'
+}
+
+// Notification System Types for In-App Approvals
+
+export interface Notification {
+  id: string; // Auto-generated UUID
+  type: NotificationType;
+  recipientId: string; // User UID who should receive notification
+  senderId: string; // User UID who triggered notification
+  title: string; // Notification title
+  message: string; // Notification message
+  status: NotificationStatus; // Current notification status
+  priority: NotificationPriority; // Notification priority level
+  relatedDocuments: RelatedDocuments; // References to related documents
+  actionRequired: boolean; // Whether user action is required
+  actions?: NotificationAction[]; // Available actions (approve/decline/etc.)
+  response?: NotificationResponse; // User response data
+  expiresAt?: Timestamp; // When notification expires
+  readAt?: Timestamp; // When notification was read
+  respondedAt?: Timestamp; // When user responded
+  metadata?: Record<string, unknown>; // Additional context data
+  createdAt: Timestamp; // Notification creation time
+  updatedAt: Timestamp; // Last update time
+}
+
+export interface RelatedDocuments {
+  transferId?: string; // Reference to transfers collection
+  equipmentId?: string; // Reference to equipment collection
+  retirementRequestId?: string; // Reference to retirement_requests collection
+  userId?: string; // Reference to users collection
+}
+
+export interface NotificationAction {
+  id: string; // Action identifier
+  label: string; // Display text
+  type: ActionType; // approve, decline, view, etc.
+  style: ActionStyle; // primary, secondary, danger
+  requiresConfirmation: boolean; // Show confirmation dialog
+  confirmationMessage?: string; // Confirmation text
+}
+
+export interface NotificationResponse {
+  action: string; // Which action was taken
+  message?: string; // Optional response message
+  timestamp: Timestamp; // When responded
+  metadata?: Record<string, unknown>; // Additional response data
+}
+
+export enum NotificationType {
+  EQUIPMENT_TRANSFER_REQUEST = 'equipment_transfer_request',
+  EQUIPMENT_TRANSFER_APPROVED = 'equipment_transfer_approved',
+  EQUIPMENT_TRANSFER_DECLINED = 'equipment_transfer_declined',
+  RETIREMENT_REQUEST = 'retirement_request',
+  MAINTENANCE_REMINDER = 'maintenance_reminder',
+  OVERDUE_REPORT = 'overdue_report',
+  SYSTEM_ALERT = 'system_alert',
+  GENERAL_MESSAGE = 'general_message'
+}
+
+export enum NotificationStatus {
+  PENDING = 'pending',
+  READ = 'read',
+  RESPONDED = 'responded',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled'
+}
+
+export enum NotificationPriority {
+  LOW = 'low',
+  NORMAL = 'normal',
+  HIGH = 'high',
+  URGENT = 'urgent'
+}
+
+export enum ActionType {
+  APPROVE = 'approve',
+  DECLINE = 'decline',
+  VIEW = 'view',
+  ACKNOWLEDGE = 'acknowledge',
+  CUSTOM = 'custom'
+}
+
+export enum ActionStyle {
+  PRIMARY = 'primary',
+  SECONDARY = 'secondary',
+  DANGER = 'danger',
+  GHOST = 'ghost'
 } 

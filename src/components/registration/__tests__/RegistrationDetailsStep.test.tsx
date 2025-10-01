@@ -32,6 +32,12 @@ jest.mock('@/constants/text', () => ({
       CREATE_ACCOUNT: 'צור חשבון',
       EMAIL_PLACEHOLDER_REGISTRATION: 'example@email.com',
       PASSWORD_PLACEHOLDER_REGISTRATION: 'הזן סיסמה חזקה',
+      SYSTEM_POLICY_TITLE: 'תנאי השימוש ומדיניות הפרטיות',
+      SYSTEM_POLICY_CONTENT: 'תוכן מדיניות הפרטיות...',
+    },
+    CONFIRMATIONS: {
+      OK: 'אישור',
+      CLOSE: 'סגור',
     },
   },
 }));

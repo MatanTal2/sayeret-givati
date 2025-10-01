@@ -14,6 +14,7 @@ import {
   EquipmentFilter,
   EquipmentSort
 } from '../types/equipment';
+import { Timestamp, serverTimestamp } from 'firebase/firestore';
 
 /**
  * Creates a new equipment history entry
@@ -21,8 +22,9 @@ import {
  */
 export function createHistoryEntry(
   action: EquipmentAction,
-  holder: string,
-  updatedBy: string,
+  holder: string, // User UID
+  updatedBy: string, // User UID
+  location: string,
   notes?: string,
   approval?: {
     approvedBy: string;
@@ -34,15 +36,21 @@ export function createHistoryEntry(
       originalHolder: string;
       justification: string;
     };
-  }
+  },
+  holderName?: string, // Display name (optional for UI performance)
+  updatedByName?: string // Display name (optional for UI performance)
 ): EquipmentHistoryEntry {
-  const now = new Date().toISOString();
+  // Use current date for history entries since serverTimestamp() can't be used in arrays
+  const now = Timestamp.fromDate(new Date());
   
   return {
     holder,
+    holderName,
     fromDate: now,
     action,
     updatedBy,
+    updatedByName,
+    location,
     notes,
     timestamp: now,
     approval: approval ? {
@@ -69,34 +77,42 @@ export function createNewEquipment(
   location: string,
   condition: EquipmentCondition,
   signedBy: string,
+  signedById: string,
   notes?: string
 ): Equipment {
-  const now = new Date().toISOString();
+  const serverNow = serverTimestamp() as Timestamp;
   
   return {
     id,
+    equipmentType: 'generic', // Default type for legacy function
     productName,
     category,
-    dateSigned: now,
+    acquisitionDate: serverNow,
+    dateSigned: serverNow,
+    lastSeen: serverNow,
     signedBy,
     currentHolder: signedBy,
+    currentHolderId: signedById,
     assignedUnit,
-    status: EquipmentStatus.ACTIVE,
+    status: EquipmentStatus.AVAILABLE,
     location,
     condition,
     notes,
-    lastReportUpdate: now,
+    lastReportUpdate: serverNow,
     trackingHistory: [
       createHistoryEntry(
         EquipmentAction.INITIAL_SIGN_IN,
-        signedBy,
-        signedBy,
+        signedById,
+        signedById,
+        location,
         notes,
-        { approvedBy: signedBy, approvalType: ApprovalType.NO_APPROVAL_REQUIRED }
+        { approvedBy: signedById, approvalType: ApprovalType.NO_APPROVAL_REQUIRED },
+        signedBy, // holderName
+        signedBy  // updatedByName
       )
     ],
-    createdAt: now,
-    updatedAt: now
+    createdAt: serverNow,
+    updatedAt: serverNow
   };
 }
 
@@ -106,8 +122,9 @@ export function createNewEquipment(
  */
 export function transferEquipment(
   equipment: Equipment,
-  newHolder: string,
-  updatedBy: string,
+  newHolder: string, // Display name
+  newHolderId: string, // User UID
+  updatedBy: string, // User UID
   approvalDetails: {
     approvedBy: string;
     approvalType: ApprovalType;
@@ -121,9 +138,10 @@ export function transferEquipment(
   },
   newUnit?: string,
   newLocation?: string,
-  notes?: string
+  notes?: string,
+  updatedByName?: string // Display name (optional)
 ): Equipment {
-  const now = new Date().toISOString();
+  const now = Timestamp.fromDate(new Date());
   
   // Close previous history entry
   const updatedHistory = [...equipment.trackingHistory];
@@ -135,10 +153,13 @@ export function transferEquipment(
   // Add new history entry
   const newHistoryEntry = createHistoryEntry(
     approvalDetails.emergencyOverride ? EquipmentAction.EMERGENCY_TRANSFER : EquipmentAction.TRANSFER,
-    newHolder,
+    newHolderId,
     updatedBy,
+    newLocation || equipment.location,
     notes,
-    approvalDetails
+    approvalDetails,
+    newHolder, // holderName
+    updatedByName // updatedByName
   );
   
   updatedHistory.push(newHistoryEntry);
@@ -146,10 +167,11 @@ export function transferEquipment(
   return {
     ...equipment,
     currentHolder: newHolder,
+    currentHolderId: newHolderId,
     assignedUnit: newUnit || equipment.assignedUnit,
     location: newLocation || equipment.location,
     trackingHistory: updatedHistory,
-    updatedAt: now
+    updatedAt: serverTimestamp() as Timestamp
   };
 }
 
@@ -160,22 +182,25 @@ export function updateEquipmentStatus(
   equipment: Equipment,
   newStatus: EquipmentStatus,
   updatedBy: string,
-  notes?: string
+  notes?: string,
+  updatedByName?: string
 ): Equipment {
-  const now = new Date().toISOString();
-  
   const historyEntry = createHistoryEntry(
     EquipmentAction.STATUS_UPDATE,
-    equipment.currentHolder,
+    equipment.currentHolderId,
     updatedBy,
-    `Status changed to: ${newStatus}${notes ? ` - ${notes}` : ''}`
+    equipment.location,
+    `Status changed to: ${newStatus}${notes ? ` - ${notes}` : ''}`,
+    undefined, // no approval needed for status updates
+    equipment.currentHolder, // holderName
+    updatedByName // updatedByName
   );
   
   return {
     ...equipment,
     status: newStatus,
     trackingHistory: [...equipment.trackingHistory, historyEntry],
-    updatedAt: now
+    updatedAt: serverTimestamp() as Timestamp
   };
 }
 
@@ -186,22 +211,25 @@ export function updateEquipmentCondition(
   equipment: Equipment,
   newCondition: EquipmentCondition,
   updatedBy: string,
-  notes?: string
+  notes?: string,
+  updatedByName?: string
 ): Equipment {
-  const now = new Date().toISOString();
-  
   const historyEntry = createHistoryEntry(
     EquipmentAction.CONDITION_UPDATE,
-    equipment.currentHolder,
+    equipment.currentHolderId,
     updatedBy,
-    `Condition changed to: ${newCondition}${notes ? ` - ${notes}` : ''}`
+    equipment.location,
+    `Condition changed to: ${newCondition}${notes ? ` - ${notes}` : ''}`,
+    undefined, // no approval needed for condition updates
+    equipment.currentHolder, // holderName
+    updatedByName // updatedByName
   );
   
   return {
     ...equipment,
     condition: newCondition,
     trackingHistory: [...equipment.trackingHistory, historyEntry],
-    updatedAt: now
+    updatedAt: serverTimestamp() as Timestamp
   };
 }
 
@@ -211,15 +239,20 @@ export function updateEquipmentCondition(
 export function performDailyCheckIn(
   equipment: Equipment,
   checkedBy: string,
-  notes?: string
+  notes?: string,
+  checkedByName?: string
 ): Equipment {
-  const now = new Date().toISOString();
+  const now = serverTimestamp() as Timestamp;
   
   const historyEntry = createHistoryEntry(
     EquipmentAction.DAILY_CHECK_IN,
-    equipment.currentHolder,
+    equipment.currentHolderId,
     checkedBy,
-    notes || 'Daily check-in completed'
+    equipment.location,
+    notes || 'Daily check-in completed',
+    undefined, // no approval needed for check-ins
+    equipment.currentHolder, // holderName
+    checkedByName // updatedByName
   );
   
   return {
@@ -260,15 +293,54 @@ export function validateEquipmentId(id: string): { isValid: boolean; error?: str
 }
 
 /**
- * Gets user permissions based on role
+ * Gets user permissions based on role and user type
  * Generic permission system that can be extended
+ * Admin UserType gets all permissions regardless of role
  */
-export function getUserPermissions(role: UserRole): EquipmentPermission[] {
+export function getUserPermissions(role: UserRole, userType?: string): EquipmentPermission[] {
+  // High-level UserTypes get ALL permissions regardless of military role
+  if (userType === 'admin' || userType === 'system_manager') {
+    return Object.values(EquipmentPermission);
+  }
+  
+  // Manager UserType gets enhanced permissions
+  if (userType === 'manager') {
+    return [
+      EquipmentPermission.VIEW_ALL,
+      EquipmentPermission.TRANSFER_EQUIPMENT,
+      EquipmentPermission.UPDATE_STATUS,
+      EquipmentPermission.APPROVE_TRANSFERS,
+      EquipmentPermission.BULK_OPERATIONS,
+      EquipmentPermission.RETIRE_EQUIPMENT,
+      EquipmentPermission.APPROVE_RETIREMENT,
+      EquipmentPermission.EXPORT_DATA
+    ];
+  }
   const permissions: Record<UserRole, EquipmentPermission[]> = {
     [UserRole.SOLDIER]: [
       EquipmentPermission.VIEW_UNIT_ONLY,
+      EquipmentPermission.TRANSFER_OWN_EQUIPMENT,
+      EquipmentPermission.UPDATE_OWN_EQUIPMENT
+    ],
+    [UserRole.TEAM_LEADER]: [
+      EquipmentPermission.VIEW_UNIT_ONLY,
+      EquipmentPermission.TRANSFER_TEAM_EQUIPMENT,
+      EquipmentPermission.UPDATE_TEAM_EQUIPMENT,
+      EquipmentPermission.APPROVE_TRANSFERS
+    ],
+    [UserRole.SQUAD_LEADER]: [
+      EquipmentPermission.VIEW_ALL,
       EquipmentPermission.TRANSFER_EQUIPMENT,
-      EquipmentPermission.UPDATE_STATUS
+      EquipmentPermission.UPDATE_STATUS,
+      EquipmentPermission.APPROVE_TRANSFERS,
+      EquipmentPermission.EXPORT_DATA
+    ],
+    [UserRole.SERGEANT]: [
+      EquipmentPermission.VIEW_ALL,
+      EquipmentPermission.TRANSFER_EQUIPMENT,
+      EquipmentPermission.UPDATE_STATUS,
+      EquipmentPermission.APPROVE_TRANSFERS,
+      EquipmentPermission.EXPORT_DATA
     ],
     [UserRole.OFFICER]: [
       EquipmentPermission.VIEW_ALL,
@@ -307,12 +379,67 @@ export function getUserPermissions(role: UserRole): EquipmentPermission[] {
 
 /**
  * Checks if user has specific permission
+ * Admin UserType automatically has all permissions
  */
 export function hasPermission(
   userContext: EquipmentUserContext,
   permission: EquipmentPermission
 ): boolean {
+  // High-level UserTypes have all permissions
+  if (userContext.userType === 'admin' || userContext.userType === 'system_manager') {
+    return true;
+  }
   return userContext.permissions.includes(permission);
+}
+
+/**
+ * Checks if user can update specific equipment based on ownership and permissions
+ */
+export function canUpdateEquipment(
+  userContext: EquipmentUserContext,
+  equipment: Equipment,
+  action: 'status' | 'transfer' | 'condition'
+): boolean {
+  // High-level UserTypes can do everything
+  if (userContext.userType === 'admin' || userContext.userType === 'system_manager') {
+    return true;
+  }
+  // Check if user has the general permission first (for higher roles - squad leader and above)
+  const hasGeneralPermission = 
+    action === 'status' && hasPermission(userContext, EquipmentPermission.UPDATE_STATUS) ||
+    action === 'transfer' && hasPermission(userContext, EquipmentPermission.TRANSFER_EQUIPMENT) ||
+    action === 'condition' && hasPermission(userContext, EquipmentPermission.UPDATE_STATUS);
+
+  // If user has general permission (squad leader and above), allow
+  if (hasGeneralPermission) {
+    return true;
+  }
+
+  // Check ownership (user holds the equipment)
+  const isOwnEquipment = !!(equipment.currentHolderId === userContext.userId);
+  
+  // Check team membership (equipment belongs to user's team)
+  const isTeamEquipment = !!(userContext.team && equipment.assignedTeam === userContext.team);
+
+  // Handle team leader permissions
+  if (action === 'status' && hasPermission(userContext, EquipmentPermission.UPDATE_TEAM_EQUIPMENT)) {
+    return isOwnEquipment || isTeamEquipment;
+  }
+
+  if (action === 'transfer' && hasPermission(userContext, EquipmentPermission.TRANSFER_TEAM_EQUIPMENT)) {
+    return isOwnEquipment || isTeamEquipment;
+  }
+
+  // Handle soldier permissions
+  if (action === 'status' && hasPermission(userContext, EquipmentPermission.UPDATE_OWN_EQUIPMENT)) {
+    return isOwnEquipment;
+  }
+
+  if (action === 'transfer' && hasPermission(userContext, EquipmentPermission.TRANSFER_OWN_EQUIPMENT)) {
+    return isOwnEquipment;
+  }
+
+  return false;
 }
 
 /**
@@ -375,7 +502,7 @@ export function filterEquipmentList(
   if (filters.dateRange) {
     const { start, end } = filters.dateRange;
     filtered = filtered.filter(item => {
-      const itemDate = new Date(item.lastReportUpdate);
+      const itemDate = item.lastReportUpdate instanceof Timestamp ? item.lastReportUpdate.toDate() : new Date(item.lastReportUpdate);
       const startDate = new Date(start);
       const endDate = new Date(end);
       return itemDate >= startDate && itemDate <= endDate;
@@ -414,12 +541,12 @@ export function sortEquipmentList(
         bValue = b.assignedUnit;
         break;
       case 'lastReportUpdate':
-        aValue = new Date(a.lastReportUpdate).getTime();
-        bValue = new Date(b.lastReportUpdate).getTime();
+        aValue = a.lastReportUpdate instanceof Timestamp ? a.lastReportUpdate.toDate().getTime() : new Date(a.lastReportUpdate).getTime();
+        bValue = b.lastReportUpdate instanceof Timestamp ? b.lastReportUpdate.toDate().getTime() : new Date(b.lastReportUpdate).getTime();
         break;
       case 'createdAt':
-        aValue = new Date(a.createdAt).getTime();
-        bValue = new Date(b.createdAt).getTime();
+        aValue = a.createdAt instanceof Timestamp ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime();
+        bValue = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
         break;
       default:
         return 0;
@@ -458,13 +585,12 @@ export function formatEquipmentDate(dateString: string): string {
  */
 export function getStatusDisplayText(status: EquipmentStatus): string {
   const statusTexts: Record<EquipmentStatus, string> = {
-    [EquipmentStatus.ACTIVE]: 'פעיל',
+    [EquipmentStatus.AVAILABLE]: 'זמין',
+    [EquipmentStatus.IN_USE]: 'בשימוש',
+    [EquipmentStatus.MAINTENANCE]: 'בתחזוקה',
+    [EquipmentStatus.REPAIR]: 'בתיקון',
     [EquipmentStatus.LOST]: 'אבוד',
-    [EquipmentStatus.BROKEN]: 'שבור',
-    [EquipmentStatus.MAINTENANCE]: 'תחזוקה',
-    [EquipmentStatus.RETIRED]: 'הוצא משירות',
-    [EquipmentStatus.PENDING_TRANSFER]: 'ממתין להעברה',
-    [EquipmentStatus.PENDING_RETIREMENT]: 'ממתין להוצאה משירות'
+    [EquipmentStatus.RETIRED]: 'הוחזר'
   };
   
   return statusTexts[status] || status;
@@ -475,12 +601,12 @@ export function getStatusDisplayText(status: EquipmentStatus): string {
  */
 export function getConditionDisplayText(condition: EquipmentCondition): string {
   const conditionTexts: Record<EquipmentCondition, string> = {
-    [EquipmentCondition.EXCELLENT]: 'מעולה',
+    [EquipmentCondition.NEW]: 'חדש',
+    [EquipmentCondition.EXCELLENT]: 'מצוין',
     [EquipmentCondition.GOOD]: 'טוב',
-    [EquipmentCondition.FAIR]: 'סביר',
+    [EquipmentCondition.FAIR]: 'בסדר',
     [EquipmentCondition.POOR]: 'גרוע',
-    [EquipmentCondition.DAMAGED]: 'פגום',
-    [EquipmentCondition.BROKEN]: 'שבור'
+    [EquipmentCondition.NEEDS_REPAIR]: 'דורש תיקון'
   };
   
   return conditionTexts[condition] || condition;
@@ -495,7 +621,7 @@ export function needsAttention(equipment: Equipment): {
   priority: 'low' | 'medium' | 'high';
 } {
   const now = new Date();
-  const lastUpdate = new Date(equipment.lastReportUpdate);
+  const lastUpdate = equipment.lastReportUpdate instanceof Timestamp ? equipment.lastReportUpdate.toDate() : new Date(equipment.lastReportUpdate);
   const daysSinceUpdate = Math.floor((now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
   
   // High priority issues
@@ -503,8 +629,8 @@ export function needsAttention(equipment: Equipment): {
     return { needsAttention: true, reason: 'ציוד אבוד', priority: 'high' };
   }
   
-  if (equipment.status === EquipmentStatus.BROKEN) {
-    return { needsAttention: true, reason: 'ציוד שבור', priority: 'high' };
+  if (equipment.status === EquipmentStatus.REPAIR) {
+    return { needsAttention: true, reason: 'ציוד בתיקון', priority: 'high' };
   }
   
   // Medium priority issues
@@ -512,7 +638,7 @@ export function needsAttention(equipment: Equipment): {
     return { needsAttention: true, reason: 'לא עודכן למעלה מ-7 ימים', priority: 'medium' };
   }
   
-  if (equipment.condition === EquipmentCondition.POOR || equipment.condition === EquipmentCondition.DAMAGED) {
+  if (equipment.condition === EquipmentCondition.POOR || equipment.condition === EquipmentCondition.NEEDS_REPAIR) {
     return { needsAttention: true, reason: 'מצב הציוד דורש תשומת לב', priority: 'medium' };
   }
   

@@ -117,8 +117,10 @@ export default function AdminSetup() {
 
         {isCreated && (
           <div className="bg-yellow-900/50 border border-yellow-700 p-4 rounded-lg">
-            <h2 className="font-semibold text-yellow-200 mb-2">⚠️ Security Note:</h2>
+            <h2 className="font-semibold text-yellow-200 mb-2">⚠️ Important Next Steps:</h2>
             <div className="text-yellow-100 text-sm space-y-1">
+              <div>• You must set the userType to &quot;admin&quot; in the Firestore users collection</div>
+              <div>• Navigate to Firestore → users collection → find this user → set userType: &quot;admin&quot;</div>
               <div>• Remember to change the default password after first login</div>
               <div>• This setup component should be removed in production</div>
               <div>• Store admin credentials securely</div>

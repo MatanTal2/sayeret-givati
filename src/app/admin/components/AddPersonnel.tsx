@@ -1,7 +1,10 @@
 'use client';
 
+import React from 'react';
 import { usePersonnelManagement } from '@/hooks/usePersonnelManagement';
-import { RANK_OPTIONS, FORM_CONSTRAINTS } from '@/constants/admin';
+import { RANK_OPTIONS, USER_TYPE_OPTIONS, FORM_CONSTRAINTS } from '@/constants/admin';
+import { UserType } from '@/types/user';
+
 
 export default function AddPersonnel() {
   const {
@@ -25,6 +28,8 @@ export default function AddPersonnel() {
       clearMessage();
     }
   };
+
+
 
   return (
     <div className="max-w-2xl">
@@ -117,6 +122,32 @@ export default function AddPersonnel() {
             </select>
           </div>
 
+          {/* User Type */}
+          <div>
+            <label htmlFor="userType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              User Type *
+            </label>
+            <select
+              id="userType"
+              value={formData.userType || UserType.USER}
+              onChange={(e) => handleInputChange('userType', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                         bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                         focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                         disabled:opacity-50"
+              disabled={isLoading}
+            >
+              {USER_TYPE_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              🔑 Determines system access level
+            </p>
+          </div>
+
           {/* Phone Number */}
           <div>
             <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -141,23 +172,6 @@ export default function AddPersonnel() {
           </div>
         </div>
 
-        {/* Message */}
-        {message && (
-          <div className={`rounded-md p-4 ${
-            message.type === 'success' 
-              ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' 
-              : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
-          }`}>
-            <p className={`text-sm ${
-              message.type === 'success' 
-                ? 'text-green-700 dark:text-green-400' 
-                : 'text-red-700 dark:text-red-400'
-            }`}>
-              {message.text}
-            </p>
-          </div>
-        )}
-
         {/* Submit Button */}
         <div className="flex justify-end">
           <button
@@ -178,6 +192,63 @@ export default function AddPersonnel() {
             )}
           </button>
         </div>
+
+        {/* Message - Positioned below button for better visibility */}
+        {message && (
+          <div className={`rounded-lg p-4 border-2 transition-all duration-300 ${
+            message.type === 'success' 
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 shadow-lg' 
+              : 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 shadow-lg'
+          }`}>
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                {message.type === 'success' ? (
+                  <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center">
+                    <span className="text-green-600 dark:text-green-400 text-lg">✅</span>
+                  </div>
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-800 flex items-center justify-center">
+                    <span className="text-red-600 dark:text-red-400 text-lg">❌</span>
+                  </div>
+                )}
+              </div>
+              <div className="ml-3 flex-1">
+                <p className={`text-sm font-medium ${
+                  message.type === 'success' 
+                    ? 'text-green-800 dark:text-green-300' 
+                    : 'text-red-800 dark:text-red-300'
+                }`}>
+                  {message.type === 'success' ? 'Success!' : 'Error'}
+                </p>
+                <p className={`text-sm mt-1 ${
+                  message.type === 'success' 
+                    ? 'text-green-700 dark:text-green-400' 
+                    : 'text-red-700 dark:text-red-400'
+                }`}>
+                  {message.text}
+                </p>
+                {message.type === 'success' && (
+                  <p className="text-xs text-green-600 dark:text-green-500 mt-2">
+                    💡 The personnel can now register using their military ID and phone number
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={clearMessage}
+                className={`ml-2 flex-shrink-0 p-1 rounded-md hover:bg-opacity-20 ${
+                  message.type === 'success' 
+                    ? 'text-green-500 hover:bg-green-200 dark:hover:bg-green-800' 
+                    : 'text-red-500 hover:bg-red-200 dark:hover:bg-red-800'
+                }`}
+              >
+                <span className="sr-only">Dismiss</span>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
       </form>
 
       {/* Info Box */}

@@ -7,6 +7,7 @@ import {
   validateBirthdate, 
   validateConsent 
 } from '@/utils/validationUtils';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 
 interface RegistrationDetailsStepProps {
   firstName: string;
@@ -55,6 +56,7 @@ export default function RegistrationDetailsStep({
 
   const [showPassword, setShowPassword] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
 
   // Real-time validation
   useEffect(() => {
@@ -299,7 +301,15 @@ export default function RegistrationDetailsStep({
                 data-testid="consent-checkbox"
               />
               <span className="text-sm text-gray-700 leading-relaxed">
-                {TEXT_CONSTANTS.AUTH.CONSENT_TERMS} *
+                אני מסכים/ה ל
+                <button
+                  type="button"
+                  onClick={() => setShowPolicyModal(true)}
+                  className="text-blue-600 hover:text-blue-800 underline mx-1"
+                >
+                  תנאי השימוש ומדיניות הפרטיות
+                </button>
+                *
               </span>
             </label>
             {validationErrors.consent && (
@@ -331,6 +341,21 @@ export default function RegistrationDetailsStep({
           </button>
         </form>
       </div>
+
+      {/* System Policy Modal */}
+      <ConfirmationModal
+        isOpen={showPolicyModal}
+        title={TEXT_CONSTANTS.AUTH.SYSTEM_POLICY_TITLE}
+        message={TEXT_CONSTANTS.AUTH.SYSTEM_POLICY_CONTENT}
+        confirmText={TEXT_CONSTANTS.CONFIRMATIONS.OK}
+        cancelText={TEXT_CONSTANTS.CONFIRMATIONS.CLOSE}
+        onConfirm={() => setShowPolicyModal(false)}
+        onCancel={() => setShowPolicyModal(false)}
+        variant="info"
+        icon="📋"
+        singleButton={true}
+        useHomePageStyle={true}
+      />
     </>
   );
 }

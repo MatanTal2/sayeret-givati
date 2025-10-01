@@ -1,4 +1,5 @@
 import { Timestamp } from 'firebase/firestore';
+import { UserType } from './user';
 
 // Admin authentication types
 export interface AdminSession {
@@ -26,6 +27,7 @@ export interface PersonnelFormData {
   lastName: string;
   rank: string;
   phoneNumber: string;
+  userType?: UserType;
   email: string; // Personal email for Firebase Authentication (NOT military)
 }
 
@@ -36,6 +38,7 @@ export interface AuthorizedPersonnelData {
   lastName: string;
   rank: string;
   phoneNumber: string;
+  userType?: UserType;
   // No email - this is for pre-authorization only
 }
 
@@ -46,6 +49,7 @@ export interface AuthorizedPersonnel {
   firstName: string;
   lastName: string;
   rank: string;
+  userType?: UserType; // User type for system access level
   email?: string; // Personal email for registration (added during user registration, not pre-auth)
   requestedRole?: string; // Role user requested during registration
   approvedRole: string; // Role approved by admin (defaults to 'soldier')
@@ -86,7 +90,7 @@ export interface ValidationResult {
 }
 
 // Admin dashboard types
-export type AdminTabType = 'add-personnel' | 'bulk-upload' | 'view-personnel' | 'system-stats';
+export type AdminTabType = 'add-personnel' | 'bulk-upload' | 'view-personnel' | 'update-personnel' | 'system-stats';
 
 export interface SystemStats {
   authorizedPersonnelCount: number;

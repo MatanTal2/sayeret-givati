@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { validateEmail, validatePassword, validateConsent } from '@/utils/validationUtils';
 import { AccountDetailsStepProps, AccountDetailsData, AccountDetailsValidationErrors } from '@/types/registration';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 
 export default function AccountDetailsStep({ 
   email = '',
@@ -25,6 +26,7 @@ export default function AccountDetailsStep({
   const [showPassword, setShowPassword] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const [showPasswordTooltip, setShowPasswordTooltip] = useState(false);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
 
   // Real-time validation
   useEffect(() => {
@@ -211,7 +213,14 @@ export default function AccountDetailsStep({
                 data-testid="consent-checkbox"
               />
               <label htmlFor="consent" className="text-sm text-gray-700 text-right leading-5">
-                * {TEXT_CONSTANTS.AUTH.CONSENT_TERMS}
+                * אני מסכים/ה ל
+                <button
+                  type="button"
+                  onClick={() => setShowPolicyModal(true)}
+                  className="text-blue-600 hover:text-blue-800 underline mx-1"
+                >
+                  תנאי השימוש ומדיניות הפרטיות
+                </button>
               </label>
             </div>
           </div>
@@ -250,6 +259,21 @@ export default function AccountDetailsStep({
           </button>
         </form>
       </div>
+
+      {/* System Policy Modal */}
+      <ConfirmationModal
+        isOpen={showPolicyModal}
+        title={TEXT_CONSTANTS.AUTH.SYSTEM_POLICY_TITLE}
+        message={TEXT_CONSTANTS.AUTH.SYSTEM_POLICY_CONTENT}
+        confirmText={TEXT_CONSTANTS.CONFIRMATIONS.OK}
+        cancelText={TEXT_CONSTANTS.CONFIRMATIONS.CLOSE}
+        onConfirm={() => setShowPolicyModal(false)}
+        onCancel={() => setShowPolicyModal(false)}
+        variant="info"
+        icon="📋"
+        singleButton={true}
+        useHomePageStyle={true}
+      />
     </>
   );
 }

@@ -6,6 +6,17 @@ import { Timestamp } from 'firebase/firestore';
 import { UserRole } from '@/types/equipment';
 
 /**
+ * User type enum for high-level categorization
+ */
+export enum UserType {
+  ADMIN = 'admin',
+  SYSTEM_MANAGER = 'system_manager', 
+  MANAGER = 'manager',
+  TEAM_LEADER = 'team_leader',
+  USER = 'user'
+}
+
+/**
  * Communication preferences for user notifications and alerts
  */
 export interface CommunicationPreferences {
@@ -27,7 +38,7 @@ export interface EnhancedAuthUser {
   uid: string;
   email?: string;
   displayName?: string;
-  userType: 'admin' | 'personnel' | null;
+  userType: UserType | null;
   
   // Firestore user profile fields
   firstName?: string;
@@ -63,6 +74,7 @@ export interface FirestoreUserProfile {
   birthday: Timestamp;
   phoneNumber: string;
   rank: string;
+  userType: UserType;
   role: UserRole;
   status: 'active' | 'inactive' | 'transferred' | 'discharged';
   militaryPersonalNumberHash: string;

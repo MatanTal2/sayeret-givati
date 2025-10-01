@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { OTPManager } from '@/lib/otpUtils';
-import { TwilioService } from '@/lib/twilioService';
+import { PhoneUtils } from '@/utils/validationUtils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate and format phone number
-    const phoneValidation = TwilioService.validatePhoneNumber(phoneNumber);
+    const phoneValidation = PhoneUtils.validatePhoneNumber(phoneNumber);
     if (!phoneValidation.isValid) {
       return NextResponse.json(
         { 

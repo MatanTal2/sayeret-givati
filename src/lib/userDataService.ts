@@ -3,14 +3,58 @@
  */
 
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore';
 import { FirestoreUserProfile, UserFetchResult, CommunicationPreferences } from '@/types/user';
 import { ADMIN_CONFIG } from '@/constants/admin';
 
 export class UserDataService {
   /**
-   * Fetch user data from Firestore using email lookup
+   * Fetch user data from Firestore using Firebase Auth UID (recommended)
+   * Direct document lookup for optimal performance
+   */
+  static async fetchUserDataByUid(uid: string): Promise<UserFetchResult> {
+    try {
+      console.log('🔍 Fetching user data for UID:', uid);
+
+      // Direct document lookup using Firebase Auth UID
+      const userDocRef = doc(db, ADMIN_CONFIG.FIRESTORE_USERS_COLLECTION, uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists()) {
+        console.log('❌ No user found with UID:', uid);
+        return {
+          success: false,
+          error: 'User not found in database'
+        };
+      }
+
+      const userData = userDoc.data() as FirestoreUserProfile;
+
+      console.log('✅ User data fetched successfully:', {
+        uid: userData.uid,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email
+      });
+
+      return {
+        success: true,
+        userData
+      };
+
+    } catch (error) {
+      console.error('❌ Error fetching user data:', error);
+      return {
+        success: false,
+        error: 'Failed to fetch user data'
+      };
+    }
+  }
+
+  /**
+   * Fetch user data from Firestore using email lookup (legacy method)
    * Uses indexed query for efficient searching
+   * @deprecated Use fetchUserDataByUid() for better performance
    */
   static async fetchUserDataByEmail(email: string): Promise<UserFetchResult> {
     try {
