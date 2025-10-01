@@ -101,10 +101,14 @@ export default function FormFieldSubcategory({
 
       {/* Add Subcategory Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowAddModal(false)}></div>
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="relative bg-white rounded-lg max-w-md w-full mx-auto p-6">
+        <div 
+          className="fixed inset-0 backdrop-blur-md bg-white/20 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowAddModal(false)}
+        >
+          <div 
+            className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-auto p-6 border border-gray-200"
+            onClick={(e) => e.stopPropagation()}
+          >
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.ADD_NEW_SUBCATEGORY}
               </h3>
@@ -146,7 +150,6 @@ export default function FormFieldSubcategory({
                   {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.ADD}
                 </Button>
               </div>
-            </div>
           </div>
         </div>
       )}

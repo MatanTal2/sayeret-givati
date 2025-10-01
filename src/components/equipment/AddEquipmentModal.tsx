@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { X, Plus, ChevronDown, RefreshCw } from 'lucide-react';
 import { Equipment } from '@/types/equipment';
 import { Timestamp, serverTimestamp } from 'firebase/firestore';
@@ -153,6 +153,7 @@ export default function AddEquipmentModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<EquipmentTemplate | null>(null);
+  const [isClassifiedEquipment, setIsClassifiedEquipment] = useState(false); // צלם/צופן checkbox
   const [showTemplates, setShowTemplates] = useState(true);
   const [showCreateTemplate, setShowCreateTemplate] = useState(false);
   
@@ -209,9 +210,19 @@ export default function AddEquipmentModal({
     loading: templatesLoading, 
     error: templatesError,
     refreshTemplates,
-    refreshCategories,
     invalidateCache
   } = useTemplates();
+
+  // Extract unique categories from templates for the form dropdown
+  const availableCategories = useMemo(() => {
+    const categorySet = new Set<string>();
+    templates.forEach(template => {
+      if (template.category && template.category !== 'לא נמצא') {
+        categorySet.add(template.category);
+      }
+    });
+    return Array.from(categorySet).sort();
+  }, [templates]);
 
   // Check if user has manager permissions (manager, system_manager, admin)
   const hasManagerPermissions = enhancedUser?.userType && [
@@ -290,13 +301,6 @@ export default function AddEquipmentModal({
     setShowTemplates(false);
   };
 
-  // Back to template selection
-  const handleBackToTemplates = () => {
-    setShowTemplates(true);
-    setSelectedTemplate(null);
-    setFormData(initialFormData);
-    setErrors({});
-  };
 
   // Handle create new template
   const handleCreateNewTemplate = () => {
@@ -387,10 +391,18 @@ export default function AddEquipmentModal({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Serial number validation
-    const serialValidation = validateEquipmentId(formData.serialNumber);
-    if (!serialValidation.isValid) {
-      newErrors.serialNumber = serialValidation.error || 'מספר סידורי לא תקין';
+    // Serial number validation - required only for classified equipment (צלם/צופן)
+    if (isClassifiedEquipment) {
+      const serialValidation = validateEquipmentId(formData.serialNumber);
+      if (!serialValidation.isValid) {
+        newErrors.serialNumber = serialValidation.error || 'מספר סידורי לא תקין';
+      }
+    } else if (formData.serialNumber.trim()) {
+      // If not classified but serial number is provided, validate it
+      const serialValidation = validateEquipmentId(formData.serialNumber);
+      if (!serialValidation.isValid) {
+        newErrors.serialNumber = serialValidation.error || 'מספר סידורי לא תקין';
+      }
     }
 
     // Product name validation
@@ -415,10 +427,12 @@ export default function AddEquipmentModal({
       newErrors.assignedUnit = unitValidation.error || 'יחידה לא תקינה';
     }
 
-    // Location validation
-    const locationValidation = validateLocation(formData.location);
-    if (!locationValidation.isValid) {
-      newErrors.location = locationValidation.error || 'מיקום לא תקין';
+    // Location validation - now optional
+    if (formData.location.trim()) {
+      const locationValidation = validateLocation(formData.location);
+      if (!locationValidation.isValid) {
+        newErrors.location = locationValidation.error || 'מיקום לא תקין';
+      }
     }
 
     setErrors(newErrors);
@@ -482,15 +496,6 @@ export default function AddEquipmentModal({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {!showTemplates && (
-              <button
-                onClick={handleBackToTemplates}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-sm text-purple-600"
-                disabled={isSubmitting}
-              >
-                ← חזור לתבניות
-              </button>
-            )}
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -505,60 +510,9 @@ export default function AddEquipmentModal({
         {showTemplates ? (
           /* Template Selection */
           <div className="p-6">
-            {/* Status and Refresh Section */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                {/* Data Source Indicator */}
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <span className="text-gray-600">
-                    נתונים מ-Firestore
-                  </span>
-                </div>
-                
-                {/* Template Count */}
-                <span className="text-sm text-gray-500">
-                  ({templates.length} תבניות)
-                </span>
-              </div>
-              
-              {/* Refresh Buttons */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={refreshCategories}
-                  disabled={templatesLoading}
-                  className="flex items-center gap-1 px-2 py-1 text-xs text-green-600 hover:text-green-800 disabled:opacity-50"
-                  title="רענן קטגוריות ותת-קטגוריות"
-                >
-                  <RefreshCw className={`w-3 h-3 ${templatesLoading ? 'animate-spin' : ''}`} />
-                  רענן קטגוריות
-                </button>
-                <button
-                  onClick={refreshTemplates}
-                  disabled={templatesLoading}
-                  className="flex items-center gap-1 px-3 py-1 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50"
-                >
-                  <RefreshCw className={`h-4 w-4 ${templatesLoading ? 'animate-spin' : ''}`} />
-                  רענן תבניות
-                </button>
-              </div>
-            </div>
-
-            {/* Error Display */}
-            {templatesError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-800">
-                  ❌ שגיאה בטעינת תבניות: {templatesError}
-                </p>
-                <p className="text-xs text-red-600 mt-1">
-                  לא ניתן לטעון תבניות ממסד הנתונים
-                </p>
-              </div>
-            )}
-
             {/* Action Buttons - Only visible for managers */}
             {hasManagerPermissions && (
-              <div className="flex gap-3 mb-6">
+              <div className="flex gap-3 mb-4">
                 <button
                   onClick={handleSkipTemplates}
                   className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
@@ -573,6 +527,36 @@ export default function AddEquipmentModal({
                   <Plus className="h-4 w-4" />
                   צור תבנית חדשה
                 </button>
+              </div>
+            )}
+
+            {/* Status and Refresh Section */}
+            <div className="flex items-center justify-between mb-4">
+              {/* Template Count */}
+              <span className="text-sm text-gray-500">
+                {templates.length} תבניות
+              </span>
+              
+              {/* Refresh Button */}
+              <button
+                onClick={refreshTemplates}
+                disabled={templatesLoading}
+                className="flex items-center gap-1 px-3 py-1 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`h-4 w-4 ${templatesLoading ? 'animate-spin' : ''}`} />
+                רענן
+              </button>
+            </div>
+
+            {/* Error Display */}
+            {templatesError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-800">
+                  ❌ שגיאה בטעינת תבניות: {templatesError}
+                </p>
+                <p className="text-xs text-red-600 mt-1">
+                  לא ניתן לטעון תבניות ממסד הנתונים
+                </p>
               </div>
             )}
 
@@ -720,11 +704,23 @@ export default function AddEquipmentModal({
               </div>
             )}
 
-            {/* Serial Number */}
+            {/* Serial Number with Classification Checkbox */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              מספר סידורי *
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                מספר סידורי {isClassifiedEquipment ? '*' : '(אופציונלי)'}
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={isClassifiedEquipment}
+                  onChange={(e) => setIsClassifiedEquipment(e.target.checked)}
+                  className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  disabled={isSubmitting}
+                />
+                <span className="text-gray-700">צלם/צופן</span>
+              </label>
+            </div>
             <input
               type="text"
               value={formData.serialNumber}
@@ -732,11 +728,16 @@ export default function AddEquipmentModal({
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors ${
                 errors.serialNumber ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="לדוגמה: EQ-2024-001"
+              placeholder={isClassifiedEquipment ? "לדוגמה: EQ-2024-001" : "לדוגמה: EQ-2024-001 (אופציונלי)"}
               disabled={isSubmitting}
             />
             {errors.serialNumber && (
               <p className="text-red-500 text-sm mt-1">{errors.serialNumber}</p>
+            )}
+            {isClassifiedEquipment && (
+              <p className="text-xs text-amber-600 mt-1">
+                ⚠️ ציוד מסווג דורש מספר סידורי
+              </p>
             )}
           </div>
 
@@ -771,15 +772,17 @@ export default function AddEquipmentModal({
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors ${
                   errors.category ? 'border-red-500' : 'border-gray-300'
                 }`}
-                disabled={isSubmitting}
+                disabled={isSubmitting || templatesLoading}
               >
                 <option value="">בחר קטגוריה</option>
-                <option value="נשק">נשק</option>
-                <option value="אופטיקה">אופטיקה</option>
-                <option value="תקשורת">תקשורת</option>
-                <option value="הגנה">הגנה</option>
-                <option value="ציוד">ציוד</option>
-                <option value="אחר">אחר</option>
+                {availableCategories.map((category: string) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+                {availableCategories.length === 0 && !templatesLoading && (
+                  <option value="" disabled>אין קטגוריות זמינות</option>
+                )}
               </select>
               {errors.category && (
                 <p className="text-red-500 text-sm mt-1">{errors.category}</p>
@@ -886,7 +889,7 @@ export default function AddEquipmentModal({
           {/* Location */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              מיקום *
+              מיקום (אופציונלי)
             </label>
             <input
               type="text"
@@ -895,7 +898,7 @@ export default function AddEquipmentModal({
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors ${
                 errors.location ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="לדוגמה: מחסן נשק - בסיס"
+              placeholder="לדוגמה: מחסן נשק - בסיס (אופציונלי)"
               disabled={isSubmitting}
             />
             {errors.location && (

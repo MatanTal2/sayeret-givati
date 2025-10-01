@@ -176,10 +176,8 @@ export default function EquipmentTemplateForm({
 
   if (!hasPermission) {
     return (
-      <div className="fixed inset-0 z-50 overflow-y-auto">
-        <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose}></div>
-        <div className="flex min-h-full items-center justify-center p-4">
-          <div className="relative bg-white rounded-lg max-w-md w-full mx-auto p-6">
+      <div className="fixed inset-0 backdrop-blur-md bg-white/20 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-auto p-6 border border-gray-200">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
               {TEXT_CONSTANTS.MANAGEMENT.ACCESS_DENIED.TITLE}
             </h3>
@@ -192,17 +190,20 @@ export default function EquipmentTemplateForm({
             >
               {TEXT_CONSTANTS.CONFIRMATIONS.CLOSE}
             </button>
-          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose}></div>
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg max-w-2xl w-full mx-auto">
+    <div 
+      className="fixed inset-0 backdrop-blur-md bg-white/20 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200"
+        onClick={(e) => e.stopPropagation()}
+      >
           {/* Header */}
           <FormHeader onClose={onClose} isSubmitting={isSubmitting} />
 
@@ -338,7 +339,6 @@ export default function EquipmentTemplateForm({
               canSubmit={!isSubmitting}
             />
           </form>
-        </div>
       </div>
     </div>
   );
