@@ -35,6 +35,7 @@ import {
   addTrackingHistoryEntry, 
   createEquipmentCreatedEntry 
 } from './equipmentHistoryService';
+import { ActionLogHelpers } from './actionsLogService';
 
 import { TEXT_CONSTANTS } from '@/constants/text';
 
@@ -510,15 +511,12 @@ export class EquipmentItemsService {
 
       // Create new tracking history entry
       const historyEntry: EquipmentHistoryEntry = {
-        holder: currentEquipment.currentHolderId, // Use UID for consistency
-        holderName: currentEquipment.currentHolder, // Cache display name for UI performance
-        fromDate: now,
         action,
-        updatedBy,
-        updatedByName,
+        holder: currentEquipment.currentHolder, // Display name for UI
         location: updates.location || currentEquipment.location,
         notes: notes || `${action} update`,
-        timestamp: now
+        timestamp: now,
+        updatedBy
       };
 
       const updateData = {

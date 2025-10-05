@@ -249,14 +249,23 @@ export function useNotificationDisplay() {
 
   const displayNotifications = notifications.map(notification => {
     let createdAtDate: Date;
+    
+    // Handle Firestore Timestamp
     if (notification.createdAt instanceof Timestamp) {
       createdAtDate = notification.createdAt.toDate();
-    } else if (notification.createdAt && typeof notification.createdAt === 'object' && 'getTime' in notification.createdAt) {
-      // Handle case where createdAt is already a Date object
+    } 
+    // Handle Date object (fallback for data inconsistencies)
+    else if (notification.createdAt && typeof notification.createdAt === 'object' && 'getTime' in notification.createdAt) {
       createdAtDate = notification.createdAt as Date;
-    } else {
-      // Handle case where createdAt is a string or number
-      createdAtDate = new Date(notification.createdAt as any);
+    } 
+    // Handle other formats (string, number, etc.) - defensive programming
+    else {
+      try {
+        createdAtDate = new Date(notification.createdAt as unknown as string | number | Date);
+      } catch {
+        // Fallback to current date if parsing fails
+        createdAtDate = new Date();
+      }
     }
 
     return {
