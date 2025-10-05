@@ -64,7 +64,7 @@ function PlaceholderTabContent({ tabData }: { tabData?: ManagementTab }) {
     return (
       <Card>
         <div className="text-center py-12">
-          <p className="text-gray-500">תוכן לא נמצא</p>
+          <p className="text-neutral-500">תוכן לא נמצא</p>
         </div>
       </Card>
     );
@@ -74,16 +74,16 @@ function PlaceholderTabContent({ tabData }: { tabData?: ManagementTab }) {
 
   return (
     <Card padding="lg" className="text-center">
-      <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-        <Icon className="w-8 h-8 text-gray-400" />
+      <div className="w-16 h-16 mx-auto mb-4 bg-neutral-100 rounded-full flex items-center justify-center">
+        <Icon className="w-8 h-8 text-neutral-400" />
       </div>
-      <h3 className="text-lg font-semibold text-gray-700 mb-2">
+      <h3 className="text-lg font-semibold text-neutral-700 mb-2">
         {tabData.label} - {MANAGEMENT.DEVELOPMENT.IN_DEVELOPMENT}
       </h3>
-      <p className="text-gray-500 mb-4">
+      <p className="text-neutral-500 mb-4">
         {MANAGEMENT.DEVELOPMENT.FEATURE_COMING_SOON}
       </p>
-      <div className="text-sm text-gray-400">
+      <div className="text-sm text-neutral-400">
         {tabData.description}
       </div>
     </Card>

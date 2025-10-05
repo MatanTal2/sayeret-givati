@@ -32,9 +32,10 @@ export default function FormFieldDefaultValues({
           onChange={(e) => onStatusChange(e.target.value as EquipmentStatus)}
           disabled={disabled}
         >
-          <option value={EquipmentStatus.AVAILABLE}>זמין</option>
-          <option value={EquipmentStatus.IN_USE}>בשימוש</option>
-          <option value={EquipmentStatus.MAINTENANCE}>תחזוקה</option>
+          <option value={EquipmentStatus.AVAILABLE}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.AVAILABLE}</option>
+          <option value={EquipmentStatus.SECURITY}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.SECURITY}</option>
+          <option value={EquipmentStatus.REPAIR}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.REPAIR}</option>
+          <option value={EquipmentStatus.LOST}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.LOST}</option>
         </select>
       </FormField>
 
@@ -46,10 +47,9 @@ export default function FormFieldDefaultValues({
           onChange={(e) => onConditionChange(e.target.value as EquipmentCondition)}
           disabled={disabled}
         >
-          <option value={EquipmentCondition.NEW}>חדש</option>
-          <option value={EquipmentCondition.EXCELLENT}>מצוין</option>
-          <option value={EquipmentCondition.GOOD}>טוב</option>
-          <option value={EquipmentCondition.FAIR}>בינוני</option>
+          <option value={EquipmentCondition.GOOD}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_OPTIONS.GOOD}</option>
+          <option value={EquipmentCondition.NEEDS_REPAIR}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_OPTIONS.NEEDS_REPAIR}</option>
+          <option value={EquipmentCondition.WORN}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_OPTIONS.WORN}</option>
         </select>
       </FormField>
     </div>

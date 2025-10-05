@@ -117,3 +117,50 @@ export function routeIsComingSoon(href: string): boolean {
 export function routeRequiresManagementAccess(href: string): boolean {
   return href === '/management';
 }
+
+/**
+ * Get menu items for hamburger menu
+ */
+export interface MenuItem {
+  label: string;
+  href: string;
+  icon?: string;
+}
+
+export function getMenuItems(): MenuItem[] {
+  const features = getFeatureRoutes();
+  
+  // Add home page as first item
+  const menuItems: MenuItem[] = [
+    {
+      label: 'עמוד הבית',
+      href: '/',
+      icon: '🏠'
+    }
+  ];
+
+  // Add feature routes
+  features.forEach(feature => {
+    menuItems.push({
+      label: feature.title,
+      href: feature.href,
+      icon: feature.icon
+    });
+  });
+
+  // Add additional common pages
+  menuItems.push(
+    {
+      label: 'הפרופיל שלי',
+      href: '/profile',
+      icon: '👤'
+    },
+    {
+      label: 'הגדרות',
+      href: '/settings',
+      icon: '⚙️'
+    }
+  );
+
+  return menuItems;
+}

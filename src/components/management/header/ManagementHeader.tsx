@@ -20,7 +20,7 @@ export default function ManagementHeader({
   onToggleSidebar,
 }: ManagementHeaderProps) {
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="bg-white shadow-sm border-b border-neutral-200">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-4">
           <MobileMenuButton 

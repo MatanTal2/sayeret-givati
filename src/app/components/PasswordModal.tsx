@@ -1,3 +1,5 @@
+import { TEXT_CONSTANTS } from '@/constants/text';
+
 interface PasswordModalProps {
   show: boolean;
   password: string;
@@ -30,9 +32,9 @@ export default function PasswordModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <h3 className="text-lg font-semibold text-neutral-900 mb-4">
           הזן סיסמת מנהל
         </h3>
         <div className="mb-4">
@@ -41,18 +43,18 @@ export default function PasswordModal({
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => onPasswordChange(e.target.value)}
-              placeholder="סיסמה"
-              className={`w-full border-2 rounded-md px-3 py-2 pr-10 text-gray-800 focus:outline-none focus:ring-2 ${
+              placeholder={TEXT_CONSTANTS.STATUS_PAGE.PASSWORD_PLACEHOLDER}
+              className={`w-full border-2 rounded-md px-3 py-2 pr-10 text-neutral-800 focus:outline-none focus:ring-2 ${
                 passwordError 
-                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
-                  : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
+                  ? 'border-danger-500 focus:ring-danger-500 focus:border-danger-500' 
+                  : 'border-neutral-400 focus:ring-primary-500 focus:border-primary-500'
               }`}
               onKeyPress={handleKeyPress}
             />
             <button
               type="button"
               onClick={onTogglePasswordVisibility}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500 hover:text-neutral-700 focus:outline-none"
             >
               {showPassword ? (
                 <span className="text-lg">🙈</span>
@@ -62,14 +64,14 @@ export default function PasswordModal({
             </button>
           </div>
           {passwordError && (
-            <p className="mt-1 text-sm text-red-600">{passwordError}</p>
+            <p className="mt-1 text-sm text-danger-600">{passwordError}</p>
           )}
         </div>
         <div className="flex gap-2">
           <button
             onClick={onSubmit}
             disabled={isUpdating}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-green-400 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-success-600 text-white rounded-md hover:bg-success-700 disabled:bg-success-400 transition-colors flex items-center gap-2"
           >
             {isUpdating ? (
               <>
@@ -83,7 +85,7 @@ export default function PasswordModal({
           <button
             onClick={onCancel}
             disabled={isUpdating}
-            className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 disabled:bg-gray-400 transition-colors"
+            className="px-4 py-2 bg-neutral-500 text-white rounded-md hover:bg-neutral-600 disabled:bg-neutral-400 transition-colors"
           >
             ביטול
           </button>

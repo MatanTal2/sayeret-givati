@@ -1,6 +1,7 @@
 import { FaWhatsapp } from "react-icons/fa";
 import { MdDownload } from "react-icons/md";
 import { Download } from "lucide-react";
+import { TEXT_CONSTANTS } from '@/constants/text';
 
 interface ReportPreviewProps {
   show: boolean;
@@ -26,10 +27,10 @@ export default function ReportPreview({
   return (
     <div id="report-preview" className="bg-white p-6 rounded-lg shadow-sm mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-purple-700">תצוגה מקדימה של הדוח</h3>
+        <h3 className="text-lg font-semibold text-primary-700">תצוגה מקדימה של הדוח</h3>
         <button 
           onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 text-xl font-bold"
+          className="text-neutral-500 hover:text-neutral-700 text-xl font-bold"
         >
           ✕
         </button>
@@ -37,26 +38,26 @@ export default function ReportPreview({
       <textarea 
         value={reportText}
         readOnly
-        className="w-full h-64 border border-gray-300 rounded-md p-3 font-mono text-sm bg-gray-50 text-black"
+        className="w-full h-64 border border-neutral-300 rounded-md p-3 font-mono text-sm bg-neutral-50 text-black"
       />
       <div className="flex gap-2 mt-4">
         <button 
           onClick={onCopyToClipboard}
-          className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+          className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
         >
           העתק ללוח
         </button>
         <button 
           onClick={onWhatsApp}
-          className="p-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
-          title="שלח ל-WhatsApp"
+          className="p-3 bg-success-600 text-white rounded-md hover:bg-success-700 transition-colors flex items-center justify-center"
+          title={TEXT_CONSTANTS.STATUS_PAGE.SEND_TO_WHATSAPP}
         >
           <FaWhatsapp className="text-lg" />
         </button>
         <button 
           onClick={onDownload}
-          className="p-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
-          title="הורד דוח"
+          className="p-3 bg-info-600 text-white rounded-md hover:bg-info-700 transition-colors flex items-center justify-center"
+          title={TEXT_CONSTANTS.STATUS_PAGE.DOWNLOAD_REPORT}
           disabled={isDownloading}
         >
           {isDownloading ? (

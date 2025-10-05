@@ -15,7 +15,7 @@ export const ADMIN_CONFIG = {
 // Validation patterns
 export const VALIDATION_PATTERNS = {
   MILITARY_ID: /^\d{5,7}$/,
-  PHONE_NUMBER: /^(?:\+972-?|0)(5[0-9])-?\d{7}$/,
+  PHONE_NUMBER: /^(?:\+972-?|0)?(5[0-9])-?\d{7}$/,
   EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 } as const;
 
@@ -28,7 +28,7 @@ export const VALIDATION_MESSAGES = {
   LAST_NAME_REQUIRED: 'Last name is required',
   RANK_REQUIRED: 'Rank is required',
   PHONE_REQUIRED: 'Phone number is required',
-  PHONE_INVALID: 'Phone number must be a valid Israeli mobile number (e.g., 050-1234567, +972-50-1234567)',
+  PHONE_INVALID: 'Phone number must be a valid Israeli mobile number (e.g., 050-1234567, +972-50-1234567, 501234567)',
   EMAIL_REQUIRED: 'Email is required',
   EMAIL_INVALID: 'Invalid email format',
   PASSWORD_REQUIRED: 'Password is required'

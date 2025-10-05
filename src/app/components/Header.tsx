@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import AuthButton from './AuthButton';
+import HamburgerMenu from '@/components/ui/HamburgerMenu';
+import { getMenuItems } from '@/utils/navigationUtils';
 
 interface HeaderProps {
   title: string;
@@ -8,7 +10,6 @@ interface HeaderProps {
   backLink?: string;
   backText?: string;
   showAuth?: boolean; // New prop to control auth button display
-  enableWaveEffect?: boolean; // New prop to enable wave effect on title
 }
 
 export default function Header({ 
@@ -16,21 +17,22 @@ export default function Header({
   subtitle, 
   backLink = "/", 
   backText = "← חזרה לעמוד הבית",
-  showAuth = true, // Default to showing auth button
-  enableWaveEffect = false // Default to no wave effect
+  showAuth = true // Default to showing auth button
 }: HeaderProps) {
+  const menuItems = getMenuItems();
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 mb-6">
+    <header className="bg-white shadow-sm border-b border-neutral-200 mb-6">
       <div className="max-w-6xl mx-auto px-4 py-4">
         
         {/* Mobile Layout */}
         <div className="md:hidden">
-          {/* Mobile: Auth button on its own row at the top */}
-          {showAuth && (
-            <div className="flex justify-start mb-4">
-              <AuthButton />
-            </div>
-          )}
+          {/* Mobile: Top row with Auth button and Hamburger menu */}
+          <div className="flex justify-between items-center mb-4">
+            {showAuth && <AuthButton />}
+            <HamburgerMenu 
+              menuItems={menuItems}
+            />
+          </div>
           
           {/* Mobile: Logo */}
           <div className="flex justify-center mb-4">
@@ -48,14 +50,14 @@ export default function Header({
           
           {/* Mobile: Headline */}
           <div className="text-center mb-2">
-            <h1 className={`text-2xl font-bold ${enableWaveEffect ? 'wave-text' : 'text-gray-900'}`}>
+            <h1 className="text-2xl font-bold text-primary-600">
               {title}
             </h1>
           </div>
           
           {/* Mobile: Subtitle */}
           <div className="text-center mb-4">
-            <p className="text-base text-gray-700 font-medium">{subtitle}</p>
+            <p className="text-base text-neutral-700 font-medium">{subtitle}</p>
           </div>
           
           {/* Mobile: Back link (if no auth) */}
@@ -63,7 +65,7 @@ export default function Header({
             <div className="flex justify-center">
               <Link 
                 href={backLink}
-                className="px-4 py-2 text-purple-600 hover:text-purple-800 font-medium transition-colors"
+                className="px-4 py-2 text-primary-600 hover:text-primary-800 font-medium transition-colors"
               >
                 {backText}
               </Link>
@@ -73,9 +75,14 @@ export default function Header({
 
         {/* Desktop Layout */}
         <div className="hidden md:block">
-          {/* Desktop: Logo and Auth button row */}
+          {/* Desktop: Hamburger menu, Logo, and Auth button row */}
           <div className="flex items-start justify-between mb-4">
-            {/* Desktop: Logo */}
+            {/* Desktop: Hamburger menu on left */}
+            <HamburgerMenu 
+              menuItems={menuItems}
+            />
+            
+            {/* Desktop: Logo in center */}
             <Link href={backLink} className="hover:opacity-80 transition-opacity">
               <Image 
                 src="/sayeret-givati-logo.png" 
@@ -87,29 +94,30 @@ export default function Header({
               />
             </Link>
             
-            {/* Desktop: Auth button on same row as logo */}
-            {showAuth && <AuthButton />}
-            
-            {/* Desktop: Back link (if no auth) */}
-            {!showAuth && (
-              <Link 
-                href={backLink}
-                className="px-4 py-2 text-purple-600 hover:text-purple-800 font-medium transition-colors"
-              >
-                <span className="hidden md:inline">{backText}</span>
-              </Link>
-            )}
+            {/* Desktop: Auth button on right */}
+            <div className="flex items-center">
+              {showAuth && <AuthButton />}
+              {!showAuth && (
+                <Link 
+                  href={backLink}
+                  className="px-4 py-2 text-primary-600 hover:text-primary-800 font-medium transition-colors"
+                >
+                  <span className="hidden md:inline">{backText}</span>
+                </Link>
+              )}
+            </div>
           </div>
           
           {/* Desktop: Headline only (no subtitle) */}
           <div className="text-center">
-            <h1 className={`text-3xl font-bold ${enableWaveEffect ? 'wave-text' : 'text-gray-900'}`}>
+            <h1 className="text-3xl font-bold text-primary-600">
               {title}
             </h1>
           </div>
         </div>
         
       </div>
+
     </header>
   );
 } 

@@ -7,6 +7,7 @@ import { UserType } from '@/types/user';
 import type { EmailRecipientType, EmailPriority, UserTypeOption, TeamOption } from '@/types/management';
 import CustomUserSelectionModal from './CustomUserSelectionModal';
 import { UserForEmail } from '@/hooks/useUsers';
+import { TEXT_CONSTANTS } from '@/constants/text';
 
 // Move these to constants if they grow
 const USER_TYPES: UserTypeOption[] = [
@@ -114,8 +115,8 @@ export default function EmailTab() {
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900">שליחת מייל למשתמשים</h3>
-        <p className="text-sm text-gray-600">שלח הודעות לקבוצות משתמשים או לכל המערכת</p>
+        <h3 className="text-lg font-semibold text-neutral-900">שליחת מייל למשתמשים</h3>
+        <p className="text-sm text-neutral-600">שלח הודעות לקבוצות משתמשים או לכל המערכת</p>
       </div>
 
       {/* Email Form */}
@@ -138,7 +139,7 @@ export default function EmailTab() {
             {/* Role Selection */}
             {recipients === 'roles' && (
               <FormField label="תפקידים">
-                <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded p-2">
+                <div className="space-y-2 max-h-32 overflow-y-auto border border-neutral-200 rounded p-2">
                   {USER_TYPES.map(userType => (
                     <div key={userType.value} className="flex items-center">
                       <input
@@ -151,9 +152,9 @@ export default function EmailTab() {
                             setSelectedRoles(selectedRoles.filter(r => r !== userType.value));
                           }
                         }}
-                        className="text-purple-600 focus:ring-purple-500 ml-2"
+                        className="text-primary-600 focus:ring-primary-500 ml-2"
                       />
-                      <span className="text-sm text-gray-700">{userType.label}</span>
+                      <span className="text-sm text-neutral-700">{userType.label}</span>
                     </div>
                   ))}
                 </div>
@@ -163,7 +164,7 @@ export default function EmailTab() {
             {/* Team Selection */}
             {recipients === 'teams' && (
               <FormField label="צוותים">
-                <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded p-2">
+                <div className="space-y-2 max-h-32 overflow-y-auto border border-neutral-200 rounded p-2">
                   {TEAMS.map(team => (
                     <div key={team.value} className="flex items-center">
                       <input
@@ -176,9 +177,9 @@ export default function EmailTab() {
                             setSelectedTeams(selectedTeams.filter(t => t !== team.value));
                           }
                         }}
-                        className="text-purple-600 focus:ring-purple-500 ml-2"
+                        className="text-primary-600 focus:ring-primary-500 ml-2"
                       />
-                      <span className="text-sm text-gray-700">{team.label}</span>
+                      <span className="text-sm text-neutral-700">{team.label}</span>
                     </div>
                   ))}
                 </div>
@@ -189,7 +190,7 @@ export default function EmailTab() {
             {recipients === 'custom' && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-neutral-700">
                     משתמשים נבחרים: {selectedUsers.length}
                   </span>
                   <Button variant="secondary" onClick={handleCustomSelection} size="sm">
@@ -198,12 +199,12 @@ export default function EmailTab() {
                 </div>
                 
                 {selectedUsers.length > 0 && (
-                  <div className="bg-gray-50 border border-gray-200 rounded p-3 max-h-32 overflow-y-auto">
+                  <div className="bg-neutral-50 border border-neutral-200 rounded p-3 max-h-32 overflow-y-auto">
                     <div className="space-y-1">
                       {selectedUsers.map(user => (
                         <div key={user.uid} className="flex justify-between items-center text-sm">
-                          <span className="text-gray-900">{user.fullName}</span>
-                          <span className="text-gray-500">{user.team}</span>
+                          <span className="text-neutral-900">{user.fullName}</span>
+                          <span className="text-neutral-500">{user.team}</span>
                         </div>
                       ))}
                     </div>
@@ -211,8 +212,8 @@ export default function EmailTab() {
                 )}
                 
                 {selectedUsers.length === 0 && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-center">
-                    <span className="text-yellow-800 text-sm">לא נבחרו משתמשים</span>
+                  <div className="bg-warning-50 border border-warning-200 rounded p-3 text-center">
+                    <span className="text-warning-800 text-sm">לא נבחרו משתמשים</span>
                   </div>
                 )}
               </div>
@@ -238,7 +239,7 @@ export default function EmailTab() {
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="נושא ההודעה..."
+                placeholder={TEXT_CONSTANTS.MANAGEMENT_COMPONENTS.MESSAGE_SUBJECT_PLACEHOLDER}
               />
             </FormField>
 
@@ -247,16 +248,16 @@ export default function EmailTab() {
                 rows={4}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="תוכן ההודעה..."
+                placeholder={TEXT_CONSTANTS.MANAGEMENT_COMPONENTS.MESSAGE_CONTENT_PLACEHOLDER}
               />
             </FormField>
 
             <div className="flex gap-2">
               <Button onClick={handleSendEmail} disabled={!subject.trim() || !message.trim()}>
-                📧 שלח הודעה
+                {TEXT_CONSTANTS.MANAGEMENT_COMPONENTS.SEND_MESSAGE_BUTTON}
               </Button>
               <Button variant="secondary" onClick={handleClearForm}>
-                נקה טופס
+                {TEXT_CONSTANTS.MANAGEMENT_COMPONENTS.CLEAR_FORM}
               </Button>
             </div>
           </div>
@@ -266,7 +267,7 @@ export default function EmailTab() {
       {/* Quick Templates */}
       <Card>
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-md font-medium text-gray-900">תבניות מהירות</h4>
+          <h4 className="text-md font-medium text-neutral-900">תבניות מהירות</h4>
           <Button 
             variant="secondary" 
             size="sm"
@@ -280,10 +281,10 @@ export default function EmailTab() {
             <button
               key={index}
               onClick={() => handleTemplateSelect(template)}
-              className="p-3 text-right border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors"
+              className="p-3 text-right border border-neutral-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-colors"
             >
-              <div className="font-medium text-gray-900 text-sm">{template.title}</div>
-              <div className="text-gray-600 text-xs mt-1">{template.content}</div>
+              <div className="font-medium text-neutral-900 text-sm">{template.title}</div>
+              <div className="text-neutral-600 text-xs mt-1">{template.content}</div>
             </button>
           ))}
         </div>
@@ -291,15 +292,15 @@ export default function EmailTab() {
 
       {/* Recent Emails */}
       <Card>
-        <h4 className="text-md font-medium text-gray-900 mb-3">הודעות אחרונות</h4>
+        <h4 className="text-md font-medium text-neutral-900 mb-3">הודעות אחרונות</h4>
         <div className="space-y-2">
           {RECENT_EMAILS.map((email, index) => (
-            <div key={index} className="flex justify-between items-center p-2 border border-gray-100 rounded">
+            <div key={index} className="flex justify-between items-center p-2 border border-neutral-100 rounded">
               <div>
-                <div className="font-medium text-gray-900 text-sm">{email.subject}</div>
-                <div className="text-gray-500 text-xs">{email.recipients}</div>
+                <div className="font-medium text-neutral-900 text-sm">{email.subject}</div>
+                <div className="text-neutral-500 text-xs">{email.recipients}</div>
               </div>
-              <div className="text-gray-400 text-xs">{email.date}</div>
+              <div className="text-neutral-400 text-xs">{email.date}</div>
             </div>
           ))}
         </div>
@@ -316,7 +317,7 @@ export default function EmailTab() {
       {/* Success Confirmation Modal */}
       <ConfirmationModal
         isOpen={isSuccessModalOpen}
-        title="הודעה נשלחה בהצלחה!"
+        title={TEXT_CONSTANTS.MANAGEMENT_COMPONENTS.MESSAGE_SENT_SUCCESS_TITLE}
         message={`ההודעה נשלחה בהצלחה ל-${emailSentCount} נמענים`}
         confirmText="סגור"
         onConfirm={() => setIsSuccessModalOpen(false)}

@@ -14,8 +14,8 @@ export default function MobileMenuButton({ isOpen, onClick }: MobileMenuButtonPr
   return (
     <button
       className={cn(
-        'lg:hidden p-2 rounded-lg transition-all duration-200 hover:bg-purple-50 hover:text-purple-600',
-        isOpen ? 'bg-purple-50 text-purple-600' : 'text-gray-600'
+        'lg:hidden p-2 rounded-lg transition-all duration-200 hover:bg-primary-50 hover:text-primary-600',
+        isOpen ? 'bg-primary-50 text-primary-600' : 'text-neutral-600'
       )}
       onClick={onClick}
       aria-label="פתח תפריט ניהול"

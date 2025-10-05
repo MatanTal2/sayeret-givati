@@ -74,8 +74,8 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
           {/* Close Button - Top Right */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 z-10 p-2 hover:bg-gray-100 rounded-full btn-press focus-ring
-                       text-gray-400 hover:text-gray-600 transition-all duration-200"
+            className="absolute top-4 right-4 z-10 p-2 hover:bg-neutral-100 rounded-full btn-press focus-ring
+                       text-neutral-400 hover:text-neutral-600 transition-all duration-200"
             disabled={isLoading}
             aria-label={TEXT_CONSTANTS.ARIA_LABELS.CLOSE_MODAL}
           >
@@ -86,14 +86,14 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
 
           {/* Login Header with Icon */}
           <div className="text-center pt-6 pb-4 px-6">
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                       d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">{TEXT_CONSTANTS.AUTH.LOGIN_TO_SYSTEM}</h2>
-            <p className="text-gray-600 text-xs">{TEXT_CONSTANTS.AUTH.LOGIN_SUBTITLE}</p>
+            <h2 className="text-xl font-bold text-neutral-900 mb-1">{TEXT_CONSTANTS.AUTH.LOGIN_TO_SYSTEM}</h2>
+            <p className="text-neutral-600 text-xs">{TEXT_CONSTANTS.AUTH.LOGIN_SUBTITLE}</p>
           </div>
 
           {/* Login Form Content */}
@@ -102,7 +102,7 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
               
               {/* Email Field */}
               <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
+                <label htmlFor="email" className="block text-sm font-semibold text-neutral-700">
                   {TEXT_CONSTANTS.AUTH.EMAIL_LABEL}
                 </label>
                 <div className="relative">
@@ -112,15 +112,15 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 
-                             focus:ring-purple-500 focus:border-purple-500 outline-none transition-all
-                             text-right text-gray-800 bg-gray-50 focus:bg-white placeholder-gray-500"
+                    className="w-full px-4 py-3.5 border-2 border-neutral-200 rounded-xl focus:ring-2 
+                             focus:ring-primary-500 focus:border-primary-500 outline-none transition-all
+                             text-right text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500"
                     placeholder={TEXT_CONSTANTS.AUTH.EMAIL_PLACEHOLDER}
                     disabled={isLoading}
                     required
                   />
                   <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                             d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                     </svg>
@@ -130,7 +130,7 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
 
               {/* Password Field */}
               <div className="space-y-2">
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
+                <label htmlFor="password" className="block text-sm font-semibold text-neutral-700">
                   {TEXT_CONSTANTS.AUTH.PASSWORD_LABEL}
                 </label>
                 <div className="relative">
@@ -140,9 +140,9 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 
-                             focus:ring-purple-500 focus:border-purple-500 outline-none transition-all
-                             text-right text-gray-800 bg-gray-50 focus:bg-white pr-12 placeholder-gray-500"
+                    className="w-full px-4 py-3.5 border-2 border-neutral-200 rounded-xl focus:ring-2 
+                             focus:ring-primary-500 focus:border-primary-500 outline-none transition-all
+                             text-right text-neutral-800 bg-neutral-50 focus:bg-white pr-12 placeholder-neutral-500"
                     placeholder={TEXT_CONSTANTS.AUTH.PASSWORD_PLACEHOLDER}
                     disabled={isLoading}
                     required
@@ -151,8 +151,8 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute left-3 top-1/2 transform -translate-y-1/2 
-                             text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-md
-                             focus:outline-none focus:ring-2 focus:ring-purple-300"
+                             text-neutral-400 hover:text-neutral-600 transition-colors p-1 rounded-md
+                             focus:outline-none focus:ring-2 focus:ring-primary-300"
                     disabled={isLoading}
                     aria-label={showPassword ? TEXT_CONSTANTS.AUTH.HIDE_PASSWORD : TEXT_CONSTANTS.AUTH.SHOW_PASSWORD}
                   >
@@ -177,8 +177,8 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
               {message && (
                 <div className={`p-4 rounded-xl text-sm font-medium ${
                   message.type === 'error' 
-                    ? 'bg-red-50 text-red-800 border border-red-200' 
-                    : 'bg-green-50 text-green-800 border border-green-200'
+                    ? 'bg-danger-50 text-danger-800 border border-danger-200' 
+                    : 'bg-success-50 text-success-800 border border-success-200'
                 }`}>
                   {message.text}
                 </div>
@@ -188,8 +188,8 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
               <button
                 type="submit"
                 disabled={isLoading || !formData.email || !formData.password}
-                className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-purple-700 
-                         hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-400
+                className="w-full py-3 px-4 bg-gradient-to-r from-primary-600 to-primary-700 
+                         hover:from-primary-700 hover:to-primary-800 disabled:from-neutral-400 disabled:to-neutral-400
                          text-white font-semibold rounded-lg btn-press focus-ring
                          disabled:cursor-not-allowed flex items-center justify-center gap-2
                          transition-all duration-200 hover:shadow-lg disabled:hover:shadow-none"
@@ -223,7 +223,7 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
                     // TODO: Implement forgot password functionality
                     console.log('Forgot password clicked');
                   }}
-                  className="w-full text-center text-sm text-purple-600 hover:text-purple-800 
+                  className="w-full text-center text-sm text-primary-600 hover:text-primary-800 
                            transition-all duration-200 underline-offset-2 hover:underline focus-ring rounded-md"
                   disabled={isLoading}
                 >
@@ -233,10 +233,10 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
                {/* Divider */}
                <div className="relative">
                  <div className="absolute inset-0 flex items-center">
-                   <div className="w-full border-t border-gray-200"></div>
+                   <div className="w-full border-t border-neutral-200"></div>
                  </div>
                  <div className="relative flex justify-center text-sm">
-                   <span className="px-2 bg-white text-gray-500">{TEXT_CONSTANTS.AUTH.OR_DIVIDER}</span>
+                   <span className="px-2 bg-white text-neutral-500">{TEXT_CONSTANTS.AUTH.OR_DIVIDER}</span>
                  </div>
                </div>
 
@@ -244,9 +244,9 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
                <button
                  type="button"
                  onClick={handleSwitchToRegister}
-                 className="w-full py-3 px-4 border-2 border-purple-600 text-purple-600 
+                 className="w-full py-3 px-4 border-2 border-primary-600 text-primary-600 
                           font-semibold rounded-xl btn-press focus-ring
-                          hover:bg-purple-50 flex items-center justify-center gap-2
+                          hover:bg-primary-50 flex items-center justify-center gap-2
                           transition-all duration-200"
                  disabled={isLoading}
                >
@@ -261,8 +261,8 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
         </div>
 
         {/* Login Footer */}
-        <div className="px-6 pb-4 text-center border-t border-gray-100 pt-2">
-          <p className="text-xs text-gray-500">
+        <div className="px-6 pb-4 text-center border-t border-neutral-100 pt-2">
+          <p className="text-xs text-neutral-500">
             {TEXT_CONSTANTS.COMPANY_NAME}
           </p>
         </div>

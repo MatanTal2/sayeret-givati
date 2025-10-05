@@ -79,7 +79,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "recipientId",
+          "fieldPath": "userId",
           "order": "ASCENDING"
         },
         {
@@ -93,11 +93,29 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "recipientId",
+          "fieldPath": "userId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "status",
+          "fieldPath": "isRead",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "notifications", 
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "type",
           "order": "ASCENDING"
         },
         {

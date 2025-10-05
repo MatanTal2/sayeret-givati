@@ -6,6 +6,7 @@ import { RANK_OPTIONS, USER_TYPE_OPTIONS, FORM_CONSTRAINTS } from '@/constants/a
 import { formatPhoneForDisplay, normalizePhoneForSearch } from '@/utils/validationUtils';
 import { AuthorizedPersonnel } from '@/types/admin';
 import { UserType } from '@/types/user';
+import { TEXT_CONSTANTS } from '@/constants/text';
 
 
 
@@ -199,9 +200,9 @@ export default function UpdatePersonnel() {
   return (
     <div className="space-y-6">
       {/* Search Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6">
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
             🔍 Search Personnel
           </label>
           <div className="flex gap-4">
@@ -209,15 +210,15 @@ export default function UpdatePersonnel() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="חיפוש לפי שם או טלפון"
-              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
-                         bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                         focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder={TEXT_CONSTANTS.ADMIN_COMPONENTS.SEARCH_BY_NAME_PHONE}
+              className="flex-1 px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
+                         bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+                         focus:ring-2 focus:ring-info-500 focus:border-info-500"
             />
             {searchTerm && (
               <button
                 onClick={clearSearch}
-                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                className="px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200"
               >
                 🗑️ Clear
               </button>
@@ -227,16 +228,16 @@ export default function UpdatePersonnel() {
 
         {/* Search Results */}
         {searchTerm && (
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4">
             {personnelLoading ? (
               <div className="text-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                <p className="text-gray-600 dark:text-gray-400">Searching...</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-info-600 mx-auto mb-2"></div>
+                <p className="text-neutral-600 dark:text-neutral-400">Searching...</p>
               </div>
             ) : filteredPersonnel.length === 0 ? (
               <div className="text-center py-4">
                 <div className="text-2xl mb-2">🔍</div>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-neutral-600 dark:text-neutral-400">
                   No personnel found matching &quot;{searchTerm}&quot;
                 </p>
               </div>
@@ -248,19 +249,19 @@ export default function UpdatePersonnel() {
                     onClick={() => handlePersonSelect(person)}
                     className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                       selectedPerson?.id === person.id
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        ? 'border-info-500 bg-info-50 dark:bg-info-900/20'
+                        : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700'
                     }`}
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-white">
+                        <div className="font-medium text-neutral-900 dark:text-white">
                           {person.firstName} {person.lastName}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-4">
+                        <div className="text-sm text-neutral-500 dark:text-neutral-400 flex items-center gap-4">
                           <span>🎖️ {person.rank}</span>
                           <span>📱 {formatPhoneForDisplay(person.phoneNumber)}</span>
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-info-100 text-info-800 dark:bg-info-800 dark:text-info-100">
                             {(person.userType || UserType.USER).replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                           </span>
                         </div>
@@ -279,16 +280,16 @@ export default function UpdatePersonnel() {
 
       {/* Selected Person Details & Edit Form */}
       {selectedPerson && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
               👤 Personnel Details
             </h3>
             {!isEditing && (
               <button
                 onClick={handleEditStart}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md
-                           focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                className="bg-info-600 hover:bg-info-700 text-white px-4 py-2 rounded-md
+                           focus:ring-2 focus:ring-info-500 focus:ring-offset-2
                            transition-colors"
               >
                 ✏️ Edit Information
@@ -300,13 +301,13 @@ export default function UpdatePersonnel() {
           {updateMessage && (
             <div className={`rounded-md p-4 mb-6 ${
               updateMessage.type === 'success' 
-                ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' 
-                : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+                ? 'bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800' 
+                : 'bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800'
             }`}>
               <p className={`text-sm ${
                 updateMessage.type === 'success' 
-                  ? 'text-green-700 dark:text-green-400' 
-                  : 'text-red-700 dark:text-red-400'
+                  ? 'text-success-700 dark:text-success-400' 
+                  : 'text-danger-700 dark:text-danger-400'
               }`}>
                 {updateMessage.text}
               </p>
@@ -321,18 +322,18 @@ export default function UpdatePersonnel() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* First Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     First Name (שם פרטי) *
                   </label>
                   <input
                     type="text"
                     value={editForm.firstName}
                     onChange={(e) => handleFormChange('firstName', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
-                               bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                               focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
+                               bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+                               focus:ring-2 focus:ring-info-500 focus:border-info-500
                                disabled:opacity-50"
-                    placeholder="שם פרטי"
+                    placeholder={TEXT_CONSTANTS.ADMIN_COMPONENTS.FIRST_NAME_PLACEHOLDER}
                     maxLength={FORM_CONSTRAINTS.NAME_MAX_LENGTH}
                     disabled={isUpdating}
                     required
@@ -341,18 +342,18 @@ export default function UpdatePersonnel() {
 
                 {/* Last Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     Last Name (שם משפחה) *
                   </label>
                   <input
                     type="text"
                     value={editForm.lastName}
                     onChange={(e) => handleFormChange('lastName', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
-                               bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                               focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
+                               bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+                               focus:ring-2 focus:ring-info-500 focus:border-info-500
                                disabled:opacity-50"
-                    placeholder="שם משפחה"
+                    placeholder={TEXT_CONSTANTS.ADMIN_COMPONENTS.LAST_NAME_PLACEHOLDER}
                     maxLength={FORM_CONSTRAINTS.NAME_MAX_LENGTH}
                     disabled={isUpdating}
                     required
@@ -361,15 +362,15 @@ export default function UpdatePersonnel() {
 
                 {/* Military Rank */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     Military Rank (דרגה) *
                   </label>
                   <select
                     value={editForm.rank}
                     onChange={(e) => handleFormChange('rank', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
-                               bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                               focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
+                               bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+                               focus:ring-2 focus:ring-info-500 focus:border-info-500
                                disabled:opacity-50"
                     disabled={isUpdating}
                     required
@@ -385,15 +386,15 @@ export default function UpdatePersonnel() {
 
                 {/* User Type */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     User Type (סוג משתמש) *
                   </label>
                   <select
                     value={editForm.userType}
                     onChange={(e) => handleFormChange('userType', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
-                               bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                               focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
+                               bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+                               focus:ring-2 focus:ring-info-500 focus:border-info-500
                                disabled:opacity-50"
                     disabled={isUpdating}
                     required
@@ -408,18 +409,18 @@ export default function UpdatePersonnel() {
 
                 {/* Phone Number */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     Phone Number (מספר טלפון) *
                   </label>
                   <input
                     type="tel"
                     value={editForm.phoneNumber}
                     onChange={(e) => handleFormChange('phoneNumber', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
-                               bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                               focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
+                               bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+                               focus:ring-2 focus:ring-info-500 focus:border-info-500
                                disabled:opacity-50"
-                    placeholder="מספר טלפון"
+                    placeholder={TEXT_CONSTANTS.ADMIN_COMPONENTS.PHONE_NUMBER_PLACEHOLDER}
                     maxLength={FORM_CONSTRAINTS.PHONE_MAX_LENGTH}
                     disabled={isUpdating}
                     required
@@ -433,9 +434,9 @@ export default function UpdatePersonnel() {
                   type="button"
                   onClick={handleSaveChanges}
                   disabled={isUpdating}
-                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 
+                  className="bg-success-600 hover:bg-success-700 disabled:bg-neutral-400 
                              text-white font-medium py-2 px-6 rounded-md
-                             focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                             focus:ring-2 focus:ring-success-500 focus:ring-offset-2
                              disabled:cursor-not-allowed transition-colors"
                 >
                   {isUpdating ? (
@@ -452,9 +453,9 @@ export default function UpdatePersonnel() {
                   type="button"
                   onClick={handleEditCancel}
                   disabled={isUpdating}
-                  className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 
+                  className="bg-neutral-600 hover:bg-neutral-700 disabled:bg-neutral-400 
                              text-white font-medium py-2 px-6 rounded-md
-                             focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
+                             focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2
                              disabled:cursor-not-allowed transition-colors"
                 >
                   ❌ Cancel
@@ -466,19 +467,19 @@ export default function UpdatePersonnel() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                  <label className="block text-sm font-medium text-neutral-500 dark:text-neutral-400">
                     Full Name
                   </label>
-                  <p className="text-lg text-gray-900 dark:text-white">
+                  <p className="text-lg text-neutral-900 dark:text-white">
                     {selectedPerson.firstName} {selectedPerson.lastName}
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                  <label className="block text-sm font-medium text-neutral-500 dark:text-neutral-400">
                     Military Rank
                   </label>
-                  <p className="text-lg text-gray-900 dark:text-white">
+                  <p className="text-lg text-neutral-900 dark:text-white">
                     🎖️ {selectedPerson.rank}
                   </p>
                 </div>
@@ -486,33 +487,33 @@ export default function UpdatePersonnel() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                  <label className="block text-sm font-medium text-neutral-500 dark:text-neutral-400">
                     Phone Number
                   </label>
-                  <p className="text-lg text-gray-900 dark:text-white">
+                  <p className="text-lg text-neutral-900 dark:text-white">
                     📱 {formatPhoneForDisplay(selectedPerson.phoneNumber)}
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                  <label className="block text-sm font-medium text-neutral-500 dark:text-neutral-400">
                     User Type
                   </label>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-info-100 text-info-800 dark:bg-info-800 dark:text-info-100">
                     {(selectedPerson.userType || UserType.USER).replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                   </span>
                 </div>
               </div>
 
               {/* Read-only info */}
-              <div className="md:col-span-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-500 dark:text-gray-400">
+              <div className="md:col-span-2 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-neutral-500 dark:text-neutral-400">
                   <div>
                     <span className="font-medium">Registration Status:</span>{' '}
                     {selectedPerson.registered ? (
-                      <span className="text-green-600 dark:text-green-400">✅ Registered</span>
+                      <span className="text-success-600 dark:text-success-400">✅ Registered</span>
                     ) : (
-                      <span className="text-yellow-600 dark:text-yellow-400">⏳ Pending</span>
+                      <span className="text-warning-600 dark:text-warning-400">⏳ Pending</span>
                     )}
                   </div>
                   <div>
@@ -528,14 +529,14 @@ export default function UpdatePersonnel() {
 
       {/* Help Text */}
       {!selectedPerson && !searchTerm && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+        <div className="bg-info-50 dark:bg-info-900/20 rounded-lg p-6 border border-info-200 dark:border-info-800">
           <div className="flex items-start">
             <div className="text-2xl mr-3">💡</div>
             <div>
-              <h3 className="text-lg font-medium text-blue-800 dark:text-blue-200 mb-2">
+              <h3 className="text-lg font-medium text-info-800 dark:text-info-200 mb-2">
                 How to Update Personnel Information
               </h3>
-              <ul className="text-blue-700 dark:text-blue-300 space-y-1">
+              <ul className="text-info-700 dark:text-info-300 space-y-1">
                 <li>• Use the search box to find personnel by name or phone number</li>
                 <li>• Click on a person from the search results to select them</li>
                 <li>• Click &quot;Edit Information&quot; to modify their details</li>

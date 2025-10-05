@@ -12,8 +12,8 @@ export default function RegistrationHeader({ onBack, onClose }: RegistrationHead
         {/* Close Button - Right Side */}
         <button
           onClick={onClose}
-          className="p-2 hover:bg-gray-100 rounded-full btn-press focus-ring
-                     text-gray-400 hover:text-gray-600 transition-all duration-200"
+          className="p-2 hover:bg-neutral-100 rounded-full btn-press focus-ring
+                     text-neutral-400 hover:text-neutral-600 transition-all duration-200"
           aria-label={TEXT_CONSTANTS.ARIA_LABELS.CLOSE_MODAL}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,14 +22,14 @@ export default function RegistrationHeader({ onBack, onClose }: RegistrationHead
         </button>
         
         {/* Title - Centered */}
-        <h2 className="text-xl font-bold text-gray-900">{TEXT_CONSTANTS.AUTH.REGISTER_TO_SYSTEM}</h2>
+        <h2 className="text-xl font-bold text-neutral-900">{TEXT_CONSTANTS.AUTH.REGISTER_TO_SYSTEM}</h2>
         
         {/* Back Arrow - Left Side */}
         <button
           onClick={onBack}
-          className="p-2 hover:bg-gray-100 rounded-full btn-press focus-ring
-                     text-gray-600 hover:text-gray-800 transition-all duration-200"
-          aria-label="חזרה להתחברות"
+          className="p-2 hover:bg-neutral-100 rounded-full btn-press focus-ring
+                     text-neutral-600 hover:text-neutral-800 transition-all duration-200"
+          aria-label={TEXT_CONSTANTS.REGISTRATION_COMPONENTS.BACK_TO_LOGIN}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

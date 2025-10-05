@@ -29,8 +29,8 @@ const shadowVariants = {
 
 const backgroundVariants = {
   white: 'bg-white',
-  gray: 'bg-gray-50',
-  purple: 'bg-purple-50',
+  gray: 'bg-neutral-50',
+  purple: 'bg-primary-50',
 };
 
 export default function Card({
@@ -48,7 +48,7 @@ export default function Card({
         backgroundVariants[background],
         paddingVariants[padding],
         shadowVariants[shadow],
-        border && 'border border-gray-200',
+        border && 'border border-neutral-200',
         className
       )}
     >

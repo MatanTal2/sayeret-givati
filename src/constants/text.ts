@@ -204,19 +204,15 @@ export const TEXT_CONSTANTS = {
       
       // Status Text
       STATUS_AVAILABLE: 'זמין',
-      STATUS_IN_USE: 'בשימוש',
-      STATUS_MAINTENANCE: 'בתחזוקה',
+      STATUS_SECURITY: 'בביטחונית',
       STATUS_REPAIR: 'בתיקון',
       STATUS_LOST: 'אבוד',
-      STATUS_RETIRED: 'הוחזר',
+      STATUS_PENDING_TRANSFER: 'בהעברה',
       
       // Condition Text
-      CONDITION_NEW: 'חדש',
-      CONDITION_EXCELLENT: 'מצוין',
       CONDITION_GOOD: 'טוב',
-      CONDITION_FAIR: 'בסדר',
-      CONDITION_POOR: 'גרוע',
-      CONDITION_NEEDS_REPAIR: 'דורש תיקון',
+      CONDITION_NEEDS_REPAIR: 'דרוש תיקון',
+      CONDITION_WORN: 'בלאי',
       
       // UI Labels
       SERIAL_NUMBER: 'מספר סידורי',
@@ -236,6 +232,8 @@ export const TEXT_CONSTANTS = {
       DAILY_CHECK: 'בדיקה יומית',
       VIEW_HISTORY: 'הצג היסטוריה',
       SHOW_MORE_DETAILS: 'הצג עוד פרטים',
+      RESTRICTED_ACCESS: 'גישה מוגבלת',
+      CREDIT_EQUIPMENT: 'זיכוי',
       
       // Tabs
       MY_EQUIPMENT: 'הציוד שלי',
@@ -277,6 +275,53 @@ export const TEXT_CONSTANTS = {
       DAYS_AGO: 'לפני {days} ימים',
       SIGNED_BY: 'על ידי {name}',
       
+      // Update Mode
+      UPDATE: {
+        TITLE: 'עדכון ציוד',
+        SUBTITLE: 'עדכן פרטי ציוד קיים במערכת',
+        SUBMIT_BUTTON: 'עדכן ציוד',
+        SUCCESS_MESSAGE: 'הציוד עודכן בהצלחה',
+        ERROR_MESSAGE: 'שגיאה בעדכון הציוד',
+        READONLY_FIELD: 'שדה לקריאה בלבד',
+        EDITABLE_FIELDS_NOTE: 'ניתן לערוך רק: סטטוס, מצב, מיקום והערות',
+        UPDATING: 'מעדכן...',
+        CREATE_SUBTITLE: 'הוסף פריט ציוד חדש למערכת',
+        CREATE_SUBMIT: 'הוסף ציוד',
+        CREATE_ERROR: 'שגיאה ביצירת הציוד. נסה שוב.',
+        CANCEL: 'ביטול',
+        SYSTEM_USER: 'מערכת',
+      },
+      
+      // Form Labels
+      FORM_LABELS: {
+        STATUS: 'סטטוס',
+        CONDITION: 'מצב',
+      },
+      
+      // Status Options
+      STATUS_OPTIONS: {
+        AVAILABLE: 'זמין',
+        SECURITY: 'בביטחונית',
+        REPAIR: 'בתיקון',
+        LOST: 'אבוד',
+        PENDING_TRANSFER: 'בהעברה',
+      },
+      
+      // Condition Options
+      CONDITION_OPTIONS: {
+        GOOD: 'טוב',
+        NEEDS_REPAIR: 'דרוש תיקון',
+        WORN: 'בלאי',
+      },
+      
+      // Validation Messages
+      VALIDATION: {
+        SERIAL_REQUIRED: 'מספר סידורי הוא שדה חובה',
+        PRODUCT_NAME_REQUIRED: 'שם המוצר הוא שדה חובה',
+        CURRENT_HOLDER_REQUIRED: 'מחזיק נוכחי הוא שדה חובה',
+        LOCATION_REQUIRED: 'מיקום הוא שדה חובה',
+      },
+      
       // Development Status
       STEP_INTERFACE_DEV: 'Step 1.2 - Interface Development',
       STATUS_UI_COMPLETED: 'Step 1.2 - Basic Equipment Interface (UI Components Completed)',
@@ -302,6 +347,52 @@ export const TEXT_CONSTANTS = {
       EQUIPMENT_NOT_FOUND: 'הציוד לא נמצא',
       EQUIPMENT_UPDATED: 'הציוד עודכן בהצלחה',
       EQUIPMENT_TRANSFERRED: 'הציוד הועבר בהצלחה',
+      
+      // Transfer System
+      TRANSFER: {
+        TITLE: 'העברת ציוד',
+        REQUEST_TITLE: 'בקשת העברת ציוד',
+        APPROVE_TITLE: 'אישור העברת ציוד',
+        REJECT_TITLE: 'דחיית העברת ציוד',
+        
+        // Form Labels
+        TO_USER: 'העבר אל',
+        TO_USER_PLACEHOLDER: 'חפש משתמש...',
+        REASON: 'סיבת ההעברה',
+        REASON_PLACEHOLDER: 'הזן סיבת ההעברה',
+        NOTE: 'הערות נוספות',
+        NOTE_PLACEHOLDER: 'הערות אופציונליות',
+        
+        // Buttons
+        SUBMIT_REQUEST: 'שלח בקשת העברה',
+        APPROVE: 'אשר העברה',
+        REJECT: 'דחה העברה',
+        CANCEL: 'ביטול',
+        
+        // Status Messages
+        REQUEST_CREATED: 'בקשת ההעברה נשלחה בהצלחה',
+        REQUEST_APPROVED: 'ההעברה אושרה בהצלחה',
+        REQUEST_REJECTED: 'ההעברה נדחתה',
+        
+        // Validation
+        TO_USER_REQUIRED: 'יש לבחור משתמש יעד',
+        REASON_REQUIRED: 'יש להזין סיבת העברה',
+        CANNOT_TRANSFER_TO_SELF: 'לא ניתן להעביר ציוד לעצמך',
+        
+        // Status Labels
+        STATUS_PENDING: 'ממתין לאישור',
+        STATUS_APPROVED: 'אושר',
+        STATUS_REJECTED: 'נדחה',
+        
+        // History
+        HISTORY_TITLE: 'היסטוריית העברות',
+        NO_TRANSFERS: 'אין העברות עבור ציוד זה',
+        
+        // Notifications
+        NEW_REQUEST_NOTIFICATION: 'בקשת העברת ציוד חדשה',
+        REQUEST_APPROVED_NOTIFICATION: 'בקשת ההעברה שלך אושרה',
+        REQUEST_REJECTED_NOTIFICATION: 'בקשת ההעברה שלך נדחתה'
+      },
       TRANSFER_SUCCESS: 'העברת הציוד הושלמה בהצלחה',
       INITIAL_SIGN_IN: 'קבלה ראשונית של הציוד',
       
@@ -725,6 +816,328 @@ export const TEXT_CONSTANTS = {
     CLOSE: 'סגור'
   },
 
+  // Status Page
+  STATUS_PAGE: {
+    // Page Elements
+    LOADING_DATA: 'טוען נתונים...',
+    UNIT_NAME: 'סיירת גבעתי',
+    BACK_TO_HOME: 'חזרה לעמוד הבית',
+    BACK_TO_HOME_SHORT: '← חזרה לעמוד הבית',
+    ERROR_LOADING_DATA: 'שגיאה בטעינת הנתונים',
+    
+    // Buttons and Actions
+    REFRESH_SHORT: 'רענן...',
+    REFRESH_DATA: '↻ רענן נתונים',
+    UPDATE_SHORT: 'עדכן...',
+    UPDATE_DATA: 'עדכן נתונים',
+    ADD_NEW: 'הוסף חדש',
+    ADD_NEW_SOLDIER: 'הוסף חייל חדש',
+    
+    // Form Labels and Placeholders
+    SEARCH_BY_NAME: 'חיפוש לפי שם...',
+    FULL_NAME: 'שם מלא',
+    PERSONAL_NUMBER: 'מספר אישי',
+    CUSTOM_STATUS_PLACEHOLDER: 'הכנס סטטוס מותאם',
+    ADDITIONAL_NOTES: 'הערות נוספות (אופציונלי)',
+    PASSWORD_PLACEHOLDER: 'סיסמה',
+    NOTES_PLACEHOLDER: 'הערות...',
+    CUSTOM_STATUS_INPUT: 'סטטוס מותאם...',
+    
+    // Status Options
+    STATUS_HOME: 'בית',
+    STATUS_GUARD: 'משמר', 
+    STATUS_OTHER: 'אחר',
+    
+    // Team Selection
+    SELECT_TEAM: 'בחר צוות',
+    TEAM_LABEL: 'צוות:',
+    STATUS_LABEL: 'סטטוס:',
+    ALL: 'הכל',
+    
+    // Table Headers
+    SELECTION: 'בחירה',
+    NAME: 'שם',
+    TEAM: 'צוות',
+    STATUS: 'סטטוס',
+    NOTES: 'הערות',
+    
+    // Report Features
+    REPORT_PREVIEW_TITLE: 'תצוגה מקדימה של הדוח',
+    SEND_TO_WHATSAPP: 'שלח ל-WhatsApp',
+    DOWNLOAD_REPORT: 'הורד דוח',
+    
+    // Alert Messages
+    NO_NEW_SOLDIERS_SERVER: 'אין חיילים חדשים לעדכון בשרת',
+    DATA_UPDATED_SUCCESS: 'הנתונים עודכנו בהצלחה בשרת!',
+    NO_CHANGES_TO_UPDATE: 'אין שינויים לעדכון',
+    NO_SOLDIERS_SELECTED: 'לא נבחרו חיילים לדוח',
+    REPORT_CREATION_ERROR: 'שגיאה ביצירת הדוח. אנא נסה שוב.',
+    REPORT_COPIED: 'הדוח הועתק ללוח',
+    COPY_ERROR: 'שגיאה בהעתקה. אנא העתק ידנית.',
+    WHATSAPP_NOT_SUPPORTED: 'פונקציית הודעת WhatsApp עדיין לא תמיכה בדפדפן זה. אנא נסה בדפדפן אחר.',
+    WRONG_PASSWORD: 'סיסמה שגויה',
+    
+    // Update Messages
+    UPDATE_SERVER_BUTTON: (count: number) => count > 0 ? `עדכן בשרת (${count})` : 'עדכן בשרת',
+    UPDATE_DATA_BUTTON: (count: number) => count > 0 ? `עדכן נתונים (${count})` : 'עדכן נתונים',
+    NO_CHANGES_TOOLTIP: 'אין שינויים לעדכון',
+    UPDATE_CHANGES_TOOLTIP: (count: number) => `עדכן ${count} שינויים`,
+    UPDATE_NEW_SOLDIERS_TOOLTIP: (count: number) => count > 0 ? `עדכן ${count} חיילים חדשים בשרת` : 'אין חיילים חדשים לעדכון'
+  },
+
+  // Test Dashboard
+  TEST_DASHBOARD: {
+    PAGE_TITLE: '🧪 מרכז בדיקות מערכת',
+    PAGE_SUBTITLE: 'ממשק מאוחד לכל בדיקות המערכת',
+    ACTIVITY_LOG: 'יומן פעילות',
+    ACTIVITY_SUBTITLE: 'תוצאות בדיקות בזמן אמת',
+    NO_ACTIVITY: 'אין פעילות עדיין',
+    RUN_ALL_TESTS: 'הרץ כל הבדיקות',
+    RUNNING_ALL_TESTS: 'מריץ כל הבדיקות...',
+    
+    // Test Status
+    STATUS_RUNNING: 'רץ',
+    STATUS_PASSED: 'עבר',
+    STATUS_FAILED: 'נכשל',
+    STATUS_WAITING: 'ממתין',
+    
+    // Test Data
+    WEAPON_CATEGORY: 'נשק אישי',
+    TEST_RIFLE_NAME: 'רובה M4A1 - בדיקה'
+  },
+
+  // Equipment Page
+  EQUIPMENT_PAGE: {
+    DEV_TOOLS_TITLE: '🧪 כלי פיתוח',
+    DEVELOPMENT_STATUS: 'Development Status:',
+    
+    // Add Equipment Modal
+    EXAMPLE_RIFLE: 'לדוגמה: רובה M4A1',
+    SELECT_CATEGORY: 'בחר קטגוריה',
+    SEARCH_OR_TYPE_NAME: 'חפש או הקלד שם',
+    EXAMPLE_HOLDER: 'לדוגמה: רב״ט דוד כהן',
+    SEARCH_OR_TYPE_UNIT: 'חפש או הקלד יחידה',
+    EXAMPLE_UNIT: 'לדוגמה: פלוגה א\'',
+    EXAMPLE_LOCATION: 'לדוגמה: מחסן נשק - בסיס (אופציונלי)',
+    ADDITIONAL_NOTES: 'הערות נוספות על הציוד...',
+    
+    // Search Placeholders
+    SEARCH_BY_SERIAL: 'חיפוש לפי מספר סידורי...',
+    SEARCH_BY_PRODUCT: 'חיפוש לפי שם מוצר...',
+    CURRENT_HOLDER_FILTER: 'מחזיק נוכחי...',
+    EQUIPMENT_TYPE_FILTER: 'סוג ציוד...',
+    CATEGORY_FILTER: 'קטגוריה...',
+    SUBCATEGORY_FILTER: 'תת-קטגוריה...',
+    ADVANCED_SERIAL_FILTER: 'מספר סידורי מתקדם...'
+  },
+
+  // Settings Page
+  SETTINGS_PAGE: {
+    NOTIFICATIONS_FUTURE: 'התראות יופעלו בעדכון עתידי'
+  },
+
+  // Management Page
+  MANAGEMENT_PAGE: {
+    LOADING: 'טוען...'
+  },
+
+  // Profile Page
+  PROFILE_PAGE: {
+    DATE_NOT_AVAILABLE: 'תאריך לא זמין'
+  },
+
+  // Admin Components
+  ADMIN_COMPONENTS: {
+    // Admin Login
+    EMAIL_PLACEHOLDER: 'Email',
+    ADMIN_PASSWORD_PLACEHOLDER: 'Enter admin password',
+    
+    // Personnel Management
+    SEARCH_BY_NAME_PHONE: 'חיפוש לפי שם או טלפון',
+    FIRST_NAME_PLACEHOLDER: 'שם פרטי',
+    LAST_NAME_PLACEHOLDER: 'שם משפחה',
+    PHONE_NUMBER_PLACEHOLDER: 'מספר טלפון',
+    PERSONAL_ID_PLACEHOLDER: 'מספר אישי',
+    PHONE_PLACEHOLDER_ADMIN: 'מספר פלאפון',
+    
+    // System Stats
+    REFRESH_NOW: 'רענן עכשיו',
+    REFRESHING: 'מרענן...',
+    UPDATE_PERSONNEL_TOOLTIP: 'עדכן רשימת כוח אדם מהמאגר',
+    
+    // Bulk Upload Sample
+    BULK_UPLOAD_SAMPLE: `1234567,"מתן","טל","רס״ל","0501234567","user"
+2345678,"אברהם","כהן","סמל","0527654321","team_leader"
+3456789,"דוד","לוי","רב״ט","0546789012","manager"`,
+    
+    // View Personnel
+    CONFIRM_DELETION_TITLE: 'Confirm Deletion'
+  },
+
+  // Registration Components
+  REGISTRATION_COMPONENTS: {
+    BACK_TO_LOGIN: 'חזרה להתחברות',
+    ENTER_FIRST_NAME: 'הזן שם פרטי',
+    ENTER_LAST_NAME: 'הזן שם משפחה',
+    
+    // Registration Form
+    CONNECTION_ERROR: 'שגיאת חיבור. אנא בדוק את החיבור לאינטרנט ונסה שוב.',
+    EMAIL_ALREADY_REGISTERED: 'כתובת האימייל כבר רשומה במערכת. אנא השתמש בעמוד ההתחברות או אפס את הסיסמה.',
+    SENDING_CODE: 'שולח קוד...',
+    VERIFYING: 'מאמת...'
+  },
+
+  // Profile Components  
+  PROFILE_COMPONENTS: {
+    // Profile Image Upload
+    INVALID_FILE_ERROR: 'אנא בחר קובץ תמונה חוקי',
+    FILE_SIZE_ERROR: 'גודל הקובץ חייב להיות קטן מ-5MB',
+    UPLOAD_ERROR: 'שגיאה בהעלאת התמונה',
+    SERVER_UPLOAD_ERROR: 'שגיאה בהעלאת התמונה לשרת',
+    UPLOAD_IMAGE_TITLE: 'העלה תמונה',
+    PROFILE_ALT: 'Profile',
+    
+    // Phone Number Update
+    INVALID_PHONE_ERROR: 'מספר טלפון לא חוקי. אנא הזן מספר ישראלי תקין',
+    OTP_SEND_ERROR: 'שגיאה בשליחת קוד אימות',
+    INVALID_OTP_LENGTH: 'אנא הזן קוד אימות בן 6 ספרות',
+    INVALID_OTP_ERROR: 'קוד אימות שגוי',
+    SMS_SEND_ERROR: 'שגיאה בשליחת SMS',
+    INVALID_OTP_SERVER_ERROR: 'קוד אימות שגוי',
+    SEND_CODE: 'שלח קוד',
+    SEND_CODE_AGAIN: 'שלח קוד שוב',
+    PHONE_PLACEHOLDER: '05X-XXX-XXXX',
+    OTP_PLACEHOLDER: '000000'
+  },
+
+  // Management Components
+  MANAGEMENT_COMPONENTS: {
+    // Template Management
+    SEARCH_TEMPLATES: 'חפש תבניות...',
+    
+    // Enforce Transfer
+    TRANSFER_REASON_PLACEHOLDER: 'הסבר מפורט לסיבת ההעברה הכפויה...',
+    
+    // Email Tab
+    MESSAGE_SUBJECT_PLACEHOLDER: 'נושא ההודעה...',
+    MESSAGE_CONTENT_PLACEHOLDER: 'תוכן ההודעה...',
+    MESSAGE_SENT_SUCCESS_TITLE: 'הודעה נשלחה בהצלחה!',
+    SEND_MESSAGE_BUTTON: '📧 שלח הודעה',
+    CLEAR_FORM: 'נקה טופס',
+    
+    // Custom User Selection
+    TYPE_TO_SEARCH: 'הקלד כדי לחפש...'
+  },
+
+  // Equipment Components
+  EQUIPMENT_COMPONENTS: {
+    // Template Form
+    TEMPLATE_EXAMPLE_PREFIX: 'M4, RAD, etc.'
+  },
+
+  // Form Validation Messages
+  FORM_VALIDATION: {
+    // Status Page Validation
+    SOLDIER_NAME_REQUIRED: 'שם החייל חובה',
+    NAME_HEBREW_ONLY: 'השם חייב להכיל רק אותיות עבריות',
+    PERSONAL_ID_REQUIRED: 'מספר אישי חובה',
+    PERSONAL_ID_FORMAT: 'מספר אישי חייב להכיל בין 5-7 ספרות ורק ספרות',
+    PERSONAL_ID_EXISTS: 'מספר אישי זה כבר קיים במערכת',
+    TEAM_SELECTION_REQUIRED: 'בחירת צוות חובה',
+    
+    // Data Validation
+    INVALID_DATA_RECEIVED: 'המידע שהתקבל אינו תקין',
+    INSUFFICIENT_DATA: 'אין מספיק נתונים בגיליון',
+    UNEXPECTED_LOADING_ERROR: 'שגיאה לא צפויה בטעינת הנתונים. אנא נסה שוב מאוחר יותר.',
+    SERVER_UPDATE_ERROR: 'שגיאה בעדכון השרת',
+    DATA_UPDATE_ERROR: 'שגיאה בעדכון הנתונים'
+  },
+
+  // Default Values and Fallbacks
+  DEFAULTS: {
+    DEFAULT_TEAM: 'מסייעת',
+    DEFAULT_STATUS: 'בית',
+    SYSTEM_MANAGER_SIGNATURE: 'מנהל-מערכת',
+    
+    // Test User Data
+    TEST_RANK: 'רב סמל',
+    TEST_UNIT: 'שייטת גבעתי'
+  },
+
+  // Notifications System
+  NOTIFICATIONS: {
+    // Main UI
+    TITLE: 'התראות',
+    NO_NOTIFICATIONS: 'אין התראות חדשות',
+    MARK_ALL_READ: 'סמן הכל כנקרא',
+    MARK_AS_READ: 'סמן כנקרא',
+    DELETE_NOTIFICATION: 'מחק התראה',
+    REFRESH_NOTIFICATIONS: 'רענן התראות',
+    
+    // Notification Types
+    TRANSFER_REQUEST: 'בקשת העברה חדשה',
+    TRANSFER_APPROVED: 'בקשת העברה אושרה',
+    TRANSFER_REJECTED: 'בקשת העברה נדחתה',
+    TRANSFER_COMPLETED: 'העברת ציוד הושלמה',
+    EQUIPMENT_UPDATE: 'עדכון ציוד',
+    EQUIPMENT_STATUS_CHANGE: 'שינוי סטטוס ציוד',
+    SYSTEM_MESSAGE: 'הודעת מערכת',
+    MAINTENANCE_DUE: 'תחזוקה נדרשת',
+    COMMANDER_MESSAGE: 'הודעה ממפקד',
+    DAILY_CHECK_REMINDER: 'תזכורת בדיקה יומית',
+    
+    // Status Messages
+    LOADING: 'טוען התראות...',
+    ERROR_LOADING: 'שגיאה בטעינת התראות',
+    MARKED_AS_READ: 'ההתראה סומנה כנקראה',
+    ALL_MARKED_READ: 'כל ההתראות סומנו כנקראות',
+    NOTIFICATION_DELETED: 'ההתראה נמחקה',
+    
+    // Time Display
+    NOW: 'עכשיו',
+    MINUTES_AGO: (minutes: number) => `לפני ${minutes} דקות`,
+    HOURS_AGO: (hours: number) => `לפני ${hours} שעות`,
+    DAYS_AGO: (days: number) => `לפני ${days} ימים`,
+    
+    // Badge
+    UNREAD_COUNT: (count: number) => count > 99 ? '99+' : count.toString(),
+    
+    // Empty State
+    EMPTY_TITLE: 'אין התראות',
+    EMPTY_MESSAGE: 'כל ההתראות שלך יופיעו כאן',
+    
+    // Settings
+    NOTIFICATION_SETTINGS: 'הגדרות התראות',
+    EMAIL_NOTIFICATIONS: 'התראות אימייל',
+    TRANSFER_ALERTS: 'התראות העברת ציוד',
+    SYSTEM_ALERTS: 'התראות מערכת',
+    MAINTENANCE_REMINDERS: 'תזכורות תחזוקה',
+    DAILY_CHECK_REMINDERS: 'תזכורות בדיקה יומית',
+    
+    // Actions
+    VIEW_EQUIPMENT: 'צפה בציוד',
+    VIEW_TRANSFER: 'צפה בהעברה',
+    DISMISS: 'התעלם',
+    
+    // Templates
+    TEMPLATES: {
+      TRANSFER_REQUEST: (fromUser: string, equipment: string) => 
+        `${fromUser} העביר לך את הציוד ${equipment}`,
+      TRANSFER_APPROVED: (toUser: string, equipment: string) => 
+        `${toUser} אישר את העברת הציוד ${equipment}`,
+      TRANSFER_REJECTED: (toUser: string, equipment: string) => 
+        `${toUser} דחה את העברת הציוד ${equipment}`,
+      TRANSFER_COMPLETED: (equipment: string) => 
+        `העברת הציוד ${equipment} הושלמה בהצלחה`,
+      EQUIPMENT_STATUS_CHANGED: (equipment: string, status: string) => 
+        `סטטוס הציוד ${equipment} עודכן ל: ${status}`,
+      MAINTENANCE_DUE: (equipment: string) => 
+        `הציוד ${equipment} דורש תחזוקה`,
+      DAILY_CHECK_REMINDER: (equipment: string) => 
+        `נדרש לבצע בדיקה יומית עבור ${equipment}`
+    }
+  },
+
   // Accessibility
   ARIA_LABELS: {
     CLOSE_MODAL: 'סגור חלון',
@@ -733,7 +1146,16 @@ export const TEXT_CONSTANTS = {
     LOGO: 'לוגו סיירת גבעתי',
     MAIN_MENU: 'תפריט ראשי',
     NOTIFICATION_BUTTON: 'התראות',
-    EQUIPMENT_NOTIFICATIONS: 'התראות ציוד'
+    EQUIPMENT_NOTIFICATIONS: 'התראות ציוד',
+    BACK_TO_LOGIN: 'חזרה להתחברות',
+    REGISTRATION_PROGRESS: 'Registration progress',
+    CLOSE_MENU: 'סגור תפריט',
+    OPEN_MANAGEMENT_MENU: 'פתח תפריט ניהול',
+    BACK_TO_HOME: 'חזור לדף הבית',
+    LOADING_STATUS: 'טוען...',
+    NOTIFICATION_DROPDOWN: 'תפריט התראות',
+    UNREAD_NOTIFICATIONS: 'התראות שלא נקראו',
+    NOTIFICATION_BELL: 'פעמון התראות'
   }
 } as const;
 
@@ -747,4 +1169,4 @@ export const TEXT_FMT = {
 };
 
 // Export individual sections for easier imports
-export const { BUTTONS, AUTH, FEATURES, ADMIN, ERRORS, SUCCESS, MANAGEMENT, CONFIRMATIONS, ARIA_LABELS } = TEXT_CONSTANTS; 
+export const { BUTTONS, AUTH, FEATURES, ADMIN, ERRORS, SUCCESS, MANAGEMENT, CONFIRMATIONS, NOTIFICATIONS, ARIA_LABELS } = TEXT_CONSTANTS; 

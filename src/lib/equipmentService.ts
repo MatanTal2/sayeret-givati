@@ -18,7 +18,8 @@ import {
   limit, 
   serverTimestamp, 
   Timestamp,
-  writeBatch
+  writeBatch,
+  runTransaction,
 } from 'firebase/firestore';
 
 import { 
@@ -30,6 +31,10 @@ import {
   ApprovalDetails
 } from '@/types/equipment';
 import { EquipmentTemplate } from '@/data/equipmentTemplates';
+import { 
+  addTrackingHistoryEntry, 
+  createEquipmentCreatedEntry 
+} from './equipmentHistoryService';
 
 import { TEXT_CONSTANTS } from '@/constants/text';
 
@@ -309,32 +314,46 @@ export class EquipmentItemsService {
         };
       }
 
-      const now = Timestamp.fromDate(new Date());
-      
       // Create initial tracking history entry
-      const initialHistoryEntry: EquipmentHistoryEntry = {
-        holder: initialHolderId, // Store UID for queries
-        holderName: initialHolderName, // Cache display name for UI performance
-        fromDate: now,
-        action: EquipmentAction.INITIAL_SIGN_IN,
-        updatedBy: initialHolderId,
-        updatedByName: initialHolderName,
-        location: equipmentData.location,
-        notes: notes || TEXT_CONSTANTS.FEATURES.EQUIPMENT.INITIAL_SIGN_IN || 'Initial sign-in',
-        timestamp: now
-      };
+      const initialHistoryEntry = createEquipmentCreatedEntry(
+        initialHolderName,
+        equipmentData.location,
+        initialHolderId,
+        notes || TEXT_CONSTANTS.FEATURES.EQUIPMENT.INITIAL_SIGN_IN || 'Initial sign-in'
+      );
+
+      const trackingHistory = addTrackingHistoryEntry([], initialHistoryEntry);
 
       const equipment: Equipment = {
         ...equipmentData,
         currentHolder: initialHolderName, // Display name for UI
         currentHolderId: initialHolderId, // UID for queries and permissions
         signedBy,
-        trackingHistory: [initialHistoryEntry],
+        trackingHistory,
         createdAt: serverTimestamp() as Timestamp,
         updatedAt: serverTimestamp() as Timestamp
       };
 
-      await setDoc(equipmentDoc, equipment);
+      // Use transaction to ensure atomicity
+      await runTransaction(db, async (transaction) => {
+        // Set equipment document
+        transaction.set(equipmentDoc, equipment);
+        
+        // Create action log entry
+        const actionLogData = {
+          ...ActionLogHelpers.equipmentCreated(
+            equipmentData.id,
+            equipmentData.id, // Using serial number as both ID and docId
+            equipmentData.productName,
+            initialHolderId,
+            initialHolderName
+          ),
+          timestamp: serverTimestamp()
+        };
+        
+        const actionLogRef = doc(collection(db, 'actionsLog'));
+        transaction.set(actionLogRef, actionLogData);
+      });
 
       return {
         success: true,
@@ -462,9 +481,19 @@ export class EquipmentItemsService {
     updatedBy: string,
     updatedByName: string,
     action: EquipmentAction,
-    notes?: string
+    notes?: string,
+    requesterUserType?: string // Add user type for permission checking
   ): Promise<EquipmentServiceResult> {
     try {
+      // Permission check: Only admin, system_manager, and manager can update equipment
+      if (requesterUserType && !['admin', 'system_manager', 'manager'].includes(requesterUserType)) {
+        return {
+          success: false,
+          message: 'אין לך הרשאה לעדכן ציוד. פעולה זו מוגבלת למנהלים בלבד.',
+          error: 'INSUFFICIENT_PERMISSIONS'
+        };
+      }
+
       const equipmentDoc = doc(db, EQUIPMENT_COLLECTION, equipmentId);
       const currentDoc = await getDoc(equipmentDoc);
       
@@ -527,9 +556,19 @@ export class EquipmentItemsService {
     approvalDetails: ApprovalDetails,
     newUnit?: string,
     newLocation?: string,
-    notes?: string
+    notes?: string,
+    requesterUserType?: string // Add user type for permission checking
   ): Promise<EquipmentServiceResult> {
     try {
+      // Permission check: Only admin, system_manager, and manager can transfer equipment
+      if (requesterUserType && !['admin', 'system_manager', 'manager'].includes(requesterUserType)) {
+        return {
+          success: false,
+          message: 'אין לך הרשאה להעביר ציוד. פעולה זו מוגבלת למנהלים בלבד.',
+          error: 'INSUFFICIENT_PERMISSIONS'
+        };
+      }
+
       const equipmentDoc = doc(db, EQUIPMENT_COLLECTION, equipmentId);
       const currentDoc = await getDoc(equipmentDoc);
       

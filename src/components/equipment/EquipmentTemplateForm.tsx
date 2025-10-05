@@ -176,17 +176,17 @@ export default function EquipmentTemplateForm({
 
   if (!hasPermission) {
     return (
-      <div className="fixed inset-0 backdrop-blur-md bg-white/20 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-auto p-6 border border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-auto p-6 border border-neutral-200">
+            <h3 className="text-lg font-medium text-neutral-900 mb-4">
               {TEXT_CONSTANTS.MANAGEMENT.ACCESS_DENIED.TITLE}
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-neutral-600 mb-4">
               {TEXT_CONSTANTS.MANAGEMENT.ACCESS_DENIED.MESSAGE}
             </p>
             <button
               onClick={onClose}
-              className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+              className="w-full px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
             >
               {TEXT_CONSTANTS.CONFIRMATIONS.CLOSE}
             </button>
@@ -197,11 +197,11 @@ export default function EquipmentTemplateForm({
 
   return (
     <div 
-      className="fixed inset-0 backdrop-blur-md bg-white/20 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200"
+        className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-neutral-200"
         onClick={(e) => e.stopPropagation()}
       >
           {/* Header */}
@@ -211,13 +211,13 @@ export default function EquipmentTemplateForm({
           <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="p-6 space-y-6">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h4 className="text-md font-medium text-gray-900">
+              <h4 className="text-md font-medium text-neutral-900">
                 {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.BASIC_INFO || 'Basic Information'}
               </h4>
               
               {/* Name Field */}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="name" className="block text-sm font-medium text-neutral-700 mb-1">
                   {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.NAME || 'Name'} *
                 </label>
                 <input
@@ -225,18 +225,18 @@ export default function EquipmentTemplateForm({
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleFieldChange('name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.NAME_PLACEHOLDER || 'Enter equipment name'}
                   disabled={isSubmitting}
                 />
                 {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                  <p className="mt-1 text-sm text-danger-600">{errors.name}</p>
                 )}
               </div>
 
               {/* Description Field */}
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="description" className="block text-sm font-medium text-neutral-700 mb-1">
                   {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.DESCRIPTION || 'Description'}
                 </label>
                 <textarea
@@ -244,7 +244,7 @@ export default function EquipmentTemplateForm({
                   value={formData.description}
                   onChange={(e) => handleFieldChange('description', e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.DESCRIPTION_PLACEHOLDER || 'Optional description'}
                   disabled={isSubmitting}
                 />
@@ -254,14 +254,14 @@ export default function EquipmentTemplateForm({
             {/* Categories */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-md font-medium text-gray-900">
+                <h4 className="text-md font-medium text-neutral-900">
                   {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.CATEGORIES}
                 </h4>
                 <button
                   type="button"
                   onClick={handleRefreshCategories}
                   disabled={categoriesLoading}
-                  className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1"
+                  className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
                 >
                   <RefreshCw className={`w-4 h-4 ${categoriesLoading ? 'animate-spin' : ''}`} />
                   {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.REFRESH}
@@ -269,7 +269,7 @@ export default function EquipmentTemplateForm({
               </div>
 
               {categoriesError && (
-                <p className="text-sm text-red-600">{categoriesError}</p>
+                <p className="text-sm text-danger-600">{categoriesError}</p>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -296,7 +296,7 @@ export default function EquipmentTemplateForm({
 
             {/* Notes and Daily Check */}
             <div className="space-y-4">
-              <h4 className="text-md font-medium text-gray-900">
+              <h4 className="text-md font-medium text-neutral-900">
                 מידע נוסף
               </h4>
 
@@ -309,7 +309,7 @@ export default function EquipmentTemplateForm({
 
               {/* Notes Field */}
               <div>
-                <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="notes" className="block text-sm font-medium text-neutral-700 mb-1">
                   {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.COMMON_NOTES || 'הערות'}
                 </label>
                 <textarea
@@ -317,7 +317,7 @@ export default function EquipmentTemplateForm({
                   value={formData.notes}
                   onChange={(e) => handleFieldChange('notes', e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.COMMON_NOTES_PLACEHOLDER || 'הערות אופציונליות או הנחיות'}
                   disabled={isSubmitting}
                 />
@@ -326,8 +326,8 @@ export default function EquipmentTemplateForm({
 
             {/* Error Display */}
             {errors.submit && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                <p className="text-sm text-red-600">{errors.submit}</p>
+              <div className="bg-danger-50 border border-danger-200 rounded-md p-3">
+                <p className="text-sm text-danger-600">{errors.submit}</p>
               </div>
             )}
 

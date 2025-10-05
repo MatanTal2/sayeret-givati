@@ -15,10 +15,10 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const variantStyles = {
-  primary: 'bg-purple-600 hover:bg-purple-700 text-white focus:ring-purple-500',
-  secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-500',
-  danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500',
-  ghost: 'text-purple-600 hover:text-purple-700 hover:bg-purple-50 focus:ring-purple-500',
+  primary: 'bg-primary-600 hover:bg-primary-700 text-white focus:ring-primary-500',
+  secondary: 'bg-neutral-200 hover:bg-neutral-300 text-neutral-700 focus:ring-neutral-500',
+  danger: 'bg-danger-600 hover:bg-danger-700 text-white focus:ring-danger-500',
+  ghost: 'text-primary-600 hover:text-primary-700 hover:bg-primary-50 focus:ring-primary-500',
 };
 
 const sizeStyles = {

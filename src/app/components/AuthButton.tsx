@@ -3,17 +3,16 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { TEXT_CONSTANTS } from '@/constants/text';
-import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, LogInIcon, BellIcon, Settings2Icon } from 'lucide-react';
+import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, LogInIcon, Settings2Icon } from 'lucide-react';
 import { UserDataService } from '@/lib/userDataService';
 import { FirestoreUserProfile } from '@/types/user';
 import { UserRole } from '@/types/equipment';
 import Link from 'next/link';
-import ConfirmationModal from '@/components/ui/ConfirmationModal';
+import { NotificationBell } from '@/components/notifications';
 
 export default function AuthButton() {
   const { user, enhancedUser, isAuthenticated, isLoading, logout, setShowAuthModal } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   // Helper function to check if user has management access
   const hasManagementAccess = useCallback(() => {
@@ -176,21 +175,13 @@ export default function AuthButton() {
     await logout();
   }, [logout]);
 
-  const handleButtonClick = useCallback((action: string) => {
-    // TODO: Implement actual actions when backend is ready
-    console.log(`${action} clicked - UI only, no backend action`);
-    if (action === 'notifications') {
-      // TODO: Open notifications panel or navigate to notifications page
-      setShowNotificationModal(true);
-    }
-  }, []);
 
   // Loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center w-9 h-9" role="status" aria-label="טוען...">
         <div 
-          className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"
+          className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-600"
           aria-hidden="true"
         />
       </div>
@@ -203,7 +194,7 @@ export default function AuthButton() {
       <button 
         type="button"
         onClick={handleLoginClick}
-        className="btn-primary flex items-center gap-2 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+        className="btn-primary flex items-center gap-2 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
         aria-label={TEXT_CONSTANTS.BUTTONS.LOGIN}
         style={{
           position: 'relative',
@@ -227,22 +218,8 @@ export default function AuthButton() {
         pointerEvents: 'auto'
       }}
     >
-      {/* Equipment Transfer Notification Button */}
-      <button
-        type="button"
-        onClick={() => handleButtonClick('notifications')}
-        className="relative p-2 rounded-full bg-gray-100 hover:bg-gray-200 
-                   focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 text-gray-600 
-                   hover:text-gray-900 transition-colors duration-200"
-        aria-label={TEXT_CONSTANTS.ARIA_LABELS.EQUIPMENT_NOTIFICATIONS}
-        title="התראות העברת ציוד"
-      >
-        <BellIcon className="w-5 h-5" />
-        {/* Notification Badge - TODO: Replace with actual count when backend is ready */}
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-          3
-        </span>
-      </button>
+      {/* Real-time Notification Bell */}
+      <NotificationBell />
       
       {/* Profile Menu Button */}
       <button
@@ -250,8 +227,8 @@ export default function AuthButton() {
         type="button"
         onClick={handleMenuToggle}
         onKeyDown={handleKeyDown}
-        className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 
-                   focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 text-gray-900 
+        className="flex items-center gap-2 px-3 py-2 rounded-full bg-neutral-100 hover:bg-neutral-200 
+                   focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 text-neutral-900 
                    transition-colors duration-200 cursor-pointer select-none"
         aria-label={`פרופיל של ${getUserLastName() || getUserFirstName()}`}
         aria-expanded={isMenuOpen}
@@ -264,7 +241,7 @@ export default function AuthButton() {
         }}
       >
         <span 
-          className="bg-purple-600 text-white rounded-full w-9 h-9 flex items-center justify-center 
+          className="bg-primary-600 text-white rounded-full w-9 h-9 flex items-center justify-center 
                      font-bold text-lg select-none shrink-0"
           aria-hidden="true"
           style={{ pointerEvents: 'none' }}
@@ -291,7 +268,7 @@ export default function AuthButton() {
         <div 
           ref={menuRef}
           className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl 
-                     border border-gray-200 py-2 z-[9999] overflow-visible"
+                     border border-neutral-200 py-2 z-[9999] overflow-visible"
           role="menu"
           aria-labelledby="profile-menu-button"
           style={{ 
@@ -305,8 +282,8 @@ export default function AuthButton() {
         >
           <Link
             href="/profile"
-            className="w-full text-right px-4 py-2 text-gray-900 hover:bg-gray-100 
-                       focus:bg-gray-100 transition-colors duration-150 flex items-center gap-2 
+            className="w-full text-right px-4 py-2 text-neutral-900 hover:bg-neutral-100 
+                       focus:bg-neutral-100 transition-colors duration-150 flex items-center gap-2 
                        cursor-pointer"
             onClick={handleProfileClick}
             role="menuitem"
@@ -318,8 +295,8 @@ export default function AuthButton() {
           
           <button
             type="button"
-            className="w-full text-right px-4 py-2 text-gray-900 hover:bg-gray-100 
-                       focus:bg-gray-100 transition-colors duration-150 flex items-center gap-2 
+            className="w-full text-right px-4 py-2 text-neutral-900 hover:bg-neutral-100 
+                       focus:bg-neutral-100 transition-colors duration-150 flex items-center gap-2 
                        cursor-pointer"
             onClick={handleSettingsClick}
             role="menuitem"
@@ -333,8 +310,8 @@ export default function AuthButton() {
           {hasManagementAccess() && (
             <Link
               href="/management"
-              className="w-full text-right px-4 py-2 text-gray-900 hover:bg-gray-100 
-                         focus:bg-gray-100 transition-colors duration-150 flex items-center gap-2 
+              className="w-full text-right px-4 py-2 text-neutral-900 hover:bg-neutral-100 
+                         focus:bg-neutral-100 transition-colors duration-150 flex items-center gap-2 
                          cursor-pointer"
               onClick={() => setIsMenuOpen(false)}
               role="menuitem"
@@ -345,13 +322,13 @@ export default function AuthButton() {
             </Link>
           )}
           
-          <hr className="border-t border-gray-200 my-1" role="separator" />
+          <hr className="border-t border-neutral-200 my-1" role="separator" />
           
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full text-right px-4 py-2 text-red-600 hover:bg-red-50 
-                       focus:bg-red-50 transition-colors duration-150 flex items-center gap-2 
+            className="w-full text-right px-4 py-2 text-danger-600 hover:bg-danger-50 
+                       focus:bg-danger-50 transition-colors duration-150 flex items-center gap-2 
                        cursor-pointer"
             role="menuitem"
             tabIndex={0}
@@ -362,20 +339,6 @@ export default function AuthButton() {
         </div>
       )}
 
-      {/* Notifications Coming Soon Modal */}
-      <ConfirmationModal
-        isOpen={showNotificationModal}
-        title={TEXT_CONSTANTS.CONFIRMATIONS.NOTIFICATIONS_COMING_SOON_TITLE}
-        message={TEXT_CONSTANTS.CONFIRMATIONS.NOTIFICATIONS_COMING_SOON_MESSAGE}
-        confirmText={TEXT_CONSTANTS.CONFIRMATIONS.OK}
-        cancelText={TEXT_CONSTANTS.CONFIRMATIONS.CLOSE}
-        onConfirm={() => setShowNotificationModal(false)}
-        onCancel={() => setShowNotificationModal(false)}
-        variant="info"
-        icon="🔔"
-        singleButton={true}
-        useHomePageStyle={true}
-      />
     </div>
   );
 } 

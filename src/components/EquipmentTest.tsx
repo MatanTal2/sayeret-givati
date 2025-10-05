@@ -2,26 +2,26 @@
 
 export default function EquipmentTest() {
   return (
-    <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg max-w-4xl mx-auto">
+    <div className="bg-neutral-900 text-white p-6 rounded-lg shadow-lg max-w-4xl mx-auto">
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-4 text-center">
           🎖️ Equipment Management Test
         </h2>
-        <p className="text-gray-300 text-center mb-4">
+        <p className="text-neutral-300 text-center mb-4">
           Comprehensive military equipment testing and workflow validation
         </p>
       </div>
 
       {/* Coming Soon Message */}
-      <div className="bg-blue-900 border border-blue-600 text-blue-100 p-6 rounded-lg text-center">
+      <div className="bg-info-900 border border-info-600 text-info-100 p-6 rounded-lg text-center">
         <div className="text-4xl mb-4">🚧</div>
         <h3 className="text-xl font-semibold mb-2">Coming Soon</h3>
-        <p className="text-blue-200 mb-4">
+        <p className="text-info-200 mb-4">
           This test component is currently under development and will include:
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-          <div className="bg-blue-800 p-4 rounded">
+          <div className="bg-info-800 p-4 rounded">
             <h4 className="font-semibold mb-2">🎯 Equipment CRUD Operations</h4>
             <ul className="text-sm space-y-1">
               <li>• Create equipment documents</li>
@@ -31,7 +31,7 @@ export default function EquipmentTest() {
             </ul>
           </div>
           
-          <div className="bg-blue-800 p-4 rounded">
+          <div className="bg-info-800 p-4 rounded">
             <h4 className="font-semibold mb-2">🔄 Transfer Workflows</h4>
             <ul className="text-sm space-y-1">
               <li>• Equipment transfer between soldiers</li>
@@ -41,7 +41,7 @@ export default function EquipmentTest() {
             </ul>
           </div>
           
-          <div className="bg-blue-800 p-4 rounded">
+          <div className="bg-info-800 p-4 rounded">
             <h4 className="font-semibold mb-2">📊 Tracking & Audit</h4>
             <ul className="text-sm space-y-1">
               <li>• Complete audit trail</li>
@@ -51,7 +51,7 @@ export default function EquipmentTest() {
             </ul>
           </div>
           
-          <div className="bg-blue-800 p-4 rounded">
+          <div className="bg-info-800 p-4 rounded">
             <h4 className="font-semibold mb-2">🛡️ Security Testing</h4>
             <ul className="text-sm space-y-1">
               <li>• Role-based access control</li>
@@ -62,42 +62,42 @@ export default function EquipmentTest() {
           </div>
         </div>
         
-        <div className="mt-6 p-4 bg-green-800 rounded">
+        <div className="mt-6 p-4 bg-success-800 rounded">
           <h4 className="font-semibold mb-2">📋 Based on Database Schema</h4>
-          <p className="text-sm text-green-200">
+          <p className="text-sm text-success-200">
             This test will implement the complete equipment management system as defined in 
-            <code className="bg-green-700 px-2 py-1 rounded mx-1">docs/database-schema.md</code>
+            <code className="bg-success-700 px-2 py-1 rounded mx-1">docs/database-schema.md</code>
           </p>
         </div>
       </div>
 
       {/* Development Status */}
-      <div className="mt-6 bg-gray-800 rounded-lg p-4">
-        <h4 className="text-md font-semibold mb-2 text-blue-400">🚀 Development Status:</h4>
-        <div className="space-y-2 text-sm text-gray-300">
+      <div className="mt-6 bg-neutral-800 rounded-lg p-4">
+        <h4 className="text-md font-semibold mb-2 text-info-400">🚀 Development Status:</h4>
+        <div className="space-y-2 text-sm text-neutral-300">
           <div className="flex items-center">
-            <span className="w-4 h-4 bg-green-600 rounded-full mr-3"></span>
+            <span className="w-4 h-4 bg-success-600 rounded-full mr-3"></span>
             <span>Database schema designed and documented</span>
           </div>
           <div className="flex items-center">
-            <span className="w-4 h-4 bg-yellow-600 rounded-full mr-3"></span>
+            <span className="w-4 h-4 bg-warning-600 rounded-full mr-3"></span>
             <span>Equipment collection structure defined</span>
           </div>
           <div className="flex items-center">
-            <span className="w-4 h-4 bg-yellow-600 rounded-full mr-3"></span>
+            <span className="w-4 h-4 bg-warning-600 rounded-full mr-3"></span>
             <span>Security rules for equipment access planned</span>
           </div>
           <div className="flex items-center">
-            <span className="w-4 h-4 bg-gray-600 rounded-full mr-3"></span>
+            <span className="w-4 h-4 bg-neutral-600 rounded-full mr-3"></span>
             <span>Component implementation - pending</span>
           </div>
           <div className="flex items-center">
-            <span className="w-4 h-4 bg-gray-600 rounded-full mr-3"></span>
+            <span className="w-4 h-4 bg-neutral-600 rounded-full mr-3"></span>
             <span>Test scenarios and workflows - pending</span>
           </div>
         </div>
         
-        <div className="mt-4 text-xs text-gray-400">
+        <div className="mt-4 text-xs text-neutral-400">
           <p><strong>Next Steps:</strong> Complete Authentication Testing first, then proceed with Equipment Management implementation</p>
         </div>
       </div>

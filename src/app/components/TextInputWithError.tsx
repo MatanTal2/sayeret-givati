@@ -21,25 +21,25 @@ export default function TextInputWithError({
 }: TextInputWithErrorProps) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">
-        {label} {required && <span className="text-red-500">*</span>}
+      <label className="block text-sm font-medium text-neutral-700 mb-1 pr-1.5">
+        {label} {required && <span className="text-danger-500">*</span>}
       </label>
       <input 
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 placeholder-gray-600 ${
+        className={`w-full h-10 border-2 rounded-md px-3 py-2 text-neutral-800 focus:outline-none focus:ring-2 placeholder-neutral-600 ${
           error 
-            ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
-            : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
+            ? 'border-danger-500 focus:ring-danger-500 focus:border-danger-500' 
+            : 'border-neutral-400 focus:ring-primary-500 focus:border-primary-500'
         } ${
-          disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+          disabled ? 'bg-neutral-100 cursor-not-allowed' : 'bg-white'
         }`}
         placeholder={placeholder}
       />
       {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p className="mt-1 text-sm text-danger-600">{error}</p>
       )}
     </div>
   );

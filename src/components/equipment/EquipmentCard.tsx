@@ -54,13 +54,13 @@ export default function EquipmentCard({
 
   // Use neutral colors like the main app
   const getCardStyling = () => {
-    return 'from-gray-100 to-gray-200 text-gray-800';
+    return 'from-neutral-100 to-neutral-200 text-neutral-800';
   };
 
   return (
     <div className={`
       relative rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 
-      bg-gradient-to-br ${getCardStyling()} cursor-pointer border border-gray-200
+      bg-gradient-to-br ${getCardStyling()} cursor-pointer border border-neutral-200
       ${compact ? 'p-4 h-32' : 'p-6 h-40'}
     `}>
       {/* Horizontal Layout */}
@@ -110,7 +110,7 @@ export default function EquipmentCard({
                   e.stopPropagation();
                   onTransfer(equipment.id);
                 }}
-                className="px-2 py-1 text-xs font-medium bg-purple-600 hover:bg-purple-700 text-white
+                className="px-2 py-1 text-xs font-medium bg-primary-600 hover:bg-primary-700 text-white
                            rounded-md transition-colors"
               >
                 העבר
@@ -123,7 +123,7 @@ export default function EquipmentCard({
                   e.stopPropagation();
                   onUpdateStatus(equipment.id);
                 }}
-                className="px-2 py-1 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white
+                className="px-2 py-1 text-xs font-medium bg-info-600 hover:bg-info-700 text-white
                            rounded-md transition-colors"
               >
                 עדכן
@@ -136,7 +136,7 @@ export default function EquipmentCard({
                   e.stopPropagation();
                   onViewHistory(equipment.id);
                 }}
-                className="px-2 py-1 text-xs font-medium bg-green-600 hover:bg-green-700 text-white
+                className="px-2 py-1 text-xs font-medium bg-success-600 hover:bg-success-700 text-white
                            rounded-md transition-colors"
               >
                 📋

@@ -13,14 +13,14 @@ interface FormHeaderProps {
 
 export default function FormHeader({ onClose, isSubmitting }: FormHeaderProps) {
   return (
-    <div className="flex items-center justify-between p-6 border-b border-gray-200">
-      <h3 className="text-lg font-medium text-gray-900">
+    <div className="flex items-center justify-between p-6 border-b border-neutral-200">
+      <h3 className="text-lg font-medium text-neutral-900">
         {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.TITLE}
       </h3>
       <button
         onClick={onClose}
         disabled={isSubmitting}
-        className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+        className="text-neutral-400 hover:text-neutral-600 disabled:opacity-50"
       >
         <X className="w-6 h-6" />
       </button>

@@ -574,9 +574,9 @@ export default function TestDashboardPage() {
   // Get status icon
   const getStatusIcon = (status: TestStatus) => {
     switch (status) {
-      case 'running': return <Clock className="h-4 w-4 text-yellow-500 animate-spin" />;
-      case 'passed': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'failed': return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'running': return <Clock className="h-4 w-4 text-warning-500 animate-spin" />;
+      case 'passed': return <CheckCircle className="h-4 w-4 text-success-500" />;
+      case 'failed': return <XCircle className="h-4 w-4 text-danger-500" />;
       default: return <div className="h-4 w-4" />;
     }
   };
@@ -585,22 +585,22 @@ export default function TestDashboardPage() {
   const getStatusBadge = (status: TestStatus) => {
     const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
     switch (status) {
-      case 'running': return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      case 'passed': return `${baseClasses} bg-green-100 text-green-800`;
-      case 'failed': return `${baseClasses} bg-red-100 text-red-800`;
-      default: return `${baseClasses} bg-gray-100 text-gray-800`;
+      case 'running': return `${baseClasses} bg-warning-100 text-warning-800`;
+      case 'passed': return `${baseClasses} bg-success-100 text-success-800`;
+      case 'failed': return `${baseClasses} bg-danger-100 text-danger-800`;
+      default: return `${baseClasses} bg-neutral-100 text-neutral-800`;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-neutral-50" dir="rtl">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
+      <div className="sticky top-0 z-50 bg-white shadow-sm border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">🧪 מרכז בדיקות מערכת</h1>
-              <p className="text-gray-600">ממשק מאוחד לכל בדיקות המערכת</p>
+              <h1 className="text-2xl font-bold text-neutral-900">🧪 מרכז בדיקות מערכת</h1>
+              <p className="text-neutral-600">ממשק מאוחד לכל בדיקות המערכת</p>
             </div>
             <div className="flex gap-3">
               <Button
@@ -629,17 +629,17 @@ export default function TestDashboardPage() {
           {/* Test Categories */}
           <div className="lg:col-span-2 space-y-4">
             {testCategories.map(category => (
-              <div key={category.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div key={category.id} className="bg-white rounded-lg shadow-sm border border-neutral-200">
                 {/* Category Header */}
                 <div 
-                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-neutral-50"
                   onClick={() => toggleCategory(category.id)}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{category.icon}</span>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{category.name}</h3>
-                      <p className="text-sm text-gray-600">{category.description}</p>
+                      <h3 className="font-semibold text-neutral-900">{category.name}</h3>
+                      <p className="text-sm text-neutral-600">{category.description}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -656,25 +656,25 @@ export default function TestDashboardPage() {
                       הרץ קטגוריה
                     </Button>
                     {expandedCategories.has(category.id) ? 
-                      <ChevronDown className="h-4 w-4 text-gray-400" /> :
-                      <ChevronRight className="h-4 w-4 text-gray-400" />
+                      <ChevronDown className="h-4 w-4 text-neutral-400" /> :
+                      <ChevronRight className="h-4 w-4 text-neutral-400" />
                     }
                   </div>
                 </div>
 
                 {/* Category Content */}
                 {expandedCategories.has(category.id) && (
-                  <div className="border-t border-gray-200">
+                  <div className="border-t border-neutral-200">
                     {category.subCategories.map(subCategory => (
-                      <div key={subCategory.id} className="border-b border-gray-100 last:border-b-0">
+                      <div key={subCategory.id} className="border-b border-neutral-100 last:border-b-0">
                         {/* Subcategory Header */}
                         <div 
-                          className="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100"
+                          className="flex items-center justify-between p-3 bg-neutral-50 cursor-pointer hover:bg-neutral-100"
                           onClick={() => toggleSubCategory(subCategory.id)}
                         >
                           <div>
-                            <h4 className="font-medium text-gray-800">{subCategory.name}</h4>
-                            <p className="text-sm text-gray-600">{subCategory.description}</p>
+                            <h4 className="font-medium text-neutral-800">{subCategory.name}</h4>
+                            <p className="text-sm text-neutral-600">{subCategory.description}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <Button
@@ -690,8 +690,8 @@ export default function TestDashboardPage() {
                               הרץ תת-קטגוריה
                             </Button>
                             {expandedSubCategories.has(subCategory.id) ? 
-                              <ChevronDown className="h-3 w-3 text-gray-400" /> :
-                              <ChevronRight className="h-3 w-3 text-gray-400" />
+                              <ChevronDown className="h-3 w-3 text-neutral-400" /> :
+                              <ChevronRight className="h-3 w-3 text-neutral-400" />
                             }
                           </div>
                         </div>
@@ -704,15 +704,15 @@ export default function TestDashboardPage() {
                               return (
                                 <div 
                                   key={test.id} 
-                                  className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg"
+                                  className="flex items-center justify-between p-3 bg-white border border-neutral-200 rounded-lg"
                                 >
                                   <div className="flex items-center gap-3">
                                     {getStatusIcon(result?.status || 'idle')}
                                     <div>
-                                      <h5 className="font-medium text-gray-900">{test.name}</h5>
-                                      <p className="text-sm text-gray-600">{test.description}</p>
+                                      <h5 className="font-medium text-neutral-900">{test.name}</h5>
+                                      <p className="text-sm text-neutral-600">{test.description}</p>
                                       {result?.message && (
-                                        <p className="text-xs text-gray-500 mt-1">{result.message}</p>
+                                        <p className="text-xs text-neutral-500 mt-1">{result.message}</p>
                                       )}
                                     </div>
                                   </div>
@@ -749,19 +749,19 @@ export default function TestDashboardPage() {
           </div>
 
           {/* Activity Log */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-4 border-b border-gray-200">
-              <h3 className="font-semibold text-gray-900">יומן פעילות</h3>
-              <p className="text-sm text-gray-600">תוצאות בדיקות בזמן אמת</p>
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200">
+            <div className="p-4 border-b border-neutral-200">
+              <h3 className="font-semibold text-neutral-900">יומן פעילות</h3>
+              <p className="text-sm text-neutral-600">תוצאות בדיקות בזמן אמת</p>
             </div>
             <div className="p-4">
-              <div className="bg-gray-50 rounded-lg p-3 h-96 overflow-y-auto">
+              <div className="bg-neutral-50 rounded-lg p-3 h-96 overflow-y-auto">
                 {logs.length === 0 ? (
-                  <p className="text-gray-500 text-center">אין פעילות עדיין</p>
+                  <p className="text-neutral-500 text-center">אין פעילות עדיין</p>
                 ) : (
                   <div className="space-y-1">
                     {logs.map((log, index) => (
-                      <div key={index} className="text-sm font-mono text-gray-700">
+                      <div key={index} className="text-sm font-mono text-neutral-700">
                         {log}
                       </div>
                     ))}

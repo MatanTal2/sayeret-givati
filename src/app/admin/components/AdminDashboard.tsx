@@ -37,20 +37,20 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   return (
     <div>
       {/* Header with logout */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6 mb-8">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
               👨‍💼 Admin Dashboard
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-neutral-600 dark:text-neutral-400 mt-1">
               System administrator tools and management
             </p>
           </div>
           <button
             onClick={handleLogoutRequest}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md
-                       focus:ring-2 focus:ring-red-500 focus:ring-offset-2
+            className="bg-danger-600 hover:bg-danger-700 text-white px-4 py-2 rounded-md
+                       focus:ring-2 focus:ring-danger-500 focus:ring-offset-2
                        transition-colors"
           >
             🚪 Logout
@@ -59,8 +59,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg mb-8">
-        <div className="border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg mb-8">
+        <div className="border-b border-neutral-200 dark:border-neutral-700">
           <nav className="flex space-x-8 px-6">
             {ADMIN_TABS.map((tab) => (
               <button
@@ -68,8 +68,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 onClick={() => setActiveTab(tab.id)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                    ? 'border-info-500 text-info-600 dark:text-info-400'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-300'
                 }`}
               >
                 {tab.name}
@@ -86,10 +86,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             return (
               <div key={tab.id}>
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
                     {tab.name.replace(/^🔐|📁|📋|📊\s/, '')}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400">
+                  <p className="text-neutral-600 dark:text-neutral-400">
                     {tab.description}
                   </p>
                 </div>

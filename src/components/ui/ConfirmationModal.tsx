@@ -37,43 +37,43 @@ export default function ConfirmationModal({
   const variantStyles = {
     danger: {
       icon: icon || '⚠️',
-      iconBg: useHomePageStyle ? 'bg-red-100' : 'bg-red-100 dark:bg-red-900/20',
-      iconColor: useHomePageStyle ? 'text-red-600' : 'text-red-600 dark:text-red-400',
-      confirmBg: useHomePageStyle ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800' : 'bg-red-600 hover:bg-red-700',
-      confirmFocus: 'focus:ring-red-500',
-      infoBg: useHomePageStyle ? 'bg-red-50' : 'bg-red-50 dark:bg-red-900/20',
-      infoBorder: useHomePageStyle ? 'border-red-200' : 'border-red-200 dark:border-red-800',
-      infoText: useHomePageStyle ? 'text-red-800' : 'text-red-800 dark:text-red-300'
+      iconBg: useHomePageStyle ? 'bg-danger-100' : 'bg-danger-100 dark:bg-danger-900/20',
+      iconColor: useHomePageStyle ? 'text-danger-600' : 'text-danger-600 dark:text-danger-400',
+      confirmBg: useHomePageStyle ? 'bg-gradient-to-r from-danger-600 to-danger-700 hover:from-danger-700 hover:to-danger-800' : 'bg-danger-600 hover:bg-danger-700',
+      confirmFocus: 'focus:ring-danger-500',
+      infoBg: useHomePageStyle ? 'bg-danger-50' : 'bg-danger-50 dark:bg-danger-900/20',
+      infoBorder: useHomePageStyle ? 'border-danger-200' : 'border-danger-200 dark:border-danger-800',
+      infoText: useHomePageStyle ? 'text-danger-800' : 'text-danger-800 dark:text-danger-300'
     },
     warning: {
       icon: icon || '⚠️',
-      iconBg: useHomePageStyle ? 'bg-yellow-100' : 'bg-yellow-100 dark:bg-yellow-900/20',
-      iconColor: useHomePageStyle ? 'text-yellow-600' : 'text-yellow-600 dark:text-yellow-400',
-      confirmBg: useHomePageStyle ? 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800' : 'bg-yellow-600 hover:bg-yellow-700',
-      confirmFocus: 'focus:ring-yellow-500',
-      infoBg: useHomePageStyle ? 'bg-yellow-50' : 'bg-yellow-50 dark:bg-yellow-900/20',
-      infoBorder: useHomePageStyle ? 'border-yellow-200' : 'border-yellow-200 dark:border-yellow-800',
-      infoText: useHomePageStyle ? 'text-yellow-800' : 'text-yellow-800 dark:text-yellow-300'
+      iconBg: useHomePageStyle ? 'bg-warning-100' : 'bg-warning-100 dark:bg-warning-900/20',
+      iconColor: useHomePageStyle ? 'text-warning-600' : 'text-warning-600 dark:text-warning-400',
+      confirmBg: useHomePageStyle ? 'bg-gradient-to-r from-warning-600 to-warning-700 hover:from-warning-700 hover:to-warning-800' : 'bg-warning-600 hover:bg-warning-700',
+      confirmFocus: 'focus:ring-warning-500',
+      infoBg: useHomePageStyle ? 'bg-warning-50' : 'bg-warning-50 dark:bg-warning-900/20',
+      infoBorder: useHomePageStyle ? 'border-warning-200' : 'border-warning-200 dark:border-warning-800',
+      infoText: useHomePageStyle ? 'text-warning-800' : 'text-warning-800 dark:text-warning-300'
     },
     info: {
       icon: icon || 'ℹ️',
-      iconBg: useHomePageStyle ? 'bg-purple-100' : 'bg-blue-100 dark:bg-blue-900/20',
-      iconColor: useHomePageStyle ? 'text-purple-600' : 'text-blue-600 dark:text-blue-400',
-      confirmBg: useHomePageStyle ? 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800' : 'bg-blue-600 hover:bg-blue-700',
-      confirmFocus: useHomePageStyle ? 'focus:ring-purple-500' : 'focus:ring-blue-500',
-      infoBg: useHomePageStyle ? 'bg-purple-50' : 'bg-blue-50 dark:bg-blue-900/20',
-      infoBorder: useHomePageStyle ? 'border-purple-200' : 'border-blue-200 dark:border-blue-800',
-      infoText: useHomePageStyle ? 'text-purple-800' : 'text-blue-800 dark:text-blue-300'
+      iconBg: useHomePageStyle ? 'bg-primary-100' : 'bg-info-100 dark:bg-info-900/20',
+      iconColor: useHomePageStyle ? 'text-primary-600' : 'text-info-600 dark:text-info-400',
+      confirmBg: useHomePageStyle ? 'bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800' : 'bg-info-600 hover:bg-info-700',
+      confirmFocus: useHomePageStyle ? 'focus:ring-primary-500' : 'focus:ring-info-500',
+      infoBg: useHomePageStyle ? 'bg-primary-50' : 'bg-info-50 dark:bg-info-900/20',
+      infoBorder: useHomePageStyle ? 'border-primary-200' : 'border-info-200 dark:border-info-800',
+      infoText: useHomePageStyle ? 'text-primary-800' : 'text-info-800 dark:text-info-300'
     },
     success: {
       icon: icon || '✅',
-      iconBg: useHomePageStyle ? 'bg-green-100' : 'bg-green-100 dark:bg-green-900/20',
-      iconColor: useHomePageStyle ? 'text-green-600' : 'text-green-600 dark:text-green-400',
-      confirmBg: useHomePageStyle ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800' : 'bg-green-600 hover:bg-green-700',
-      confirmFocus: 'focus:ring-green-500',
-      infoBg: useHomePageStyle ? 'bg-green-50' : 'bg-green-50 dark:bg-green-900/20',
-      infoBorder: useHomePageStyle ? 'border-green-200' : 'border-green-200 dark:border-green-800',
-      infoText: useHomePageStyle ? 'text-green-800' : 'text-green-800 dark:text-green-300'
+      iconBg: useHomePageStyle ? 'bg-success-100' : 'bg-success-100 dark:bg-success-900/20',
+      iconColor: useHomePageStyle ? 'text-success-600' : 'text-success-600 dark:text-success-400',
+      confirmBg: useHomePageStyle ? 'bg-gradient-to-r from-success-600 to-success-700 hover:from-success-700 hover:to-success-800' : 'bg-success-600 hover:bg-success-700',
+      confirmFocus: 'focus:ring-success-500',
+      infoBg: useHomePageStyle ? 'bg-success-50' : 'bg-success-50 dark:bg-success-900/20',
+      infoBorder: useHomePageStyle ? 'border-success-200' : 'border-success-200 dark:border-success-800',
+      infoText: useHomePageStyle ? 'text-success-800' : 'text-success-800 dark:text-success-300'
     }
   };
 
@@ -95,21 +95,21 @@ export default function ConfirmationModal({
     >
       {/* Backdrop */}
       <div 
-        className={`fixed inset-0 ${useHomePageStyle ? 'bg-black bg-opacity-30 backdrop-blur-sm' : 'bg-black bg-opacity-50'} transition-opacity`}
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity"
         onClick={!isLoading ? onCancel : undefined}
       ></div>
       
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className={`relative ${useHomePageStyle ? 'bg-white shadow-2xl' : 'bg-white dark:bg-gray-800 shadow-xl'} rounded-lg max-w-md w-full mx-auto ${useHomePageStyle ? 'modal-enter' : ''}`}>
+        <div className={`relative ${useHomePageStyle ? 'bg-white shadow-2xl' : 'bg-white dark:bg-neutral-800 shadow-xl'} rounded-lg max-w-md w-full mx-auto ${useHomePageStyle ? 'modal-enter' : ''}`}>
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-700">
             <div className="flex items-center">
               <div className={`flex-shrink-0 w-10 h-10 rounded-full ${styles.iconBg} flex items-center justify-center`}>
                 <span className={`${styles.iconColor} text-xl`}>{styles.icon}</span>
               </div>
               <div className="ml-3">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                <h3 className="text-lg font-medium text-neutral-900 dark:text-white">
                   {title}
                 </h3>
               </div>
@@ -117,7 +117,7 @@ export default function ConfirmationModal({
             <button
               onClick={onCancel}
               disabled={isLoading}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="sr-only">Close</span>
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -128,7 +128,7 @@ export default function ConfirmationModal({
 
           {/* Content */}
           <div className="p-6">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
               {message}
             </p>
             {additionalInfo && (
@@ -141,16 +141,16 @@ export default function ConfirmationModal({
           </div>
 
           {/* Actions */}
-          <div className={`${singleButton ? 'flex justify-center' : 'flex justify-end gap-3'} p-6 border-t border-gray-200 ${useHomePageStyle ? '' : 'dark:border-gray-700'}`}>
+          <div className={`${singleButton ? 'flex justify-center' : 'flex justify-end gap-3'} p-6 border-t border-neutral-200 ${useHomePageStyle ? '' : 'dark:border-neutral-700'}`}>
             {!singleButton && (
               <button
                 onClick={onCancel}
                 disabled={isLoading}
                 className={`px-4 py-2 text-sm font-medium ${
                   useHomePageStyle 
-                    ? 'text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 btn-press'
-                    : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600'
-                } focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                    ? 'text-neutral-700 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 btn-press'
+                    : 'text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-600'
+                } focus:ring-2 focus:ring-info-500 focus:ring-offset-2
                   disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
               >
                 {cancelText}
@@ -160,7 +160,7 @@ export default function ConfirmationModal({
               onClick={onConfirm}
               disabled={isLoading}
               className={`px-6 py-3 font-semibold text-white 
-                         ${styles.confirmBg} disabled:bg-gray-400 
+                         ${styles.confirmBg} disabled:bg-neutral-400 
                          border border-transparent ${useHomePageStyle ? 'rounded-lg btn-press hover:shadow-lg' : 'rounded-md'}
                          focus:ring-2 ${styles.confirmFocus} focus:ring-offset-2
                          disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2`}

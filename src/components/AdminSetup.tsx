@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TEXT_CONSTANTS } from '@/constants/text';
 import { auth } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { ADMIN_CONFIG } from '@/constants/admin';
@@ -52,23 +53,23 @@ export default function AdminSetup() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-gray-800 rounded-lg shadow-lg">
+    <div className="max-w-2xl mx-auto p-6 bg-neutral-800 rounded-lg shadow-lg">
       <h1 className="text-2xl font-bold mb-6 text-white">🔧 Admin User Setup</h1>
       
       <div className="space-y-4">
-        <div className="bg-blue-900/50 border border-blue-700 p-4 rounded-lg">
-          <h2 className="font-semibold text-blue-200 mb-2">Setup Instructions:</h2>
-          <div className="text-blue-100 text-sm space-y-1">
+        <div className="bg-info-900/50 border border-info-700 p-4 rounded-lg">
+          <h2 className="font-semibold text-info-200 mb-2">Setup Instructions:</h2>
+          <div className="text-info-100 text-sm space-y-1">
             <div>1. This will create the admin user in Firebase Authentication</div>
-            <div>2. Email: <code className="bg-blue-800 px-1 rounded">{adminEmail}</code></div>
+            <div>2. Email: <code className="bg-info-800 px-1 rounded">{adminEmail}</code></div>
             <div>3. Enter a secure password below</div>
             <div>4. After creation, you can login to the admin panel</div>
           </div>
         </div>
 
-        <div className="bg-green-900/50 border border-green-700 p-4 rounded-lg">
-          <h2 className="font-semibold text-green-200 mb-2">Status:</h2>
-          <p className="text-green-100">{status}</p>
+        <div className="bg-success-900/50 border border-success-700 p-4 rounded-lg">
+          <h2 className="font-semibold text-success-200 mb-2">Status:</h2>
+          <p className="text-success-100">{status}</p>
         </div>
 
         <div className="space-y-4">
@@ -81,12 +82,12 @@ export default function AdminSetup() {
               id="adminPassword"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter a secure password..."
+              placeholder={TEXT_CONSTANTS.ADMIN_COMPONENTS.ADMIN_PASSWORD_PLACEHOLDER}
               disabled={isLoading || isCreated}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg 
-                       text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 
-                       focus:border-blue-500 outline-none transition-colors
-                       disabled:bg-gray-800 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 bg-neutral-700 border border-neutral-600 rounded-lg 
+                       text-white placeholder-neutral-400 focus:ring-2 focus:ring-info-500 
+                       focus:border-info-500 outline-none transition-colors
+                       disabled:bg-neutral-800 disabled:cursor-not-allowed"
               required
             />
           </div>
@@ -97,8 +98,8 @@ export default function AdminSetup() {
               disabled={isLoading || isCreated || !password.trim()}
               className={`px-6 py-2 rounded-lg font-medium transition-colors ${
                 isLoading || isCreated || !password.trim()
-                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  ? 'bg-neutral-600 text-neutral-400 cursor-not-allowed'
+                  : 'bg-info-600 hover:bg-info-700 text-white'
               }`}
             >
               {isLoading ? '⏳ Creating...' : isCreated ? '✅ Created' : '🔧 Create Admin User'}
@@ -107,7 +108,7 @@ export default function AdminSetup() {
             {isCreated && (
               <a
                 href="/admin"
-                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+                className="px-6 py-2 bg-success-600 hover:bg-success-700 text-white rounded-lg font-medium transition-colors"
               >
                 🚀 Go to Admin Login
               </a>
@@ -116,9 +117,9 @@ export default function AdminSetup() {
         </div>
 
         {isCreated && (
-          <div className="bg-yellow-900/50 border border-yellow-700 p-4 rounded-lg">
-            <h2 className="font-semibold text-yellow-200 mb-2">⚠️ Important Next Steps:</h2>
-            <div className="text-yellow-100 text-sm space-y-1">
+          <div className="bg-warning-900/50 border border-warning-700 p-4 rounded-lg">
+            <h2 className="font-semibold text-warning-200 mb-2">⚠️ Important Next Steps:</h2>
+            <div className="text-warning-100 text-sm space-y-1">
               <div>• You must set the userType to &quot;admin&quot; in the Firestore users collection</div>
               <div>• Navigate to Firestore → users collection → find this user → set userType: &quot;admin&quot;</div>
               <div>• Remember to change the default password after first login</div>

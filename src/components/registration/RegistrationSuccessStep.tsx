@@ -20,7 +20,7 @@ export default function RegistrationSuccessStep({
       {/* Header */}
       <div className="text-center px-6 pb-4">
         {/* Success Checkmark Icon */}
-        <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-16 h-16 bg-gradient-to-br from-success-400 to-success-600 rounded-full flex items-center justify-center mx-auto mb-6">
           <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} 
                   d="M5 13l4 4L19 7" />
@@ -28,7 +28,7 @@ export default function RegistrationSuccessStep({
         </div>
         
         {/* Success Message */}
-        <h3 className="text-xl font-bold text-gray-900 mb-8" data-testid="success-message">
+        <h3 className="text-xl font-bold text-neutral-900 mb-8" data-testid="success-message">
           {TEXT_CONSTANTS.AUTH.REGISTRATION_SUCCESS}
         </h3>
       </div>
@@ -40,8 +40,8 @@ export default function RegistrationSuccessStep({
           onClick={handleContinue}
           className="w-full py-3 px-4 font-semibold rounded-xl btn-press focus-ring
                    flex items-center justify-center gap-2
-                   transition-all duration-200 bg-gradient-to-r from-green-600 to-green-700 
-                   hover:from-green-700 hover:to-green-800 text-white hover:shadow-lg"
+                   transition-all duration-200 bg-gradient-to-r from-success-600 to-success-700 
+                   hover:from-success-700 hover:to-success-800 text-white hover:shadow-lg"
           data-testid="continue-button"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -586,11 +586,10 @@ export function formatEquipmentDate(dateString: string): string {
 export function getStatusDisplayText(status: EquipmentStatus): string {
   const statusTexts: Record<EquipmentStatus, string> = {
     [EquipmentStatus.AVAILABLE]: 'זמין',
-    [EquipmentStatus.IN_USE]: 'בשימוש',
-    [EquipmentStatus.MAINTENANCE]: 'בתחזוקה',
+    [EquipmentStatus.SECURITY]: 'בביטחונית',
     [EquipmentStatus.REPAIR]: 'בתיקון',
     [EquipmentStatus.LOST]: 'אבוד',
-    [EquipmentStatus.RETIRED]: 'הוחזר'
+    [EquipmentStatus.PENDING_TRANSFER]: 'בהעברה'
   };
   
   return statusTexts[status] || status;
@@ -601,12 +600,9 @@ export function getStatusDisplayText(status: EquipmentStatus): string {
  */
 export function getConditionDisplayText(condition: EquipmentCondition): string {
   const conditionTexts: Record<EquipmentCondition, string> = {
-    [EquipmentCondition.NEW]: 'חדש',
-    [EquipmentCondition.EXCELLENT]: 'מצוין',
     [EquipmentCondition.GOOD]: 'טוב',
-    [EquipmentCondition.FAIR]: 'בסדר',
-    [EquipmentCondition.POOR]: 'גרוע',
-    [EquipmentCondition.NEEDS_REPAIR]: 'דורש תיקון'
+    [EquipmentCondition.NEEDS_REPAIR]: 'דרוש תיקון',
+    [EquipmentCondition.WORN]: 'בלאי'
   };
   
   return conditionTexts[condition] || condition;
@@ -638,7 +634,7 @@ export function needsAttention(equipment: Equipment): {
     return { needsAttention: true, reason: 'לא עודכן למעלה מ-7 ימים', priority: 'medium' };
   }
   
-  if (equipment.condition === EquipmentCondition.POOR || equipment.condition === EquipmentCondition.NEEDS_REPAIR) {
+  if (equipment.condition === EquipmentCondition.NEEDS_REPAIR || equipment.condition === EquipmentCondition.WORN) {
     return { needsAttention: true, reason: 'מצב הציוד דורש תשומת לב', priority: 'medium' };
   }
   

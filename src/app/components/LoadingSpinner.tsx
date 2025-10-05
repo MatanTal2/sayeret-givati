@@ -12,8 +12,8 @@ export default function LoadingSpinner({ size = 'md', color = 'white' }: Loading
 
   const colorClasses = {
     white: 'border-white',
-    purple: 'border-purple-600',
-    gray: 'border-gray-600'
+    purple: 'border-primary-600',
+    gray: 'border-neutral-600'
   };
 
   return (

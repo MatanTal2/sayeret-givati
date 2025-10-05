@@ -105,7 +105,7 @@ export default function RegistrationDetailsStep({
       {/* Header */}
       <div className="text-center px-6 pb-4">
         {/* User Icon */}
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 bg-gradient-to-br from-info-400 to-info-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -113,7 +113,7 @@ export default function RegistrationDetailsStep({
         </div>
         
         {/* Title */}
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">{TEXT_CONSTANTS.AUTH.REGISTRATION_DETAILS}</h3>
+        <h3 className="text-2xl font-bold text-neutral-900 mb-2">{TEXT_CONSTANTS.AUTH.REGISTRATION_DETAILS}</h3>
       </div>
 
       {/* Registration Details Form */}
@@ -121,35 +121,35 @@ export default function RegistrationDetailsStep({
         <form className="space-y-4">
           
           {/* Read-only Pre-filled Fields */}
-          <div className="space-y-3 bg-gray-50 p-4 rounded-xl">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">פרטים אישיים</h4>
+          <div className="space-y-3 bg-neutral-50 p-4 rounded-xl">
+            <h4 className="text-sm font-semibold text-neutral-700 mb-3">פרטים אישיים</h4>
             
             {/* First Name - Read Only */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-neutral-700">
                 {TEXT_CONSTANTS.AUTH.FIRST_NAME}
               </label>
               <input
                 type="text"
                 value={firstName}
                 readOnly
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-100 
-                         text-right text-gray-600 cursor-not-allowed"
+                className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl bg-neutral-100 
+                         text-right text-neutral-600 cursor-not-allowed"
                 data-testid="first-name-readonly"
               />
             </div>
 
             {/* Last Name - Read Only */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-neutral-700">
                 {TEXT_CONSTANTS.AUTH.LAST_NAME}
               </label>
               <input
                 type="text"
                 value={lastName}
                 readOnly
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-100 
-                         text-right text-gray-600 cursor-not-allowed"
+                className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl bg-neutral-100 
+                         text-right text-neutral-600 cursor-not-allowed"
                 data-testid="last-name-readonly"
               />
             </div>
@@ -159,7 +159,7 @@ export default function RegistrationDetailsStep({
 
           {/* Email Field */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-neutral-700">
               {TEXT_CONSTANTS.AUTH.EMAIL_ADDRESS} *
             </label>
             <div className="relative">
@@ -168,23 +168,23 @@ export default function RegistrationDetailsStep({
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                         text-right text-gray-800 bg-gray-50 focus:bg-white placeholder-gray-500 ${
+                         text-right text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 ${
                   validationErrors.email && formData.email
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                    : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500'
+                    ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
+                    : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
                 }`}
                 placeholder={TEXT_CONSTANTS.AUTH.EMAIL_PLACEHOLDER_REGISTRATION}
                 data-testid="email-input"
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                         d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                 </svg>
               </div>
             </div>
             {validationErrors.email && formData.email && (
-              <p className="text-sm text-red-600 text-right px-1" data-testid="email-error">
+              <p className="text-sm text-danger-600 text-right px-1" data-testid="email-error">
                 {validationErrors.email}
               </p>
             )}
@@ -192,7 +192,7 @@ export default function RegistrationDetailsStep({
 
           {/* Password Field */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-neutral-700">
               {TEXT_CONSTANTS.AUTH.PASSWORD} *
             </label>
             <div className="relative">
@@ -201,10 +201,10 @@ export default function RegistrationDetailsStep({
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
                 className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                         text-right text-gray-800 bg-gray-50 focus:bg-white pr-12 placeholder-gray-500 ${
+                         text-right text-neutral-800 bg-neutral-50 focus:bg-white pr-12 placeholder-neutral-500 ${
                   validationErrors.password && formData.password
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                    : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500'
+                    ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
+                    : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
                 }`}
                 placeholder={TEXT_CONSTANTS.AUTH.PASSWORD_PLACEHOLDER_REGISTRATION}
                 data-testid="password-input"
@@ -213,8 +213,8 @@ export default function RegistrationDetailsStep({
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 
-                         text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-md
-                         focus:outline-none focus:ring-2 focus:ring-blue-300"
+                         text-neutral-400 hover:text-neutral-600 transition-colors p-1 rounded-md
+                         focus:outline-none focus:ring-2 focus:ring-info-300"
               >
                 {showPassword ? (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,7 +232,7 @@ export default function RegistrationDetailsStep({
               </button>
             </div>
             {validationErrors.password && formData.password && (
-              <p className="text-sm text-red-600 text-right px-1" data-testid="password-error">
+              <p className="text-sm text-danger-600 text-right px-1" data-testid="password-error">
                 {validationErrors.password}
               </p>
             )}
@@ -240,17 +240,17 @@ export default function RegistrationDetailsStep({
 
           {/* Gender Dropdown */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-neutral-700">
               {TEXT_CONSTANTS.AUTH.GENDER} *
             </label>
             <select
               value={formData.gender}
               onChange={(e) => handleInputChange('gender', e.target.value)}
               className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                       text-right text-gray-800 bg-gray-50 focus:bg-white ${
+                       text-right text-neutral-800 bg-neutral-50 focus:bg-white ${
                 validationErrors.gender && formData.gender
-                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                  : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500'
+                  ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
+                  : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
               }`}
               data-testid="gender-select"
             >
@@ -260,7 +260,7 @@ export default function RegistrationDetailsStep({
               <option value="other">{TEXT_CONSTANTS.AUTH.GENDER_OTHER}</option>
             </select>
             {validationErrors.gender && (
-              <p className="text-sm text-red-600 text-right px-1" data-testid="gender-error">
+              <p className="text-sm text-danger-600 text-right px-1" data-testid="gender-error">
                 {validationErrors.gender}
               </p>
             )}
@@ -268,7 +268,7 @@ export default function RegistrationDetailsStep({
 
           {/* Birthdate Field */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-neutral-700">
               {TEXT_CONSTANTS.AUTH.BIRTHDATE} *
             </label>
             <input
@@ -276,15 +276,15 @@ export default function RegistrationDetailsStep({
               value={formData.birthdate}
               onChange={(e) => handleInputChange('birthdate', e.target.value)}
               className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                       text-right text-gray-800 bg-gray-50 focus:bg-white ${
+                       text-right text-neutral-800 bg-neutral-50 focus:bg-white ${
                 validationErrors.birthdate && formData.birthdate
-                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                  : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500'
+                  ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
+                  : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
               }`}
               data-testid="birthdate-input"
             />
             {validationErrors.birthdate && formData.birthdate && (
-              <p className="text-sm text-red-600 text-right px-1" data-testid="birthdate-error">
+              <p className="text-sm text-danger-600 text-right px-1" data-testid="birthdate-error">
                 {validationErrors.birthdate}
               </p>
             )}
@@ -297,15 +297,15 @@ export default function RegistrationDetailsStep({
                 type="checkbox"
                 checked={formData.consent}
                 onChange={(e) => handleInputChange('consent', e.target.checked)}
-                className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="mt-1 w-4 h-4 text-info-600 border-neutral-300 rounded focus:ring-info-500"
                 data-testid="consent-checkbox"
               />
-              <span className="text-sm text-gray-700 leading-relaxed">
+              <span className="text-sm text-neutral-700 leading-relaxed">
                 אני מסכים/ה ל
                 <button
                   type="button"
                   onClick={() => setShowPolicyModal(true)}
-                  className="text-blue-600 hover:text-blue-800 underline mx-1"
+                  className="text-info-600 hover:text-info-800 underline mx-1"
                 >
                   תנאי השימוש ומדיניות הפרטיות
                 </button>
@@ -313,7 +313,7 @@ export default function RegistrationDetailsStep({
               </span>
             </label>
             {validationErrors.consent && (
-              <p className="text-sm text-red-600 text-right px-1" data-testid="consent-error">
+              <p className="text-sm text-danger-600 text-right px-1" data-testid="consent-error">
                 {validationErrors.consent}
               </p>
             )}
@@ -328,8 +328,8 @@ export default function RegistrationDetailsStep({
                      flex items-center justify-center gap-2
                      transition-all duration-200 ${
               isFormValid
-                ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:shadow-lg'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-gradient-to-r from-info-600 to-info-700 hover:from-info-700 hover:to-info-800 text-white hover:shadow-lg'
+                : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
             }`}
             data-testid="create-account-button"
           >

@@ -11,6 +11,7 @@ import DailyStatusBadge from './DailyStatusBadge';
 import SelectAllCheckbox from '@/app/components/SelectAllCheckbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserType } from '@/types/user';
+import { hasEquipmentManagementAccess } from '@/utils/permissionUtils';
 
 interface EquipmentListProps {
   equipment: Equipment[];
@@ -19,6 +20,7 @@ interface EquipmentListProps {
   onTransfer?: (equipmentId: string) => void;
   onUpdateStatus?: (equipmentId: string) => void;
   onViewHistory?: (equipmentId: string) => void;
+  onCredit?: (equipmentId: string) => void;
   onRefresh?: () => void;
 }
 
@@ -32,6 +34,7 @@ export default function EquipmentList({
   onTransfer,
   onUpdateStatus,
   onViewHistory,
+  onCredit,
   onRefresh
 }: EquipmentListProps) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -49,6 +52,24 @@ export default function EquipmentList({
   // Tab and user context
   const { enhancedUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'my-equipment' | 'additional-equipment'>('my-equipment');
+  
+  // Permission checks
+  const canManageEquipment = hasEquipmentManagementAccess(enhancedUser);
+  
+  // Check if user can perform actions on equipment
+  const canPerformActions = () => {
+    // In "my-equipment" tab, users can always manage their own equipment
+    if (activeTab === 'my-equipment') {
+      return true;
+    }
+    
+    // In "additional-equipment" tab, only admin/manager/system_manager can perform actions
+    if (activeTab === 'additional-equipment') {
+      return canManageEquipment;
+    }
+    
+    return false;
+  };
   
   // Additional filters for "additional equipment" tab
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -223,11 +244,11 @@ export default function EquipmentList({
 
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) {
-      return <ArrowUpDown className="inline w-4 h-4 ml-1 text-purple-500" />;
+      return <ArrowUpDown className="inline w-4 h-4 ml-1 text-primary-500" />;
     }
     return sortOrder === 'asc' 
-      ? <ArrowUp className="inline w-4 h-4 ml-1 text-purple-700" />
-      : <ArrowDown className="inline w-4 h-4 ml-1 text-purple-700" />;
+      ? <ArrowUp className="inline w-4 h-4 ml-1 text-primary-700" />
+      : <ArrowDown className="inline w-4 h-4 ml-1 text-primary-700" />;
   };
 
   // Toggle row expansion
@@ -340,8 +361,8 @@ export default function EquipmentList({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-info-600 mx-auto mb-4"></div>
+          <p className="text-neutral-600">
             {TEXT_CONSTANTS.FEATURES.EQUIPMENT.LOADING_EQUIPMENT}
           </p>
         </div>
@@ -352,14 +373,14 @@ export default function EquipmentList({
   if (error) {
     return (
       <div className="text-center py-12">
-        <div className="text-red-600 dark:text-red-400 mb-4">
+        <div className="text-danger-600 dark:text-danger-400 mb-4">
           ❌ {TEXT_CONSTANTS.FEATURES.EQUIPMENT.ERROR_LOADING}
         </div>
-        <p className="text-sm text-gray-600 mb-4">{error}</p>
+        <p className="text-sm text-neutral-600 mb-4">{error}</p>
         {onRefresh && (
           <button
             onClick={onRefresh}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-info-600 text-white rounded-md hover:bg-info-700 transition-colors"
           >
             {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TRY_AGAIN}
           </button>
@@ -371,18 +392,18 @@ export default function EquipmentList({
   return (
     <div className="space-y-6">
       {/* Compact Controls Bar */}
-      <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100">
+      <div className="bg-white rounded-xl shadow-lg p-4 border border-neutral-100">
         {/* Basic Filters - Compact Layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
             <input
               type="text"
-              placeholder="חיפוש לפי מספר סידורי..."
+              placeholder={TEXT_CONSTANTS.EQUIPMENT_PAGE.SEARCH_BY_SERIAL}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg
-                         bg-gray-50 text-gray-900 placeholder-gray-500
-                         focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white
+              className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg
+                         bg-neutral-50 text-neutral-900 placeholder-neutral-500
+                         focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white
                          transition-colors"
             />
           </div>
@@ -391,30 +412,29 @@ export default function EquipmentList({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as EquipmentStatus | 'all')}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg
-                         bg-gray-50 text-gray-900
-                         focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white
+              className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg
+                         bg-neutral-50 text-neutral-900
+                         focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white
                          transition-colors"
             >
               <option value="all">כל הסטטוסים</option>
               <option value={EquipmentStatus.AVAILABLE}>זמין</option>
-              <option value={EquipmentStatus.IN_USE}>בשימוש</option>
-              <option value={EquipmentStatus.MAINTENANCE}>בתחזוקה</option>
+              <option value={EquipmentStatus.SECURITY}>בביטחונית</option>
               <option value={EquipmentStatus.REPAIR}>בתיקון</option>
               <option value={EquipmentStatus.LOST}>אבוד</option>
-              <option value={EquipmentStatus.RETIRED}>הוחזר</option>
+              <option value={EquipmentStatus.PENDING_TRANSFER}>בהעברה</option>
             </select>
           </div>
 
           <div>
             <input
               type="text"
-              placeholder="חיפוש לפי שם מוצר..."
+              placeholder={TEXT_CONSTANTS.EQUIPMENT_PAGE.SEARCH_BY_PRODUCT}
               value={productNameFilter}
               onChange={(e) => setProductNameFilter(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg
-                         bg-gray-50 text-gray-900 placeholder-gray-500
-                         focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white
+              className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg
+                         bg-neutral-50 text-neutral-900 placeholder-neutral-500
+                         focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white
                          transition-colors"
             />
           </div>
@@ -422,7 +442,7 @@ export default function EquipmentList({
           <div className="flex items-center">
             <button
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors"
             >
               <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showAdvancedFilters ? 'rotate-180' : ''}`} />
               {showAdvancedFilters ? TEXT_CONSTANTS.FEATURES.EQUIPMENT.HIDE_ADVANCED_FILTERS : TEXT_CONSTANTS.FEATURES.EQUIPMENT.SHOW_ADVANCED_FILTERS}
@@ -432,66 +452,63 @@ export default function EquipmentList({
 
         {/* Collapsible Advanced Filters */}
         {showAdvancedFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-200 transition-all duration-300 ease-in-out">
+          <div className="mt-4 pt-4 border-t border-neutral-200 transition-all duration-300 ease-in-out">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <div>
                 <input
                   type="text"
-                  placeholder="מחזיק נוכחי..."
+                  placeholder={TEXT_CONSTANTS.EQUIPMENT_PAGE.CURRENT_HOLDER_FILTER}
                   value={holderFilter}
                   onChange={(e) => setHolderFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-colors"
+                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg bg-neutral-50 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-colors"
                 />
               </div>
               <div>
                 <input
                   type="text"
-                  placeholder="סוג ציוד..."
+                  placeholder={TEXT_CONSTANTS.EQUIPMENT_PAGE.EQUIPMENT_TYPE_FILTER}
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-colors"
+                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg bg-neutral-50 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-colors"
                 />
               </div>
               <div>
                 <input
                   type="text"
-                  placeholder="קטגוריה..."
+                  placeholder={TEXT_CONSTANTS.EQUIPMENT_PAGE.CATEGORY_FILTER}
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-colors"
+                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg bg-neutral-50 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-colors"
                 />
               </div>
               <div>
                 <input
                   type="text"
-                  placeholder="תת-קטגוריה..."
+                  placeholder={TEXT_CONSTANTS.EQUIPMENT_PAGE.SUBCATEGORY_FILTER}
                   value={subCategoryFilter}
                   onChange={(e) => setSubCategoryFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-colors"
+                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg bg-neutral-50 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-colors"
                 />
               </div>
               <div>
                 <input
                   type="text"
-                  placeholder="מספר סידורי מתקדם..."
+                  placeholder={TEXT_CONSTANTS.EQUIPMENT_PAGE.ADVANCED_SERIAL_FILTER}
                   value={idFilter}
                   onChange={(e) => setIdFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-colors"
+                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg bg-neutral-50 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-colors"
                 />
               </div>
               <div>
                 <select
                   value={conditionFilter}
                   onChange={(e) => setConditionFilter(e.target.value as EquipmentCondition | 'all')}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-colors"
+                  className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg bg-neutral-50 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:bg-white transition-colors"
                 >
                   <option value="all">כל המצבים</option>
-                  <option value={EquipmentCondition.NEW}>חדש</option>
-                  <option value={EquipmentCondition.EXCELLENT}>מצוין</option>
                   <option value={EquipmentCondition.GOOD}>טוב</option>
-                  <option value={EquipmentCondition.FAIR}>בסדר</option>
-                  <option value={EquipmentCondition.POOR}>גרוע</option>
-                  <option value={EquipmentCondition.NEEDS_REPAIR}>דורש תיקון</option>
+                  <option value={EquipmentCondition.NEEDS_REPAIR}>דרוש תיקון</option>
+                  <option value={EquipmentCondition.WORN}>בלאי</option>
                 </select>
               </div>
             </div>
@@ -510,7 +527,7 @@ export default function EquipmentList({
                   setStatusFilter('all');
                   setSearchTerm('');
                 }}
-                className="px-3 py-1 text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                className="px-3 py-1 text-xs text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 rounded-md transition-colors"
               >
                 נקה הכל
               </button>
@@ -520,24 +537,24 @@ export default function EquipmentList({
       </div>
 
       {/* Results Count & Info */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm bg-gray-50 px-4 py-3 rounded-lg">
-        <div className="text-gray-600">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm bg-neutral-50 px-4 py-3 rounded-lg">
+        <div className="text-neutral-600">
           {(() => {
             // Calculate the baseline count for the current tab
             const baseEquipmentForTab = getFilteredEquipment();
             return TEXT_FMT.SHOWING_RESULTS(filteredAndSortedEquipment.length, baseEquipmentForTab.length);
           })()}
           {selectedEquipmentIds.size > 0 && (
-            <span className="text-purple-600 font-medium mr-2">
+            <span className="text-primary-600 font-medium mr-2">
               • נבחרו {selectedEquipmentIds.size} פריטים
             </span>
           )}
         </div>
         
         {/* Active Filter Info */}
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-neutral-500">
           {(searchTerm || idFilter || productNameFilter || holderFilter || typeFilter || categoryFilter || subCategoryFilter || statusFilter !== 'all' || conditionFilter !== 'all') && (
-            <span className="text-purple-600">סינון פעיל • </span>
+            <span className="text-primary-600">סינון פעיל • </span>
           )}
           {activeTab === 'my-equipment' 
             ? 'הציוד שלי'
@@ -549,16 +566,16 @@ export default function EquipmentList({
       </div>
 
       {/* Equipment Display with Tabs */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden min-h-[500px]">
+      <div className="bg-white rounded-xl shadow-lg border border-neutral-100 overflow-hidden min-h-[500px]">
         {/* Tabs - Always visible, sticky above table header */}
-        <div className="sticky top-0 z-20 bg-white border-b border-gray-200">
+        <div className="sticky top-0 z-20 bg-white border-b border-neutral-200">
           <div className="flex">
             <button
               onClick={() => setActiveTab('my-equipment')}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === 'my-equipment'
-                  ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50'
+                  : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50'
               }`}
             >
               {TEXT_CONSTANTS.FEATURES.EQUIPMENT.MY_EQUIPMENT}
@@ -567,8 +584,8 @@ export default function EquipmentList({
               onClick={() => setActiveTab('additional-equipment')}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === 'additional-equipment'
-                  ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50'
+                  : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50'
               }`}
             >
               {TEXT_CONSTANTS.FEATURES.EQUIPMENT.ADDITIONAL_EQUIPMENT}
@@ -580,10 +597,10 @@ export default function EquipmentList({
         {filteredAndSortedEquipment.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📦</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-neutral-900 mb-2">
               {activeTab === 'my-equipment' ? 'אין לך ציוד כרגע' : 'לא נמצא ציוד'}
             </h3>
-            <p className="text-gray-600 text-sm">
+            <p className="text-neutral-600 text-sm">
               {activeTab === 'my-equipment' 
                 ? 'לא נמצא ציוד שאתה מחזיק כרגע'
                 : searchTerm || idFilter || productNameFilter || holderFilter || typeFilter || categoryFilter || subCategoryFilter || statusFilter !== 'all' || conditionFilter !== 'all'
@@ -594,7 +611,7 @@ export default function EquipmentList({
               }
             </p>
             {process.env.NODE_ENV === 'development' && (
-              <div className="mt-4 text-xs text-gray-400">
+              <div className="mt-4 text-xs text-neutral-400">
                 <p>Debug: Total equipment in system: {equipment.length}</p>
                 <p>Equipment for current tab: {getFilteredEquipment().length}</p>
                 <p>After filters applied: {filteredAndSortedEquipment.length}</p>
@@ -616,9 +633,9 @@ export default function EquipmentList({
                 <col className="w-28" />
                 <col className="w-32" />
               </colgroup>
-              <thead className="bg-purple-50 border-b border-purple-200">
+              <thead className="bg-primary-50 border-b border-primary-200">
                 <tr>
-                  <th className="px-3 py-4 text-center text-xs font-medium text-purple-700 uppercase tracking-wider">
+                  <th className="px-3 py-4 text-center text-xs font-medium text-primary-700 uppercase tracking-wider">
                     <SelectAllCheckbox
                       allSelected={allVisibleSelected}
                       someSelected={someVisibleSelected}
@@ -626,19 +643,19 @@ export default function EquipmentList({
                       className="w-4 h-4"
                     />
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-purple-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-medium text-primary-700 uppercase tracking-wider">
                     פרטים
                   </th>
                   <th 
-                    className="px-6 py-4 text-right text-xs font-medium text-purple-700 uppercase tracking-wider cursor-pointer hover:bg-purple-100"
+                    className="px-6 py-4 text-right text-xs font-medium text-primary-700 uppercase tracking-wider cursor-pointer hover:bg-primary-100"
                     onClick={() => handleSort('id')}
                   >
                     {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TABLE_SERIAL} {getSortIcon('id')}
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-purple-700 uppercase tracking-wider relative" ref={productNameFilterRef}>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-primary-700 uppercase tracking-wider relative" ref={productNameFilterRef}>
                     <div className="flex items-center justify-between">
                       <div 
-                        className="flex items-center cursor-pointer hover:bg-purple-100 px-2 py-1 rounded"
+                        className="flex items-center cursor-pointer hover:bg-primary-100 px-2 py-1 rounded"
                         onClick={() => handleSort('productName')}
                       >
                         <span>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.TABLE_ITEM}</span>
@@ -646,13 +663,13 @@ export default function EquipmentList({
                       </div>
                       <button
                         onClick={() => setShowProductNameFilter(!showProductNameFilter)}
-                        className="mr-2 px-2 py-1 text-purple-700 hover:bg-purple-100 rounded transition-colors"
+                        className="mr-2 px-2 py-1 text-primary-700 hover:bg-primary-100 rounded transition-colors"
                       >
-                        <ChevronDown className={`h-4 w-4 text-purple-700 transition-transform duration-200 ${showProductNameFilter ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`h-4 w-4 text-primary-700 transition-transform duration-200 ${showProductNameFilter ? 'rotate-180' : ''}`} />
                       </button>
                     </div>
                     {showProductNameFilter && (
-                      <div className="fixed bg-white border border-gray-200 rounded-md shadow-lg z-50" 
+                      <div className="fixed bg-white border border-neutral-200 rounded-md shadow-lg z-50" 
                            style={{
                              top: dropdownPositions.productName.top,
                              left: dropdownPositions.productName.left,
@@ -660,10 +677,10 @@ export default function EquipmentList({
                            }}>
                         <div className="p-3 max-h-48 overflow-y-auto">
                           <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm font-semibold text-gray-700">בחר פריטים:</span>
+                            <span className="text-sm font-semibold text-neutral-700">בחר פריטים:</span>
                             <button
                               onClick={clearProductNameFilters}
-                              className="text-xs text-purple-600 hover:text-purple-800"
+                              className="text-xs text-primary-600 hover:text-primary-800"
                             >
                               נקה הכל
                             </button>
@@ -675,9 +692,9 @@ export default function EquipmentList({
                                   type="checkbox"
                                   checked={selectedProductNames.includes(productName)}
                                   onChange={(e) => handleProductNameFilterChange(productName, e.target.checked)}
-                                  className="text-purple-600 focus:ring-purple-500"
+                                  className="text-primary-600 focus:ring-primary-500"
                                 />
-                                <span className="text-sm text-gray-700">{productName}</span>
+                                <span className="text-sm text-neutral-700">{productName}</span>
                               </label>
                             ))}
                           </div>
@@ -685,10 +702,10 @@ export default function EquipmentList({
                       </div>
                     )}
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-purple-700 uppercase tracking-wider relative" ref={holderFilterRef}>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-primary-700 uppercase tracking-wider relative" ref={holderFilterRef}>
                     <div className="flex items-center justify-between">
                       <div 
-                        className="flex items-center cursor-pointer hover:bg-purple-100 px-2 py-1 rounded"
+                        className="flex items-center cursor-pointer hover:bg-primary-100 px-2 py-1 rounded"
                         onClick={() => handleSort('currentHolder')}
                       >
                         <span>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.TABLE_HOLDER}</span>
@@ -696,13 +713,13 @@ export default function EquipmentList({
                       </div>
                       <button
                         onClick={() => setShowHolderFilter(!showHolderFilter)}
-                        className="mr-2 px-2 py-1 text-purple-700 hover:bg-purple-100 rounded transition-colors"
+                        className="mr-2 px-2 py-1 text-primary-700 hover:bg-primary-100 rounded transition-colors"
                       >
-                        <ChevronDown className={`h-4 w-4 text-purple-700 transition-transform duration-200 ${showHolderFilter ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`h-4 w-4 text-primary-700 transition-transform duration-200 ${showHolderFilter ? 'rotate-180' : ''}`} />
                       </button>
                     </div>
                     {showHolderFilter && (
-                      <div className="fixed bg-white border border-gray-200 rounded-md shadow-lg z-50"
+                      <div className="fixed bg-white border border-neutral-200 rounded-md shadow-lg z-50"
                            style={{
                              top: dropdownPositions.holder.top,
                              left: dropdownPositions.holder.left,
@@ -710,10 +727,10 @@ export default function EquipmentList({
                            }}>
                         <div className="p-3 max-h-48 overflow-y-auto">
                           <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm font-semibold text-gray-700">בחר מחזיקים:</span>
+                            <span className="text-sm font-semibold text-neutral-700">בחר מחזיקים:</span>
                             <button
                               onClick={clearHolderFilters}
-                              className="text-xs text-purple-600 hover:text-purple-800"
+                              className="text-xs text-primary-600 hover:text-primary-800"
                             >
                               נקה הכל
                             </button>
@@ -725,9 +742,9 @@ export default function EquipmentList({
                                   type="checkbox"
                                   checked={selectedHolders.includes(holder)}
                                   onChange={(e) => handleHolderFilterChange(holder, e.target.checked)}
-                                  className="text-purple-600 focus:ring-purple-500"
+                                  className="text-primary-600 focus:ring-primary-500"
                                 />
-                                <span className="text-sm text-gray-700">{holder}</span>
+                                <span className="text-sm text-neutral-700">{holder}</span>
                               </label>
                             ))}
                           </div>
@@ -736,48 +753,48 @@ export default function EquipmentList({
                     )}
                   </th>
                   <th 
-                    className="px-6 py-4 text-right text-xs font-medium text-purple-700 uppercase tracking-wider cursor-pointer hover:bg-purple-100"
+                    className="px-6 py-4 text-right text-xs font-medium text-primary-700 uppercase tracking-wider cursor-pointer hover:bg-primary-100"
                     onClick={() => handleSort('status')}
                   >
                     {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TABLE_STATUS} {getSortIcon('status')}
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-purple-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-medium text-primary-700 uppercase tracking-wider">
                     {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TABLE_ACTIONS}
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-neutral-200">
                 {filteredAndSortedEquipment.map((item) => (
                   <React.Fragment key={item.id}>
                     {/* Main Row - Minimal Info */}
-                    <tr className="hover:bg-gray-50">
+                    <tr className="hover:bg-neutral-50">
                       <td className="px-3 py-4 whitespace-nowrap text-center">
                         <input
                           type="checkbox"
                           checked={selectedEquipmentIds.has(item.id)}
                           onChange={() => toggleEquipmentSelection(item.id)}
-                          className="text-purple-600 focus:ring-purple-500 w-4 h-4"
+                          className="text-primary-600 focus:ring-primary-500 w-4 h-4"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => toggleRowExpansion(item.id)}
-                          className="flex items-center gap-2 text-purple-700 hover:bg-purple-50 px-2 py-1 rounded-md transition-colors"
+                          className="flex items-center gap-2 text-primary-700 hover:bg-primary-50 px-2 py-1 rounded-md transition-colors"
                         >
                           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${expandedRows.has(item.id) ? 'rotate-180' : ''}`} />
                           <span className="text-xs font-medium">{TEXT_CONSTANTS.FEATURES.EQUIPMENT.SHOW_MORE_DETAILS}</span>
                         </button>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">
                         #{item.id}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{item.productName}</div>
-                        <div className="text-xs text-gray-500">{item.category}</div>
+                        <div className="text-sm font-medium text-neutral-900">{item.productName}</div>
+                        <div className="text-xs text-neutral-500">{item.category}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{item.currentHolder}</div>
-                        <div className="text-xs text-gray-500">{item.assignedUnit}</div>
+                        <div className="text-sm text-neutral-900">{item.currentHolder}</div>
+                        <div className="text-xs text-neutral-500">{item.assignedUnit}</div>
                       </td>
                                              <td className="px-6 py-4 whitespace-nowrap">
                          <div className="flex flex-col gap-1">
@@ -787,21 +804,34 @@ export default function EquipmentList({
                        </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex gap-2">
-                          {onTransfer && (
+                          {onTransfer && canPerformActions() && (
                             <button
                               onClick={() => onTransfer(item.id)}
-                              className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-md transition-colors"
+                              className="px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white text-xs rounded-md transition-colors"
                             >
                               העבר
                             </button>
                           )}
-                          {onUpdateStatus && (
+                          {onUpdateStatus && canPerformActions() && (
                             <button
                               onClick={() => onUpdateStatus(item.id)}
-                              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-md transition-colors"
+                              className="px-3 py-1 bg-info-600 hover:bg-info-700 text-white text-xs rounded-md transition-colors"
                             >
                               עדכן
                             </button>
+                          )}
+                          {onCredit && canPerformActions() && (
+                            <button
+                              onClick={() => onCredit(item.id)}
+                              className="px-3 py-1 bg-white border-2 border-danger-600 text-danger-600 hover:bg-danger-50 text-xs rounded-md transition-colors"
+                            >
+                              {TEXT_CONSTANTS.FEATURES.EQUIPMENT.CREDIT_EQUIPMENT}
+                            </button>
+                          )}
+                          {!canPerformActions() && activeTab === 'additional-equipment' && (
+                            <span className="px-3 py-1 bg-neutral-200 text-neutral-500 text-xs rounded-md">
+                              {TEXT_CONSTANTS.FEATURES.EQUIPMENT.RESTRICTED_ACCESS}
+                            </span>
                           )}
                         </div>
                       </td>
@@ -810,61 +840,61 @@ export default function EquipmentList({
                     {/* Expanded Row - Additional Details */}
                     {expandedRows.has(item.id) && (
                       <tr>
-                        <td colSpan={7} className="px-6 py-4 bg-gray-50">
+                        <td colSpan={7} className="px-6 py-4 bg-neutral-50">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
                             <div>
-                              <h4 className="font-medium text-gray-900 mb-2">פרטי מיקום ומצב</h4>
+                              <h4 className="font-medium text-neutral-900 mb-2">פרטי מיקום ומצב</h4>
                               <div className="space-y-1">
                                 <div className="flex items-center gap-3">
-                                  <span className="text-gray-500 min-w-[80px]">מיקום:</span>
-                                  <span className="text-gray-900">📍 {item.location}</span>
+                                  <span className="text-neutral-500 min-w-[80px]">מיקום:</span>
+                                  <span className="text-neutral-900">📍 {item.location}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="text-gray-500 min-w-[80px]">מצב:</span>
+                                  <span className="text-neutral-500 min-w-[80px]">מצב:</span>
                                   <ConditionComponent condition={item.condition} size="sm" />
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="text-gray-500 min-w-[80px]">בדיקה אחרונה:</span>
-                                  <span className="text-gray-900">{formatDate(item.lastReportUpdate)}</span>
+                                  <span className="text-neutral-500 min-w-[80px]">בדיקה אחרונה:</span>
+                                  <span className="text-neutral-900">{formatDate(item.lastReportUpdate)}</span>
                                 </div>
                               </div>
                             </div>
                             
                             <div>
-                              <h4 className="font-medium text-gray-900 mb-2">פרטי קבלה</h4>
+                              <h4 className="font-medium text-neutral-900 mb-2">פרטי קבלה</h4>
                               <div className="space-y-1">
                                 <div className="flex items-center gap-3">
-                                  <span className="text-gray-500 min-w-[80px]">תאריך קבלה:</span>
-                                  <span className="text-gray-900">{formatDate(item.dateSigned)}</span>
+                                  <span className="text-neutral-500 min-w-[80px]">תאריך קבלה:</span>
+                                  <span className="text-neutral-900">{formatDate(item.dateSigned)}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="text-gray-500 min-w-[80px]">נמסר על ידי:</span>
-                                  <span className="text-gray-900">{item.signedBy}</span>
+                                  <span className="text-neutral-500 min-w-[80px]">נמסר על ידי:</span>
+                                  <span className="text-neutral-900">{item.signedBy}</span>
                                 </div>
                                 {item.assignedTeam && (
                                   <div className="flex items-center gap-3">
-                                    <span className="text-gray-500 min-w-[80px]">צוות:</span>
-                                    <span className="text-gray-900">{item.assignedTeam}</span>
+                                    <span className="text-neutral-500 min-w-[80px]">צוות:</span>
+                                    <span className="text-neutral-900">{item.assignedTeam}</span>
                                   </div>
                                 )}
                               </div>
                             </div>
                             
                             <div>
-                              <h4 className="font-medium text-gray-900 mb-2">פעולות נוספות</h4>
+                              <h4 className="font-medium text-neutral-900 mb-2">פעולות נוספות</h4>
                               <div className="space-y-2">
                                 {onViewHistory && (
                                   <button
                                     onClick={() => onViewHistory(item.id)}
-                                    className="w-full px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-md transition-colors"
+                                    className="w-full px-3 py-2 bg-success-600 hover:bg-success-700 text-white text-sm rounded-md transition-colors"
                                   >
                                     📋 הצג היסטוריה
                                   </button>
                                 )}
                                 {item.notes && (
                                   <div className="mt-2">
-                                    <span className="text-gray-500 text-xs">הערות:</span>
-                                    <p className="text-gray-900 text-sm mt-1 p-2 bg-yellow-50 rounded border-r-4 border-yellow-200">
+                                    <span className="text-neutral-500 text-xs">הערות:</span>
+                                    <p className="text-neutral-900 text-sm mt-1 p-2 bg-warning-50 rounded border-r-4 border-warning-200">
                                       {item.notes}
                                     </p>
                                   </div>

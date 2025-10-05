@@ -115,13 +115,13 @@ export default function SimpleUserTest() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-gray-800 rounded-lg shadow-lg">
+    <div className="max-w-4xl mx-auto p-6 bg-neutral-800 rounded-lg shadow-lg">
       <h1 className="text-2xl font-bold mb-6 text-white">🧪 Simple User Creation Test</h1>
       
       <div className="space-y-4">
-        <div className="bg-blue-900/50 border border-blue-700 p-4 rounded-lg">
-          <h2 className="font-semibold text-blue-200">What This Test Does:</h2>
-          <div className="text-blue-100 text-sm space-y-1">
+        <div className="bg-info-900/50 border border-info-700 p-4 rounded-lg">
+          <h2 className="font-semibold text-info-200">What This Test Does:</h2>
+          <div className="text-info-100 text-sm space-y-1">
             <div>1. Creates a user with email and password</div>
             <div>2. Checks if we&apos;re connected/authenticated</div>
             <div>3. Signs out and cleans up</div>
@@ -129,36 +129,36 @@ export default function SimpleUserTest() {
           </div>
         </div>
 
-        <div className="bg-green-900/50 border border-green-700 p-4 rounded-lg">
-          <h2 className="font-semibold text-green-200">Current Status:</h2>
-          <p className="text-green-100">{status}</p>
+        <div className="bg-success-900/50 border border-success-700 p-4 rounded-lg">
+          <h2 className="font-semibold text-success-200">Current Status:</h2>
+          <p className="text-success-100">{status}</p>
         </div>
 
         <div className="flex gap-4">
           <button
             onClick={checkFirebaseConfig}
             disabled={isRunning}
-            className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-500 transition-colors shadow-lg disabled:opacity-50"
+            className="bg-warning-600 text-white px-4 py-2 rounded hover:bg-warning-500 transition-colors shadow-lg disabled:opacity-50"
           >
             🔍 Check Config
           </button>
           <button
             onClick={testCreateUser}
             disabled={isRunning}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-500 transition-colors shadow-lg disabled:opacity-50"
+            className="bg-success-600 text-white px-4 py-2 rounded hover:bg-success-500 transition-colors shadow-lg disabled:opacity-50"
           >
             🧪 Test User Creation
           </button>
         </div>
 
-        <div className="bg-gray-700 border border-gray-600 p-4 rounded-lg">
-          <h3 className="font-semibold text-gray-200 mb-3">Test Results:</h3>
+        <div className="bg-neutral-700 border border-neutral-600 p-4 rounded-lg">
+          <h3 className="font-semibold text-neutral-200 mb-3">Test Results:</h3>
           <div className="space-y-1 max-h-96 overflow-y-auto">
             {testResults.length === 0 ? (
-              <p className="text-gray-400">No tests run yet...</p>
+              <p className="text-neutral-400">No tests run yet...</p>
             ) : (
               testResults.map((result, index) => (
-                <div key={index} className="font-mono text-sm text-gray-100 bg-gray-800 p-2 rounded border border-gray-600">
+                <div key={index} className="font-mono text-sm text-neutral-100 bg-neutral-800 p-2 rounded border border-neutral-600">
                   {result}
                 </div>
               ))

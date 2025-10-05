@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { CameraIcon, UserIcon, UploadIcon } from 'lucide-react';
 import { ProfileImageUploadProps, ImageUploadState } from '@/types/profile';
+import { TEXT_CONSTANTS } from '@/constants/text';
 
 /**
  * ProfileImageUpload component for uploading and updating profile images
@@ -53,7 +54,7 @@ export default function ProfileImageUpload({
     if (!file.type.startsWith('image/')) {
       setUploadState({
         isUploading: false,
-        error: 'אנא בחר קובץ תמונה חוקי',
+        error: TEXT_CONSTANTS.PROFILE_COMPONENTS.INVALID_FILE_ERROR,
         success: false
       });
       return;
@@ -63,7 +64,7 @@ export default function ProfileImageUpload({
     if (file.size > 5 * 1024 * 1024) {
       setUploadState({
         isUploading: false,
-        error: 'גודל הקובץ חייב להיות קטן מ-5MB',
+        error: TEXT_CONSTANTS.PROFILE_COMPONENTS.FILE_SIZE_ERROR,
         success: false
       });
       return;
@@ -97,7 +98,7 @@ export default function ProfileImageUpload({
     } catch (error) {
       setUploadState({
         isUploading: false,
-        error: error instanceof Error ? error.message : 'שגיאה בהעלאת התמונה',
+        error: error instanceof Error ? error.message : TEXT_CONSTANTS.PROFILE_COMPONENTS.UPLOAD_ERROR,
         success: false
       });
     }
@@ -116,7 +117,7 @@ export default function ProfileImageUpload({
         if (Math.random() > 0.1) { // 90% success rate
           resolve(`/api/uploads/${file.name}`);
         } else {
-          reject(new Error('שגיאה בהעלאת התמונה לשרת'));
+          reject(new Error(TEXT_CONSTANTS.PROFILE_COMPONENTS.SERVER_UPLOAD_ERROR));
         }
       }, 2000); // Simulate upload time
     });
@@ -127,7 +128,7 @@ export default function ProfileImageUpload({
       {/* Profile Image Container */}
       <div className="relative group">
         <div 
-          className={`${sizeClasses[size]} bg-purple-600 rounded-full flex items-center justify-center text-white ${textSizes[size]} font-bold cursor-pointer transition-all duration-200 group-hover:bg-purple-700 overflow-hidden`}
+          className={`${sizeClasses[size]} bg-primary-600 rounded-full flex items-center justify-center text-white ${textSizes[size]} font-bold cursor-pointer transition-all duration-200 group-hover:bg-primary-700 overflow-hidden`}
           onClick={handleImageSelect}
         >
           {uploadState.isUploading ? (
@@ -136,7 +137,7 @@ export default function ProfileImageUpload({
             // eslint-disable-next-line @next/next/no-img-element
             <img 
               src={currentImageUrl} 
-              alt="Profile" 
+              alt={TEXT_CONSTANTS.PROFILE_COMPONENTS.PROFILE_ALT} 
               className="w-full h-full object-cover"
             />
           ) : (
@@ -158,8 +159,8 @@ export default function ProfileImageUpload({
           <button
             onClick={handleImageSelect}
             disabled={uploadState.isUploading}
-            className="absolute -bottom-2 -right-2 bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-full shadow-lg transition-colors duration-200 disabled:bg-gray-400"
-            title="העלה תמונה"
+            className="absolute -bottom-2 -right-2 bg-primary-600 hover:bg-primary-700 text-white p-2 rounded-full shadow-lg transition-colors duration-200 disabled:bg-neutral-400"
+            title={TEXT_CONSTANTS.PROFILE_COMPONENTS.UPLOAD_IMAGE_TITLE}
           >
             {uploadState.isUploading ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -183,10 +184,10 @@ export default function ProfileImageUpload({
       {/* Upload Instructions */}
       {size !== 'small' && (
         <div className="mt-2 text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-neutral-500">
             לחץ להעלאת תמונה חדשה
           </p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-neutral-400">
             JPG, PNG עד 5MB
           </p>
         </div>
@@ -195,7 +196,7 @@ export default function ProfileImageUpload({
       {/* Status Messages */}
       {uploadState.error && (
         <div className="mt-2 text-center">
-          <p className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+          <p className="text-xs text-danger-600 bg-danger-50 px-2 py-1 rounded">
             {uploadState.error}
           </p>
         </div>
@@ -203,7 +204,7 @@ export default function ProfileImageUpload({
 
       {uploadState.success && (
         <div className="mt-2 text-center">
-          <p className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+          <p className="text-xs text-success-600 bg-success-50 px-2 py-1 rounded">
             התמונה הועלתה בהצלחה!
           </p>
         </div>

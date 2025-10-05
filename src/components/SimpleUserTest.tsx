@@ -235,12 +235,12 @@ export default function SimpleUserTest() {
   };
 
   return (
-    <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg max-w-4xl mx-auto">
+    <div className="bg-neutral-900 text-white p-6 rounded-lg shadow-lg max-w-4xl mx-auto">
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-4 text-center">
           🔐 Complete Authentication Test
         </h2>
-        <p className="text-gray-300 text-center mb-4">
+        <p className="text-neutral-300 text-center mb-4">
           Comprehensive Firebase authentication testing with detailed pass/fail results
         </p>
       </div>
@@ -250,7 +250,7 @@ export default function SimpleUserTest() {
         <button
           onClick={checkConfig}
           disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded font-medium transition-colors"
+          className="bg-info-600 hover:bg-info-700 disabled:bg-neutral-600 px-4 py-2 rounded font-medium transition-colors"
         >
           🔍 Check Config
         </button>
@@ -258,7 +258,7 @@ export default function SimpleUserTest() {
         <button
           onClick={runComprehensiveAuthTest}
           disabled={loading}
-          className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-4 py-2 rounded font-medium transition-colors"
+          className="bg-success-600 hover:bg-success-700 disabled:bg-neutral-600 px-4 py-2 rounded font-medium transition-colors"
         >
           🔐 Run Authentication Testing
         </button>
@@ -266,7 +266,7 @@ export default function SimpleUserTest() {
         <button
           onClick={testUserDeletion}
           disabled={loading}
-          className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 px-4 py-2 rounded font-medium transition-colors"
+          className="bg-danger-600 hover:bg-danger-700 disabled:bg-neutral-600 px-4 py-2 rounded font-medium transition-colors"
         >
           🗑️ Delete User
         </button>
@@ -274,7 +274,7 @@ export default function SimpleUserTest() {
         <button
           onClick={clearResults}
           disabled={loading}
-          className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-600 px-4 py-2 rounded font-medium transition-colors"
+          className="bg-neutral-600 hover:bg-neutral-700 disabled:bg-neutral-600 px-4 py-2 rounded font-medium transition-colors"
         >
           🧹 Clear Results
         </button>
@@ -282,9 +282,9 @@ export default function SimpleUserTest() {
 
       {/* Loading Indicator */}
       {loading && (
-        <div className="bg-yellow-900 border border-yellow-600 text-yellow-200 px-4 py-3 rounded mb-4">
+        <div className="bg-warning-900 border border-warning-600 text-warning-200 px-4 py-3 rounded mb-4">
           <div className="flex items-center">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-200 mr-2"></div>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-warning-200 mr-2"></div>
             <span>Running test...</span>
           </div>
         </div>
@@ -292,24 +292,24 @@ export default function SimpleUserTest() {
 
       {/* Authentication Test Results Summary */}
       {authResults.length > 0 && (
-        <div className="bg-gray-800 rounded-lg p-4 mb-6">
-          <h3 className="text-lg font-semibold mb-3 text-blue-400">📊 Authentication Test Results:</h3>
+        <div className="bg-neutral-800 rounded-lg p-4 mb-6">
+          <h3 className="text-lg font-semibold mb-3 text-info-400">📊 Authentication Test Results:</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {authResults.map((result, index) => (
               <div
                 key={index}
                 className={`p-3 rounded-lg border ${
                   result.passed 
-                    ? 'bg-green-900 border-green-600 text-green-100' 
-                    : 'bg-red-900 border-red-600 text-red-100'
+                    ? 'bg-success-900 border-success-600 text-success-100' 
+                    : 'bg-danger-900 border-danger-600 text-danger-100'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-medium text-sm">{result.testName}</span>
                   <span className={`text-xs px-2 py-1 rounded ${
                     result.passed 
-                      ? 'bg-green-600 text-green-100' 
-                      : 'bg-red-600 text-red-100'
+                      ? 'bg-success-600 text-success-100' 
+                      : 'bg-danger-600 text-danger-100'
                   }`}>
                     {result.passed ? 'PASS' : 'FAIL'}
                   </span>
@@ -321,7 +321,7 @@ export default function SimpleUserTest() {
             ))}
           </div>
           <div className="mt-4 text-center">
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-neutral-400">
               {authResults.filter(r => r.passed).length} / {authResults.length} tests passed
             </span>
           </div>
@@ -329,10 +329,10 @@ export default function SimpleUserTest() {
       )}
 
       {/* Detailed Results Display */}
-      <div className="bg-gray-800 rounded-lg p-4 min-h-[300px] max-h-[500px] overflow-y-auto">
-        <h3 className="text-lg font-semibold mb-3 text-green-400">📋 Detailed Test Log:</h3>
+      <div className="bg-neutral-800 rounded-lg p-4 min-h-[300px] max-h-[500px] overflow-y-auto">
+        <h3 className="text-lg font-semibold mb-3 text-success-400">📋 Detailed Test Log:</h3>
         {results.length === 0 ? (
-          <p className="text-gray-400 italic">Click a button above to start testing...</p>
+          <p className="text-neutral-400 italic">Click a button above to start testing...</p>
         ) : (
           <div className="space-y-1">
             {results.map((result, index) => (
@@ -340,14 +340,14 @@ export default function SimpleUserTest() {
                 key={index}
                 className={`text-sm font-mono ${
                   result.includes('❌') 
-                    ? 'text-red-400' 
+                    ? 'text-danger-400' 
                     : result.includes('✅') 
-                    ? 'text-green-400'
+                    ? 'text-success-400'
                     : result.includes('ℹ️')
-                    ? 'text-blue-400'
+                    ? 'text-info-400'
                     : result.includes('🗑️')
                     ? 'text-orange-400'
-                    : 'text-gray-300'
+                    : 'text-neutral-300'
                 }`}
               >
                 {result}
@@ -358,16 +358,16 @@ export default function SimpleUserTest() {
       </div>
 
       {/* Test Info */}
-      <div className="mt-6 bg-gray-800 rounded-lg p-4">
-        <h4 className="text-md font-semibold mb-2 text-blue-400">🎯 Test Instructions:</h4>
-        <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
+      <div className="mt-6 bg-neutral-800 rounded-lg p-4">
+        <h4 className="text-md font-semibold mb-2 text-info-400">🎯 Test Instructions:</h4>
+        <ol className="text-sm text-neutral-300 space-y-1 list-decimal list-inside">
           <li><strong>Check Config:</strong> Verify Firebase settings are loaded correctly</li>
           <li><strong>Run Authentication Testing:</strong> Comprehensive test of all auth scenarios</li>
           <li><strong>Delete User:</strong> Clean up test user and Firestore document</li>
           <li><strong>Check Results Summary:</strong> View pass/fail status for each test type</li>
         </ol>
         
-        <div className="mt-3 text-xs text-gray-400">
+        <div className="mt-3 text-xs text-neutral-400">
           <p><strong>Authentication Tests Include:</strong></p>
           <ul className="ml-4 space-y-1 list-disc list-inside">
             <li>Email/Password Registration</li>
@@ -378,7 +378,7 @@ export default function SimpleUserTest() {
           </ul>
         </div>
         
-        <div className="mt-3 text-xs text-gray-400">
+        <div className="mt-3 text-xs text-neutral-400">
           <p><strong>Test User:</strong> {testEmail}</p>
           <p><strong>Profile Registration:</strong> Creates user in &apos;users&apos; collection with TEST- prefix</p>
           <p><strong>Note:</strong> User deletion is permanent and cannot be undone!</p>

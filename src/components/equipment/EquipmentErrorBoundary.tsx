@@ -65,25 +65,25 @@ interface DefaultErrorFallbackProps {
 
 function DefaultErrorFallback({ error, resetError }: DefaultErrorFallbackProps) {
   return (
-    <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-red-200 dark:border-red-800">
+    <div className="text-center py-12 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-danger-200 dark:border-danger-800">
       <div className="text-6xl mb-6">
         ⚠️
       </div>
       
-      <h3 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-3">
+      <h3 className="text-xl font-semibold text-danger-600 dark:text-danger-400 mb-3">
         {TEXT_CONSTANTS.FEATURES.EQUIPMENT.ERROR_LOADING}
       </h3>
       
-      <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
+      <p className="text-neutral-600 dark:text-neutral-400 mb-4 max-w-md mx-auto">
         {TEXT_CONSTANTS.FEATURES.EQUIPMENT.UNEXPECTED_ERROR}
       </p>
       
       {error && (
         <details className="mb-6 text-left max-w-lg mx-auto">
-          <summary className="text-sm text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+          <summary className="text-sm text-neutral-500 dark:text-neutral-400 cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300">
             {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TECHNICAL_DETAILS}
           </summary>
-          <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono text-gray-800 dark:text-gray-200 overflow-auto">
+          <div className="mt-2 p-3 bg-neutral-100 dark:bg-neutral-700 rounded text-xs font-mono text-neutral-800 dark:text-neutral-200 overflow-auto">
             {error.message}
             {error.stack && (
               <pre className="mt-2 whitespace-pre-wrap">
@@ -97,24 +97,24 @@ function DefaultErrorFallback({ error, resetError }: DefaultErrorFallbackProps) 
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <button
           onClick={resetError}
-          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg 
-                     hover:bg-blue-700 transition-colors duration-200
-                     focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="px-6 py-3 bg-info-600 text-white font-medium rounded-lg 
+                     hover:bg-info-700 transition-colors duration-200
+                     focus:ring-2 focus:ring-info-500 focus:ring-offset-2"
         >
           {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TRY_AGAIN}
         </button>
         
         <button
           onClick={() => window.location.reload()}
-          className="px-6 py-3 bg-gray-600 text-white font-medium rounded-lg 
-                     hover:bg-gray-700 transition-colors duration-200
-                     focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          className="px-6 py-3 bg-neutral-600 text-white font-medium rounded-lg 
+                     hover:bg-neutral-700 transition-colors duration-200
+                     focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
         >
           {TEXT_CONSTANTS.FEATURES.EQUIPMENT.REFRESH_PAGE}
         </button>
       </div>
       
-      <div className="mt-6 text-sm text-gray-500 dark:text-gray-400">
+      <div className="mt-6 text-sm text-neutral-500 dark:text-neutral-400">
         {TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONTACT_ADMIN}
       </div>
     </div>
