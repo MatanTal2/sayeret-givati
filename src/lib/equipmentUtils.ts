@@ -93,8 +93,7 @@ export function createNewEquipment(
         location,
         notes,
         { approvedBy: signedById, approvalType: ApprovalType.NO_APPROVAL_REQUIRED },
-        signedBy, // holderName
-        signedBy  // updatedByName
+        signedBy // holderName
       )
     ],
     createdAt: serverNow,
@@ -124,18 +123,8 @@ export function transferEquipment(
   },
   newUnit?: string,
   newLocation?: string,
-  notes?: string,
-  updatedByName?: string // Display name (optional)
+  notes?: string
 ): Equipment {
-  const now = Timestamp.fromDate(new Date());
-  
-  // Close previous history entry
-  const updatedHistory = [...equipment.trackingHistory];
-  const lastEntry = updatedHistory[updatedHistory.length - 1];
-  if (lastEntry && !lastEntry.toDate) {
-    lastEntry.toDate = now;
-  }
-  
   // Add new history entry
   const newHistoryEntry = createHistoryEntry(
     approvalDetails.emergencyOverride ? EquipmentAction.EMERGENCY_TRANSFER : EquipmentAction.TRANSFER,
@@ -144,11 +133,10 @@ export function transferEquipment(
     newLocation || equipment.location,
     notes,
     approvalDetails,
-    newHolder, // holderName
-    updatedByName // updatedByName
+    newHolder // holderName
   );
   
-  updatedHistory.push(newHistoryEntry);
+  const updatedHistory = [...equipment.trackingHistory, newHistoryEntry];
   
   return {
     ...equipment,
@@ -168,8 +156,7 @@ export function updateEquipmentStatus(
   equipment: Equipment,
   newStatus: EquipmentStatus,
   updatedBy: string,
-  notes?: string,
-  updatedByName?: string
+  notes?: string
 ): Equipment {
   const historyEntry = createHistoryEntry(
     EquipmentAction.STATUS_UPDATE,
@@ -178,8 +165,7 @@ export function updateEquipmentStatus(
     equipment.location,
     `Status changed to: ${newStatus}${notes ? ` - ${notes}` : ''}`,
     undefined, // no approval needed for status updates
-    equipment.currentHolder, // holderName
-    updatedByName // updatedByName
+    equipment.currentHolder // holderName
   );
   
   return {
@@ -197,8 +183,7 @@ export function updateEquipmentCondition(
   equipment: Equipment,
   newCondition: EquipmentCondition,
   updatedBy: string,
-  notes?: string,
-  updatedByName?: string
+  notes?: string
 ): Equipment {
   const historyEntry = createHistoryEntry(
     EquipmentAction.CONDITION_UPDATE,
@@ -207,8 +192,7 @@ export function updateEquipmentCondition(
     equipment.location,
     `Condition changed to: ${newCondition}${notes ? ` - ${notes}` : ''}`,
     undefined, // no approval needed for condition updates
-    equipment.currentHolder, // holderName
-    updatedByName // updatedByName
+    equipment.currentHolder // holderName
   );
   
   return {
@@ -225,8 +209,7 @@ export function updateEquipmentCondition(
 export function performDailyCheckIn(
   equipment: Equipment,
   checkedBy: string,
-  notes?: string,
-  checkedByName?: string
+  notes?: string
 ): Equipment {
   const now = serverTimestamp() as Timestamp;
   
@@ -237,8 +220,7 @@ export function performDailyCheckIn(
     equipment.location,
     notes || 'Daily check-in completed',
     undefined, // no approval needed for check-ins
-    equipment.currentHolder, // holderName
-    checkedByName // updatedByName
+    equipment.currentHolder // holderName
   );
   
   return {
