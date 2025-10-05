@@ -90,8 +90,8 @@ function SearchableDropdown({
           value={isOpen ? searchTerm : value}
           onChange={(e) => onSearchChange(e.target.value)}
           onFocus={onToggle}
-          className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors ${
-            error ? 'border-red-500' : 'border-gray-300'
+          className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
+            error ? 'border-danger-500' : 'border-neutral-300'
           }`}
           placeholder={placeholder}
           disabled={disabled}
@@ -102,16 +102,16 @@ function SearchableDropdown({
           className="absolute inset-y-0 right-0 flex items-center pr-3"
           disabled={disabled}
         >
-          <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`h-4 w-4 text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
       
       {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+        <div className="absolute z-10 w-full mt-1 bg-white border border-neutral-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
           {loading ? (
-            <div className="p-3 text-center text-gray-500">טוען...</div>
+            <div className="p-3 text-center text-neutral-500">טוען...</div>
           ) : options.length === 0 ? (
-            <div className="p-3 text-center text-gray-500">לא נמצאו תוצאות</div>
+            <div className="p-3 text-center text-neutral-500">לא נמצאו תוצאות</div>
           ) : (
             options.map((option) => (
               <button
@@ -124,11 +124,11 @@ function SearchableDropdown({
                     onChange(option.label);
                   }
                 }}
-                className="w-full px-3 py-2 text-right hover:bg-purple-50 focus:bg-purple-50 focus:outline-none"
+                className="w-full px-3 py-2 text-right hover:bg-primary-50 focus:bg-primary-50 focus:outline-none"
               >
-                <div className="font-medium text-gray-900">{option.label}</div>
+                <div className="font-medium text-neutral-900">{option.label}</div>
                 {option.subtitle && (
-                  <div className="text-sm text-gray-600">{option.subtitle}</div>
+                  <div className="text-sm text-neutral-600">{option.subtitle}</div>
                 )}
               </button>
             ))
@@ -137,7 +137,7 @@ function SearchableDropdown({
       )}
       
       {error && (
-        <p className="text-red-500 text-sm mt-1">{error}</p>
+        <p className="text-danger-500 text-sm mt-1">{error}</p>
       )}
     </div>
   );
@@ -274,7 +274,7 @@ export default function AddEquipmentModal({
         assignedUnit: '',
         location: 'מחסן',
         status: EquipmentStatus.AVAILABLE,
-        condition: EquipmentCondition.NEW,
+        condition: EquipmentCondition.GOOD,
         notes: equipmentTemplate.notes || ''
       });
     } else {
@@ -289,7 +289,7 @@ export default function AddEquipmentModal({
         assignedUnit: '',
         location: '',
         status: EquipmentStatus.AVAILABLE,
-        condition: EquipmentCondition.NEW,
+        condition: EquipmentCondition.GOOD,
         notes: equipmentType.notes || ''
       });
     }
@@ -478,15 +478,15 @@ export default function AddEquipmentModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-md bg-white/20 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-neutral-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-neutral-200">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-neutral-900">
               {showTemplates ? 'בחר תבנית ציוד' : TEXT_CONSTANTS.FEATURES.EQUIPMENT.ADD_NEW}
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-neutral-600 mt-1">
               {showTemplates 
                 ? 'בחר תבנית מוכנה או צור ציוד באופן ידני'
                 : selectedTemplate
@@ -498,10 +498,10 @@ export default function AddEquipmentModal({
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
               disabled={isSubmitting}
             >
-              <X className="h-5 w-5 text-gray-500" />
+              <X className="h-5 w-5 text-neutral-500" />
             </button>
           </div>
         </div>
@@ -515,14 +515,14 @@ export default function AddEquipmentModal({
               <div className="flex gap-3 mb-4">
                 <button
                   onClick={handleSkipTemplates}
-                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm"
                 >
                   <Plus className="h-4 w-4" />
                   יצירה ידנית
                 </button>
                 <button
                   onClick={handleCreateNewTemplate}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                  className="flex items-center gap-2 px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700 transition-colors text-sm"
                 >
                   <Plus className="h-4 w-4" />
                   צור תבנית חדשה
@@ -533,7 +533,7 @@ export default function AddEquipmentModal({
             {/* Status and Refresh Section */}
             <div className="flex items-center justify-between mb-4">
               {/* Template Count */}
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-neutral-500">
                 {templates.length} תבניות
               </span>
               
@@ -541,7 +541,7 @@ export default function AddEquipmentModal({
               <button
                 onClick={refreshTemplates}
                 disabled={templatesLoading}
-                className="flex items-center gap-1 px-3 py-1 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50"
+                className="flex items-center gap-1 px-3 py-1 text-sm text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50"
               >
                 <RefreshCw className={`h-4 w-4 ${templatesLoading ? 'animate-spin' : ''}`} />
                 רענן
@@ -550,11 +550,11 @@ export default function AddEquipmentModal({
 
             {/* Error Display */}
             {templatesError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-800">
+              <div className="mb-4 p-3 bg-danger-50 border border-danger-200 rounded-lg">
+                <p className="text-sm text-danger-800">
                   ❌ שגיאה בטעינת תבניות: {templatesError}
                 </p>
-                <p className="text-xs text-red-600 mt-1">
+                <p className="text-xs text-danger-600 mt-1">
                   לא ניתן לטעון תבניות ממסד הנתונים
                 </p>
               </div>
@@ -563,19 +563,19 @@ export default function AddEquipmentModal({
             {/* Empty State */}
             {templates.length === 0 && !templatesLoading && (
               <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">
+                <div className="text-neutral-400 mb-4">
                   <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2M4 13h2m13-8V4a1 1 0 00-1-1H7a1 1 0 00-1 1v1m8 0V4.5" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">אין תבניות זמינות</h3>
-                <p className="text-gray-500 mb-4">
+                <h3 className="text-lg font-medium text-neutral-900 mb-2">אין תבניות זמינות</h3>
+                <p className="text-neutral-500 mb-4">
                   לא נמצאו תבניות ציוד במסד הנתונים
                 </p>
                 {hasManagerPermissions && (
                   <button
                     onClick={handleCreateNewTemplate}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-info-600 text-white rounded-lg hover:bg-info-700 transition-colors"
                   >
                     <Plus className="h-4 w-4" />
                     צור תבנית ראשונה
@@ -591,15 +591,15 @@ export default function AddEquipmentModal({
                 const isExpanded = expandedCategories.has(category);
                 
                 return (
-                  <div key={category} className="border border-gray-200 rounded-lg">
+                  <div key={category} className="border border-neutral-200 rounded-lg">
                     {/* Category Header */}
                     <button
                       onClick={() => toggleCategory(category)}
-                      className="w-full p-4 flex items-center justify-between text-right hover:bg-gray-50 transition-colors"
+                      className="w-full p-4 flex items-center justify-between text-right hover:bg-neutral-50 transition-colors"
                     >
-                      <h3 className="text-lg font-semibold text-gray-900">{category}</h3>
+                      <h3 className="text-lg font-semibold text-neutral-900">{category}</h3>
                       <ChevronDown 
-                        className={`h-5 w-5 text-gray-500 transition-transform duration-200 ${
+                        className={`h-5 w-5 text-neutral-500 transition-transform duration-200 ${
                           isExpanded ? 'rotate-180' : ''
                         }`}
                       />
@@ -613,26 +613,26 @@ export default function AddEquipmentModal({
                             <button
                               key={template.id}
                               onClick={() => handleTemplateSelect(template)}
-                              className="w-full p-3 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all text-right group"
+                              className="w-full p-3 border border-neutral-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-all text-right group"
                             >
                               <div className="flex items-center gap-3">
                                 <span className="text-lg">{getTemplateDisplayProps(template).icon}</span>
                                 <div className="flex-1 min-w-0 space-y-1">
                                   {/* Template Name */}
-                                  <h4 className="font-medium text-gray-900 group-hover:text-purple-700 truncate">
+                                  <h4 className="font-medium text-neutral-900 group-hover:text-primary-700 truncate">
                                     {template.name}
                                   </h4>
                                   
                                   {/* Category and Subcategory */}
-                                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                                    <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
+                                  <div className="flex items-center gap-2 text-xs text-neutral-500">
+                                    <span className="bg-info-50 text-info-700 px-2 py-0.5 rounded">
                                       {template.category}
                                     </span>
                                     {template.subcategory && (
-                                      <span className="text-gray-400">›</span>
+                                      <span className="text-neutral-400">›</span>
                                     )}
                                     {template.subcategory && (
-                                      <span className="bg-gray-50 text-gray-600 px-2 py-0.5 rounded">
+                                      <span className="bg-neutral-50 text-neutral-600 px-2 py-0.5 rounded">
                                         {template.subcategory}
                                       </span>
                                     )}
@@ -640,7 +640,7 @@ export default function AddEquipmentModal({
                                   
                                   {/* Description or Notes */}
                                   {getTemplateDisplayProps(template).description && (
-                                    <p className="text-sm text-gray-600 truncate">
+                                    <p className="text-sm text-neutral-600 truncate">
                                       {getTemplateDisplayProps(template).description}
                                     </p>
                                   )}
@@ -668,15 +668,15 @@ export default function AddEquipmentModal({
 
             {/* Manual Entry Option for Non-Managers */}
             {!hasManagerPermissions && (
-              <div className="mt-8 pt-6 border-t border-gray-200">
+              <div className="mt-8 pt-6 border-t border-neutral-200">
                 <button
                   onClick={handleSkipTemplates}
-                  className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all"
+                  className="w-full p-4 border-2 border-dashed border-neutral-300 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-all"
                 >
                   <div className="text-center">
                     <span className="text-2xl mb-2 block">✏️</span>
-                    <h4 className="font-medium text-gray-900">יצירה ידנית</h4>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <h4 className="font-medium text-neutral-900">יצירה ידנית</h4>
+                    <p className="text-sm text-neutral-600 mt-1">
                       צור ציוד חדש ללא תבנית מוכנה
                     </p>
                   </div>
@@ -689,14 +689,14 @@ export default function AddEquipmentModal({
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Template Indicator */}
             {selectedTemplate && (
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{getTemplateDisplayProps(selectedTemplate).icon}</span>
                   <div>
-                    <h4 className="font-medium text-purple-900">
+                    <h4 className="font-medium text-primary-900">
                       תבנית: {selectedTemplate.name}
                     </h4>
-                    <p className="text-sm text-purple-700">
+                    <p className="text-sm text-primary-700">
                       {getTemplateDisplayProps(selectedTemplate).description}
                     </p>
                   </div>
@@ -707,7 +707,7 @@ export default function AddEquipmentModal({
             {/* Serial Number with Classification Checkbox */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-neutral-700">
                 מספר סידורי {isClassifiedEquipment ? '*' : '(אופציונלי)'}
               </label>
               <label className="flex items-center gap-2 text-sm">
@@ -715,24 +715,24 @@ export default function AddEquipmentModal({
                   type="checkbox"
                   checked={isClassifiedEquipment}
                   onChange={(e) => setIsClassifiedEquipment(e.target.checked)}
-                  className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  className="rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
                   disabled={isSubmitting}
                 />
-                <span className="text-gray-700">צלם/צופן</span>
+                <span className="text-neutral-700">צלם/צופן</span>
               </label>
             </div>
             <input
               type="text"
               value={formData.serialNumber}
               onChange={(e) => handleInputChange('serialNumber', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors ${
-                errors.serialNumber ? 'border-red-500' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
+                errors.serialNumber ? 'border-danger-500' : 'border-neutral-300'
               }`}
               placeholder={isClassifiedEquipment ? "לדוגמה: EQ-2024-001" : "לדוגמה: EQ-2024-001 (אופציונלי)"}
               disabled={isSubmitting}
             />
             {errors.serialNumber && (
-              <p className="text-red-500 text-sm mt-1">{errors.serialNumber}</p>
+              <p className="text-danger-500 text-sm mt-1">{errors.serialNumber}</p>
             )}
             {isClassifiedEquipment && (
               <p className="text-xs text-amber-600 mt-1">
@@ -744,37 +744,37 @@ export default function AddEquipmentModal({
           {/* Product Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 שם המוצר *
               </label>
               <input
                 type="text"
                 value={formData.productName}
                 onChange={(e) => handleInputChange('productName', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors ${
-                  errors.productName ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
+                  errors.productName ? 'border-danger-500' : 'border-neutral-300'
                 }`}
-                placeholder="לדוגמה: רובה M4A1"
+                placeholder={TEXT_CONSTANTS.EQUIPMENT_PAGE.EXAMPLE_RIFLE}
                 disabled={isSubmitting}
               />
               {errors.productName && (
-                <p className="text-red-500 text-sm mt-1">{errors.productName}</p>
+                <p className="text-danger-500 text-sm mt-1">{errors.productName}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 קטגוריה *
               </label>
               <select
                 value={formData.category}
                 onChange={(e) => handleInputChange('category', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors ${
-                  errors.category ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
+                  errors.category ? 'border-danger-500' : 'border-neutral-300'
                 }`}
                 disabled={isSubmitting || templatesLoading}
               >
-                <option value="">בחר קטגוריה</option>
+                <option value="">{TEXT_CONSTANTS.EQUIPMENT_PAGE.SELECT_CATEGORY}</option>
                 {availableCategories.map((category: string) => (
                   <option key={category} value={category}>
                     {category}
@@ -785,7 +785,7 @@ export default function AddEquipmentModal({
                 )}
               </select>
               {errors.category && (
-                <p className="text-red-500 text-sm mt-1">{errors.category}</p>
+                <p className="text-danger-500 text-sm mt-1">{errors.category}</p>
               )}
             </div>
           </div>
@@ -793,7 +793,7 @@ export default function AddEquipmentModal({
           {/* Assignment Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div ref={nameDropdownRef}>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 מחזיק נוכחי *
               </label>
               {hasManagerPermissions ? (
@@ -812,7 +812,7 @@ export default function AddEquipmentModal({
                     label: user.fullName,
                     subtitle: `${user.rank} • ${user.role}`
                   }))}
-                  placeholder="חפש או הקלד שם"
+                  placeholder={TEXT_CONSTANTS.EQUIPMENT_PAGE.SEARCH_OR_TYPE_NAME}
                   error={errors.currentHolder}
                   disabled={isSubmitting}
                   loading={usersLoading}
@@ -823,21 +823,21 @@ export default function AddEquipmentModal({
                     type="text"
                     value={formData.currentHolder}
                     onChange={(e) => handleInputChange('currentHolder', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors ${
-                      errors.currentHolder ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
+                      errors.currentHolder ? 'border-danger-500' : 'border-neutral-300'
                     }`}
                     placeholder="לדוגמה: רב״ט דוד כהן"
                     disabled={isSubmitting}
                   />
                   {errors.currentHolder && (
-                    <p className="text-red-500 text-sm mt-1">{errors.currentHolder}</p>
+                    <p className="text-danger-500 text-sm mt-1">{errors.currentHolder}</p>
                   )}
                 </>
               )}
             </div>
 
             <div ref={unitDropdownRef}>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 יחידה *
               </label>
               {hasManagerPermissions ? (
@@ -861,7 +861,7 @@ export default function AddEquipmentModal({
                   ].filter(unit => 
                     unit.label.toLowerCase().includes(unitSearchTerm.toLowerCase())
                   )}
-                  placeholder="חפש או הקלד יחידה"
+                  placeholder={TEXT_CONSTANTS.EQUIPMENT_PAGE.SEARCH_OR_TYPE_UNIT}
                   error={errors.assignedUnit}
                   disabled={isSubmitting}
                   loading={false}
@@ -872,14 +872,14 @@ export default function AddEquipmentModal({
                     type="text"
                     value={formData.assignedUnit}
                     onChange={(e) => handleInputChange('assignedUnit', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors ${
-                      errors.assignedUnit ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
+                      errors.assignedUnit ? 'border-danger-500' : 'border-neutral-300'
                     }`}
                     placeholder="לדוגמה: פלוגה א'"
                     disabled={isSubmitting}
                   />
                   {errors.assignedUnit && (
-                    <p className="text-red-500 text-sm mt-1">{errors.assignedUnit}</p>
+                    <p className="text-danger-500 text-sm mt-1">{errors.assignedUnit}</p>
                   )}
                 </>
               )}
@@ -888,98 +888,96 @@ export default function AddEquipmentModal({
 
           {/* Location */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
               מיקום (אופציונלי)
             </label>
             <input
               type="text"
               value={formData.location}
               onChange={(e) => handleInputChange('location', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors ${
-                errors.location ? 'border-red-500' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
+                errors.location ? 'border-danger-500' : 'border-neutral-300'
               }`}
-              placeholder="לדוגמה: מחסן נשק - בסיס (אופציונלי)"
+              placeholder={TEXT_CONSTANTS.EQUIPMENT_PAGE.EXAMPLE_LOCATION}
               disabled={isSubmitting}
             />
             {errors.location && (
-              <p className="text-red-500 text-sm mt-1">{errors.location}</p>
+              <p className="text-danger-500 text-sm mt-1">{errors.location}</p>
             )}
           </div>
 
           {/* Status and Condition */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 סטטוס
               </label>
               <select
                 value={formData.status}
                 onChange={(e) => handleInputChange('status', e.target.value as EquipmentStatus)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                 disabled={isSubmitting}
               >
                 <option value={EquipmentStatus.AVAILABLE}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_AVAILABLE}</option>
-                <option value={EquipmentStatus.IN_USE}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_IN_USE}</option>
-                <option value={EquipmentStatus.MAINTENANCE}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_MAINTENANCE}</option>
+                <option value={EquipmentStatus.SECURITY}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_SECURITY}</option>
                 <option value={EquipmentStatus.REPAIR}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_REPAIR}</option>
+                <option value={EquipmentStatus.LOST}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_LOST}</option>
+                <option value={EquipmentStatus.PENDING_TRANSFER}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_PENDING_TRANSFER}</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 מצב
               </label>
               <select
                 value={formData.condition}
                 onChange={(e) => handleInputChange('condition', e.target.value as EquipmentCondition)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                 disabled={isSubmitting}
               >
-                <option value={EquipmentCondition.NEW}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_NEW}</option>
-                <option value={EquipmentCondition.EXCELLENT}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_EXCELLENT}</option>
                 <option value={EquipmentCondition.GOOD}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_GOOD}</option>
-                <option value={EquipmentCondition.FAIR}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_FAIR}</option>
-                <option value={EquipmentCondition.POOR}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_POOR}</option>
                 <option value={EquipmentCondition.NEEDS_REPAIR}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_NEEDS_REPAIR}</option>
+                <option value={EquipmentCondition.WORN}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_WORN}</option>
               </select>
             </div>
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
               הערות
             </label>
             <textarea
               value={formData.notes}
               onChange={(e) => handleInputChange('notes', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
               rows={3}
-              placeholder="הערות נוספות על הציוד..."
+              placeholder={TEXT_CONSTANTS.EQUIPMENT_PAGE.ADDITIONAL_NOTES}
               disabled={isSubmitting}
             />
           </div>
 
           {/* Submit Error */}
           {errors.submit && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-600 text-sm">{errors.submit}</p>
+            <div className="bg-danger-50 border border-danger-200 rounded-lg p-3">
+              <p className="text-danger-600 text-sm">{errors.submit}</p>
             </div>
           )}
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t border-gray-200">
+          <div className="flex gap-3 pt-4 border-t border-neutral-200">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="flex-1 px-4 py-2 text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
               disabled={isSubmitting}
             >
               ביטול
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitting || loading}
             >
               {isSubmitting ? 'יוצר...' : 'צור ציוד'}

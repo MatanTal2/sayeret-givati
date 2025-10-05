@@ -14,20 +14,20 @@ export interface BadgeProps {
 
 const colorVariants = {
   filled: {
-    gray: 'bg-gray-100 text-gray-800',
-    purple: 'bg-purple-100 text-purple-800',
-    blue: 'bg-blue-100 text-blue-800',
-    green: 'bg-green-100 text-green-800',
-    yellow: 'bg-yellow-100 text-yellow-800',
-    red: 'bg-red-100 text-red-800',
+    gray: 'bg-neutral-100 text-neutral-800',
+    purple: 'bg-primary-100 text-primary-800',
+    blue: 'bg-info-100 text-info-800',
+    green: 'bg-success-100 text-success-800',
+    yellow: 'bg-warning-100 text-warning-800',
+    red: 'bg-danger-100 text-danger-800',
   },
   outlined: {
-    gray: 'bg-transparent text-gray-700 border border-gray-700',
-    purple: 'bg-transparent text-purple-700 border border-purple-700',
-    blue: 'bg-transparent text-blue-700 border border-blue-700',
-    green: 'bg-transparent text-green-700 border border-green-700',
-    yellow: 'bg-transparent text-yellow-700 border border-yellow-700',
-    red: 'bg-transparent text-red-700 border border-red-700',
+    gray: 'bg-transparent text-neutral-700 border border-neutral-700',
+    purple: 'bg-transparent text-primary-700 border border-primary-700',
+    blue: 'bg-transparent text-info-700 border border-info-700',
+    green: 'bg-transparent text-success-700 border border-success-700',
+    yellow: 'bg-transparent text-warning-700 border border-warning-700',
+    red: 'bg-transparent text-danger-700 border border-danger-700',
   },
 };
 

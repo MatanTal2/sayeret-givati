@@ -140,7 +140,7 @@ export default function OTPVerificationStep({
       {/* Header */}
       <div className="text-center px-6 pb-4">
         {/* Phone Icon */}
-        <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-12 h-12 bg-gradient-to-br from-success-400 to-success-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                   d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -148,13 +148,13 @@ export default function OTPVerificationStep({
         </div>
         
         {/* Title */}
-        <h3 className="text-xl font-bold text-gray-900 mb-2">{TEXT_CONSTANTS.AUTH.OTP_VERIFICATION}</h3>
+        <h3 className="text-xl font-bold text-neutral-900 mb-2">{TEXT_CONSTANTS.AUTH.OTP_VERIFICATION}</h3>
         
         {/* Message */}
-        <p className="text-base text-gray-600 mb-2">{TEXT_CONSTANTS.AUTH.OTP_SENT_MESSAGE}</p>
+        <p className="text-base text-neutral-600 mb-2">{TEXT_CONSTANTS.AUTH.OTP_SENT_MESSAGE}</p>
         
         {/* Masked Phone Number */}
-        <p className="text-sm text-gray-800 font-semibold mb-6">{maskedPhone}</p>
+        <p className="text-sm text-neutral-800 font-semibold mb-6">{maskedPhone}</p>
       </div>
 
       {/* OTP Form */}
@@ -169,10 +169,10 @@ export default function OTPVerificationStep({
                 value={otpCode}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                         text-center tracking-widest text-gray-800 bg-gray-50 focus:bg-white placeholder-gray-500 ${
+                         text-center tracking-widest text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 ${
                   (validationError && otpCode) || backendError
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                    : 'border-gray-200 focus:border-green-500 focus:ring-green-500'
+                    ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
+                    : 'border-neutral-200 focus:border-success-500 focus:ring-success-500'
                 }`}
                 placeholder={TEXT_CONSTANTS.AUTH.OTP_INPUT_PLACEHOLDER}
                 maxLength={6}
@@ -181,7 +181,7 @@ export default function OTPVerificationStep({
                 data-testid="otp-input"
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
@@ -191,7 +191,7 @@ export default function OTPVerificationStep({
             {/* Error Messages */}
             {validationError && otpCode && (
               <p 
-                className="text-sm text-red-600 text-center px-1"
+                className="text-sm text-danger-600 text-center px-1"
                 data-testid="otp-error"
               >
                 {validationError}
@@ -200,7 +200,7 @@ export default function OTPVerificationStep({
             
             {backendError && (
               <p 
-                className="text-sm text-red-600 text-center px-1"
+                className="text-sm text-danger-600 text-center px-1"
                 data-testid="otp-backend-error"
               >
                 {backendError}
@@ -217,8 +217,8 @@ export default function OTPVerificationStep({
                      flex items-center justify-center gap-2
                      transition-all duration-200 ${
               isValid && !isVerifying
-                ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-lg'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-gradient-to-r from-success-600 to-success-700 hover:from-success-700 hover:to-success-800 text-white hover:shadow-lg'
+                : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
             }`}
             data-testid="verify-otp-button"
           >
@@ -245,7 +245,7 @@ export default function OTPVerificationStep({
             <button
               type="button"
               onClick={handleResendCode}
-              className="text-sm text-green-600 hover:text-green-800 
+              className="text-sm text-success-600 hover:text-success-800 
                        transition-all duration-200 underline-offset-2 hover:underline focus-ring rounded-md"
             >
               {TEXT_CONSTANTS.AUTH.RESEND_CODE}

@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Card, Button, FormField } from '@/components/ui';
 import { useUsers, UserForEmail } from '@/hooks/useUsers';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
+import { TEXT_CONSTANTS } from '@/constants/text';
 
 interface CustomUserSelectionModalProps {
   isOpen: boolean;
@@ -29,8 +30,8 @@ function UserChip({ user, isSelected, onToggle }: UserChipProps) {
       className={`
         flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-all duration-200 border
         ${isSelected
-          ? 'bg-purple-600 text-white border-purple-600 shadow-md'
-          : 'bg-white text-gray-700 border-gray-300 hover:border-purple-300 hover:bg-purple-50'
+          ? 'bg-primary-600 text-white border-primary-600 shadow-md'
+          : 'bg-white text-neutral-700 border-neutral-300 hover:border-primary-300 hover:bg-primary-50'
         }
       `}
     >
@@ -39,7 +40,7 @@ function UserChip({ user, isSelected, onToggle }: UserChipProps) {
         {isSelected && (
           <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center flex-shrink-0">
             <svg 
-              className="w-3 h-3 text-purple-600" 
+              className="w-3 h-3 text-primary-600" 
               fill="currentColor" 
               viewBox="0 0 20 20"
             >
@@ -156,12 +157,12 @@ export default function CustomUserSelectionModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">בחירת משתמשים מותאמת</h2>
-          <p className="text-sm text-gray-600 mt-1">
+        <div className="bg-neutral-50 px-6 py-4 border-b border-neutral-200">
+          <h2 className="text-xl font-semibold text-neutral-900">בחירת משתמשים מותאמת</h2>
+          <p className="text-sm text-neutral-600 mt-1">
             בחר משתמשים ספציפיים לשליחת ההודעה
           </p>
         </div>
@@ -176,20 +177,20 @@ export default function CustomUserSelectionModal({
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="הקלד כדי לחפש..."
+                placeholder={TEXT_CONSTANTS.MANAGEMENT_COMPONENTS.TYPE_TO_SEARCH}
                 className="w-full"
               />
             </FormField>
 
             {/* Alphabet Filter */}
             <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+              <label className="text-sm font-medium text-neutral-700 whitespace-nowrap">
                 סינון לפי אות ראשונה:
               </label>
               <select
                 value={alphabetFilter}
                 onChange={(e) => setAlphabetFilter(e.target.value as AlphabetFilter)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 w-20 text-center"
+                className="px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-20 text-center"
               >
                 <option value="all">הכל</option>
                 {hebrewAlphabet.map(letter => (
@@ -208,7 +209,7 @@ export default function CustomUserSelectionModal({
               <Button variant="secondary" onClick={handleUnselectAll} size="sm">
                 בטל בחירה
               </Button>
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-neutral-600">
                 נבחרו: {selectedUserIds.size} משתמשים
               </span>
             </div>
@@ -223,8 +224,8 @@ export default function CustomUserSelectionModal({
 
           {/* Error State */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-              <p className="text-red-800">{error}</p>
+            <div className="bg-danger-50 border border-danger-200 rounded-lg p-4 text-center">
+              <p className="text-danger-800">{error}</p>
             </div>
           )}
 
@@ -233,14 +234,14 @@ export default function CustomUserSelectionModal({
             <Card>
               <div className="space-y-4">
                 {/* Toolbar Header */}
-                <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
                   <div className="flex items-center gap-4">
-                    <h4 className="text-sm font-medium text-gray-900">
+                    <h4 className="text-sm font-medium text-neutral-900">
                       רשימת משתמשים ({filteredUsers.length})
                     </h4>
                     <button
                       onClick={toggleSort}
-                      className="flex items-center gap-1 text-xs text-gray-600 hover:text-purple-600 transition-colors"
+                      className="flex items-center gap-1 text-xs text-neutral-600 hover:text-primary-600 transition-colors"
                     >
                       מיון: {sortDirection === 'asc' ? 'א-ת' : 'ת-א'}
                       <span className="text-xs">
@@ -249,14 +250,14 @@ export default function CustomUserSelectionModal({
                     </button>
                   </div>
                   
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-neutral-500">
                     גלול אופקית לעיון בכל המשתמשים
                   </div>
                 </div>
 
                 {/* Scrollable Chip Container */}
                 {filteredUsers.length === 0 ? (
-                  <div className="py-12 text-center text-gray-500">
+                  <div className="py-12 text-center text-neutral-500">
                     {searchTerm || alphabetFilter !== 'all' 
                       ? 'לא נמצאו משתמשים התואמים לחיפוש'
                       : 'אין משתמשים זמינים'
@@ -265,7 +266,7 @@ export default function CustomUserSelectionModal({
                 ) : (
                   <div className="relative">
                     {/* Horizontal scrollable container */}
-                    <div className="flex gap-3 overflow-x-auto pb-4 pl-4 pr-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                    <div className="flex gap-3 overflow-x-auto pb-4 pl-4 pr-4 scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-neutral-100">
                       {filteredUsers.map((user) => (
                         <UserChip
                           key={user.uid}
@@ -284,8 +285,8 @@ export default function CustomUserSelectionModal({
 
                 {/* Additional Info Row */}
                 {filteredUsers.length > 0 && (
-                  <div className="pt-3 border-t border-gray-100">
-                    <div className="grid grid-cols-3 gap-4 text-xs text-gray-600">
+                  <div className="pt-3 border-t border-neutral-100">
+                    <div className="grid grid-cols-3 gap-4 text-xs text-neutral-600">
                       <div>
                         <span className="font-medium">סה&quot;כ משתמשים:</span> {filteredUsers.length}
                       </div>
@@ -304,8 +305,8 @@ export default function CustomUserSelectionModal({
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between">
-          <div className="text-sm text-gray-600">
+        <div className="bg-neutral-50 px-6 py-4 border-t border-neutral-200 flex justify-between">
+          <div className="text-sm text-neutral-600">
             נבחרו {selectedUserIds.size} משתמשים מתוך {users.length}
           </div>
           <div className="flex gap-3">

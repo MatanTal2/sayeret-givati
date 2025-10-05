@@ -7,9 +7,13 @@ import { TEXT_CONSTANTS } from '@/constants/text';
 import EquipmentErrorBoundary from '@/components/equipment/EquipmentErrorBoundary';
 import EquipmentList from '@/components/equipment/EquipmentList';
 import EquipmentLoadingState from '@/components/equipment/EquipmentLoadingState';
-import AddEquipmentModal from '@/components/equipment/AddEquipmentModal';
+import EquipmentModal from '@/components/equipment/EquipmentModal';
+import TransferModal from '@/components/equipment/TransferModal';
 import { useEquipment } from '@/hooks/useEquipment';
-import { Equipment } from '@/types/equipment';
+import { Equipment, EquipmentAction } from '@/types/equipment';
+import { useAuth } from '@/contexts/AuthContext';
+import { hasEquipmentManagementAccess, getUserPermissionLevel } from '@/utils/permissionUtils';
+import { EquipmentService } from '@/lib/equipmentService';
 
 /**
  * Equipment Page - צלם
@@ -25,8 +29,16 @@ export default function EquipmentPage() {
     addEquipment,
   } = useEquipment();
 
+  const { enhancedUser } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
+  
+  // Permission checks
+  const canManageEquipment = hasEquipmentManagementAccess(enhancedUser);
+  const userPermissionLevel = getUserPermissionLevel(enhancedUser);
 
   // Handle refresh with loading state
   const handleRefresh = async () => {
@@ -38,26 +50,42 @@ export default function EquipmentPage() {
     }
   };
 
-  // Handle transfer (placeholder - will be implemented in future steps)
+  // Handle transfer - open transfer modal
   const handleTransfer = async (equipmentId: string) => {
-    console.log('Transfer equipment:', equipmentId);
-    // TODO: Open transfer modal/form in future steps
-    // Example usage:
-    // const success = await transferEquipment(equipmentId, 'NEW_HOLDER_UID', 'UPDATER_UID', 'NEW_UNIT', 'NEW_LOCATION', 'Transfer notes');
+    const equipmentItem = equipment.find(item => item.id === equipmentId);
+    if (equipmentItem) {
+      setSelectedEquipment(equipmentItem);
+      setShowTransferModal(true);
+    }
   };
 
-  // Handle status update (placeholder - will be implemented in future steps)
+  // Handle transfer success
+  const handleTransferSuccess = () => {
+    setShowTransferModal(false);
+    setSelectedEquipment(null);
+    refreshEquipment(); // Refresh the equipment list
+  };
+
+  // Handle status update - open update modal
   const handleUpdateStatus = async (equipmentId: string) => {
-    console.log('Update status:', equipmentId);
-    // TODO: Open status update modal/form in future steps
-    // Example usage:
-    // const success = await updateEquipmentStatus(equipmentId, EquipmentStatus.MAINTENANCE, 'UPDATER_UID', 'Status change notes');
+    const equipmentToUpdate = equipment.find(item => item.id === equipmentId);
+    if (equipmentToUpdate) {
+      setSelectedEquipment(equipmentToUpdate);
+      setShowUpdateModal(true);
+    }
   };
 
   // Handle view history (placeholder - will be implemented in future steps)
   const handleViewHistory = (equipmentId: string) => {
     console.log('View history:', equipmentId);
     // TODO: Open history modal/view in future steps
+  };
+
+  // Handle credit equipment (placeholder - will be implemented in future steps)
+  const handleCredit = (equipmentId: string) => {
+    console.log('Credit equipment:', equipmentId);
+    // TODO: Open credit modal/form in future steps
+    // This action should clear/credit the equipment from the current holder
   };
 
   // Handle add equipment
@@ -75,10 +103,48 @@ export default function EquipmentPage() {
     }
   };
 
+  // Handle update equipment
+  const handleUpdateEquipment = async (equipmentId: string, updates: Partial<Equipment>) => {
+    try {
+      if (!enhancedUser) {
+        throw new Error('User not authenticated');
+      }
+
+      const updatedBy = enhancedUser.uid;
+      const updatedByName = `${enhancedUser.firstName || ''} ${enhancedUser.lastName || ''}`.trim();
+      const userType = enhancedUser.userType?.toLowerCase();
+      
+      // Call the equipment service to update
+      const result = await EquipmentService.Items.updateEquipment(
+        equipmentId,
+        updates,
+        updatedBy,
+        updatedByName,
+        EquipmentAction.STATUS_UPDATE, // Default action, could be made dynamic
+        'Equipment updated via form', // Default notes
+        userType
+      );
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to update equipment');
+      }
+      
+      // Refresh the equipment list to show updated data
+      await refreshEquipment();
+      
+      // Close the modal
+      setShowUpdateModal(false);
+      setSelectedEquipment(null);
+    } catch (error) {
+      console.error('Error updating equipment:', error);
+      throw error; // Re-throw to let the modal handle the error
+    }
+  };
+
   return (
     <AuthGuard>
       <EquipmentErrorBoundary>
-        <div className="min-h-screen bg-gray-50" dir="rtl">
+        <div className="min-h-screen bg-neutral-50" dir="rtl">
           {/* Header */}
           <Header 
             title={`🎖️ ${TEXT_CONSTANTS.FEATURES.EQUIPMENT.TITLE}`}
@@ -95,14 +161,14 @@ export default function EquipmentPage() {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setShowAddModal(true)}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors shadow-sm"
+                    className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors shadow-sm"
                   >
                     ➕ {TEXT_CONSTANTS.FEATURES.EQUIPMENT.ADD_NEW}
                   </button>
                 </div>
                 <div>
                   {/* Development Badge */}
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
                     🚧 {TEXT_CONSTANTS.FEATURES.EQUIPMENT.STEP_INTERFACE_DEV}
                   </span>
                 </div>
@@ -111,9 +177,9 @@ export default function EquipmentPage() {
                 <button
                   onClick={handleRefresh}
                   disabled={loading || isRefreshing}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 
-                             disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors
-                             focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                  className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 
+                             disabled:bg-neutral-400 disabled:cursor-not-allowed transition-colors
+                             focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                 >
                   {loading || isRefreshing ? (
                     <div className="flex items-center gap-2">
@@ -131,18 +197,31 @@ export default function EquipmentPage() {
 
               {/* Development Tools */}
               {process.env.NODE_ENV === 'development' && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                  <h3 className="font-semibold text-blue-800 mb-2">🧪 כלי פיתוח</h3>
+                <div className="bg-info-50 border border-info-200 rounded-lg p-4 mb-6">
+                  <h3 className="font-semibold text-info-800 mb-2">🧪 כלי פיתוח</h3>
                   <div className="space-y-2">
                     <a
                       href="/test-dashboard"
-                      className="inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                      className="inline-block bg-info-600 text-white px-4 py-2 rounded-md hover:bg-info-700 transition-colors"
                     >
                       🚀 מרכז בדיקות מערכת
                     </a>
-                    <p className="text-sm text-blue-700">
+                    <p className="text-sm text-info-700">
                       ממשק מאוחד לכל בדיקות המערכת - ציוד, מסד נתונים, ואבטחה
                     </p>
+                    {/* Permission Debug Info */}
+                    <div className="mt-3 p-3 bg-warning-50 border border-warning-200 rounded-md">
+                      <h4 className="font-medium text-warning-800 mb-1">🔒 מידע הרשאות</h4>
+                      <div className="text-sm text-warning-700 space-y-1">
+                        <p><strong>משתמש:</strong> {enhancedUser?.firstName} {enhancedUser?.lastName}</p>
+                        <p><strong>סוג משתמש:</strong> {enhancedUser?.userType || 'לא מוגדר'}</p>
+                        <p><strong>רמת הרשאה:</strong> {userPermissionLevel}</p>
+                        <p><strong>יכול לנהל ציוד:</strong> {canManageEquipment ? '✅ כן' : '❌ לא'}</p>
+                        <p className="text-xs mt-2">
+                          רק משתמשים מסוג admin, system_manager, או manager יכולים להעביר/לעדכן ציוד בטאב &quot;ציוד נוסף&quot;
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -158,17 +237,18 @@ export default function EquipmentPage() {
                   onTransfer={handleTransfer}
                   onUpdateStatus={handleUpdateStatus}
                   onViewHistory={handleViewHistory}
+                  onCredit={handleCredit}
                   onRefresh={handleRefresh}
                 />
               )}
 
               {/* Development Info */}
-              <div className="mt-12 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="mt-12 p-4 bg-info-50 border border-info-200 rounded-lg">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm">
-                  <div className="text-blue-700">
+                  <div className="text-info-700">
                     <strong>🎯 Development Status:</strong> {TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_UI_COMPLETED}
                   </div>
-                  <div className="text-blue-600">
+                  <div className="text-info-600">
                     {TEXT_CONSTANTS.FEATURES.EQUIPMENT.NEXT_FORMS_ACTIONS}
                   </div>
                 </div>
@@ -177,11 +257,36 @@ export default function EquipmentPage() {
           </main>
 
           {/* Add Equipment Modal */}
-          <AddEquipmentModal
+          <EquipmentModal
             isOpen={showAddModal}
             onClose={() => setShowAddModal(false)}
             onSubmit={handleAddEquipment}
             loading={loading}
+            mode="create"
+          />
+
+          {/* Update Equipment Modal */}
+          <EquipmentModal
+            isOpen={showUpdateModal}
+            onClose={() => {
+              setShowUpdateModal(false);
+              setSelectedEquipment(null);
+            }}
+            onUpdate={handleUpdateEquipment}
+            loading={loading}
+            mode="update"
+            existingEquipment={selectedEquipment || undefined}
+          />
+
+          {/* Transfer Equipment Modal */}
+          <TransferModal
+            isOpen={showTransferModal}
+            onClose={() => {
+              setShowTransferModal(false);
+              setSelectedEquipment(null);
+            }}
+            equipment={selectedEquipment}
+            onTransferSuccess={handleTransferSuccess}
           />
         </div>
       </EquipmentErrorBoundary>

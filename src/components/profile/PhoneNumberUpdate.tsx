@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { PhoneIcon, CheckIcon, XIcon } from 'lucide-react';
 import { PhoneNumberUpdateProps, PhoneUpdateState, OTPVerificationRequest } from '@/types/profile';
+import { TEXT_CONSTANTS } from '@/constants/text';
 
 /**
  * PhoneNumberUpdate component with OTP verification
@@ -86,7 +87,7 @@ export default function PhoneNumberUpdate({
     if (!validatePhoneNumber(newPhoneNumber)) {
       setUpdateState(prev => ({
         ...prev,
-        error: 'מספר טלפון לא חוקי. אנא הזן מספר ישראלי תקין'
+        error: TEXT_CONSTANTS.PROFILE_COMPONENTS.INVALID_PHONE_ERROR
       }));
       return;
     }
@@ -115,7 +116,7 @@ export default function PhoneNumberUpdate({
       setUpdateState(prev => ({
         ...prev,
         isUpdating: false,
-        error: error instanceof Error ? error.message : 'שגיאה בשליחת קוד אימות'
+        error: error instanceof Error ? error.message : TEXT_CONSTANTS.PROFILE_COMPONENTS.OTP_SEND_ERROR
       }));
     }
   };
@@ -136,7 +137,7 @@ export default function PhoneNumberUpdate({
     if (!otpCode || otpCode.length !== 6) {
       setUpdateState(prev => ({
         ...prev,
-        error: 'אנא הזן קוד אימות בן 6 ספרות'
+        error: TEXT_CONSTANTS.PROFILE_COMPONENTS.INVALID_OTP_LENGTH
       }));
       return;
     }
@@ -175,7 +176,7 @@ export default function PhoneNumberUpdate({
       setUpdateState(prev => ({
         ...prev,
         isUpdating: false,
-        error: error instanceof Error ? error.message : 'קוד אימות שגוי'
+        error: error instanceof Error ? error.message : TEXT_CONSTANTS.PROFILE_COMPONENTS.INVALID_OTP_ERROR
       }));
     }
   };
@@ -188,7 +189,7 @@ export default function PhoneNumberUpdate({
         if (Math.random() > 0.1) { // 90% success rate
           resolve();
         } else {
-          reject(new Error('שגיאה בשליחת SMS'));
+          reject(new Error(TEXT_CONSTANTS.PROFILE_COMPONENTS.SMS_SEND_ERROR));
         }
       }, 1500);
     });
@@ -201,7 +202,7 @@ export default function PhoneNumberUpdate({
         if (request.otpCode.length === 6) {
           resolve();
         } else {
-          reject(new Error('קוד אימות שגוי'));
+          reject(new Error(TEXT_CONSTANTS.PROFILE_COMPONENTS.INVALID_OTP_SERVER_ERROR));
         }
       }, 1000);
     });
@@ -220,15 +221,15 @@ export default function PhoneNumberUpdate({
     return (
       <div className={`flex items-center justify-between ${className}`}>
         <div className="flex items-center gap-3">
-          <PhoneIcon className="w-5 h-5 text-gray-400" />
+          <PhoneIcon className="w-5 h-5 text-neutral-400" />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">מספר טלפון</label>
-            <div className="text-gray-900">{formatPhoneDisplay(currentPhoneNumber)}</div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">מספר טלפון</label>
+            <div className="text-neutral-900">{formatPhoneDisplay(currentPhoneNumber)}</div>
           </div>
         </div>
         <button
           onClick={handleEditStart}
-          className="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200"
+          className="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors duration-200"
         >
           עדכן
         </button>
@@ -242,7 +243,7 @@ export default function PhoneNumberUpdate({
       {!updateState.otpSent && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
               מספר טלפון חדש
             </label>
             <div className="flex gap-3">
@@ -250,19 +251,19 @@ export default function PhoneNumberUpdate({
                 type="tel"
                 value={newPhoneNumber}
                 onChange={(e) => setNewPhoneNumber(e.target.value)}
-                placeholder="05X-XXX-XXXX"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                placeholder={TEXT_CONSTANTS.PROFILE_COMPONENTS.PHONE_PLACEHOLDER}
+                className="flex-1 px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 disabled={updateState.isUpdating}
               />
               <button
                 onClick={handleSendOTP}
                 disabled={updateState.isUpdating || !newPhoneNumber}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
+                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-400 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
               >
                 {updateState.isUpdating ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 ) : (
-                  'שלח קוד'
+                  TEXT_CONSTANTS.PROFILE_COMPONENTS.SEND_CODE
                 )}
               </button>
             </div>
@@ -273,17 +274,17 @@ export default function PhoneNumberUpdate({
       {/* OTP Verification */}
       {updateState.otpSent && !updateState.otpVerified && (
         <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800 mb-2">
+          <div className="bg-info-50 border border-info-200 rounded-lg p-4">
+            <p className="text-sm text-info-800 mb-2">
               נשלח קוד אימות למספר: {formatPhoneDisplay(newPhoneNumber)}
             </p>
-            <p className="text-xs text-blue-600">
+            <p className="text-xs text-info-600">
               הקוד תקף למשך 5 דקות
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
               קוד אימות (6 ספרות)
             </label>
             <div className="flex gap-3">
@@ -291,15 +292,15 @@ export default function PhoneNumberUpdate({
                 type="text"
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
+                placeholder={TEXT_CONSTANTS.PROFILE_COMPONENTS.OTP_PLACEHOLDER}
                 maxLength={6}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-center text-lg font-mono"
+                className="flex-1 px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-center text-lg font-mono"
                 disabled={updateState.isUpdating}
               />
               <button
                 onClick={handleVerifyOTP}
                 disabled={updateState.isUpdating || otpCode.length !== 6}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
+                className="px-4 py-2 bg-success-600 hover:bg-success-700 disabled:bg-neutral-400 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
               >
                 {updateState.isUpdating ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -315,11 +316,11 @@ export default function PhoneNumberUpdate({
             <button
               onClick={handleSendOTP}
               disabled={updateState.countdown > 0 || updateState.isUpdating}
-              className="text-sm text-purple-600 hover:text-purple-800 disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="text-sm text-primary-600 hover:text-primary-800 disabled:text-neutral-400 disabled:cursor-not-allowed"
             >
               {updateState.countdown > 0 
                 ? `שלח שוב בעוד ${updateState.countdown}s`
-                : 'שלח קוד שוב'
+                : TEXT_CONSTANTS.PROFILE_COMPONENTS.SEND_CODE_AGAIN
               }
             </button>
           </div>
@@ -328,8 +329,8 @@ export default function PhoneNumberUpdate({
 
       {/* Success Message */}
       {updateState.success && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-green-800">
+        <div className="bg-success-50 border border-success-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-success-800">
             <CheckIcon className="w-5 h-5" />
             <span className="font-medium">מספר הטלפון עודכן בהצלחה!</span>
           </div>
@@ -338,8 +339,8 @@ export default function PhoneNumberUpdate({
 
       {/* Error Message */}
       {updateState.error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <p className="text-sm text-red-800">{updateState.error}</p>
+        <div className="bg-danger-50 border border-danger-200 rounded-lg p-3">
+          <p className="text-sm text-danger-800">{updateState.error}</p>
         </div>
       )}
 
@@ -349,7 +350,7 @@ export default function PhoneNumberUpdate({
           <button
             onClick={handleCancel}
             disabled={updateState.isUpdating}
-            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors duration-200 flex items-center justify-center gap-2"
           >
             <XIcon className="w-4 h-4" />
             ביטול

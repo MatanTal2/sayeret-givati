@@ -3,9 +3,11 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { Soldier } from '../types';
+import { NewSoldierForm } from '@/types';
 import { getCachedData, setCachedData } from '@/lib/cache';
 import { formatReportDate, formatReportTime, formatLastUpdated, formatCacheErrorDate } from '@/lib/dateUtils';
 import { mapRawStatusToStructured, mapStructuredStatusToRaw } from '@/lib/statusUtils';
+import { TEXT_CONSTANTS } from '@/constants/text';
 import { GiTank } from "react-icons/gi";
 import { BsFillHouseFill, BsPersonAdd } from "react-icons/bs";
 import { MdNotListedLocation } from "react-icons/md";
@@ -62,11 +64,11 @@ export default function StatusPage() {
   });
 
   // Add new soldier form state
-  const [newSoldier, setNewSoldier] = useState({
+  const [newSoldier, setNewSoldier] = useState<NewSoldierForm>({
     id: '',
     name: '',
     platoon: '',
-    status: 'בית',
+    status: TEXT_CONSTANTS.STATUS_PAGE.STATUS_HOME,
     customStatus: '',
     notes: ''
   });
@@ -116,12 +118,12 @@ export default function StatusPage() {
       const result = await response.json();
       
       if (!result.data || !Array.isArray(result.data)) {
-        throw new Error('המידע שהתקבל אינו תקין');
+        throw new Error(TEXT_CONSTANTS.FORM_VALIDATION.INVALID_DATA_RECEIVED);
       }
       
       const rows = result.data;
       if (rows.length < 2) {
-        throw new Error('אין מספיק נתונים בגיליון');
+        throw new Error(TEXT_CONSTANTS.FORM_VALIDATION.INSUFFICIENT_DATA);
       }
       
       // Map the data to soldiers array
@@ -143,7 +145,7 @@ export default function StatusPage() {
             firstName,
             lastName,
             name: fullName,
-            platoon: row[3] || 'מסייעת',
+            platoon: row[3] || TEXT_CONSTANTS.DEFAULTS.DEFAULT_TEAM,
             status,
             customStatus,
             isSelected: false
@@ -174,7 +176,7 @@ export default function StatusPage() {
         setError(
           error instanceof Error 
             ? error.message 
-            : 'שגיאה לא צפויה בטעינת הנתונים. אנא נסה שוב מאוחר יותר.'
+            : TEXT_CONSTANTS.FORM_VALIDATION.UNEXPECTED_LOADING_ERROR
         );
       }
     } finally {
@@ -207,7 +209,7 @@ export default function StatusPage() {
 
   // Check if any filtered soldier has "other" status for dynamic column sizing
   const hasOtherStatus = useMemo(() => {
-    return filteredSoldiers.some(s => s.status === 'אחר');
+    return filteredSoldiers.some(s => s.status === TEXT_CONSTANTS.STATUS_PAGE.STATUS_OTHER);
   }, [filteredSoldiers]);
 
   // Check if there are any manually added soldiers that need to be updated to server
@@ -305,7 +307,7 @@ export default function StatusPage() {
     updatedSoldiers[originalIndex] = {
       ...updatedSoldiers[originalIndex],
       status: newStatus,
-      customStatus: newStatus === 'אחר' ? customStatus : undefined
+      customStatus: newStatus === TEXT_CONSTANTS.STATUS_PAGE.STATUS_OTHER ? customStatus : undefined
     };
     setSoldiers(updatedSoldiers);
   };
@@ -352,7 +354,7 @@ export default function StatusPage() {
     const HARDCODED_PASSWORD = "admin123"; // TODO: Replace with proper authentication
     
     if (password !== HARDCODED_PASSWORD) {
-      setPasswordError('סיסמה שגויה');
+      setPasswordError(TEXT_CONSTANTS.STATUS_PAGE.WRONG_PASSWORD);
       return;
     }
 
@@ -369,7 +371,7 @@ export default function StatusPage() {
       
       if (manuallyAddedSoldiers.length === 0) {
         console.log('❌ DEBUG: No manually added soldiers found');
-        alert('אין חיילים חדשים לעדכון בשרת');
+        alert(TEXT_CONSTANTS.STATUS_PAGE.NO_NEW_SOLDIERS_SERVER);
         setShowPasswordModal(false);
         setPassword('');
         return;
@@ -390,13 +392,13 @@ export default function StatusPage() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.log('❌ DEBUG: API response error:', errorData);
-        throw new Error(errorData.error || 'שגיאה בעדכון השרת');
+        throw new Error(errorData.error || TEXT_CONSTANTS.FORM_VALIDATION.SERVER_UPDATE_ERROR);
       }
       
       const result = await response.json();
       console.log('✅ DEBUG: API success response:', result);
       
-      alert('הנתונים עודכנו בהצלחה בשרת!');
+      alert(TEXT_CONSTANTS.STATUS_PAGE.DATA_UPDATED_SUCCESS);
       setShowPasswordModal(false);
       setPassword('');
       
@@ -408,7 +410,7 @@ export default function StatusPage() {
       alert(
         error instanceof Error 
           ? error.message 
-          : 'שגיאה בעדכון השרת. אנא נסה שוב.'
+          : TEXT_CONSTANTS.FORM_VALIDATION.SERVER_UPDATE_ERROR
       );
     } finally {
       setIsUpdatingServer(false);
@@ -417,7 +419,7 @@ export default function StatusPage() {
 
   const updateChangedData = async () => {
     if (changedSoldiers.length === 0) {
-      alert('אין שינויים לעדכון');
+      alert(TEXT_CONSTANTS.STATUS_PAGE.NO_CHANGES_TO_UPDATE);
       return;
     }
 
@@ -439,7 +441,7 @@ export default function StatusPage() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.log('❌ DEBUG: API response error:', errorData);
-        throw new Error(errorData.error || 'שגיאה בעדכון הנתונים');
+        throw new Error(errorData.error || TEXT_CONSTANTS.FORM_VALIDATION.DATA_UPDATE_ERROR);
       }
       
       const result = await response.json();
@@ -455,7 +457,7 @@ export default function StatusPage() {
       alert(
         error instanceof Error 
           ? error.message 
-          : 'שגיאה בעדכון הנתונים. אנא נסה שוב.'
+          : TEXT_CONSTANTS.FORM_VALIDATION.DATA_UPDATE_ERROR
       );
     } finally {
       setIsUpdatingChanges(false);
@@ -468,34 +470,34 @@ export default function StatusPage() {
 
     // Validate name
     if (!newSoldier.name.trim()) {
-      errors.name = 'שם החייל חובה';
+      errors.name = TEXT_CONSTANTS.FORM_VALIDATION.SOLDIER_NAME_REQUIRED;
     } else {
       // Validate name format: only Hebrew letters and spaces
       const namePattern = /^[\u05D0-\u05EA\s]+$/;
       if (!namePattern.test(newSoldier.name.trim())) {
-        errors.name = 'השם חייב להכיל רק אותיות עבריות';
+        errors.name = TEXT_CONSTANTS.FORM_VALIDATION.NAME_HEBREW_ONLY;
       }
     }
 
     // Validate ID
     if (!newSoldier.id.trim()) {
-      errors.id = 'מספר אישי חובה';
+      errors.id = TEXT_CONSTANTS.FORM_VALIDATION.PERSONAL_ID_REQUIRED;
     } else {
       // Validate ID format: only numbers and between 5-7 digits
       const idPattern = /^\d{5,7}$/;
       if (!idPattern.test(newSoldier.id.trim())) {
-        errors.id = 'מספר אישי חייב להכיל בין 5-7 ספרות ורק ספרות';
+        errors.id = TEXT_CONSTANTS.FORM_VALIDATION.PERSONAL_ID_FORMAT;
       } else {
         // Check for duplicate IDs across all teams
         if (soldiers.some(s => s.id && s.id.trim() === newSoldier.id.trim())) {
-          errors.id = 'מספר אישי זה כבר קיים במערכת';
+          errors.id = TEXT_CONSTANTS.FORM_VALIDATION.PERSONAL_ID_EXISTS;
         }
       }
     }
 
     // Validate platoon
     if (!newSoldier.platoon) {
-      errors.platoon = 'בחירת צוות חובה';
+      errors.platoon = TEXT_CONSTANTS.FORM_VALIDATION.TEAM_SELECTION_REQUIRED;
     }
 
     // Set errors and return if any validation failed
@@ -516,7 +518,7 @@ export default function StatusPage() {
       name: newSoldier.name.trim(),
       platoon: newSoldier.platoon,
       status: newSoldier.status,
-      customStatus: newSoldier.status === 'אחר' ? newSoldier.customStatus : undefined,
+      customStatus: newSoldier.status === TEXT_CONSTANTS.STATUS_PAGE.STATUS_OTHER ? newSoldier.customStatus : undefined,
       notes: newSoldier.notes.trim() || undefined,
       isSelected: true,
       isManuallyAdded: true
@@ -530,7 +532,7 @@ export default function StatusPage() {
       id: '',
       name: '',
       platoon: '',
-      status: 'בית',
+      status: TEXT_CONSTANTS.STATUS_PAGE.STATUS_HOME,
       customStatus: '',
       notes: ''
     });
@@ -546,7 +548,7 @@ export default function StatusPage() {
         : filteredSoldiers.filter(s => s.isSelected);
       
       if (selectedSoldiers.length === 0) {
-        alert('לא נבחרו חיילים לדוח');
+        alert(TEXT_CONSTANTS.STATUS_PAGE.NO_SOLDIERS_SELECTED);
         return;
       }
 
@@ -556,7 +558,7 @@ export default function StatusPage() {
 
       // Group by platoon
       const groupedByPlatoon = selectedSoldiers.reduce((acc, soldier) => {
-        const platoonKey = soldier.platoon || 'מסייעת'; // fallback to default
+        const platoonKey = soldier.platoon || TEXT_CONSTANTS.DEFAULTS.DEFAULT_TEAM; // fallback to default
         if (!acc[platoonKey]) {
           acc[platoonKey] = [];
         }
@@ -602,22 +604,22 @@ export default function StatusPage() {
       }, 100);
     } catch (error) {
       console.error('Error generating report:', error);
-      alert('שגיאה ביצירת הדוח. אנא נסה שוב.');
+      alert(TEXT_CONSTANTS.STATUS_PAGE.REPORT_CREATION_ERROR);
     }
   };
 
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(reportText);
-      alert('הדוח הועתק ללוח');
+      alert(TEXT_CONSTANTS.STATUS_PAGE.REPORT_COPIED);
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
-      alert('שגיאה בהעתקה. אנא העתק ידנית.');
+      alert(TEXT_CONSTANTS.STATUS_PAGE.COPY_ERROR);
     }
   };
 
   const showWhatsAppNotSupported = () => {
-    alert('פונקציית הודעת WhatsApp עדיין לא תמיכה בדפדפן זה. אנא נסה בדפדפן אחר.');
+    alert(TEXT_CONSTANTS.STATUS_PAGE.WHATSAPP_NOT_SUPPORTED);
   };
 
   const downloadReport = () => {
@@ -642,10 +644,10 @@ export default function StatusPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">טוען נתונים...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-neutral-600">{TEXT_CONSTANTS.STATUS_PAGE.LOADING_DATA}</p>
         </div>
       </div>
     );
@@ -653,15 +655,15 @@ export default function StatusPage() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gray-50 relative" dir="rtl">
+      <div className="min-h-screen bg-neutral-50 relative" dir="rtl">
       {/* Header with Logo and Navigation */}
-      <header className="bg-white shadow-sm border-b border-gray-200 mb-6">
+      <header className="bg-white shadow-sm border-b border-neutral-200 mb-6">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <Link href="/" className="hover:opacity-80 transition-opacity">
               <Image 
                 src="/sayeret-givati-logo.png" 
-                alt="לוגו סיירת גבעתי" 
+                alt={TEXT_CONSTANTS.ARIA_LABELS.LOGO} 
                 width={80} 
                 height={80}
                 priority
@@ -669,18 +671,18 @@ export default function StatusPage() {
               />
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-neutral-900">
                 מערכת שבצ״ק מסייעת
               </h1>
-              <p className="text-lg text-gray-700 font-medium">סיירת גבעתי</p>
+              <p className="text-lg text-neutral-700 font-medium">{TEXT_CONSTANTS.STATUS_PAGE.UNIT_NAME}</p>
             </div>
             <div className="mr-auto">
               <Link 
                 href="/"
-                className="px-4 py-2 text-purple-600 hover:text-purple-800 font-medium transition-colors"
+                className="px-4 py-2 text-primary-600 hover:text-primary-800 font-medium transition-colors"
               >
                 <span className="md:hidden">🏠 ←</span>
-                <span className="hidden md:inline">← חזרה לעמוד הבית</span>
+                <span className="hidden md:inline">{TEXT_CONSTANTS.STATUS_PAGE.BACK_TO_HOME_SHORT}</span>
               </Link>
             </div>
           </div>
@@ -689,17 +691,17 @@ export default function StatusPage() {
 
       <div className="max-w-6xl mx-auto px-4 pb-32">
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-6 p-4 bg-danger-50 border border-danger-200 rounded-lg">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+              <div className="w-6 h-6 bg-danger-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-bold">!</span>
               </div>
               <div>
-                <h3 className="font-medium text-red-800">שגיאה בטעינת הנתונים</h3>
-                <p className="text-red-700 mt-1">{error}</p>
+                <h3 className="font-medium text-danger-800">{TEXT_CONSTANTS.STATUS_PAGE.ERROR_LOADING_DATA}</h3>
+                <p className="text-danger-700 mt-1">{error}</p>
                 <button 
                   onClick={() => fetchSoldiers(true)}
-                  className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm"
+                  className="mt-2 px-4 py-2 bg-danger-600 text-white rounded-md hover:bg-danger-700 transition-colors text-sm"
                 >
                   נסה שוב
                 </button>
@@ -717,11 +719,11 @@ export default function StatusPage() {
                   type="text"
                   value={nameFilter}
                   onChange={(e) => setNameFilter(e.target.value)}
-                  placeholder="חיפוש לפי שם..."
-                  className="w-full border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600 pl-10"
+                  placeholder={TEXT_CONSTANTS.STATUS_PAGE.SEARCH_BY_NAME}
+                  className="w-full border-2 border-neutral-400 rounded-md px-3 py-2 text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder-neutral-600 pl-10"
                 />
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-neutral-400" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -731,16 +733,16 @@ export default function StatusPage() {
             {/* Selection Counter */}
             <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
-                <p className="text-lg font-medium text-gray-800">
+                <p className="text-lg font-medium text-neutral-800">
                   נבחרו: {filteredSelectedCount} מתוך {filteredTotalCount}
                   {(nameFilter || selectedTeams.length > 0 || selectedStatuses.length > 0) && (
-                    <span className="text-sm text-gray-600 mr-2">
+                    <span className="text-sm text-neutral-600 mr-2">
                       (סה&quot;כ: {selectedCount} מתוך {totalCount})
                     </span>
                   )}
                 </p>
                 {lastUpdated && (
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-neutral-500 mt-1">
                     עודכן לאחרונה: {formatLastUpdated(lastUpdated)}
                   </p>
                 )}
@@ -749,18 +751,18 @@ export default function StatusPage() {
                 <button
                   onClick={() => fetchSoldiers(true)}
                   disabled={isRefreshing}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-purple-400 transition-colors text-sm flex items-center gap-2"
+                  className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:bg-primary-400 transition-colors text-sm flex items-center gap-2"
                 >
                   {isRefreshing ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span className="sm:hidden">רענן...</span>
-                      <span className="hidden sm:inline">רענן...</span>
+                      <span className="sm:hidden">{TEXT_CONSTANTS.STATUS_PAGE.REFRESH_SHORT}</span>
+                      <span className="hidden sm:inline">{TEXT_CONSTANTS.STATUS_PAGE.REFRESH_SHORT}</span>
                     </>
                   ) : (
                     <>
                       <span className="sm:hidden">↻</span>
-                      <span className="hidden sm:inline">↻ רענן נתונים</span>
+                      <span className="hidden sm:inline">{TEXT_CONSTANTS.STATUS_PAGE.REFRESH_DATA}</span>
                     </>
                   )}
                 </button>
@@ -769,7 +771,7 @@ export default function StatusPage() {
                   disabled={isUpdatingChanges || changedSoldiers.length === 0}
                   className={`px-4 py-2 text-white rounded-md transition-colors text-sm flex items-center gap-2 ${
                     changedSoldiers.length === 0 
-                      ? 'bg-gray-400 cursor-not-allowed' 
+                      ? 'bg-neutral-400 cursor-not-allowed' 
                       : 'bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400'
                   }`}
                   title={changedSoldiers.length === 0 ? 'אין שינויים לעדכון' : `עדכן ${changedSoldiers.length} שינויים`}
@@ -792,10 +794,10 @@ export default function StatusPage() {
                     setShowAddForm(!showAddForm);
                     if (!showAddForm) setFormErrors({ name: '', id: '', platoon: '' });
                   }}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm flex items-center gap-2"
+                  className="px-4 py-2 bg-success-600 text-white rounded-md hover:bg-success-700 transition-colors text-sm flex items-center gap-2"
                 >
                   <BsPersonAdd className="text-lg" />
-                  <span className="hidden sm:inline">הוסף חדש</span>
+                  <span className="hidden sm:inline">{TEXT_CONSTANTS.STATUS_PAGE.ADD_NEW}</span>
                 </button>
               </div>
             </div>
@@ -803,119 +805,119 @@ export default function StatusPage() {
             {/* Add New Soldier Form */}
             {showAddForm && (
               <div className="bg-white rounded-lg shadow-sm mb-6 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">הוסף חייל חדש</h3>
+                <h3 className="text-lg font-semibold text-neutral-900 mb-4">{TEXT_CONSTANTS.STATUS_PAGE.ADD_NEW_SOLDIER}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">
-                      שם <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium text-neutral-700 mb-1 pr-1.5">
+                      שם <span className="text-danger-500">*</span>
                     </label>
                     <input 
                       type="text"
                       value={newSoldier.name}
                       onChange={handleNameChange}
-                      className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 placeholder-gray-600 ${
+                      className={`w-full h-10 border-2 rounded-md px-3 py-2 text-neutral-800 focus:outline-none focus:ring-2 placeholder-neutral-600 ${
                         formErrors.name 
-                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
-                          : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
+                          ? 'border-danger-500 focus:ring-danger-500 focus:border-danger-500' 
+                          : 'border-neutral-400 focus:ring-primary-500 focus:border-primary-500'
                       }`}
-                      placeholder="שם מלא"
+                      placeholder={TEXT_CONSTANTS.STATUS_PAGE.FULL_NAME}
                     />
                     {formErrors.name && (
-                      <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
+                      <p className="mt-1 text-sm text-danger-600">{formErrors.name}</p>
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">
-                      מספר אישי <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium text-neutral-700 mb-1 pr-1.5">
+                      מספר אישי <span className="text-danger-500">*</span>
                     </label>
                     <input 
                       type="text"
                       value={newSoldier.id}
                       onChange={handleIdChange}
-                      className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 placeholder-gray-600 ${
+                      className={`w-full h-10 border-2 rounded-md px-3 py-2 text-neutral-800 focus:outline-none focus:ring-2 placeholder-neutral-600 ${
                         formErrors.id 
-                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
-                          : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
+                          ? 'border-danger-500 focus:ring-danger-500 focus:border-danger-500' 
+                          : 'border-neutral-400 focus:ring-primary-500 focus:border-primary-500'
                       }`}
-                      placeholder="מספר אישי"
+                      placeholder={TEXT_CONSTANTS.STATUS_PAGE.PERSONAL_NUMBER}
                     />
                     {formErrors.id && (
-                      <p className="mt-1 text-sm text-red-600">{formErrors.id}</p>
+                      <p className="mt-1 text-sm text-danger-600">{formErrors.id}</p>
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">
-                      צוות <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium text-neutral-700 mb-1 pr-1.5">
+                      צוות <span className="text-danger-500">*</span>
                     </label>
                     <select 
                       value={newSoldier.platoon}
                       onChange={handlePlatoonChange}
-                      className={`w-full h-10 border-2 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 ${
+                      className={`w-full h-10 border-2 rounded-md px-3 py-2 text-neutral-800 focus:outline-none focus:ring-2 ${
                         formErrors.platoon 
-                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
-                          : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
+                          ? 'border-danger-500 focus:ring-danger-500 focus:border-danger-500' 
+                          : 'border-neutral-400 focus:ring-primary-500 focus:border-primary-500'
                       }`}
                     >
-                      <option value="">בחר צוות</option>
+                      <option value="">{TEXT_CONSTANTS.STATUS_PAGE.SELECT_TEAM}</option>
                       {uniquePlatoons.map(platoon => (
                         <option key={platoon} value={platoon}>{platoon}</option>
                       ))}
                     </select>
                     {formErrors.platoon && (
-                      <p className="mt-1 text-sm text-red-600">{formErrors.platoon}</p>
+                      <p className="mt-1 text-sm text-danger-600">{formErrors.platoon}</p>
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 pr-1.5">סטטוס</label>
+                    <label className="block text-sm font-medium text-neutral-700 mb-1 pr-1.5">{TEXT_CONSTANTS.STATUS_PAGE.STATUS_LABEL}</label>
                     <div className="flex items-center gap-2">
                       {/* Status Toggle Icons */}
-                      <div className="flex bg-gray-100 rounded-lg p-1">
+                      <div className="flex bg-neutral-100 rounded-lg p-1">
                         <button 
                           type="button"
-                          onClick={() => setNewSoldier(prev => ({ ...prev, status: 'בית', customStatus: '' }))}
+                          onClick={() => setNewSoldier(prev => ({ ...prev, status: TEXT_CONSTANTS.STATUS_PAGE.STATUS_HOME, customStatus: '' }))}
                           className={`px-3 py-2 rounded-md text-lg transition-colors ${
-                            newSoldier.status === 'בית' 
-                              ? 'bg-purple-600 text-white shadow-sm' 
-                              : 'text-gray-600 hover:bg-gray-200'
+                            newSoldier.status === TEXT_CONSTANTS.STATUS_PAGE.STATUS_HOME 
+                              ? 'bg-primary-600 text-white shadow-sm' 
+                              : 'text-neutral-600 hover:bg-neutral-200'
                           }`}
-                          title="בית"
+                          title={TEXT_CONSTANTS.STATUS_PAGE.STATUS_HOME}
                         >
                           <BsFillHouseFill />
                         </button>
                         <button 
                           type="button"
-                          onClick={() => setNewSoldier(prev => ({ ...prev, status: 'משמר', customStatus: '' }))}
+                          onClick={() => setNewSoldier(prev => ({ ...prev, status: TEXT_CONSTANTS.STATUS_PAGE.STATUS_GUARD, customStatus: '' }))}
                           className={`px-3 py-2 rounded-md text-lg transition-colors ${
-                            newSoldier.status === 'משמר' 
-                              ? 'bg-purple-600 text-white shadow-sm' 
-                              : 'text-gray-600 hover:bg-gray-200'
+                            newSoldier.status === TEXT_CONSTANTS.STATUS_PAGE.STATUS_GUARD 
+                              ? 'bg-primary-600 text-white shadow-sm' 
+                              : 'text-neutral-600 hover:bg-neutral-200'
                           }`}
-                          title="משמר"
+                          title={TEXT_CONSTANTS.STATUS_PAGE.STATUS_GUARD}
                         >
                           <GiTank />
                         </button>
                         <button 
                           type="button"
-                          onClick={() => setNewSoldier(prev => ({ ...prev, status: 'אחר' }))}
+                          onClick={() => setNewSoldier(prev => ({ ...prev, status: TEXT_CONSTANTS.STATUS_PAGE.STATUS_OTHER }))}
                           className={`px-3 py-2 rounded-md text-lg transition-colors ${
-                            newSoldier.status === 'אחר' 
-                              ? 'bg-purple-600 text-white shadow-sm' 
-                              : 'text-gray-600 hover:bg-gray-200'
+                            newSoldier.status === TEXT_CONSTANTS.STATUS_PAGE.STATUS_OTHER 
+                              ? 'bg-primary-600 text-white shadow-sm' 
+                              : 'text-neutral-600 hover:bg-neutral-200'
                           }`}
-                          title="אחר"
+                          title={TEXT_CONSTANTS.STATUS_PAGE.STATUS_OTHER}
                         >
                           <MdNotListedLocation />
                         </button>
                       </div>
                       
                       {/* Custom Status Input (when אחר is selected) */}
-                      {newSoldier.status === 'אחר' && (
+                      {newSoldier.status === TEXT_CONSTANTS.STATUS_PAGE.STATUS_OTHER && (
                         <input 
                           type="text"
                           value={newSoldier.customStatus}
                           onChange={handleCustomStatusChange}
-                          placeholder="הכנס סטטוס מותאם"
-                          className="flex-1 h-10 border-2 border-gray-400 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
+                          placeholder={TEXT_CONSTANTS.STATUS_PAGE.CUSTOM_STATUS_PLACEHOLDER}
+                          className="flex-1 h-10 border-2 border-neutral-400 rounded-md px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder-neutral-600"
                         />
                       )}
                     </div>
@@ -926,14 +928,14 @@ export default function StatusPage() {
                     type="text"
                     value={newSoldier.notes}
                     onChange={handleNotesChange}
-                    className="flex-1 h-10 border-2 border-gray-400 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600"
-                    placeholder="הערות נוספות (אופציונלי)"
+                    className="flex-1 h-10 border-2 border-neutral-400 rounded-md px-3 py-2 text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder-neutral-600"
+                    placeholder={TEXT_CONSTANTS.STATUS_PAGE.ADDITIONAL_NOTES}
                   />
                 </div>
                 <div className="flex gap-2">
                   <button 
                     onClick={addNewSoldier}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                    className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
                   >
                     הוסף
                   </button>
@@ -942,18 +944,18 @@ export default function StatusPage() {
                     disabled={manuallyAddedCount === 0}
                     className={manuallyAddedCount > 0 
                       ? 'px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors' 
-                      : 'px-4 py-2 bg-gray-400 text-gray-200 rounded-md cursor-not-allowed transition-colors'
+                      : 'px-4 py-2 bg-neutral-400 text-neutral-200 rounded-md cursor-not-allowed transition-colors'
                     }
-                    title={manuallyAddedCount > 0 ? `עדכן ${manuallyAddedCount} חיילים חדשים בשרת` : 'אין חיילים חדשים לעדכון'}
+                    title={TEXT_CONSTANTS.STATUS_PAGE.UPDATE_NEW_SOLDIERS_TOOLTIP(manuallyAddedCount)}
                   >
-                    {manuallyAddedCount > 0 ? `עדכן בשרת (${manuallyAddedCount})` : 'עדכן בשרת'}
+                    {TEXT_CONSTANTS.STATUS_PAGE.UPDATE_SERVER_BUTTON(manuallyAddedCount)}
                   </button>
                   <button 
                     onClick={() => {
                       setShowAddForm(false);
                       setFormErrors({ name: '', id: '', platoon: '' });
                     }}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                    className="px-4 py-2 bg-neutral-500 text-white rounded-md hover:bg-neutral-600 transition-colors"
                   >
                     ביטול
                   </button>
@@ -1006,10 +1008,10 @@ export default function StatusPage() {
             {showPreview && (
               <div id="report-preview" className="bg-white p-6 rounded-lg shadow-sm mb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-purple-700">תצוגה מקדימה של הדוח</h3>
+                  <h3 className="text-lg font-semibold text-primary-700">{TEXT_CONSTANTS.STATUS_PAGE.REPORT_PREVIEW_TITLE}</h3>
                   <button 
                     onClick={() => setShowPreview(false)}
-                    className="text-gray-500 hover:text-gray-700 text-xl font-bold"
+                    className="text-neutral-500 hover:text-neutral-700 text-xl font-bold"
                   >
                     ✕
                   </button>
@@ -1017,26 +1019,26 @@ export default function StatusPage() {
                 <textarea 
                   value={reportText}
                   readOnly
-                  className="w-full h-64 border border-gray-300 rounded-md p-3 font-mono text-sm bg-gray-50 text-black"
+                  className="w-full h-64 border border-neutral-300 rounded-md p-3 font-mono text-sm bg-neutral-50 text-black"
                 />
                 <div className="flex gap-2 mt-4">
                   <button 
                     onClick={copyToClipboard}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                    className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
                   >
                     העתק ללוח
                   </button>
                   <button 
                     onClick={showWhatsAppNotSupported}
-                    className="p-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
-                    title="שלח ל-WhatsApp"
+                    className="p-3 bg-success-600 text-white rounded-md hover:bg-success-700 transition-colors flex items-center justify-center"
+                    title={TEXT_CONSTANTS.STATUS_PAGE.SEND_TO_WHATSAPP}
                   >
                     <FaWhatsapp className="text-lg" />
                   </button>
                   <button 
                     onClick={downloadReport}
-                    className="p-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
-                    title="הורד דוח"
+                    className="p-3 bg-info-600 text-white rounded-md hover:bg-info-700 transition-colors flex items-center justify-center"
+                    title={TEXT_CONSTANTS.STATUS_PAGE.DOWNLOAD_REPORT}
                     disabled={isDownloading}
                   >
                     {isDownloading ? (
@@ -1054,12 +1056,12 @@ export default function StatusPage() {
 
       {/* Fixed Bottom Bar */}
       {!error && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 p-4 shadow-lg">
           <div className="max-w-6xl mx-auto">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <button 
                 onClick={generateReport}
-                className="w-full md:w-auto px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors font-medium"
+                className="w-full md:w-auto px-6 py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors font-medium"
               >
                 הפק טקסט
               </button>
@@ -1070,9 +1072,9 @@ export default function StatusPage() {
                     id="multiPlatoonReport"
                     checked={isMultiPlatoonReport}
                     onChange={(e) => setIsMultiPlatoonReport(e.target.checked)}
-                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                    className="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
                   />
-                  <label htmlFor="multiPlatoonReport" className="text-sm font-medium text-gray-700">
+                  <label htmlFor="multiPlatoonReport" className="text-sm font-medium text-neutral-700">
                     שבצ&quot;ק רב מחלקתי
                   </label>
                 </div>
@@ -1082,9 +1084,9 @@ export default function StatusPage() {
                     id="includeIdInReport"
                     checked={includeIdInReport}
                     onChange={(e) => setIncludeIdInReport(e.target.checked)}
-                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                    className="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
                   />
-                  <label htmlFor="includeIdInReport" className="text-sm font-medium text-gray-700">
+                  <label htmlFor="includeIdInReport" className="text-sm font-medium text-neutral-700">
                     כלול מספר אישי
                   </label>
                 </div>
@@ -1096,9 +1098,9 @@ export default function StatusPage() {
 
       {/* Password Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="text-lg font-semibold text-neutral-900 mb-4">
               הזן סיסמת מנהל
             </h3>
             <div className="mb-4">
@@ -1110,11 +1112,11 @@ export default function StatusPage() {
                     setPassword(e.target.value);
                     setPasswordError('');
                   }}
-                  placeholder="סיסמה"
-                  className={`w-full border-2 rounded-md px-3 py-2 pr-10 text-gray-800 focus:outline-none focus:ring-2 ${
+                  placeholder={TEXT_CONSTANTS.STATUS_PAGE.PASSWORD_PLACEHOLDER}
+                  className={`w-full border-2 rounded-md px-3 py-2 pr-10 text-neutral-800 focus:outline-none focus:ring-2 ${
                     passwordError 
-                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
-                      : 'border-gray-400 focus:ring-purple-500 focus:border-purple-500'
+                      ? 'border-danger-500 focus:ring-danger-500 focus:border-danger-500' 
+                      : 'border-neutral-400 focus:ring-primary-500 focus:border-primary-500'
                   }`}
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
@@ -1125,7 +1127,7 @@ export default function StatusPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500 hover:text-neutral-700 focus:outline-none"
                 >
                   {showPassword ? (
                     <span className="text-lg">🙈</span>
@@ -1135,14 +1137,14 @@ export default function StatusPage() {
                 </button>
               </div>
               {passwordError && (
-                <p className="mt-1 text-sm text-red-600">{passwordError}</p>
+                <p className="mt-1 text-sm text-danger-600">{passwordError}</p>
               )}
             </div>
             <div className="flex gap-2">
               <button
                 onClick={updateServerData}
                 disabled={isUpdatingServer}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-green-400 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-success-600 text-white rounded-md hover:bg-success-700 disabled:bg-success-400 transition-colors flex items-center gap-2"
               >
                 {isUpdatingServer ? (
                   <>
@@ -1150,7 +1152,7 @@ export default function StatusPage() {
                     מעדכן...
                   </>
                 ) : (
-                  'עדכן'
+                  TEXT_CONSTANTS.STATUS_PAGE.UPDATE_SHORT
                 )}
               </button>
               <button
@@ -1160,7 +1162,7 @@ export default function StatusPage() {
                   setPasswordError('');
                 }}
                 disabled={isUpdatingServer}
-                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 disabled:bg-gray-400 transition-colors"
+                className="px-4 py-2 bg-neutral-500 text-white rounded-md hover:bg-neutral-600 disabled:bg-neutral-400 transition-colors"
               >
                 ביטול
               </button>

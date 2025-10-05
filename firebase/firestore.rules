@@ -118,25 +118,72 @@ service cloud.firestore {
         && (equipmentId.matches('DEBUG-.*') || equipmentId.matches('TEST-.*'));
     }
     
-    // Notifications collection - for in-app notifications
+    // Notifications collection - for real-time in-app notifications
     match /notifications/{notificationId} {
       // Users can read notifications intended for them
       allow read: if request.auth != null 
-        && resource.data.recipientId == request.auth.uid;
+        && resource.data.userId == request.auth.uid;
       
-      // Users can update their own notifications (mark as read, respond to actions)
+      // Users can update their own notifications (mark as read, delete)
       allow update: if request.auth != null 
-        && resource.data.recipientId == request.auth.uid
+        && resource.data.userId == request.auth.uid
         && validateNotificationUpdate(resource.data, request.resource.data);
+      
+      // Users can delete their own notifications
+      allow delete: if request.auth != null 
+        && resource.data.userId == request.auth.uid;
       
       // System can create notifications (via service layer)
       allow create: if request.auth != null 
-        && isAuthorizedUser(request.auth.uid);
-      
-      // Allow deletion ONLY for test notifications
-      allow delete: if request.auth != null 
         && isAuthorizedUser(request.auth.uid)
-        && notificationId.matches('TEST-.*');
+        && validateNotificationCreate(request.resource.data);
+    }
+    
+    // Actions Log collection - for audit logging of all equipment actions
+    match /actionsLog/{actionId} {
+      // Users can read action logs they are involved in (actor or target) or managers/admins
+      allow read: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && (resource.data.actorId == request.auth.uid 
+           || resource.data.targetId == request.auth.uid
+           || getUserRole(request.auth.uid) in ['equipment_manager', 'commander']
+           || getUserType(request.auth.uid) in ['admin', 'system_manager']);
+      
+      // Authenticated users can create action logs (for audit trail)
+      allow create: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && validateActionLogCreate(request.resource.data);
+      
+      // No updates or deletes allowed - audit logs are immutable
+      allow update, delete: if false;
+    }
+    
+    // Transfer requests - for equipment transfers between users
+    match /transferRequests/{requestId} {
+      // Users can read transfer requests they are involved in (sender or recipient)
+      allow read: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && (resource.data.fromUserId == request.auth.uid 
+           || resource.data.toUserId == request.auth.uid
+           || getUserRole(request.auth.uid) in ['equipment_manager', 'commander']
+           || getUserType(request.auth.uid) in ['admin', 'system_manager']);
+      
+      // Users can create transfer requests for equipment they hold
+      allow create: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && request.resource.data.fromUserId == request.auth.uid
+        && validateTransferRequestCreate(request.resource.data);
+      
+      // Only recipients and managers can update transfer requests (approve/reject)
+      allow update: if request.auth != null 
+        && isAuthorizedUser(request.auth.uid)
+        && (resource.data.toUserId == request.auth.uid 
+           || getUserRole(request.auth.uid) in ['equipment_manager', 'commander']
+           || getUserType(request.auth.uid) in ['admin', 'system_manager'])
+        && validateTransferRequestUpdate(resource.data, request.resource.data);
+      
+      // No deletion allowed - keep audit trail
+      allow delete: if false;
     }
     
     // Retirement requests
@@ -214,13 +261,61 @@ service cloud.firestore {
         && after.trackingHistory.size() >= before.trackingHistory.size(); // Can only add to history, not remove
     }
     
+    function validateNotificationCreate(data) {
+      return data.keys().hasAll(['userId', 'type', 'title', 'message', 'isRead'])
+        && data.userId is string
+        && data.type is string
+        && data.title is string
+        && data.message is string
+        && data.isRead is bool;
+    }
+    
     function validateNotificationUpdate(before, after) {
-      // Users can only update status, readAt, response, and respondedAt
-      return after.id == before.id // Cannot change ID
-        && after.recipientId == before.recipientId // Cannot change recipient
-        && after.senderId == before.senderId // Cannot change sender
+      // Users can only update isRead and readAt fields
+      return after.userId == before.userId // Cannot change user
         && after.type == before.type // Cannot change type
+        && after.title == before.title // Cannot change title
+        && after.message == before.message // Cannot change message
         && after.createdAt == before.createdAt; // Cannot change creation date
+    }
+    
+    function validateTransferRequestCreate(data) {
+      return data.keys().hasAll(['equipmentId', 'equipmentDocId', 'equipmentName', 'fromUserId', 'fromUserName', 'toUserId', 'toUserName', 'reason', 'status'])
+        && data.equipmentId is string
+        && data.equipmentDocId is string
+        && data.equipmentName is string
+        && data.fromUserId is string
+        && data.fromUserName is string
+        && data.toUserId is string
+        && data.toUserName is string
+        && data.reason is string
+        && data.status == 'pending'
+        && data.fromUserId != data.toUserId; // Cannot transfer to self
+    }
+    
+    function validateTransferRequestUpdate(before, after) {
+      // Ensure core fields cannot be changed, only status and statusHistory
+      return after.equipmentId == before.equipmentId
+        && after.equipmentDocId == before.equipmentDocId
+        && after.equipmentName == before.equipmentName
+        && after.fromUserId == before.fromUserId
+        && after.fromUserName == before.fromUserName
+        && after.toUserId == before.toUserId
+        && after.toUserName == before.toUserName
+        && after.reason == before.reason
+        && after.createdAt == before.createdAt
+        && after.status in ['pending', 'approved', 'rejected']
+        && after.statusHistory.size() >= before.statusHistory.size(); // Can only add to history
+    }
+    
+    function validateActionLogCreate(data) {
+      return data.keys().hasAll(['actionType', 'equipmentId', 'equipmentDocId', 'equipmentName', 'actorId', 'actorName'])
+        && data.actionType is string
+        && data.equipmentId is string
+        && data.equipmentDocId is string
+        && data.equipmentName is string
+        && data.actorId is string
+        && data.actorName is string;
     }
   }
 } 

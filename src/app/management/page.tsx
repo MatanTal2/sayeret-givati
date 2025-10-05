@@ -28,10 +28,10 @@ function ManagementContent() {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">טוען...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-neutral-600">טוען...</p>
         </div>
       </div>
     );
@@ -40,7 +40,7 @@ function ManagementContent() {
   // Show access denied for users without management access
   if (!permissions.canAccessManagement) {
     return (
-      <div className="min-h-screen bg-gray-50" dir="rtl">
+      <div className="min-h-screen bg-neutral-50" dir="rtl">
         <Header 
           title={MANAGEMENT.PAGE_TITLE}
           subtitle={MANAGEMENT.PAGE_SUBTITLE_LIMITED}
@@ -49,16 +49,16 @@ function ManagementContent() {
         
         <main className="max-w-4xl mx-auto px-4 py-8">
           <Card padding="lg" className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-              <Shield className="w-8 h-8 text-red-600" />
+            <div className="w-16 h-16 mx-auto mb-4 bg-danger-100 rounded-full flex items-center justify-center">
+              <Shield className="w-8 h-8 text-danger-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-neutral-900 mb-2">
               {MANAGEMENT.ACCESS_DENIED.TITLE}
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-neutral-600 mb-6">
               {MANAGEMENT.ACCESS_DENIED.MESSAGE}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-neutral-500">
               {MANAGEMENT.ACCESS_DENIED.CONTACT_ADMIN}
             </p>
           </Card>
@@ -70,11 +70,11 @@ function ManagementContent() {
   const activeTabData = getTabById(activeTab);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex" dir="rtl">
+    <div className="min-h-screen bg-neutral-50 flex" dir="rtl">
       {/* Mobile Sidebar Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden animate-fade-in" 
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden animate-fade-in" 
           onClick={() => setSidebarOpen(false)}
         />
       )}

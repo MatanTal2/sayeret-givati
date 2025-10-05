@@ -83,7 +83,7 @@ export default function FormFieldCategory({
           <button
             type="button"
             onClick={() => setShowAddModal(true)}
-            className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1"
+            className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
           >
             <Plus className="w-4 h-4" />
             {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.ADD_NEW_CATEGORY}
@@ -94,17 +94,17 @@ export default function FormFieldCategory({
       {/* Add Category Modal */}
       {showAddModal && (
         <div 
-          className="fixed inset-0 backdrop-blur-md bg-white/20 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => setShowAddModal(false)}
         >
           <div 
-            className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-auto p-6 border border-gray-200"
+            className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-auto p-6 border border-neutral-200"
             onClick={(e) => e.stopPropagation()}
           >
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-neutral-900 mb-4">
                 {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.ADD_NEW_CATEGORY}
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-neutral-600 mb-4">
                 {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.ENTER_CATEGORY_NAME}
               </p>
               <input
@@ -112,7 +112,7 @@ export default function FormFieldCategory({
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.CATEGORY_NAME_PLACEHOLDER}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 mb-4"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 mb-4"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();

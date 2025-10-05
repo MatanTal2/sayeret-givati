@@ -29,7 +29,7 @@ export default function SelectAllCheckbox({
         }
       }}
       onChange={onToggle}
-      className={`${sizeClasses[size]} text-purple-600 border-gray-300 rounded focus:ring-purple-500 ${className}`}
+      className={`${sizeClasses[size]} text-primary-600 border-neutral-300 rounded focus:ring-primary-500 ${className}`}
     />
   );
 } 

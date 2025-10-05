@@ -105,18 +105,18 @@ export default function RegistrationStepDots({
                 className={`
                   w-3 h-3 rounded-full transition-all duration-300 ease-in-out
                   ${isCompleted 
-                    ? 'bg-green-500 shadow-sm' 
+                    ? 'bg-success-500 shadow-sm' 
                     : isActive 
-                      ? 'bg-blue-500 shadow-lg ring-2 ring-blue-200' 
-                      : 'bg-gray-300 hover:bg-gray-400'
+                      ? 'bg-info-500 shadow-lg ring-2 ring-info-200' 
+                      : 'bg-neutral-300 hover:bg-neutral-400'
                   }
                 `}
               />
               
               {/* Tooltip */}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
                 {step.label}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-800"></div>
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-neutral-800"></div>
               </div>
             </div>
             
@@ -126,8 +126,8 @@ export default function RegistrationStepDots({
                 className={`
                   h-0.5 w-8 transition-all duration-300 ease-in-out
                   ${isCompleted 
-                    ? 'bg-green-500' 
-                    : 'bg-gray-300'
+                    ? 'bg-success-500' 
+                    : 'bg-neutral-300'
                   }
                 `}
               />

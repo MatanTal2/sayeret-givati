@@ -12,16 +12,16 @@ export interface SidebarHeaderProps {
 
 export default function SidebarHeader({ userName, onClose }: SidebarHeaderProps) {
   return (
-    <div className="flex items-center justify-between p-6 border-b border-gray-200">
+    <div className="flex items-center justify-between p-6 border-b border-neutral-200">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-          <Settings className="w-5 h-5 text-purple-600" />
+        <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+          <Settings className="w-5 h-5 text-primary-600" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-gray-900">
+          <h2 className="text-lg font-bold text-neutral-900">
             {MANAGEMENT.PAGE_TITLE}
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-neutral-600">
             {userName || MANAGEMENT.DEFAULT_MANAGER}
           </p>
         </div>
@@ -29,7 +29,7 @@ export default function SidebarHeader({ userName, onClose }: SidebarHeaderProps)
       
       {/* Close button for mobile */}
       <button
-        className="lg:hidden p-2 rounded-lg hover:bg-red-50 hover:text-red-600 transition-all duration-200 text-gray-500"
+        className="lg:hidden p-2 rounded-lg hover:bg-danger-50 hover:text-danger-600 transition-all duration-200 text-neutral-500"
         onClick={onClose}
         aria-label="סגור תפריט"
       >

@@ -138,6 +138,12 @@ export class ValidationUtils {
    */
   static isValidIsraeliMobile(phone: string): boolean {
     const cleaned = phone.replace(/[\s-]/g, '');
+    
+    // Handle case where Excel removes leading zero (e.g., 528966085)
+    if (/^5[0-9]\d{7}$/.test(cleaned)) {
+      return true; // 9-digit number starting with 5 (missing leading 0)
+    }
+    
     return VALIDATION_PATTERNS.PHONE_NUMBER.test(cleaned);
   }
 
@@ -148,6 +154,9 @@ export class ValidationUtils {
     let cleaned = phone.replace(/[\s-]/g, '');
     if (cleaned.startsWith('0')) {
       cleaned = '+972' + cleaned.slice(1);
+    } else if (/^5[0-9]\d{7}$/.test(cleaned)) {
+      // Handle 9-digit number missing leading zero (e.g., 528966085 -> +972528966085)
+      cleaned = '+972' + cleaned;
     }
     return cleaned;
   }

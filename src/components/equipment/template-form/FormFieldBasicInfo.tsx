@@ -30,7 +30,7 @@ export default function FormFieldBasicInfo({
 }: FormFieldBasicInfoProps) {
   return (
     <div className="space-y-4">
-      <h4 className="text-md font-medium text-gray-900">
+      <h4 className="text-md font-medium text-neutral-900">
         {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.BASIC_INFO}
       </h4>
       
@@ -58,7 +58,7 @@ export default function FormFieldBasicInfo({
             type="text"
             value={idPrefix}
             onChange={(e) => onIdPrefixChange(e.target.value.toUpperCase())}
-            placeholder="M4, RAD, etc."
+            placeholder={TEXT_CONSTANTS.EQUIPMENT_COMPONENTS.TEMPLATE_EXAMPLE_PREFIX}
             maxLength={6}
             disabled={disabled}
           />

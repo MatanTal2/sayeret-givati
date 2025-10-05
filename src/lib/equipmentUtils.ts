@@ -37,32 +37,18 @@ export function createHistoryEntry(
       justification: string;
     };
   },
-  holderName?: string, // Display name (optional for UI performance)
-  updatedByName?: string // Display name (optional for UI performance)
+  holderName?: string // Display name (optional for UI performance)
 ): EquipmentHistoryEntry {
   // Use current date for history entries since serverTimestamp() can't be used in arrays
   const now = Timestamp.fromDate(new Date());
   
   return {
-    holder,
-    holderName,
-    fromDate: now,
     action,
-    updatedBy,
-    updatedByName,
+    holder: holderName || holder, // Use display name if available, otherwise UID
     location,
     notes,
     timestamp: now,
-    approval: approval ? {
-      approvedBy: approval.approvedBy,
-      approvedAt: now,
-      approvalType: approval.approvalType,
-      phoneLast4: approval.phoneLast4,
-      emergencyOverride: approval.emergencyOverride ? {
-        ...approval.emergencyOverride,
-        overrideAt: now
-      } : undefined
-    } : undefined
+    updatedBy
   };
 }
 
@@ -107,8 +93,7 @@ export function createNewEquipment(
         location,
         notes,
         { approvedBy: signedById, approvalType: ApprovalType.NO_APPROVAL_REQUIRED },
-        signedBy, // holderName
-        signedBy  // updatedByName
+        signedBy // holderName
       )
     ],
     createdAt: serverNow,
@@ -138,18 +123,8 @@ export function transferEquipment(
   },
   newUnit?: string,
   newLocation?: string,
-  notes?: string,
-  updatedByName?: string // Display name (optional)
+  notes?: string
 ): Equipment {
-  const now = Timestamp.fromDate(new Date());
-  
-  // Close previous history entry
-  const updatedHistory = [...equipment.trackingHistory];
-  const lastEntry = updatedHistory[updatedHistory.length - 1];
-  if (lastEntry && !lastEntry.toDate) {
-    lastEntry.toDate = now;
-  }
-  
   // Add new history entry
   const newHistoryEntry = createHistoryEntry(
     approvalDetails.emergencyOverride ? EquipmentAction.EMERGENCY_TRANSFER : EquipmentAction.TRANSFER,
@@ -158,11 +133,10 @@ export function transferEquipment(
     newLocation || equipment.location,
     notes,
     approvalDetails,
-    newHolder, // holderName
-    updatedByName // updatedByName
+    newHolder // holderName
   );
   
-  updatedHistory.push(newHistoryEntry);
+  const updatedHistory = [...equipment.trackingHistory, newHistoryEntry];
   
   return {
     ...equipment,
@@ -182,8 +156,7 @@ export function updateEquipmentStatus(
   equipment: Equipment,
   newStatus: EquipmentStatus,
   updatedBy: string,
-  notes?: string,
-  updatedByName?: string
+  notes?: string
 ): Equipment {
   const historyEntry = createHistoryEntry(
     EquipmentAction.STATUS_UPDATE,
@@ -192,8 +165,7 @@ export function updateEquipmentStatus(
     equipment.location,
     `Status changed to: ${newStatus}${notes ? ` - ${notes}` : ''}`,
     undefined, // no approval needed for status updates
-    equipment.currentHolder, // holderName
-    updatedByName // updatedByName
+    equipment.currentHolder // holderName
   );
   
   return {
@@ -211,8 +183,7 @@ export function updateEquipmentCondition(
   equipment: Equipment,
   newCondition: EquipmentCondition,
   updatedBy: string,
-  notes?: string,
-  updatedByName?: string
+  notes?: string
 ): Equipment {
   const historyEntry = createHistoryEntry(
     EquipmentAction.CONDITION_UPDATE,
@@ -221,8 +192,7 @@ export function updateEquipmentCondition(
     equipment.location,
     `Condition changed to: ${newCondition}${notes ? ` - ${notes}` : ''}`,
     undefined, // no approval needed for condition updates
-    equipment.currentHolder, // holderName
-    updatedByName // updatedByName
+    equipment.currentHolder // holderName
   );
   
   return {
@@ -239,8 +209,7 @@ export function updateEquipmentCondition(
 export function performDailyCheckIn(
   equipment: Equipment,
   checkedBy: string,
-  notes?: string,
-  checkedByName?: string
+  notes?: string
 ): Equipment {
   const now = serverTimestamp() as Timestamp;
   
@@ -251,8 +220,7 @@ export function performDailyCheckIn(
     equipment.location,
     notes || 'Daily check-in completed',
     undefined, // no approval needed for check-ins
-    equipment.currentHolder, // holderName
-    checkedByName // updatedByName
+    equipment.currentHolder // holderName
   );
   
   return {
@@ -586,11 +554,10 @@ export function formatEquipmentDate(dateString: string): string {
 export function getStatusDisplayText(status: EquipmentStatus): string {
   const statusTexts: Record<EquipmentStatus, string> = {
     [EquipmentStatus.AVAILABLE]: 'זמין',
-    [EquipmentStatus.IN_USE]: 'בשימוש',
-    [EquipmentStatus.MAINTENANCE]: 'בתחזוקה',
+    [EquipmentStatus.SECURITY]: 'בביטחונית',
     [EquipmentStatus.REPAIR]: 'בתיקון',
     [EquipmentStatus.LOST]: 'אבוד',
-    [EquipmentStatus.RETIRED]: 'הוחזר'
+    [EquipmentStatus.PENDING_TRANSFER]: 'בהעברה'
   };
   
   return statusTexts[status] || status;
@@ -601,12 +568,9 @@ export function getStatusDisplayText(status: EquipmentStatus): string {
  */
 export function getConditionDisplayText(condition: EquipmentCondition): string {
   const conditionTexts: Record<EquipmentCondition, string> = {
-    [EquipmentCondition.NEW]: 'חדש',
-    [EquipmentCondition.EXCELLENT]: 'מצוין',
     [EquipmentCondition.GOOD]: 'טוב',
-    [EquipmentCondition.FAIR]: 'בסדר',
-    [EquipmentCondition.POOR]: 'גרוע',
-    [EquipmentCondition.NEEDS_REPAIR]: 'דורש תיקון'
+    [EquipmentCondition.NEEDS_REPAIR]: 'דרוש תיקון',
+    [EquipmentCondition.WORN]: 'בלאי'
   };
   
   return conditionTexts[condition] || condition;
@@ -638,7 +602,7 @@ export function needsAttention(equipment: Equipment): {
     return { needsAttention: true, reason: 'לא עודכן למעלה מ-7 ימים', priority: 'medium' };
   }
   
-  if (equipment.condition === EquipmentCondition.POOR || equipment.condition === EquipmentCondition.NEEDS_REPAIR) {
+  if (equipment.condition === EquipmentCondition.NEEDS_REPAIR || equipment.condition === EquipmentCondition.WORN) {
     return { needsAttention: true, reason: 'מצב הציוד דורש תשומת לב', priority: 'medium' };
   }
   

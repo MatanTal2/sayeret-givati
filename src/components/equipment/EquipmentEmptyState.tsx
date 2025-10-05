@@ -28,32 +28,32 @@ export default function EquipmentEmptyState({
     : TEXT_CONSTANTS.FEATURES.EQUIPMENT.ADD_EQUIPMENT_TO_START;
 
   return (
-    <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+    <div className="text-center py-12 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700">
       <div className="text-6xl mb-6">
         {icon}
       </div>
       
-      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+      <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-3">
         {title || defaultTitle}
       </h3>
       
-      <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+      <p className="text-neutral-600 dark:text-neutral-400 mb-6 max-w-md mx-auto">
         {description || defaultDescription}
       </p>
       
       {onAction && actionText && (
         <button
           onClick={onAction}
-          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg 
-                     hover:bg-blue-700 transition-colors duration-200
-                     focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="px-6 py-3 bg-info-600 text-white font-medium rounded-lg 
+                     hover:bg-info-700 transition-colors duration-200
+                     focus:ring-2 focus:ring-info-500 focus:ring-offset-2"
         >
           {actionText}
         </button>
       )}
       
       {isFiltered && (
-        <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">
           💡 {TEXT_CONSTANTS.FEATURES.EQUIPMENT.SEARCH_TIP}
         </div>
       )}

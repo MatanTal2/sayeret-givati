@@ -14,13 +14,12 @@ export default function HomePage() {
   const features = getFeatureRoutes();
 
   return (
-    <div className="min-h-screen bg-gray-50 relative" dir="rtl">
+    <div className="min-h-screen bg-neutral-50 relative" dir="rtl">
       {/* Header with Auth Button */}
       <Header 
-        title="מערכת ניהול - מסייעת סיירת גבעתי"
-        subtitle="פלטפורמה מרכזית לניהול פעילויות הסיירת"
+        title={TEXT_CONSTANTS.APP_NAME}
+        subtitle={TEXT_CONSTANTS.APP_SUBTITLE}
         showAuth={true}
-        enableWaveEffect={true}
       />
 
       {/* Background Logo */}
@@ -41,7 +40,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto">
           {/* Features Introduction */}
           <div className="text-center mb-12">
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-neutral-600 max-w-2xl mx-auto">
               {TEXT_CONSTANTS.APP_SUBTITLE}
             </p>
           </div>
@@ -50,7 +49,7 @@ export default function HomePage() {
 
           {/* All Features */}
           <div className="mb-12">
-            <h3 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
+            <h3 className="text-2xl font-semibold text-neutral-900 mb-6 text-center">
               {TEXT_CONSTANTS.FEATURES.SECTION_TITLE}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -71,20 +70,20 @@ export default function HomePage() {
         </div>
 
         {/* Footer */}
-        <footer className="max-w-4xl mx-auto mt-16 pt-8 border-t border-gray-200 text-center text-gray-600">
+        <footer className="max-w-4xl mx-auto mt-16 pt-8 border-t border-neutral-200 text-center text-neutral-600">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
               <h4 className="font-semibold mb-3">{TEXT_CONSTANTS.FOOTER.QUICK_LINKS}</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="/status" className="hover:text-purple-600 transition-colors">{TEXT_CONSTANTS.FEATURES.SOLDIER_MANAGEMENT.TITLE}</a></li>
-                <li><a href="/admin" className="hover:text-purple-600 transition-colors">{TEXT_CONSTANTS.FOOTER.ADMIN_INTERFACE}</a></li>
+                <li><a href="/status" className="hover:text-primary-600 transition-colors">{TEXT_CONSTANTS.FEATURES.SOLDIER_MANAGEMENT.TITLE}</a></li>
+                <li><a href="/admin" className="hover:text-primary-600 transition-colors">{TEXT_CONSTANTS.FOOTER.ADMIN_INTERFACE}</a></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-3">{TEXT_CONSTANTS.FOOTER.SUPPORT}</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="/help" className="hover:text-purple-600 transition-colors">{TEXT_CONSTANTS.FOOTER.USER_GUIDE}</a></li>
-                <li><a href="/contact" className="hover:text-purple-600 transition-colors">{TEXT_CONSTANTS.FOOTER.CONTACT}</a></li>
+                <li><a href="/help" className="hover:text-primary-600 transition-colors">{TEXT_CONSTANTS.FOOTER.USER_GUIDE}</a></li>
+                <li><a href="/contact" className="hover:text-primary-600 transition-colors">{TEXT_CONSTANTS.FOOTER.CONTACT}</a></li>
               </ul>
             </div>
             <div>
@@ -97,7 +96,7 @@ export default function HomePage() {
           </div>
           
           {/* Version & Copyright */}
-          <div className="border-t border-gray-200 pt-4">
+          <div className="border-t border-neutral-200 pt-4">
             <p className="text-sm">
               {TEXT_CONSTANTS.COMPANY_NAME} • {TEXT_CONSTANTS.VERSION}
             </p>

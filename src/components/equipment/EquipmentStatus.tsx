@@ -15,16 +15,14 @@ export default function EquipmentStatus({ status, size = 'md', variant = 'filled
     switch (status) {
       case StatusType.AVAILABLE:
         return TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_AVAILABLE;
-      case StatusType.IN_USE:
-        return TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_IN_USE;
-      case StatusType.MAINTENANCE:
-        return TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_MAINTENANCE;
+      case StatusType.SECURITY:
+        return TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_SECURITY;
       case StatusType.REPAIR:
         return TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_REPAIR;
       case StatusType.LOST:
         return TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_LOST;
-      case StatusType.RETIRED:
-        return TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_RETIRED;
+      case StatusType.PENDING_TRANSFER:
+        return TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_PENDING_TRANSFER;
       default:
         return status;
     }
@@ -35,37 +33,33 @@ export default function EquipmentStatus({ status, size = 'md', variant = 'filled
     if (variant === 'outlined') {
       switch (status) {
         case StatusType.AVAILABLE:
-          return 'bg-transparent text-green-700 border border-green-700';
-        case StatusType.IN_USE:
-          return 'bg-transparent text-blue-700 border border-blue-700';
-        case StatusType.MAINTENANCE:
-          return 'bg-transparent text-yellow-700 border border-yellow-700';
+          return 'bg-transparent text-success-700 border border-success-700';
+        case StatusType.SECURITY:
+          return 'bg-transparent text-info-700 border border-info-700';
         case StatusType.REPAIR:
           return 'bg-transparent text-orange-700 border border-orange-700';
         case StatusType.LOST:
-          return 'bg-transparent text-red-700 border border-red-700';
-        case StatusType.RETIRED:
-          return 'bg-transparent text-gray-700 border border-gray-700';
+          return 'bg-transparent text-danger-700 border border-danger-700';
+        case StatusType.PENDING_TRANSFER:
+          return 'bg-transparent text-warning-700 border border-warning-700';
         default:
-          return 'bg-transparent text-gray-700 border border-gray-700';
+          return 'bg-transparent text-neutral-700 border border-neutral-700';
       }
     } else {
       // Filled variant (original)
       switch (status) {
         case StatusType.AVAILABLE:
-          return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-        case StatusType.IN_USE:
-          return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-        case StatusType.MAINTENANCE:
-          return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+          return 'bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-200';
+        case StatusType.SECURITY:
+          return 'bg-info-100 text-info-800 dark:bg-info-900 dark:text-info-200';
         case StatusType.REPAIR:
           return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
         case StatusType.LOST:
-          return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-        case StatusType.RETIRED:
-          return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+          return 'bg-danger-100 text-danger-800 dark:bg-danger-900 dark:text-danger-200';
+        case StatusType.PENDING_TRANSFER:
+          return 'bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-200';
         default:
-          return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+          return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-200';
       }
     }
   };

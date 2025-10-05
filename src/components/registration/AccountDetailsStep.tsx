@@ -70,15 +70,15 @@ export default function AccountDetailsStep({
     <>
       {/* Header */}
       <div className="text-center px-6 pb-4">
-        <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-12 h-12 bg-gradient-to-br from-success-400 to-success-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
         
-        <h3 className="text-xl font-bold text-gray-900 mb-2">יצירת חשבון</h3>
-        <p className="text-base text-gray-600 mb-3">הגדר את פרטי הכניסה שלך</p>
+        <h3 className="text-xl font-bold text-neutral-900 mb-2">יצירת חשבון</h3>
+        <p className="text-base text-neutral-600 mb-3">הגדר את פרטי הכניסה שלך</p>
       </div>
 
       {/* Form */}
@@ -93,16 +93,16 @@ export default function AccountDetailsStep({
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 className={`w-full px-4 py-2.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                         text-right text-gray-800 bg-gray-50 focus:bg-white placeholder-gray-500 pr-12 ${
+                         text-right text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 pr-12 ${
                   validationErrors.email && formData.email
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                    : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500'
+                    ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
+                    : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
                 }`}
                 placeholder={TEXT_CONSTANTS.AUTH.EMAIL_PLACEHOLDER_REGISTRATION}
                 data-testid="email-input"
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                         d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                 </svg>
@@ -111,7 +111,7 @@ export default function AccountDetailsStep({
             
             {/* Email Error Message */}
             {validationErrors.email && formData.email && (
-              <p className="text-xs text-red-600 text-right px-1" data-testid="email-error">
+              <p className="text-xs text-danger-600 text-right px-1" data-testid="email-error">
                 {validationErrors.email}
               </p>
             )}
@@ -125,10 +125,10 @@ export default function AccountDetailsStep({
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
                 className={`w-full px-4 py-2.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                         text-right text-gray-800 bg-gray-50 focus:bg-white placeholder-gray-500 pl-12 pr-12 ${
+                         text-right text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 pl-12 pr-12 ${
                   validationErrors.password && formData.password
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                    : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500'
+                    ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
+                    : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
                 }`}
                 placeholder={TEXT_CONSTANTS.AUTH.PASSWORD_PLACEHOLDER_REGISTRATION}
                 data-testid="password-input"
@@ -138,7 +138,7 @@ export default function AccountDetailsStep({
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors duration-200"
                 data-testid="password-toggle"
                 aria-label={showPassword ? TEXT_CONSTANTS.AUTH.HIDE_PASSWORD : TEXT_CONSTANTS.AUTH.SHOW_PASSWORD}
               >
@@ -164,14 +164,14 @@ export default function AccountDetailsStep({
                   onMouseEnter={() => setShowPasswordTooltip(true)}
                   onMouseLeave={() => setShowPasswordTooltip(false)}
                 >
-                  <svg className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-help transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-neutral-400 hover:text-neutral-600 cursor-help transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                           d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                   
                   {/* Password Requirements Tooltip */}
                   {showPasswordTooltip && (
-                    <div className="absolute bottom-full right-0 mb-2 w-64 bg-gray-800 text-white text-xs rounded-lg p-3 z-10 shadow-lg">
+                    <div className="absolute bottom-full right-0 mb-2 w-64 bg-neutral-800 text-white text-xs rounded-lg p-3 z-10 shadow-lg">
                       <div className="text-center font-semibold mb-2">דרישות סיסמה:</div>
                       <ul className="text-right space-y-1">
                         <li>• לפחות 8 תווים</li>
@@ -181,7 +181,7 @@ export default function AccountDetailsStep({
                         <li>• תו מיוחד (!@#$%^&*)</li>
                       </ul>
                       {/* Tooltip Arrow */}
-                      <div className="absolute top-full right-3 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800"></div>
+                      <div className="absolute top-full right-3 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-neutral-800"></div>
                     </div>
                   )}
                 </div>
@@ -190,7 +190,7 @@ export default function AccountDetailsStep({
             
             {/* Password Error Message */}
             {validationErrors.password && formData.password && (
-              <p className="text-xs text-red-600 text-right px-1" data-testid="password-error">
+              <p className="text-xs text-danger-600 text-right px-1" data-testid="password-error">
                 {validationErrors.password}
               </p>
             )}
@@ -204,20 +204,20 @@ export default function AccountDetailsStep({
                 id="consent"
                 checked={formData.consent}
                 onChange={(e) => handleInputChange('consent', e.target.checked)}
-                className={`mt-1 h-4 w-4 rounded border-2 focus:ring-2 focus:ring-blue-500  ${
+                className={`mt-1 h-4 w-4 rounded border-2 focus:ring-2 focus:ring-info-500  ${
                   validationErrors.consent
-                    ? 'border-red-500 text-red-600'
-                    : 'border-gray-300 text-blue-600'
+                    ? 'border-danger-500 text-danger-600'
+                    : 'border-neutral-300 text-info-600'
                 }`}
                 
                 data-testid="consent-checkbox"
               />
-              <label htmlFor="consent" className="text-sm text-gray-700 text-right leading-5">
+              <label htmlFor="consent" className="text-sm text-neutral-700 text-right leading-5">
                 * אני מסכים/ה ל
                 <button
                   type="button"
                   onClick={() => setShowPolicyModal(true)}
-                  className="text-blue-600 hover:text-blue-800 underline mx-1"
+                  className="text-info-600 hover:text-info-800 underline mx-1"
                 >
                   תנאי השימוש ומדיניות הפרטיות
                 </button>
@@ -234,8 +234,8 @@ export default function AccountDetailsStep({
                      flex items-center justify-center gap-2 mt-4
                      transition-all duration-200 ${
               isFormValid && !isSubmitting
-                ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-lg'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-gradient-to-r from-success-600 to-success-700 hover:from-success-700 hover:to-success-800 text-white hover:shadow-lg'
+                : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
             }`}
             data-testid="create-account-button"
           >

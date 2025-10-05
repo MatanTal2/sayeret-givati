@@ -77,7 +77,7 @@ export function validateNewEquipmentForm(form: Partial<NewEquipmentForm>): Valid
   }
 
   // Warnings for best practices
-  if (form.condition === EquipmentCondition.POOR || form.condition === EquipmentCondition.NEEDS_REPAIR) {
+  if (form.condition === EquipmentCondition.NEEDS_REPAIR || form.condition === EquipmentCondition.WORN) {
     warnings.condition = 'ציוד במצב גרוע או דורש תיקון - שקלו תחזוקה';
   }
 
@@ -128,12 +128,8 @@ export function validateTransferForm(
     errors.general = 'לא ניתן להעביר ציוד שמסומן כאבוד';
   }
 
-  if (currentEquipment.status === EquipmentStatus.RETIRED) {
-    errors.general = 'לא ניתן להעביר ציוד שהוצא משירות';
-  }
-
-  if (currentEquipment.status === EquipmentStatus.MAINTENANCE) {
-    warnings.general = 'ציוד נמצא בתחזוקה - וודא התאמה להעברה';
+  if (currentEquipment.status === EquipmentStatus.REPAIR) {
+    warnings.general = 'ציוד נמצא בתיקון - וודא התאמה להעברה';
   }
 
   // Role-based validations
@@ -206,8 +202,7 @@ export function validateBulkTransferForm(
     form.equipmentIds.forEach(id => {
       const equipment = equipmentList.find(item => item.id === id);
       if (equipment) {
-        if (equipment.status === EquipmentStatus.LOST || 
-            equipment.status === EquipmentStatus.RETIRED) {
+        if (equipment.status === EquipmentStatus.LOST) {
           problematicItems.push(equipment.id);
         }
         if (equipment.condition === EquipmentCondition.NEEDS_REPAIR) {

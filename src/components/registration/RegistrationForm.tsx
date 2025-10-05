@@ -84,7 +84,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
         setOtpSendError(errorMessage);
       }
     } catch {
-      setOtpSendError('שגיאת חיבור. אנא בדוק את החיבור לאינטרנט ונסה שוב.');
+      setOtpSendError(TEXT_CONSTANTS.REGISTRATION_COMPONENTS.CONNECTION_ERROR);
     } finally {
       setIsSendingOTP(false);
     }
@@ -181,7 +181,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
         if (authError instanceof Error && authError.message.includes('email-already-in-use')) {
           // Email already exists - this means the user already has a Firebase Auth account
           // We cannot proceed with registration using a different password
-          setValidationError('כתובת האימייל כבר רשומה במערכת. אנא השתמש בעמוד ההתחברות או אפס את הסיסמה.');
+          setValidationError(TEXT_CONSTANTS.REGISTRATION_COMPONENTS.EMAIL_ALREADY_REGISTERED);
           setIsSubmittingRegistration(false);
           return;
         } else {
@@ -286,7 +286,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       {/* Registration Content */}
       <div className="text-center px-6 pb-4">
         {/* Medal Icon */}
-        <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-12 h-12 bg-gradient-to-br from-warning-400 to-warning-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                   d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
@@ -294,17 +294,17 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
         </div>
         
         {/* Main Title */}
-        <h3 className="text-xl font-bold text-gray-900 mb-2">{TEXT_CONSTANTS.AUTH.WELCOME_TO_SYSTEM}</h3>
+        <h3 className="text-xl font-bold text-neutral-900 mb-2">{TEXT_CONSTANTS.AUTH.WELCOME_TO_SYSTEM}</h3>
         
         {/* Subtitle */}
-        <p className="text-base text-gray-600 mb-3">{TEXT_CONSTANTS.AUTH.SYSTEM_SUBTITLE}</p>
+        <p className="text-base text-neutral-600 mb-3">{TEXT_CONSTANTS.AUTH.SYSTEM_SUBTITLE}</p>
       </div>
 
       {/* Registration Form */}
       <div className="px-6 pb-3">
         <form className="space-y-4">
           {/* Section Title */}
-          <h4 className="text-lg font-semibold text-gray-800 text-center mb-2">
+          <h4 className="text-lg font-semibold text-neutral-800 text-center mb-2">
             {TEXT_CONSTANTS.AUTH.IDENTITY_VERIFICATION}
           </h4>
           
@@ -316,17 +316,17 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
                 value={personalNumber}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                         text-right text-gray-800 bg-gray-50 focus:bg-white placeholder-gray-500 ${
+                         text-right text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 ${
                   validationError && personalNumber
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                    : 'border-gray-200 focus:border-purple-500 focus:ring-purple-500'
+                    ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
+                    : 'border-neutral-200 focus:border-primary-500 focus:ring-primary-500'
                 }`}
                 placeholder={TEXT_CONSTANTS.AUTH.PERSONAL_NUMBER_PLACEHOLDER}
                 maxLength={7}
                 data-testid="personal-number-input"
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                         d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 114 0v2m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
                 </svg>
@@ -336,7 +336,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
             {/* Error Message */}
             {validationError && personalNumber && (
               <p 
-                className="text-sm text-red-600 text-right px-1"
+                className="text-sm text-danger-600 text-right px-1"
                 data-testid="personal-number-error"
               >
                 {validationError}
@@ -346,7 +346,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
             {/* OTP Send Error */}
             {otpSendError && (
               <p 
-                className="text-sm text-red-600 text-center px-1"
+                className="text-sm text-danger-600 text-center px-1"
                 data-testid="otp-send-error"
               >
                 {otpSendError}
@@ -355,7 +355,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
             
             {/* Helper Text */}
             {!validationError && !otpSendError && (
-              <p className="text-sm text-gray-500 text-center">
+              <p className="text-sm text-neutral-500 text-center">
                 {TEXT_CONSTANTS.AUTH.PERSONAL_NUMBER_HELPER}
               </p>
             )}
@@ -370,8 +370,8 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
                      flex items-center justify-center gap-2
                      transition-all duration-200 ${
               isValid && !isVerifying && !isSendingOTP
-                ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-lg'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-gradient-to-r from-success-600 to-success-700 hover:from-success-700 hover:to-success-800 text-white hover:shadow-lg'
+                : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
             }`}
             data-testid="verify-button"
           >
@@ -381,7 +381,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                {isSendingOTP ? 'שולח קוד...' : 'מאמת...'}
+                {isSendingOTP ? TEXT_CONSTANTS.REGISTRATION_COMPONENTS.SENDING_CODE : TEXT_CONSTANTS.REGISTRATION_COMPONENTS.VERIFYING}
               </>
             ) : (
               <>
@@ -399,7 +399,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
               <button
                 type="button"
                 onClick={onSwitchToLogin}
-                className="text-sm text-purple-600 hover:text-purple-800 
+                className="text-sm text-primary-600 hover:text-primary-800 
                          transition-all duration-200 underline-offset-2 hover:underline focus-ring rounded-md"
               >
                 כבר יש לך חשבון? התחבר כאן

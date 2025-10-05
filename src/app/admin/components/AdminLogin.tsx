@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { TEXT_CONSTANTS } from '@/constants/text';
 
 interface AdminLoginProps {
   onLoginSuccess: () => void;
@@ -22,20 +23,20 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
 
   return (
     <div className="max-w-md mx-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
           <div className="text-4xl mb-4">🔐</div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
             Admin Login
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-neutral-600 dark:text-neutral-400 mt-2">
             System Administrator Access
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="email" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Admin Email
             </label>
             <input
@@ -43,11 +44,11 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
-                         bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                         focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
+                         bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+                         focus:ring-2 focus:ring-info-500 focus:border-info-500
                          disabled:opacity-50"
-              placeholder="Email"
+              placeholder={TEXT_CONSTANTS.ADMIN_COMPONENTS.EMAIL_PLACEHOLDER}
               autoComplete="username"
               required
               disabled={isLoading}
@@ -55,7 +56,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Password
             </label>
             <input
@@ -63,11 +64,11 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
-                         bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                         focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
+                         bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+                         focus:ring-2 focus:ring-info-500 focus:border-info-500
                          disabled:opacity-50"
-              placeholder="Enter admin password"
+              placeholder={TEXT_CONSTANTS.ADMIN_COMPONENTS.ADMIN_PASSWORD_PLACEHOLDER}
               autoComplete="current-password"
               required
               disabled={isLoading}
@@ -77,18 +78,18 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
           {message && (
             <div className={`rounded-md p-4 ${
               message.type === 'success' 
-                ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' 
-                : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+                ? 'bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800' 
+                : 'bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800'
             }`}>
               <div className="flex">
-                <div className={message.type === 'success' ? 'text-green-400' : 'text-red-400'}>
+                <div className={message.type === 'success' ? 'text-success-400' : 'text-danger-400'}>
                   {message.type === 'success' ? '✅' : '⚠️'}
                 </div>
                 <div className="ml-3">
                   <p className={`text-sm ${
                     message.type === 'success' 
-                      ? 'text-green-700 dark:text-green-400' 
-                      : 'text-red-700 dark:text-red-400'
+                      ? 'text-success-700 dark:text-success-400' 
+                      : 'text-danger-700 dark:text-danger-400'
                   }`}>
                     {message.text}
                   </p>
@@ -100,9 +101,9 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
           <button
             type="submit"
             disabled={isLoading || !email || !password}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 
+            className="w-full bg-info-600 hover:bg-info-700 disabled:bg-neutral-400 
                        text-white font-medium py-2 px-4 rounded-md
-                       focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                       focus:ring-2 focus:ring-info-500 focus:ring-offset-2
                        disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? (
@@ -117,7 +118,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
             🔒 Secure system administrator access only
           </p>
         </div>

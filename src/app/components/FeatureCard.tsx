@@ -27,7 +27,7 @@ export default function FeatureCard({
         <h3 className="text-xl font-bold mb-2">{title}</h3>
         <p className="text-sm opacity-90">{description}</p>
         {!available && (
-          <span className="absolute top-4 left-4 bg-gray-400 text-white text-xs px-2 py-1 rounded-full">
+          <span className="absolute top-4 left-4 bg-neutral-400 text-white text-xs px-2 py-1 rounded-full">
             בקרוב
           </span>
         )}

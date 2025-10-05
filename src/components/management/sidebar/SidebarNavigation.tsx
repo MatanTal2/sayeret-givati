@@ -35,12 +35,12 @@ export default function SidebarNavigation({
         return (
           <div key={category.id}>
             {/* Category Title */}
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3">
               {category.name}
             </h3>
             
             {/* Gradient Divider */}
-            <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent mb-4" />
+            <div className="h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent mb-4" />
             
             {/* Category Tabs */}
             <div className="space-y-1">
@@ -54,11 +54,11 @@ export default function SidebarNavigation({
                     onClick={() => onTabChange(tab.id)}
                     className={cn(
                       'w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200',
-                      'hover:bg-purple-50 hover:text-purple-700',
-                      'focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2',
+                      'hover:bg-primary-50 hover:text-primary-700',
+                      'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
                       isActive
-                        ? 'bg-purple-100 text-purple-700 border-r-2 border-purple-600'
-                        : 'text-gray-700 hover:text-purple-700'
+                        ? 'bg-primary-100 text-primary-700 border-r-2 border-primary-600'
+                        : 'text-neutral-700 hover:text-primary-700'
                     )}
                   >
                     <Icon className="w-5 h-5 ml-3 flex-shrink-0" />

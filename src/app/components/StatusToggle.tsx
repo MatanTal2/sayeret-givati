@@ -1,6 +1,7 @@
 import { BsFillHouseFill } from "react-icons/bs";
 import { GiTank } from "react-icons/gi";
 import { MdNotListedLocation } from "react-icons/md";
+import { TEXT_CONSTANTS } from '@/constants/text';
 
 interface StatusToggleProps {
   currentStatus: string;
@@ -26,40 +27,40 @@ export default function StatusToggle({
   }`;
 
   return (
-    <div className="flex bg-gray-100 rounded-lg p-1">
+    <div className="flex bg-neutral-100 rounded-lg p-1">
       <button 
-        onClick={() => !disabled && onStatusChange('בית')}
+        onClick={() => !disabled && onStatusChange(TEXT_CONSTANTS.STATUS_PAGE.STATUS_HOME)}
         disabled={disabled}
         className={`${buttonClass} ${
-          currentStatus === 'בית' 
-            ? 'bg-purple-600 text-white shadow-sm' 
-            : 'text-gray-600 hover:bg-gray-200'
+          currentStatus === TEXT_CONSTANTS.STATUS_PAGE.STATUS_HOME 
+            ? 'bg-primary-600 text-white shadow-sm' 
+            : 'text-neutral-600 hover:bg-neutral-200'
         }`}
-        title="בית"
+        title={TEXT_CONSTANTS.STATUS_PAGE.STATUS_HOME}
       >
         <BsFillHouseFill />
       </button>
       <button 
-        onClick={() => !disabled && onStatusChange('משמר')}
+        onClick={() => !disabled && onStatusChange(TEXT_CONSTANTS.STATUS_PAGE.STATUS_GUARD)}
         disabled={disabled}
         className={`${buttonClass} ${
-          currentStatus === 'משמר' 
-            ? 'bg-purple-600 text-white shadow-sm' 
-            : 'text-gray-600 hover:bg-gray-200'
+          currentStatus === TEXT_CONSTANTS.STATUS_PAGE.STATUS_GUARD 
+            ? 'bg-primary-600 text-white shadow-sm' 
+            : 'text-neutral-600 hover:bg-neutral-200'
         }`}
-        title="משמר"
+        title={TEXT_CONSTANTS.STATUS_PAGE.STATUS_GUARD}
       >
         <GiTank />
       </button>
       <button 
-        onClick={() => !disabled && onStatusChange('אחר')}
+        onClick={() => !disabled && onStatusChange(TEXT_CONSTANTS.STATUS_PAGE.STATUS_OTHER)}
         disabled={disabled}
         className={`${buttonClass} ${
-          currentStatus === 'אחר' 
-            ? 'bg-purple-600 text-white shadow-sm' 
-            : 'text-gray-600 hover:bg-gray-200'
+          currentStatus === TEXT_CONSTANTS.STATUS_PAGE.STATUS_OTHER 
+            ? 'bg-primary-600 text-white shadow-sm' 
+            : 'text-neutral-600 hover:bg-neutral-200'
         }`}
-        title="אחר"
+        title={TEXT_CONSTANTS.STATUS_PAGE.STATUS_OTHER}
       >
         <MdNotListedLocation />
       </button>

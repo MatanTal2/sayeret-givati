@@ -19,18 +19,12 @@ export default function EquipmentCondition({
   // Condition to display text mapping
   const getConditionText = (condition: ConditionType): string => {
     switch (condition) {
-      case ConditionType.NEW:
-        return TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_NEW;
-      case ConditionType.EXCELLENT:
-        return TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_EXCELLENT;
       case ConditionType.GOOD:
         return TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_GOOD;
-      case ConditionType.FAIR:
-        return TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_FAIR;
-      case ConditionType.POOR:
-        return TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_POOR;
       case ConditionType.NEEDS_REPAIR:
         return TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_NEEDS_REPAIR;
+      case ConditionType.WORN:
+        return TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_WORN;
       default:
         return condition;
     }
@@ -39,12 +33,9 @@ export default function EquipmentCondition({
   // Condition to color mapping - using semantic colors
   const getConditionColor = (condition: ConditionType): string => {
     const colorMap = {
-      [ConditionType.NEW]: 'emerald',
-      [ConditionType.EXCELLENT]: 'green', 
       [ConditionType.GOOD]: 'blue',
-      [ConditionType.FAIR]: 'yellow',
-      [ConditionType.POOR]: 'orange',
-      [ConditionType.NEEDS_REPAIR]: 'red'
+      [ConditionType.NEEDS_REPAIR]: 'red',
+      [ConditionType.WORN]: 'yellow'
     };
     
     const color = colorMap[condition] || 'gray';
@@ -59,18 +50,12 @@ export default function EquipmentCondition({
   // Condition to icon mapping - visual indicators
   const getConditionIcon = (condition: ConditionType): string => {
     switch (condition) {
-      case ConditionType.NEW:
-        return '✨';
-      case ConditionType.EXCELLENT:
-        return '⭐';
       case ConditionType.GOOD:
         return '👍';
-      case ConditionType.FAIR:
-        return '👌';
-      case ConditionType.POOR:
-        return '👎';
       case ConditionType.NEEDS_REPAIR:
         return '🔧';
+      case ConditionType.WORN:
+        return '⚠️';
       default:
         return '❓';
     }

@@ -20,7 +20,7 @@ export default function ComingSoon({
   showBackButton = true 
 }: ComingSoonProps) {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4" dir="rtl">
+    <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4" dir="rtl">
       <div className="max-w-lg w-full">
         {/* Coming Soon Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
@@ -32,7 +32,7 @@ export default function ComingSoon({
           </div>
 
           {/* Title */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl font-bold text-neutral-900 mb-4">
             {title}
           </h1>
 
@@ -43,22 +43,22 @@ export default function ComingSoon({
 
           {/* Description */}
           {description && (
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p className="text-neutral-600 mb-6 leading-relaxed">
               {description}
             </p>
           )}
 
           {/* Development Status */}
-          <div className="bg-gray-50 rounded-xl p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">
+          <div className="bg-neutral-50 rounded-xl p-6 mb-6">
+            <h3 className="text-lg font-semibold text-neutral-900 mb-3">
               סטטוס פיתוח
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-neutral-600 mb-4">
               תכונה זו נמצאת כרגע בפיתוח פעיל ותהיה זמינה בקרוב.
             </p>
             
             {expectedDate && (
-              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center justify-center gap-2 text-sm text-neutral-500">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
@@ -72,13 +72,13 @@ export default function ComingSoon({
             {showBackButton && (
               <Link 
                 href="/"
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 inline-block"
+                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 inline-block"
               >
                 חזרה לדף הבית
               </Link>
             )}
             
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-neutral-500">
               לעדכונים על התקדמות הפיתוח, צור קשר עם צוות הפיתוח
             </div>
           </div>
