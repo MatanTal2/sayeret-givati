@@ -37,8 +37,7 @@ export function createHistoryEntry(
       justification: string;
     };
   },
-  holderName?: string, // Display name (optional for UI performance)
-  updatedByName?: string // Display name (optional for UI performance)
+  holderName?: string // Display name (optional for UI performance)
 ): EquipmentHistoryEntry {
   // Use current date for history entries since serverTimestamp() can't be used in arrays
   const now = Timestamp.fromDate(new Date());
