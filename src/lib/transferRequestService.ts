@@ -86,7 +86,7 @@ export async function createTransferRequest(
           updatedByName: fromUserName,
           note: 'Transfer request created'
         }],
-        createdAt: serverTimestamp() as any
+        createdAt: serverTimestamp() as Timestamp
       };
 
       // Add transfer request document

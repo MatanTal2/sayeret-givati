@@ -87,7 +87,7 @@ export default function TransferModal({
 
     const timeoutId = setTimeout(performUserSearch, 300);
     return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+  }, [searchQuery, formData.toUserId]);
 
   // Handle click outside to close dropdown
   useEffect(() => {
