@@ -581,28 +581,17 @@ export class EquipmentItemsService {
       const currentEquipment = currentDoc.data() as Equipment;
       const now = Timestamp.fromDate(new Date());
 
-      // Close previous history entry
-      const updatedHistory = [...currentEquipment.trackingHistory];
-      const lastEntry = updatedHistory[updatedHistory.length - 1];
-      if (lastEntry && !lastEntry.toDate) {
-        lastEntry.toDate = now;
-      }
-
-      // Create new tracking history entry
+      // Create new tracking history entry for transfer
       const transferEntry: EquipmentHistoryEntry = {
-        holder: newHolderId, // Store UID for queries
-        holderName: newHolder, // Cache display name for UI performance
-        fromDate: now,
-        action: approvalDetails.emergencyOverride ? EquipmentAction.EMERGENCY_TRANSFER : EquipmentAction.TRANSFER,
-        updatedBy,
-        updatedByName,
+        action: approvalDetails.emergencyOverride ? 'emergency_transfer' : 'transfer_completed',
+        holder: newHolder, // Display name for UI
         location: newLocation || currentEquipment.location,
         notes: notes || TEXT_CONSTANTS.FEATURES.EQUIPMENT.EQUIPMENT_TRANSFERRED || 'Equipment transferred',
-        approval: approvalDetails,
-        timestamp: now
+        timestamp: now,
+        updatedBy
       };
 
-      updatedHistory.push(transferEntry);
+      const updatedHistory = [...currentEquipment.trackingHistory, transferEntry];
 
       const updateData = {
         currentHolder: newHolder, // Display name for UI

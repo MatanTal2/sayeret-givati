@@ -44,25 +44,12 @@ export function createHistoryEntry(
   const now = Timestamp.fromDate(new Date());
   
   return {
-    holder,
-    holderName,
-    fromDate: now,
     action,
-    updatedBy,
-    updatedByName,
+    holder: holderName || holder, // Use display name if available, otherwise UID
     location,
     notes,
     timestamp: now,
-    approval: approval ? {
-      approvedBy: approval.approvedBy,
-      approvedAt: now,
-      approvalType: approval.approvalType,
-      phoneLast4: approval.phoneLast4,
-      emergencyOverride: approval.emergencyOverride ? {
-        ...approval.emergencyOverride,
-        overrideAt: now
-      } : undefined
-    } : undefined
+    updatedBy
   };
 }
 
