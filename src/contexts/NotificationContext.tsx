@@ -251,10 +251,12 @@ export function useNotificationDisplay() {
     let createdAtDate: Date;
     if (notification.createdAt instanceof Timestamp) {
       createdAtDate = notification.createdAt.toDate();
-    } else if (notification.createdAt instanceof Date) {
-      createdAtDate = notification.createdAt;
+    } else if (notification.createdAt && typeof notification.createdAt === 'object' && 'getTime' in notification.createdAt) {
+      // Handle case where createdAt is already a Date object
+      createdAtDate = notification.createdAt as Date;
     } else {
-      createdAtDate = new Date(notification.createdAt);
+      // Handle case where createdAt is a string or number
+      createdAtDate = new Date(notification.createdAt as any);
     }
 
     return {
