@@ -8,6 +8,7 @@ import { Timestamp } from 'firebase/firestore';
 import StatusComponent from './EquipmentStatus';
 import ConditionComponent from './EquipmentCondition';
 import DailyStatusBadge from './DailyStatusBadge';
+import PendingTransferButton from './PendingTransferButton';
 import SelectAllCheckbox from '@/app/components/SelectAllCheckbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserType } from '@/types/user';
@@ -804,34 +805,45 @@ export default function EquipmentList({
                        </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex gap-2">
-                          {onTransfer && canPerformActions() && (
-                            <button
-                              onClick={() => onTransfer(item.id)}
-                              className="px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white text-xs rounded-md transition-colors"
-                            >
-                              העבר
-                            </button>
-                          )}
-                          {onUpdateStatus && canPerformActions() && (
-                            <button
-                              onClick={() => onUpdateStatus(item.id)}
-                              className="px-3 py-1 bg-info-600 hover:bg-info-700 text-white text-xs rounded-md transition-colors"
-                            >
-                              עדכן
-                            </button>
-                          )}
-                          {onCredit && canPerformActions() && (
-                            <button
-                              onClick={() => onCredit(item.id)}
-                              className="px-3 py-1 bg-white border-2 border-danger-600 text-danger-600 hover:bg-danger-50 text-xs rounded-md transition-colors"
-                            >
-                              {TEXT_CONSTANTS.FEATURES.EQUIPMENT.CREDIT_EQUIPMENT}
-                            </button>
-                          )}
-                          {!canPerformActions() && activeTab === 'additional-equipment' && (
-                            <span className="px-3 py-1 bg-neutral-200 text-neutral-500 text-xs rounded-md">
-                              {TEXT_CONSTANTS.FEATURES.EQUIPMENT.RESTRICTED_ACCESS}
-                            </span>
+                          {/* Show PendingTransferButton if equipment is in pending_transfer status */}
+                          {item.status === EquipmentStatus.PENDING_TRANSFER && canPerformActions() ? (
+                            <PendingTransferButton 
+                              equipment={item} 
+                              onTransferUpdate={onRefresh}
+                              size="sm"
+                            />
+                          ) : (
+                            <>
+                              {onTransfer && canPerformActions() && (
+                                <button
+                                  onClick={() => onTransfer(item.id)}
+                                  className="px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white text-xs rounded-md transition-colors"
+                                >
+                                  העבר
+                                </button>
+                              )}
+                              {onUpdateStatus && canPerformActions() && (
+                                <button
+                                  onClick={() => onUpdateStatus(item.id)}
+                                  className="px-3 py-1 bg-info-600 hover:bg-info-700 text-white text-xs rounded-md transition-colors"
+                                >
+                                  עדכן
+                                </button>
+                              )}
+                              {onCredit && canPerformActions() && (
+                                <button
+                                  onClick={() => onCredit(item.id)}
+                                  className="px-3 py-1 bg-white border-2 border-danger-600 text-danger-600 hover:bg-danger-50 text-xs rounded-md transition-colors"
+                                >
+                                  {TEXT_CONSTANTS.FEATURES.EQUIPMENT.CREDIT_EQUIPMENT}
+                                </button>
+                              )}
+                              {!canPerformActions() && activeTab === 'additional-equipment' && (
+                                <span className="px-3 py-1 bg-neutral-200 text-neutral-500 text-xs rounded-md">
+                                  {TEXT_CONSTANTS.FEATURES.EQUIPMENT.RESTRICTED_ACCESS}
+                                </span>
+                              )}
+                            </>
                           )}
                         </div>
                       </td>

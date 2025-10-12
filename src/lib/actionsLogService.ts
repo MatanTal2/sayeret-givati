@@ -246,6 +246,30 @@ export const ActionLogHelpers = {
   }),
 
   /**
+   * Create transfer cancellation action log
+   */
+  transferCancelled: (
+    equipmentId: string,
+    equipmentDocId: string,
+    equipmentName: string,
+    cancellerUserId: string,
+    cancellerUserName: string,
+    toUserId: string,
+    toUserName: string,
+    reason?: string
+  ): Omit<ActionsLog, 'id' | 'timestamp'> => ({
+    actionType: ActionType.TRANSFER_CANCELLED,
+    equipmentId,
+    equipmentDocId,
+    equipmentName,
+    actorId: cancellerUserId,
+    actorName: cancellerUserName,
+    targetId: toUserId,
+    targetName: toUserName,
+    note: reason
+  }),
+
+  /**
    * Create equipment creation action log
    */
   equipmentCreated: (

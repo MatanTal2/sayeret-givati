@@ -201,6 +201,24 @@ export function createMaintenanceCompleteEntry(
 }
 
 /**
+ * Create a tracking history entry for transfer cancellation
+ */
+export function createTransferCancelledEntry(
+  holderName: string,
+  location: string,
+  cancellerUserId: string,
+  reason?: string
+): Omit<EquipmentHistoryEntry, 'timestamp'> {
+  return {
+    action: 'transfer_cancelled',
+    holder: holderName,
+    location: location,
+    notes: reason || 'Transfer cancelled by requester',
+    updatedBy: cancellerUserId
+  };
+}
+
+/**
  * Get the most recent tracking history entry
  */
 export function getMostRecentHistoryEntry(

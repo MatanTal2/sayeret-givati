@@ -360,6 +360,7 @@ export enum ActionType {
   TRANSFER_REQUESTED = 'transfer_requested',
   TRANSFER_APPROVED = 'transfer_approved',
   TRANSFER_REJECTED = 'transfer_rejected',
+  TRANSFER_CANCELLED = 'transfer_cancelled',
   
   // Maintenance actions
   MAINTENANCE_START = 'maintenance_start',
@@ -403,7 +404,8 @@ export enum TransferStatus {
   NONE = 'none',
   PENDING = 'pending',
   APPROVED = 'approved',
-  REJECTED = 'rejected'
+  REJECTED = 'rejected',
+  CANCELLED = 'cancelled'
 }
 
 export interface TransferStatusHistoryEntry {

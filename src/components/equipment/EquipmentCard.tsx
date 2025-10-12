@@ -1,17 +1,19 @@
 'use client';
 
-import { Equipment } from '@/types/equipment';
+import { Equipment, EquipmentStatus as EquipmentStatusEnum } from '@/types/equipment';
 import { TEXT_FMT } from '@/constants/text';
 import { Timestamp } from 'firebase/firestore';
 import EquipmentStatus from './EquipmentStatus';
 import EquipmentCondition from './EquipmentCondition';
 import DailyStatusBadge from './DailyStatusBadge';
+import PendingTransferButton from './PendingTransferButton';
 
 interface EquipmentCardProps {
   equipment: Equipment;
   onTransfer?: (equipmentId: string) => void;
   onUpdateStatus?: (equipmentId: string) => void;
   onViewHistory?: (equipmentId: string) => void;
+  onRefresh?: () => void;
   compact?: boolean;
 }
 
@@ -20,6 +22,7 @@ export default function EquipmentCard({
   onTransfer,
   onUpdateStatus,
   onViewHistory,
+  onRefresh,
   compact = false 
 }: EquipmentCardProps) {
   
@@ -104,43 +107,56 @@ export default function EquipmentCard({
           </div>
           
           <div className="flex gap-1">
-            {onTransfer && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTransfer(equipment.id);
-                }}
-                className="px-2 py-1 text-xs font-medium bg-primary-600 hover:bg-primary-700 text-white
-                           rounded-md transition-colors"
-              >
-                העבר
-              </button>
-            )}
-            
-            {onUpdateStatus && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUpdateStatus(equipment.id);
-                }}
-                className="px-2 py-1 text-xs font-medium bg-info-600 hover:bg-info-700 text-white
-                           rounded-md transition-colors"
-              >
-                עדכן
-              </button>
-            )}
-            
-            {onViewHistory && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewHistory(equipment.id);
-                }}
-                className="px-2 py-1 text-xs font-medium bg-success-600 hover:bg-success-700 text-white
-                           rounded-md transition-colors"
-              >
-                📋
-              </button>
+            {/* Show PendingTransferButton if equipment is in pending_transfer status */}
+            {equipment.status === EquipmentStatusEnum.PENDING_TRANSFER ? (
+              <div onClick={(e) => e.stopPropagation()}>
+                <PendingTransferButton 
+                  equipment={equipment} 
+                  onTransferUpdate={onRefresh}
+                  size="sm"
+                />
+              </div>
+            ) : (
+              <>
+                {onTransfer && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTransfer(equipment.id);
+                    }}
+                    className="px-2 py-1 text-xs font-medium bg-primary-600 hover:bg-primary-700 text-white
+                               rounded-md transition-colors"
+                  >
+                    העבר
+                  </button>
+                )}
+                
+                {onUpdateStatus && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUpdateStatus(equipment.id);
+                    }}
+                    className="px-2 py-1 text-xs font-medium bg-info-600 hover:bg-info-700 text-white
+                               rounded-md transition-colors"
+                  >
+                    עדכן
+                  </button>
+                )}
+                
+                {onViewHistory && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onViewHistory(equipment.id);
+                    }}
+                    className="px-2 py-1 text-xs font-medium bg-success-600 hover:bg-success-700 text-white
+                               rounded-md transition-colors"
+                  >
+                    📋
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>

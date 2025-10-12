@@ -384,6 +384,18 @@ export const TEXT_CONSTANTS = {
         STATUS_APPROVED: 'אושר',
         STATUS_REJECTED: 'נדחה',
         
+        // Pending Transfer Actions
+        PENDING_TRANSFER_BUTTON: 'ממתין לאישור',
+        CANCEL_TRANSFER: 'בטל העברה',
+        REMIND_RECIPIENT: 'תזכר נמען',
+        CANCEL_TRANSFER_CONFIRM_TITLE: 'בטל העברת ציוד',
+        CANCEL_TRANSFER_CONFIRM_MESSAGE: 'האם אתה בטוח שברצונך לבטל את בקשת ההעברה?',
+        CANCEL_TRANSFER_SUCCESS: 'בקשת ההעברה בוטלה בהצלחה',
+        CANCEL_TRANSFER_ERROR: 'שגיאה בביטול בקשת ההעברה',
+        REMIND_RECIPIENT_SUCCESS: 'תזכורת נשלחה לנמען',
+        REMIND_RECIPIENT_ERROR: 'שגיאה בשליחת התזכורת',
+        REMINDER_SENT: 'תזכורת נשלחה',
+        
         // History
         HISTORY_TITLE: 'היסטוריית העברות',
         NO_TRANSFERS: 'אין העברות עבור ציוד זה',

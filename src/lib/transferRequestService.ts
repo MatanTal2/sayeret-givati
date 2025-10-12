@@ -30,13 +30,15 @@ import {
   addTrackingHistoryEntry, 
   createTransferRequestedEntry,
   createTransferApprovedEntry,
-  createTransferRejectedEntry
+  createTransferRejectedEntry,
+  createTransferCancelledEntry
 } from './equipmentHistoryService';
 import { 
   notifyTransferRequest,
   notifyTransferApproved,
   notifyTransferRejected,
-  notifyTransferCompleted
+  notifyTransferCompleted,
+  notifyTransferReminder
 } from '@/utils/notifications';
 
 const TRANSFER_REQUESTS_COLLECTION = 'transferRequests';
@@ -433,5 +435,173 @@ export async function getAllPendingTransferRequests(): Promise<TransferRequest[]
   } catch (error) {
     console.error('Error fetching all pending transfer requests:', error);
     throw new Error('Failed to fetch all pending transfer requests');
+  }
+}
+
+/**
+ * Get pending transfer request for a specific equipment item
+ */
+export async function getPendingTransferRequestForEquipment(equipmentDocId: string): Promise<TransferRequest | null> {
+  try {
+    const q = query(
+      collection(db, TRANSFER_REQUESTS_COLLECTION),
+      where('equipmentDocId', '==', equipmentDocId),
+      where('status', '==', TransferStatus.PENDING),
+      orderBy('createdAt', 'desc')
+    );
+
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      return null;
+    }
+
+    const doc = querySnapshot.docs[0]; // Get the most recent pending request
+    return {
+      id: doc.id,
+      ...doc.data()
+    } as TransferRequest;
+  } catch (error) {
+    console.error('Error fetching pending transfer request for equipment:', error);
+    throw new Error('Failed to fetch pending transfer request');
+  }
+}
+
+/**
+ * Cancel a transfer request (by the original requester)
+ */
+export async function cancelTransferRequest(
+  transferRequestId: string,
+  cancellerUserId: string,
+  cancellerUserName: string,
+  cancellationReason?: string
+): Promise<void> {
+  try {
+    await runTransaction(db, async (transaction) => {
+      // Get transfer request
+      const transferRequestRef = doc(db, TRANSFER_REQUESTS_COLLECTION, transferRequestId);
+      const transferRequestDoc = await transaction.get(transferRequestRef);
+      
+      if (!transferRequestDoc.exists()) {
+        throw new Error('Transfer request not found');
+      }
+
+      const transferRequest = { id: transferRequestDoc.id, ...transferRequestDoc.data() } as TransferRequest;
+
+      if (transferRequest.status !== TransferStatus.PENDING) {
+        throw new Error('Transfer request is not pending');
+      }
+
+      // Only allow the original requester to cancel
+      if (transferRequest.fromUserId !== cancellerUserId) {
+        throw new Error('Only the original requester can cancel the transfer');
+      }
+
+      // Get equipment document
+      const equipmentRef = doc(db, EQUIPMENT_COLLECTION, transferRequest.equipmentDocId);
+      const equipmentDoc = await transaction.get(equipmentRef);
+      
+      if (!equipmentDoc.exists()) {
+        throw new Error('Equipment not found');
+      }
+
+      const equipment = { id: equipmentDoc.id, ...equipmentDoc.data() } as Equipment;
+
+      // Update transfer request status
+      const now = Timestamp.now();
+      const newStatusEntry: TransferStatusHistoryEntry = {
+        status: TransferStatus.CANCELLED,
+        timestamp: now,
+        updatedBy: cancellerUserId,
+        updatedByName: cancellerUserName,
+        note: cancellationReason || 'Transfer cancelled by requester'
+      };
+
+      transaction.update(transferRequestRef, {
+        status: TransferStatus.CANCELLED,
+        statusHistory: [...transferRequest.statusHistory, newStatusEntry]
+      });
+
+      // Update equipment - revert status back to available
+      const newHistoryEntry = createTransferCancelledEntry(
+        transferRequest.fromUserName,
+        equipment.location,
+        cancellerUserId,
+        cancellationReason || 'Transfer cancelled by requester'
+      );
+
+      const updatedTrackingHistory = addTrackingHistoryEntry(
+        equipment.trackingHistory || [],
+        newHistoryEntry
+      );
+
+      transaction.update(equipmentRef, {
+        status: EquipmentStatus.AVAILABLE, // Reset to available after cancellation
+        trackingHistory: updatedTrackingHistory,
+        updatedAt: serverTimestamp()
+      });
+    });
+
+    // Create action log entry (outside transaction to avoid conflicts)
+    const transferRequestDoc = await getDoc(doc(db, TRANSFER_REQUESTS_COLLECTION, transferRequestId));
+    if (transferRequestDoc.exists()) {
+      const transferRequest = { id: transferRequestDoc.id, ...transferRequestDoc.data() } as TransferRequest;
+      
+      await createActionLog(ActionLogHelpers.transferCancelled(
+        transferRequest.equipmentId,
+        transferRequest.equipmentDocId,
+        transferRequest.equipmentName,
+        cancellerUserId,
+        cancellerUserName,
+        transferRequest.toUserId,
+        transferRequest.toUserName,
+        cancellationReason
+      ));
+    }
+  } catch (error) {
+    console.error('Error cancelling transfer request:', error);
+    throw new Error('Failed to cancel transfer request');
+  }
+}
+
+/**
+ * Send a reminder notification for a pending transfer request
+ */
+export async function sendTransferReminder(
+  transferRequestId: string,
+  reminderId: string,
+  reminderName: string
+): Promise<void> {
+  try {
+    // Get transfer request
+    const transferRequestRef = doc(db, TRANSFER_REQUESTS_COLLECTION, transferRequestId);
+    const transferRequestDoc = await getDoc(transferRequestRef);
+    
+    if (!transferRequestDoc.exists()) {
+      throw new Error('Transfer request not found');
+    }
+
+    const transferRequest = { id: transferRequestDoc.id, ...transferRequestDoc.data() } as TransferRequest;
+
+    if (transferRequest.status !== TransferStatus.PENDING) {
+      throw new Error('Transfer request is not pending');
+    }
+
+    // Only allow the original requester to send reminders
+    if (transferRequest.fromUserId !== reminderId) {
+      throw new Error('Only the original requester can send reminders');
+    }
+
+    // Send reminder notification
+    await notifyTransferReminder(
+      transferRequest.toUserId,
+      reminderName,
+      transferRequest.equipmentName,
+      transferRequest.equipmentId,
+      transferRequest.equipmentDocId,
+      transferRequestId
+    );
+  } catch (error) {
+    console.error('Error sending transfer reminder:', error);
+    throw new Error('Failed to send transfer reminder');
   }
 }

@@ -411,6 +411,29 @@ export async function notifyTransferCompleted(
   });
 }
 
+export async function notifyTransferReminder(
+  toUserId: string,
+  fromUserName: string,
+  equipmentName: string,
+  equipmentId?: string,
+  equipmentDocId?: string,
+  transferId?: string
+): Promise<NotificationServiceResult> {
+  const data: CreateNotificationData = {
+    title: 'תזכורת - בקשת העברת ציוד',
+    message: `${fromUserName} שלח לך תזכורת לגבי בקשת העברת הציוד ${equipmentName}`,
+    ...(equipmentId && { relatedEquipmentId: equipmentId }),
+    ...(equipmentDocId && { relatedEquipmentDocId: equipmentDocId }),
+    ...(transferId && { relatedTransferId: transferId })
+  };
+  
+  return NotificationService.createNotification(
+    toUserId,
+    NotificationType.TRANSFER_REQUEST, // Reuse the same type as original request
+    data
+  );
+}
+
 // Equipment-related notifications
 export async function notifyEquipmentStatusChange(
   userId: string,
