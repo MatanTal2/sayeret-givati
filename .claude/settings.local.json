@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat /c/Users/mamas/projects/sayeret-givati/eslint.config.*)",
+      "Bash(cat /c/Users/mamas/projects/sayeret-givati/jest.config.*)",
+      "Bash(wc -l /c/Users/mamas/projects/sayeret-givati/src/hooks/*.ts /c/Users/mamas/projects/sayeret-givati/src/contexts/*.tsx /c/Users/mamas/projects/sayeret-givati/src/types/*.ts /c/Users/mamas/projects/sayeret-givati/src/constants/*.ts /c/Users/mamas/projects/sayeret-givati/src/utils/*.ts /c/Users/mamas/projects/sayeret-givati/src/data/*.ts)",
+      "Bash(find /c/Users/mamas/projects/sayeret-givati/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.js\" -o -name \"*.jsx\" \\\\\\) -exec wc -l {} +)",
+      "Bash(awk '{print $1, $2}')",
+      "Bash(sort -k2)",
+      "Bash(wc -l /c/Users/mamas/projects/sayeret-givati/src/lib/*.ts /c/Users/mamas/projects/sayeret-givati/src/lib/categories/*.ts)",
+      "Bash(grep -E \"\\(page|layout\\)\\\\.tsx$\")",
+      "Bash(wc -l /c/Users/mamas/projects/sayeret-givati/src/hooks/*.ts /c/Users/mamas/projects/sayeret-givati/src/types/*.ts /c/Users/mamas/projects/sayeret-givati/src/utils/*.ts)",
+      "Bash(awk '$1 > 300 {print $2, $1}')",
+      "Bash(sort -k2 -rn)",
+      "Bash(cat /c/Users/mamas/projects/sayeret-givati/tailwind.config.*)",
+      "Bash(wc:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}
