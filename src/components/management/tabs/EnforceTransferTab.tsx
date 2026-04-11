@@ -1,20 +1,93 @@
 /**
  * Enforce transfer tab component - extracted from management page
+ * Wired to real Firestore data via transferRequestService
  */
-import React, { useState } from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  getAllPendingTransferRequests,
+  approveTransferRequest,
+  rejectTransferRequest,
+} from '@/lib/transferRequestService';
+import { TransferRequest } from '@/types/equipment';
+import { Timestamp } from 'firebase/firestore';
 
 export default function EnforceTransferTab() {
+  const { enhancedUser } = useAuth();
   const [selectedEquipment, setSelectedEquipment] = useState('');
   const [fromUser, setFromUser] = useState('');
   const [toUser, setToUser] = useState('');
   const [reason, setReason] = useState('');
 
-  const pendingTransfers = [
-    { id: '1', equipment: 'תבור - T001', from: 'יוסי כהן', to: 'שרה לוי', date: '2024-01-15', status: 'pending' },
-    { id: '2', equipment: 'אפוד טקטי - V042', from: 'דוד אבן', to: 'רן כהן', date: '2024-01-14', status: 'approved' },
-    { id: '3', equipment: 'קסדה - H123', from: 'מיכל לוי', to: 'אבי גרינברג', date: '2024-01-13', status: 'rejected' },
-  ];
+  const [pendingTransfers, setPendingTransfers] = useState<TransferRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
+
+  // Load real pending transfers on mount
+  useEffect(() => {
+    loadPendingTransfers();
+  }, []);
+
+  const loadPendingTransfers = async () => {
+    setIsLoading(true);
+    try {
+      const transfers = await getAllPendingTransferRequests();
+      setPendingTransfers(transfers);
+    } catch (error) {
+      console.error('Error loading pending transfers:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleApprove = async (transferId: string) => {
+    if (!enhancedUser) return;
+    setActionInProgress(transferId);
+    try {
+      const approverName = (enhancedUser.firstName && enhancedUser.lastName)
+        ? `${enhancedUser.firstName} ${enhancedUser.lastName}`
+        : enhancedUser.email || '';
+      await approveTransferRequest(transferId, enhancedUser.uid, approverName);
+      await loadPendingTransfers();
+    } catch (error) {
+      console.error('Error approving transfer:', error);
+      alert('שגיאה באישור ההעברה');
+    } finally {
+      setActionInProgress(null);
+    }
+  };
+
+  const handleReject = async (transferId: string) => {
+    if (!enhancedUser) return;
+    const rejectionReason = prompt('סיבת הדחייה:');
+    if (rejectionReason === null) return; // cancelled
+
+    setActionInProgress(transferId);
+    try {
+      const rejectorName = (enhancedUser.firstName && enhancedUser.lastName)
+        ? `${enhancedUser.firstName} ${enhancedUser.lastName}`
+        : enhancedUser.email || '';
+      await rejectTransferRequest(transferId, enhancedUser.uid, rejectorName, rejectionReason || undefined);
+      await loadPendingTransfers();
+    } catch (error) {
+      console.error('Error rejecting transfer:', error);
+      alert('שגיאה בדחיית ההעברה');
+    } finally {
+      setActionInProgress(null);
+    }
+  };
+
+  const formatDate = (timestamp: Timestamp | string | Date): string => {
+    try {
+      const date = timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp as string);
+      return date.toLocaleDateString('he-IL');
+    } catch {
+      return '';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -41,9 +114,6 @@ export default function EnforceTransferTab() {
               onChange={(e) => setSelectedEquipment(e.target.value)}
             >
               <option value="">בחר ציוד...</option>
-              <option value="1">תבור - T001</option>
-              <option value="2">אפוד טקטי - V042</option>
-              <option value="3">קסדה - H123</option>
             </select>
           </div>
           <div>
@@ -54,9 +124,6 @@ export default function EnforceTransferTab() {
               onChange={(e) => setFromUser(e.target.value)}
             >
               <option value="">בחר משתמש...</option>
-              <option value="1">יוסי כהן</option>
-              <option value="2">שרה לוי</option>
-              <option value="3">דוד אבן</option>
             </select>
           </div>
           <div>
@@ -67,9 +134,6 @@ export default function EnforceTransferTab() {
               onChange={(e) => setToUser(e.target.value)}
             >
               <option value="">בחר משתמש...</option>
-              <option value="1">יוסי כהן</option>
-              <option value="2">שרה לוי</option>
-              <option value="3">דוד אבן</option>
             </select>
           </div>
           <div>
@@ -96,59 +160,74 @@ export default function EnforceTransferTab() {
           />
         </div>
         <div className="mt-4">
-          <button className="px-4 py-2 bg-danger-600 hover:bg-danger-700 text-white font-medium rounded-lg transition-colors">
+          <button className="px-4 py-2 bg-danger-600 hover:bg-danger-700 text-white font-medium rounded-lg transition-colors"
+            onClick={() => alert('פיצ\'ר העברה כפויה בפיתוח')}
+          >
             ⚠️ בצע העברה כפויה
           </button>
         </div>
       </div>
 
-      {/* Pending Transfers */}
+      {/* Pending Transfers — Real Data */}
       <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
-        <div className="px-6 py-4 bg-neutral-50 border-b border-neutral-200">
+        <div className="px-6 py-4 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between">
           <h4 className="text-lg font-medium text-neutral-900">העברות בהמתנה לאישור</h4>
+          <button
+            onClick={loadPendingTransfers}
+            disabled={isLoading}
+            className="text-sm text-primary-600 hover:text-primary-800"
+          >
+            🔄 רענן
+          </button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-neutral-200">
-            <thead className="bg-neutral-50">
-              <tr>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">ציוד</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">מאת</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">אל</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">תאריך</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">סטטוס</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">פעולות</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-neutral-200">
-              {pendingTransfers.map((transfer) => (
-                <tr key={transfer.id} className="hover:bg-neutral-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">{transfer.equipment}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">{transfer.from}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">{transfer.to}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">{transfer.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      transfer.status === 'pending' ? 'bg-warning-100 text-warning-800' :
-                      transfer.status === 'approved' ? 'bg-success-100 text-success-800' :
-                      'bg-danger-100 text-danger-800'
-                    }`}>
-                      {transfer.status === 'pending' ? 'ממתין' : transfer.status === 'approved' ? 'אושר' : 'נדחה'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                    {transfer.status === 'pending' && (
-                      <>
-                        <button className="text-success-600 hover:text-success-900 ml-2">אשר</button>
-                        <button className="text-danger-600 hover:text-danger-900">דחה</button>
-                      </>
-                    )}
-                    <button className="text-info-600 hover:text-info-900">פרטים</button>
-                  </td>
+
+        {isLoading ? (
+          <div className="p-8 text-center text-neutral-500">טוען...</div>
+        ) : pendingTransfers.length === 0 ? (
+          <div className="p-8 text-center text-neutral-500">אין העברות בהמתנה</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-neutral-200">
+              <thead className="bg-neutral-50">
+                <tr>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">ציוד</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">מאת</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">אל</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">תאריך</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">סיבה</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">פעולות</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="bg-white divide-y divide-neutral-200">
+                {pendingTransfers.map((transfer) => (
+                  <tr key={transfer.id} className="hover:bg-neutral-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">{transfer.equipmentName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">{transfer.fromUserName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">{transfer.toUserName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">{formatDate(transfer.createdAt)}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-600 max-w-[200px] truncate">{transfer.reason}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                      <button
+                        onClick={() => handleApprove(transfer.id)}
+                        disabled={actionInProgress === transfer.id}
+                        className="text-success-600 hover:text-success-900 ml-2 disabled:opacity-50"
+                      >
+                        {actionInProgress === transfer.id ? '...' : 'אשר'}
+                      </button>
+                      <button
+                        onClick={() => handleReject(transfer.id)}
+                        disabled={actionInProgress === transfer.id}
+                        className="text-danger-600 hover:text-danger-900 disabled:opacity-50"
+                      >
+                        דחה
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -87,6 +87,53 @@ export class PersonnelCache {
   }
 
   /**
+   * Append a single personnel to the existing cache
+   */
+  static appendToCache(personnel: AuthorizedPersonnel): void {
+    try {
+      const cached = this.getCachedData();
+      if (cached) {
+        cached.data.push(personnel);
+        localStorage.setItem(PERSONNEL_CACHE_KEY, JSON.stringify(cached));
+      }
+    } catch (error) {
+      console.warn('Failed to append to personnel cache:', error);
+    }
+  }
+
+  /**
+   * Remove a personnel from the cache by ID
+   */
+  static removeFromCache(personnelId: string): void {
+    try {
+      const cached = this.getCachedData();
+      if (cached) {
+        cached.data = cached.data.filter(p => p.id !== personnelId);
+        localStorage.setItem(PERSONNEL_CACHE_KEY, JSON.stringify(cached));
+      }
+    } catch (error) {
+      console.warn('Failed to remove from personnel cache:', error);
+    }
+  }
+
+  /**
+   * Update a personnel in the cache by ID
+   */
+  static updateInCache(personnelId: string, updates: Partial<AuthorizedPersonnel>): void {
+    try {
+      const cached = this.getCachedData();
+      if (cached) {
+        cached.data = cached.data.map(p =>
+          p.id === personnelId ? { ...p, ...updates } : p
+        );
+        localStorage.setItem(PERSONNEL_CACHE_KEY, JSON.stringify(cached));
+      }
+    } catch (error) {
+      console.warn('Failed to update personnel cache:', error);
+    }
+  }
+
+  /**
    * Get last manual refresh time
    */
   static getLastManualRefresh(): Date | null {

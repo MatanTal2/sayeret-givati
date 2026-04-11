@@ -5,21 +5,18 @@
  */
 
 import { db, auth } from '@/lib/firebase';
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  getDocs, 
-  updateDoc, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  serverTimestamp, 
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit,
+  serverTimestamp,
   Timestamp,
   writeBatch,
-  runTransaction,
 } from 'firebase/firestore';
 
 import { 
@@ -76,48 +73,29 @@ export class EquipmentTypesService {
   /**
    * Create a new equipment type
    */
+  /**
+   * Create a new equipment type.
+   * Delegates to server API route (firebase-admin) for the write.
+   */
   static async createEquipmentType(
     equipmentTypeData: Omit<EquipmentType, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<EquipmentServiceResult> {
     try {
-      // Use auto-generated document ID
-      const equipmentTypeDoc = doc(collection(db, EQUIPMENT_TEMPLATES_COLLECTION));
-      
-      // Build equipment type object, removing undefined fields to prevent Firestore errors
-      const equipmentType: EquipmentType = {
-        ...equipmentTypeData,
-        id: equipmentTypeDoc.id, // Use the auto-generated ID
-        createdAt: serverTimestamp() as Timestamp,
-        updatedAt: serverTimestamp() as Timestamp
-      };
+      const response = await fetch('/api/equipment-templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(equipmentTypeData),
+      });
+      const result = await response.json();
 
-      // Build data object for Firestore, excluding undefined optional fields
-      const dataToSave: Record<string, unknown> = {
-        id: equipmentType.id,
-        name: equipmentType.name,
-        category: equipmentType.category,
-        subcategory: equipmentType.subcategory,
-        requiresDailyStatusCheck: equipmentType.requiresDailyStatusCheck,
-        isActive: equipmentType.isActive,
-        templateCreatorId: equipmentType.templateCreatorId,
-        createdAt: equipmentType.createdAt,
-        updatedAt: equipmentType.updatedAt
-      };
-
-      // Add optional fields only if they are defined
-      if (equipmentType.description !== undefined) {
-        dataToSave.description = equipmentType.description;
+      if (!result.success) {
+        return { success: false, message: result.error || 'Failed to create equipment type', error: result.error };
       }
-      if (equipmentType.notes !== undefined) {
-        dataToSave.notes = equipmentType.notes;
-      }
-
-      await setDoc(equipmentTypeDoc, dataToSave);
 
       return {
         success: true,
         message: TEXT_CONSTANTS.FEATURES.EQUIPMENT.EQUIPMENT_TYPE_CREATED || 'Equipment type created successfully',
-        data: equipmentType
+        data: { ...equipmentTypeData, id: result.id } as EquipmentType
       };
 
     } catch (error) {
@@ -246,30 +224,25 @@ export class EquipmentTypesService {
   /**
    * Update equipment type
    */
+  /**
+   * Update equipment type.
+   * Delegates to server API route (firebase-admin) for the write.
+   */
   static async updateEquipmentType(
-    typeId: string, 
+    typeId: string,
     updates: Partial<Omit<EquipmentType, 'id' | 'createdAt' | 'updatedAt'>>
   ): Promise<EquipmentServiceResult> {
     try {
-      const equipmentTypeDoc = doc(db, EQUIPMENT_TEMPLATES_COLLECTION, typeId);
-      
-      // Build update object, excluding undefined values
-      const updateData: Record<string, unknown> = {
-        updatedAt: serverTimestamp()
-      };
+      const response = await fetch('/api/equipment-templates', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: typeId, ...updates }),
+      });
+      const result = await response.json();
 
-      // Add only defined fields from updates
-      if (updates.name !== undefined) updateData.name = updates.name;
-      if (updates.category !== undefined) updateData.category = updates.category;
-      if (updates.subcategory !== undefined) updateData.subcategory = updates.subcategory;
-      if (updates.description !== undefined) updateData.description = updates.description;
-      if (updates.notes !== undefined) updateData.notes = updates.notes;
-      if (updates.requiresDailyStatusCheck !== undefined) updateData.requiresDailyStatusCheck = updates.requiresDailyStatusCheck;
-      if (updates.isActive !== undefined) updateData.isActive = updates.isActive;
-      if (updates.templateCreatorId !== undefined) updateData.templateCreatorId = updates.templateCreatorId;
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await updateDoc(equipmentTypeDoc, updateData as any);
+      if (!result.success) {
+        return { success: false, message: result.error || 'Failed to update equipment type', error: result.error };
+      }
 
       return {
         success: true,
@@ -335,26 +308,29 @@ export class EquipmentItemsService {
         updatedAt: serverTimestamp() as Timestamp
       };
 
-      // Use transaction to ensure atomicity
-      await runTransaction(db, async (transaction) => {
-        // Set equipment document
-        transaction.set(equipmentDoc, equipment);
-        
-        // Create action log entry
-        const actionLogData = {
-          ...ActionLogHelpers.equipmentCreated(
+      // Create equipment + action log via server API route (firebase-admin transaction)
+      const createResponse = await fetch('/api/equipment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          equipmentData,
+          initialHolderName,
+          initialHolderId,
+          signedBy,
+          trackingHistory,
+          actionLog: ActionLogHelpers.equipmentCreated(
             equipmentData.id,
-            equipmentData.id, // Using serial number as both ID and docId
+            equipmentData.id,
             equipmentData.productName,
             initialHolderId,
             initialHolderName
           ),
-          timestamp: serverTimestamp()
-        };
-        
-        const actionLogRef = doc(collection(db, 'actionsLog'));
-        transaction.set(actionLogRef, actionLogData);
+        }),
       });
+      const createResult = await createResponse.json();
+      if (!createResult.success) {
+        return { success: false, message: createResult.error || 'Failed to create equipment', error: createResult.error };
+      }
 
       return {
         success: true,
@@ -495,9 +471,10 @@ export class EquipmentItemsService {
         };
       }
 
-      const equipmentDoc = doc(db, EQUIPMENT_COLLECTION, equipmentId);
-      const currentDoc = await getDoc(equipmentDoc);
-      
+      // Read current equipment to get tracking history (client SDK read)
+      const equipmentDocRef = doc(db, EQUIPMENT_COLLECTION, equipmentId);
+      const currentDoc = await getDoc(equipmentDocRef);
+
       if (!currentDoc.exists()) {
         return {
           success: false,
@@ -509,23 +486,30 @@ export class EquipmentItemsService {
       const currentEquipment = currentDoc.data() as Equipment;
       const now = Timestamp.fromDate(new Date());
 
-      // Create new tracking history entry
       const historyEntry: EquipmentHistoryEntry = {
         action,
-        holder: currentEquipment.currentHolder, // Display name for UI
+        holder: currentEquipment.currentHolder,
         location: updates.location || currentEquipment.location,
         notes: notes || `${action} update`,
         timestamp: now,
         updatedBy
       };
 
-      const updateData = {
-        ...updates,
-        trackingHistory: [...currentEquipment.trackingHistory, historyEntry],
-        updatedAt: serverTimestamp() as Timestamp
-      };
-
-      await updateDoc(equipmentDoc, updateData);
+      // Update via server API route (firebase-admin)
+      const updateResponse = await fetch('/api/equipment', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          equipmentId,
+          updates,
+          historyEntry,
+          currentTrackingHistory: currentEquipment.trackingHistory,
+        }),
+      });
+      const updateResult = await updateResponse.json();
+      if (!updateResult.success) {
+        return { success: false, message: updateResult.error || 'Failed to update equipment', error: updateResult.error };
+      }
 
       return {
         success: true,
@@ -567,9 +551,10 @@ export class EquipmentItemsService {
         };
       }
 
-      const equipmentDoc = doc(db, EQUIPMENT_COLLECTION, equipmentId);
-      const currentDoc = await getDoc(equipmentDoc);
-      
+      // Read current equipment (client SDK read)
+      const equipmentDocRef = doc(db, EQUIPMENT_COLLECTION, equipmentId);
+      const currentDoc = await getDoc(equipmentDocRef);
+
       if (!currentDoc.exists()) {
         return {
           success: false,
@@ -581,28 +566,35 @@ export class EquipmentItemsService {
       const currentEquipment = currentDoc.data() as Equipment;
       const now = Timestamp.fromDate(new Date());
 
-      // Create new tracking history entry for transfer
       const transferEntry: EquipmentHistoryEntry = {
         action: approvalDetails.emergencyOverride ? 'emergency_transfer' : 'transfer_completed',
-        holder: newHolder, // Display name for UI
+        holder: newHolder,
         location: newLocation || currentEquipment.location,
         notes: notes || TEXT_CONSTANTS.FEATURES.EQUIPMENT.EQUIPMENT_TRANSFERRED || 'Equipment transferred',
         timestamp: now,
         updatedBy
       };
 
-      const updatedHistory = [...currentEquipment.trackingHistory, transferEntry];
-
-      const updateData = {
-        currentHolder: newHolder, // Display name for UI
-        currentHolderId: newHolderId, // UID for queries and permissions
-        assignedUnit: newUnit || currentEquipment.assignedUnit,
-        location: newLocation || currentEquipment.location,
-        trackingHistory: updatedHistory,
-        updatedAt: serverTimestamp() as Timestamp
-      };
-
-      await updateDoc(equipmentDoc, updateData);
+      // Transfer via server API route (firebase-admin)
+      const transferResponse = await fetch('/api/equipment/transfer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          equipmentId,
+          newHolder,
+          newHolderId,
+          newUnit,
+          newLocation,
+          transferEntry,
+          currentTrackingHistory: currentEquipment.trackingHistory,
+          currentAssignedUnit: currentEquipment.assignedUnit,
+          currentLocation: currentEquipment.location,
+        }),
+      });
+      const transferResult = await transferResponse.json();
+      if (!transferResult.success) {
+        return { success: false, message: transferResult.error || 'Failed to transfer equipment', error: transferResult.error };
+      }
 
       return {
         success: true,

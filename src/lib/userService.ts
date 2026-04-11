@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { doc, setDoc, updateDoc, serverTimestamp, getDoc, Timestamp, collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { doc, serverTimestamp, getDoc, Timestamp, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { SecurityUtils } from '@/lib/adminUtils';
 import { UserRole } from '@/types/equipment';
 import { CommunicationPreferences, UserType } from '@/types/user';
@@ -129,13 +129,18 @@ export class UserService {
         communicationPreferences: defaultCommunicationPreferences
       };
 
-      // 6. Save user profile to Firestore using Firebase Auth UID as document ID
-      const userDocRef = doc(db, ADMIN_CONFIG.FIRESTORE_USERS_COLLECTION, registrationData.firebaseAuthUid);
-      await setDoc(userDocRef, userProfile);
+      // 6. Save user profile to Firestore via server API route (firebase-admin)
+      const createResponse = await fetch('/api/auth/create-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userProfile: { ...userProfile, birthday: registrationData.birthdate },
+          militaryIdHash,
+        }),
+      });
+      const createResult = await createResponse.json();
+      if (!createResult.success) throw new Error(createResult.error || 'Failed to create user profile');
       console.log('✅ User profile created in Firestore with Firebase Auth UID:', registrationData.firebaseAuthUid);
-
-      // 7. Mark as registered in authorized_personnel collection
-      await this.markAsRegistered(militaryIdHash);
 
       // Note: Firebase Auth user is created client-side, Firestore profile created server-side
       console.log('📝 Firebase Auth user and Firestore profile linked via UID:', registrationData.firebaseAuthUid);
@@ -193,22 +198,7 @@ export class UserService {
     }
   }
 
-  /**
-   * Mark a user as fully registered in authorized_personnel collection
-   */
-  private static async markAsRegistered(militaryIdHash: string): Promise<void> {
-    try {
-      const personnelDocRef = doc(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION, militaryIdHash);
-      await updateDoc(personnelDocRef, { 
-        registered: true,
-        updatedAt: serverTimestamp()
-      });
-      console.log('✅ Marked user as registered in authorized_personnel');
-    } catch (error) {
-      console.error('⚠️ Failed to mark user as registered (non-critical):', error);
-      // Don't throw error - this is a non-critical operation
-    }
-  }
+  // markAsRegistered moved to server: src/lib/db/server/userService.ts
 }
 
 /**

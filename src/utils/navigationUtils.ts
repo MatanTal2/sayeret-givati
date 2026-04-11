@@ -85,10 +85,10 @@ export function getFeatureRoutes(): FeatureRoute[] {
       description: TEXT_CONSTANTS.FEATURES.ADDITIONAL_TOOLS.DESCRIPTION,
       icon: "🔧",
       href: "/tools",
-      available: false,
-      color: "bg-gray-400",
-      requiresAuth: true,
-      isComingSoon: true
+      available: true,
+      color: "bg-purple-600",
+      requiresAuth: false,
+      isComingSoon: false
     }
   ];
 }

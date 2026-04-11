@@ -2,18 +2,13 @@
  * Categories Repository - Firestore data access layer
  */
 
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  setDoc, 
-  updateDoc, 
-  query, 
-  where,
-  serverTimestamp,
-  Timestamp,
-  writeBatch
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  query,
+  where
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { 
@@ -218,73 +213,75 @@ export class CategoriesRepository {
   }
 
   /**
-   * Create a new category
+   * Create a new category.
+   * Delegates to server API route (firebase-admin) for the write.
    */
   static async createCategory(
     categoryData: Omit<Category, 'id' | 'subcategories' | 'createdAt' | 'updatedAt'>
   ): Promise<string> {
-    const categoryDoc = doc(collection(db, COLLECTIONS.CATEGORIES));
-    
-    const category = {
-      ...categoryData,
-      createdAt: serverTimestamp() as Timestamp,
-      updatedAt: serverTimestamp() as Timestamp
-    };
-
-    await setDoc(categoryDoc, category);
-    return categoryDoc.id; // Return the auto-generated ID
+    const response = await fetch('/api/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(categoryData),
+    });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Failed to create category');
+    return result.id;
   }
 
   /**
-   * Create a new subcategory
+   * Create a new subcategory.
+   * Delegates to server API route (firebase-admin) for the write.
    */
   static async createSubcategory(
     subcategoryData: Omit<Subcategory, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<string> {
-    const subcategoryDoc = doc(collection(db, COLLECTIONS.SUBCATEGORIES));
-    
-    const subcategory = {
-      ...subcategoryData,
-      createdAt: serverTimestamp() as Timestamp,
-      updatedAt: serverTimestamp() as Timestamp
-    };
-
-    await setDoc(subcategoryDoc, subcategory);
-    return subcategoryDoc.id; // Return the auto-generated ID
+    const response = await fetch('/api/categories/subcategories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(subcategoryData),
+    });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Failed to create subcategory');
+    return result.id;
   }
 
   /**
-   * Update a category
+   * Update a category.
+   * Delegates to server API route (firebase-admin) for the write.
    */
   static async updateCategory(
     categoryId: string,
     updates: Partial<Pick<Category, 'name' | 'order' | 'isActive'>>
   ): Promise<void> {
-    const categoryDoc = doc(db, COLLECTIONS.CATEGORIES, categoryId);
-    
-    await updateDoc(categoryDoc, {
-      ...updates,
-      updatedAt: serverTimestamp()
+    const response = await fetch('/api/categories', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: categoryId, ...updates }),
     });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Failed to update category');
   }
 
   /**
-   * Update a subcategory
+   * Update a subcategory.
+   * Delegates to server API route (firebase-admin) for the write.
    */
   static async updateSubcategory(
     subcategoryId: string,
     updates: Partial<Pick<Subcategory, 'name' | 'order' | 'isActive'>>
   ): Promise<void> {
-    const subcategoryDoc = doc(db, COLLECTIONS.SUBCATEGORIES, subcategoryId);
-    
-    await updateDoc(subcategoryDoc, {
-      ...updates,
-      updatedAt: serverTimestamp()
+    const response = await fetch('/api/categories/subcategories', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: subcategoryId, ...updates }),
     });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Failed to update subcategory');
   }
 
   /**
-   * Get next order number for categories
+   * Get next order number for categories (client SDK read)
    */
   static async getNextCategoryOrder(): Promise<number> {
     try {
@@ -297,7 +294,7 @@ export class CategoriesRepository {
   }
 
   /**
-   * Get next order number for subcategories in a category
+   * Get next order number for subcategories in a category (client SDK read)
    */
   static async getNextSubcategoryOrder(parentCategoryId: string): Promise<number> {
     try {
@@ -314,44 +311,30 @@ export class CategoriesRepository {
   }
 
   /**
-   * Deactivate category and all its subcategories
+   * Deactivate category and all its subcategories.
+   * Delegates to server API route (firebase-admin) for the write.
    */
   static async deactivateCategory(categoryId: string): Promise<void> {
-    const batch = writeBatch(db);
-    
-    // Deactivate category
-    const categoryDoc = doc(db, COLLECTIONS.CATEGORIES, categoryId);
-    batch.update(categoryDoc, {
-      isActive: false,
-      updatedAt: serverTimestamp()
+    const response = await fetch('/api/categories', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: categoryId }),
     });
-    
-    // Deactivate all subcategories
-    const subcategoriesQuery = query(
-      collection(db, COLLECTIONS.SUBCATEGORIES),
-      where('parentCategoryId', '==', categoryId)
-    );
-    
-    const subcategoriesSnapshot = await getDocs(subcategoriesQuery);
-    subcategoriesSnapshot.forEach(doc => {
-      batch.update(doc.ref, {
-        isActive: false,
-        updatedAt: serverTimestamp()
-      });
-    });
-    
-    await batch.commit();
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Failed to deactivate category');
   }
 
   /**
-   * Deactivate subcategory
+   * Deactivate subcategory.
+   * Delegates to server API route (firebase-admin) for the write.
    */
   static async deactivateSubcategory(subcategoryId: string): Promise<void> {
-    const subcategoryDoc = doc(db, COLLECTIONS.SUBCATEGORIES, subcategoryId);
-    
-    await updateDoc(subcategoryDoc, {
-      isActive: false,
-      updatedAt: serverTimestamp()
+    const response = await fetch('/api/categories/subcategories', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: subcategoryId }),
     });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Failed to deactivate subcategory');
   }
 }

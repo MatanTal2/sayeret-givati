@@ -2,135 +2,146 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Button Styles from Style Guide - Temporarily Disabled for Testing */
-/*
+/* ─── Design token CSS variables ──────────────────────────────────────────────
+   Single source of truth for values that must be referenced in raw CSS.
+   All other token usage should go through Tailwind class names.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  --color-primary-500: #7c3aed;
+  --color-primary-600: #6d28d9;
+  --color-primary-700: #5b21b6;
+  --color-primary-focus-ring: rgba(124, 58, 237, 0.2);
+}
+
+/* ─── Shared component classes ────────────────────────────────────────────────
+   These are the ONLY permitted way to apply repeated multi-class patterns.
+   Do not duplicate these patterns via cn() across components — use the class.
+   ─────────────────────────────────────────────────────────────────────────── */
 @layer components {
+  /* Buttons */
   .btn-primary {
-    @apply px-6 py-3 bg-primary-600 text-white rounded-md 
-           hover:bg-primary-700 transition-colors font-medium
-           focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    @apply px-6 py-3 bg-primary-600 text-white rounded-xl font-medium
+           hover:bg-primary-700 active:scale-[0.98] transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply px-4 py-2 text-primary-600 hover:text-primary-800 
-           font-medium transition-colors;
+    @apply px-4 py-2 text-primary-600 hover:text-primary-800
+           font-medium transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+  .btn-ghost {
+    @apply px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100
+           font-medium rounded-xl transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2;
+  }
+
+  .btn-danger {
+    @apply px-4 py-2 bg-danger-600 text-white rounded-xl font-medium
+           hover:bg-danger-700 active:scale-[0.98] transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-danger-500 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Cards */
+  .card-base {
+    @apply bg-white rounded-2xl shadow-soft border border-neutral-100;
+  }
+
+  .card-interactive {
+    @apply card-base transition-all duration-300 hover:shadow-medium hover:-translate-y-1 cursor-pointer;
+  }
+
+  /* Form inputs */
+  .input-base {
+    @apply w-full px-4 py-2 bg-white border border-neutral-300 rounded-xl text-neutral-900
+           placeholder-neutral-400 transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+           disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed;
+  }
+
+  /* Badges */
+  .badge-base {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  /* Modal overlay backdrop */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/30 backdrop-blur-sm z-40;
   }
 }
-*/
 
-/* Custom Scrollbar Utilities */
+/* ─── Scrollbar utilities ─────────────────────────────────────────────────── */
 @layer utilities {
   .scrollbar-none {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
-  }
-  
-  .scrollbar-none::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
-  /* Fade-in Animation */
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ─── Animation utilities ───────────────────────────────────────────────── */
   .animate-fade-in {
     animation: fadeIn 0.3s ease-out forwards;
   }
-}
 
-/* Fade-in Keyframes */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Custom Animations and Transitions */
-@layer utilities {
-  /* Smooth entrance animation for modals */
   .modal-enter {
     animation: modalEnter 0.2s ease-out forwards;
   }
-  
-  @keyframes modalEnter {
-    from {
-      opacity: 0;
-      transform: scale(0.95) translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-  }
-  
-  /* Backdrop blur entrance */
+
   .backdrop-enter {
     animation: backdropEnter 0.2s ease-out forwards;
   }
-  
-  @keyframes backdropEnter {
-    from {
-      opacity: 0;
-      backdrop-filter: blur(0px);
-    }
-    to {
-      opacity: 1;
-      backdrop-filter: blur(4px);
-    }
-  }
-  
-  /* Feature card hover effect enhancement */
+
   .feature-card-hover {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
   .feature-card-hover:hover {
     transform: translateY(-4px) scale(1.02);
     box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
   }
-  
-  /* Button press animation */
+
   .btn-press {
     transition: all 0.1s ease-in-out;
   }
-  
+
   .btn-press:active {
     transform: scale(0.98);
   }
-  
-  /* Pulse animation for status indicators */
+
   .pulse-slow {
     animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
-  
-  /* Removed fade-in and stagger animations that were causing flicker on page load */
-  /* Cards now only animate on hover as intended */
 
-  /* Wave effect for homepage title */
+  /* Wave effect for homepage title — uses CSS variable for brand color */
   .wave-text {
     background: linear-gradient(
       90deg,
-      #7c3aed 0%,
-      #7c3aed 40%,
+      var(--color-primary-500) 0%,
+      var(--color-primary-500) 40%,
       #ffffff 50%,
-      #7c3aed 60%,
-      #7c3aed 100%
+      var(--color-primary-500) 60%,
+      var(--color-primary-500) 100%
     );
     background-size: 200% 100%;
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-position: 200% 0; /* End position - purple text */
+    background-position: 200% 0;
     animation: wave-slide;
   }
 
-  
   /* Loading shimmer effect */
   .shimmer {
     position: relative;
     overflow: hidden;
   }
-  
+
   .shimmer::before {
     content: '';
     position: absolute;
@@ -146,26 +157,42 @@
     );
     animation: shimmer 2s infinite;
   }
-  
-  @keyframes shimmer {
-    0% {
-      left: -100%;
-    }
-    100% {
-      left: 100%;
-    }
-  }
 }
 
-/* RTL Support Enhancements */
-[dir="rtl"] {
-  .feature-card-hover:hover {
-    transform: translateY(-4px) scale(1.02);
-  }
+/* ─── Keyframes ───────────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-/* Focus-visible improvements for accessibility */
+@keyframes modalEnter {
+  from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes backdropEnter {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to   { opacity: 1; backdrop-filter: blur(4px); }
+}
+
+@keyframes waveSlide {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes shimmer {
+  0%   { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* ─── RTL support ─────────────────────────────────────────────────────────── */
+/* dir="rtl" is set once on <html> in layout.tsx — do not repeat per component */
+[dir="rtl"] .feature-card-hover:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* ─── Focus ring ──────────────────────────────────────────────────────────── */
 .focus-ring:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px #7c3aed, 0 0 0 4px rgba(124, 58, 237, 0.2);
+  box-shadow: 0 0 0 2px var(--color-primary-500), 0 0 0 4px var(--color-primary-focus-ring);
 }

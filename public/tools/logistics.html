@@ -1,0 +1,576 @@
+
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>דרישות מל״מ - סיירת גבעתי</title>
+    <style>
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background-color: #f3eef5; 
+            margin: 0; 
+            padding: 15px; 
+            color: #1c1e21; 
+            overscroll-behavior: none;
+        }
+        
+        body.modal-open { 
+            overflow: hidden !important; 
+            position: fixed !important; 
+            width: 100%;
+            height: 100%;
+        }
+
+        .container { 
+            max-width: 500px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(115, 43, 134, 0.15); 
+        }
+        .logo-container { text-align: center; margin-bottom: 10px; }
+        .logo-container img { max-height: 100px; border-radius: 8px; }
+        h1 { text-align: center; color: #732b86; font-size: 24px; margin: 10px 0 5px 0; }
+        p.subtitle { text-align: center; font-size: 14px; color: #666; margin-bottom: 15px; }
+        
+        .team-selector {
+            background: #fdfafc; padding: 15px; border-radius: 8px; 
+            border: 2px solid #732b86; margin-bottom: 20px;
+        }
+        select {
+            width: 100%; padding: 10px; font-size: 16px; border-radius: 6px; 
+            border: 1px solid #ccc; background-color: white; font-family: inherit;
+        }
+
+        .mode-switch { display: flex; gap: 10px; margin-bottom: 20px; }
+        .mode-btn {
+            flex: 1; padding: 10px; font-size: 15px; font-weight: bold;
+            border: 1px solid #732b86; background: white; color: #732b86;
+            border-radius: 8px; cursor: pointer; transition: 0.2s;
+        }
+        .mode-btn.active { background: #732b86; color: white; }
+
+        .parser-section {
+            background: #eef2f5; padding: 15px; border-radius: 8px; 
+            border: 2px dashed #95a5a6; margin-bottom: 20px;
+        }
+        .btn-parse { background-color: #3498db; color: white; margin-top: 10px; padding: 10px; width: 100%; border-radius: 8px; font-weight: bold; border: none;}
+
+        .field { 
+            margin-bottom: 15px; background: #f8f9fa; padding: 12px; 
+            border-radius: 8px; border: 1px solid #e9ecef;
+        }
+        .field-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .field-header label { font-weight: bold; color: #2c3e50; font-size: 15px; }
+        .field-actions { display: flex; gap: 8px; }
+        
+        .icon-btn {
+            background: transparent; border: none; padding: 4px; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        /* התיקון הקריטי למובייל - מונע מהציור לבלוע את הלחיצה */
+        .icon-btn svg { 
+            pointer-events: none; 
+        }
+        .icon-trash svg { stroke: #e74c3c; width: 22px; height: 22px; }
+        .icon-expand svg { stroke: #34495e; width: 22px; height: 22px; }
+
+        textarea { 
+            width: 100%; box-sizing: border-box; padding: 10px; 
+            border: 1px solid #ced4da; border-radius: 6px; font-family: inherit; 
+            font-size: 15px; resize: vertical; min-height: 60px; line-height: 1.4;
+        }
+
+        .btn-preview { background-color: #4a1f56; color: white; padding: 14px; margin-top: 20px; width: 100%; border-radius: 8px; font-weight: bold; border: none;}
+        .btn-reset { background-color: #fff; color: #e74c3c; border: 1px solid #e74c3c; padding: 10px; margin-top: 10px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        /* חלון מורחב מוגן מגלילה חיצונית */
+        .modal-overlay {
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; right: 0; bottom: 0; 
+            background: rgba(0,0,0,0.8); 
+            z-index: 1000; 
+            padding: 10px; 
+            box-sizing: border-box;
+            align-items: center; 
+            justify-content: center;
+            touch-action: none; 
+            overscroll-behavior: none;
+        }
+        
+        .modal-content {
+            background: white; 
+            width: 100%; 
+            max-width: 500px; 
+            height: 100%; 
+            max-height: 100%;
+            border-radius: 12px; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+        
+        .modal-sticky-header {
+            flex: 0 0 auto; 
+            padding: 15px; 
+            border-bottom: 1px solid #eee; 
+            background: #fff; 
+        }
+        
+        .modal-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .modal-title-row h2 { margin: 0; font-size: 18px; color: #732b86; }
+        
+        .modal-toolbar {
+            display: flex; gap: 10px; align-items: center; background: #f8f9fa; padding: 8px; border-radius: 6px;
+        }
+        .tool-btn {
+            background: white; border: 1px solid #ccc; padding: 6px 12px; border-radius: 4px;
+            font-size: 14px; font-weight: bold; cursor: pointer;
+        }
+        
+        .modal-body { 
+            flex: 1 1 auto; 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column;
+            background: #fdfafc;
+            overflow: hidden; 
+        }
+        
+        #modal-textarea { 
+            flex: 1 1 auto; 
+            width: 100%; 
+            resize: none; 
+            font-size: 16px; 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            border-radius: 8px;
+            box-sizing: border-box;
+            line-height: 1.5;
+            overflow-y: auto; 
+            touch-action: pan-y; 
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        #modal-textarea:focus { border-color: #732b86; outline: none; }
+
+        #preview-container { 
+            display: none; margin-top: 20px; padding: 15px; background: #f4f0f5; 
+            border-right: 4px solid #732b86; border-radius: 6px; white-space: pre-wrap; 
+            font-family: inherit; font-size: 14px; color: #2c3e50;
+        }
+        .action-buttons { display: none; gap: 10px; margin-top: 15px; }
+        .btn-whatsapp { background-color: #25d366; color: white; flex: 1; padding: 14px; border-radius: 8px; font-weight: bold; border: none;}
+        .btn-copy { background-color: #e0e0e0; color: #333; flex: 1; padding: 14px; border-radius: 8px; font-weight: bold; border: none;}
+    </style>
+</head>
+<body>
+   <div class="container">
+       <div class="logo-container">
+           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSE7vczuUAR4NUDeUWnIC907NqfinXYxWLCWA&s" alt="לוגו סיירת גבעתי">
+       </div>
+       <h1>📦 דרישות מל״מ</h1>
+       <p class="subtitle">הנתונים נשמרים אוטומטית בכל הקלדה.</p>
+
+       <div class="team-selector">
+           <label>בחר צוות:</label>
+           <select id="team-select">
+               <option value="פינוי קל">פינוי קל</option>
+               <option value="פינוי כבד">פינוי כבד</option>
+               <option value="מרגמות">מרגמות</option>
+           </select>
+       </div>
+
+       <div class="mode-switch">
+           <button type="button" class="mode-btn active" id="btn-mode-cat" onclick="switchMode('categories')">📑 קטגוריות</button>
+           <button type="button" class="mode-btn" id="btn-mode-free" onclick="switchMode('free')">📝 עריכה חופשית</button>
+       </div>
+
+       <div id="mode-categories-container">
+           <div class="parser-section">
+               <label>🔄 <b>לקיצור דרך:</b> הדבק הודעה קודמת לפיזור אוטומטי.</label>
+               <textarea id="paste-area" placeholder="הדבק כאן..."></textarea>
+               <button type="button" class="btn-parse" onclick="parseText()">פזר לקטגוריות 👇</button>
+           </div>
+           <div id="form-fields"></div>
+           <!-- Add Custom Category -->
+           <div style="margin-bottom: 15px;">
+               <button type="button" class="btn-preview" style="background: #28a745; font-size: 14px; padding: 10px;" onclick="addCustomCategory()">➕ הוסף קטגוריה מותאמת</button>
+           </div>
+
+           <div class="field" style="border-color: #732b86;">
+               <div class="field-header">
+                   <label>📝 דברים נוספים:</label>
+                   <div class="field-actions">
+                       <button type="button" class="icon-btn icon-trash" onclick="clearField('input-free-text')" title="נקה"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                       <button type="button" class="icon-btn icon-expand" onclick="openModal('input-free-text', 'דברים נוספים')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg></button>
+                   </div>
+               </div>
+               <textarea id="input-free-text" class="bullet-textarea" placeholder="הערות נוספות..."></textarea>
+           </div>
+       </div>
+
+       <div id="mode-free-container" style="display: none;">
+           <div class="field" style="border-color: #732b86;">
+               <div class="field-header">
+                   <label>📝 טקסט חופשי להודעה:</label>
+                   <button type="button" class="icon-btn icon-trash" onclick="clearField('master-free-text')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+               </div>
+               <textarea id="master-free-text" style="min-height: 300px;" placeholder="הקלד כאן חופשי..."></textarea>
+           </div>
+       </div>
+
+       <button type="button" class="btn-preview" onclick="generatePreview()">👁️ תצוגה מקדימה וסיום</button>
+       <button type="button" class="btn-reset" onclick="resetAll()">🗑️ נקה הכל והתחל מחדש</button>
+       
+       <div id="preview-container"></div>
+       <div id="action-buttons" class="action-buttons">
+           <button type="button" class="btn-whatsapp" onclick="sendToWhatsApp()">📲 שלח לוואטסאפ</button>
+           <button type="button" id="copy-btn" class="btn-copy" onclick="copyToClipboard()">📋 העתק טקסט</button>
+       </div>
+   </div>
+
+   <div id="edit-modal" class="modal-overlay">
+       <div class="modal-content">
+           <div class="modal-sticky-header">
+               <div class="modal-title-row">
+                   <h2 id="modal-title">מצב עריכה</h2>
+                   <button type="button" class="icon-btn icon-expand" onclick="closeModal()" title="סגור חזרה">
+                       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                   </button>
+               </div>
+               <div class="modal-toolbar">
+                   <button type="button" class="tool-btn" onclick="applyFormat('bold')">B (הדגשה)</button>
+                   <button type="button" class="tool-btn" onclick="applyFormat('bullet')">• בולט</button>
+                   <div style="flex-grow:1"></div>
+                   <button type="button" class="icon-btn icon-trash" onclick="clearModalText()" title="נקה הכל">
+                       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                   </button>
+               </div>
+           </div>
+           <div class="modal-body">
+               <textarea id="modal-textarea" class="bullet-textarea"></textarea>
+           </div>
+       </div>
+   </div>
+
+   <script>
+       const defaultCategories = ["שישיות מים", "מנקים", "לחם", "אוכל", "לוגיסטיקה", "החלפות בלאי", "חתימות חדשות", "תחמושת", "ארמו״ן", "שמנים/בנזין", "תקשוב", "טנא וחלפים"];
+       let customCategories = [];
+       let categories = [...defaultCategories];
+       const formFields = document.getElementById('form-fields');
+       let currentActiveFieldId = '';
+       let currentMode = 'categories';
+       let scrollPosition = 0;
+       let finalMessage = '';
+
+       // Load custom categories from localStorage
+       try {
+           const savedCustom = localStorage.getItem('givatiCustomCategories');
+           if (savedCustom) {
+               customCategories = JSON.parse(savedCustom);
+               categories = [...defaultCategories, ...customCategories];
+           }
+       } catch(e) {}
+
+       function createCategoryField(cat, isCustom) {
+           const div = document.createElement('div');
+           div.className = 'field';
+           div.setAttribute('data-category', cat);
+           div.innerHTML = `
+               <div class="field-header">
+                   <label>*${cat}:*</label>
+                   <div class="field-actions">
+                       ${isCustom ? `<button type="button" class="icon-btn" style="stroke:#dc3545;" title="מחק קטגוריה" data-action="delete-cat"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>` : ''}
+                       <button type="button" class="icon-btn icon-trash trash-btn" title="נקה שדה"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                       <button type="button" class="icon-btn icon-expand expand-btn" title="הרחב חלון"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg></button>
+                   </div>
+               </div>
+               <textarea id="input-${cat}" class="bullet-textarea" placeholder="פרט כאן..."></textarea>`;
+
+           div.querySelector('.trash-btn').addEventListener('click', () => clearField(`input-${cat}`));
+           div.querySelector('.expand-btn').addEventListener('click', () => openModal(`input-${cat}`, cat));
+
+           if (isCustom) {
+               div.querySelector('[data-action="delete-cat"]').addEventListener('click', () => removeCustomCategory(cat));
+           }
+
+           return div;
+       }
+
+       // Render all category fields
+       categories.forEach(cat => {
+           const isCustom = customCategories.includes(cat);
+           formFields.appendChild(createCategoryField(cat, isCustom));
+       });
+
+       function addCustomCategory() {
+           const name = prompt('שם הקטגוריה החדשה:');
+           if (!name || !name.trim()) return;
+           const trimmed = name.trim();
+
+           if (categories.includes(trimmed)) {
+               alert('קטגוריה בשם זה כבר קיימת.');
+               return;
+           }
+
+           customCategories.push(trimmed);
+           categories.push(trimmed);
+
+           // Save custom categories list
+           try { localStorage.setItem('givatiCustomCategories', JSON.stringify(customCategories)); } catch(e) {}
+
+           // Add field to DOM
+           formFields.appendChild(createCategoryField(trimmed, true));
+
+           // Attach save listeners to the new textarea
+           const newTextarea = document.getElementById(`input-${trimmed}`);
+           if (newTextarea) {
+               newTextarea.addEventListener('input', saveData);
+               newTextarea.addEventListener('change', saveData);
+           }
+
+           saveData();
+       }
+
+       function removeCustomCategory(cat) {
+           if (!confirm(`למחוק את הקטגוריה "${cat}"?`)) return;
+
+           customCategories = customCategories.filter(c => c !== cat);
+           categories = categories.filter(c => c !== cat);
+
+           // Save updated list
+           try { localStorage.setItem('givatiCustomCategories', JSON.stringify(customCategories)); } catch(e) {}
+
+           // Remove from DOM
+           const field = formFields.querySelector(`[data-category="${cat}"]`);
+           if (field) field.remove();
+
+           saveData();
+       }
+
+       function saveData() {
+           try {
+               const data = {
+                   team: document.getElementById('team-select').value,
+                   mode: currentMode,
+                   freeText: document.getElementById('input-free-text').value,
+                   masterText: document.getElementById('master-free-text').value,
+                   cats: {}
+               };
+               categories.forEach(cat => { 
+                   const el = document.getElementById(`input-${cat}`);
+                   if (el) data.cats[cat] = el.value; 
+               });
+               localStorage.setItem('givatiRequirements', JSON.stringify(data));
+           } catch (e) {
+               console.warn("Local storage is disabled or full.");
+           }
+       }
+
+       function loadData() {
+           try {
+               const saved = localStorage.getItem('givatiRequirements');
+               if (saved) {
+                   const data = JSON.parse(saved);
+                   if (data.team) document.getElementById('team-select').value = data.team;
+                   if (data.mode) switchMode(data.mode);
+                   if (data.freeText !== undefined) document.getElementById('input-free-text').value = data.freeText;
+                   if (data.masterText !== undefined) document.getElementById('master-free-text').value = data.masterText;
+                   if (data.cats) {
+                       categories.forEach(cat => {
+                           if (data.cats[cat] !== undefined) {
+                               const el = document.getElementById(`input-${cat}`);
+                               if (el) el.value = data.cats[cat];
+                           }
+                       });
+                   }
+               }
+           } catch(e) { console.error("Error loading data"); }
+       }
+
+       document.querySelectorAll('textarea, select').forEach(el => {
+           el.addEventListener('input', saveData);
+           el.addEventListener('change', saveData);
+       });
+
+       document.getElementById('modal-textarea').addEventListener('input', function() {
+           if (currentActiveFieldId) {
+               document.getElementById(currentActiveFieldId).value = this.value;
+               saveData();
+           }
+       });
+
+       document.addEventListener('keydown', function(e) {
+           if (e.target.classList.contains('bullet-textarea') && e.key === 'Enter') {
+               const t = e.target;
+               const start = t.selectionStart;
+               const val = t.value;
+               const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+               const currentLine = val.substring(lineStart, start);
+
+               if (currentLine.startsWith('• ')) {
+                   e.preventDefault();
+                   if (currentLine.trim() === '•') {
+                       t.value = val.substring(0, lineStart) + val.substring(start);
+                       t.selectionStart = t.selectionEnd = lineStart;
+                   } else {
+                       const bullet = "\n• ";
+                       t.value = val.substring(0, start) + bullet + val.substring(start);
+                       t.selectionStart = t.selectionEnd = start + bullet.length;
+                   }
+                   saveData();
+               }
+           }
+       });
+
+       function switchMode(mode) {
+           currentMode = mode;
+           document.getElementById('btn-mode-cat').classList.toggle('active', mode === 'categories');
+           document.getElementById('btn-mode-free').classList.toggle('active', mode === 'free');
+           document.getElementById('mode-categories-container').style.display = mode === 'categories' ? 'block' : 'none';
+           document.getElementById('mode-free-container').style.display = mode === 'free' ? 'block' : 'none';
+           saveData();
+       }
+
+       function clearField(id) { 
+           const el = document.getElementById(id);
+           if (el) {
+               el.value = ''; 
+               saveData();
+           }
+       }
+       
+       function clearModalText() { 
+           document.getElementById('modal-textarea').value = ''; 
+           if (currentActiveFieldId) {
+               document.getElementById(currentActiveFieldId).value = '';
+           }
+           saveData();
+       }
+
+       function resetAll() {
+           if(confirm('האם בטוח שברצונך למחוק את כל הנתונים מכל השדות ולהתחיל מחדש?')) {
+               localStorage.removeItem('givatiRequirements');
+               document.querySelectorAll('textarea').forEach(el => el.value = '');
+               document.getElementById('preview-container').style.display = 'none';
+               document.getElementById('action-buttons').style.display = 'none';
+               saveData();
+           }
+       }
+
+       function openModal(id, title) {
+           currentActiveFieldId = id;
+           document.getElementById('modal-title').innerText = "מצב עריכה: " + title;
+           document.getElementById('modal-textarea').value = document.getElementById(id).value;
+           
+           scrollPosition = window.pageYOffset;
+           document.body.style.top = `-${scrollPosition}px`;
+           document.body.classList.add('modal-open');
+           
+           document.getElementById('edit-modal').style.display = 'flex';
+           
+           setTimeout(() => {
+               document.getElementById('modal-textarea').focus();
+           }, 50);
+       }
+
+       function closeModal() {
+           document.getElementById('edit-modal').style.display = 'none';
+           
+           document.body.classList.remove('modal-open');
+           document.body.style.top = '';
+           window.scrollTo(0, scrollPosition);
+           
+           currentActiveFieldId = '';
+           saveData();
+       }
+
+       function applyFormat(type) {
+           const textarea = document.getElementById('modal-textarea');
+           const start = textarea.selectionStart;
+           const end = textarea.selectionEnd;
+           const text = textarea.value;
+           if (type === 'bold') {
+               const sel = text.substring(start, end);
+               textarea.value = text.substring(0, start) + `*${sel}*` + text.substring(end);
+           } else if (type === 'bullet') {
+               textarea.value = text.substring(0, start) + "• " + text.substring(end);
+           }
+           if (currentActiveFieldId) document.getElementById(currentActiveFieldId).value = textarea.value;
+           textarea.focus();
+           saveData();
+       }
+
+       function parseText() {
+           const pastedText = document.getElementById('paste-area').value;
+           if (!pastedText.trim()) return;
+           const teams = ["פינוי קל", "פינוי כבד", "מרגמות"];
+           teams.forEach(t => { if(pastedText.includes(t)) document.getElementById('team-select').value = t; });
+           let found = [];
+           categories.forEach(cat => {
+               let idx = pastedText.indexOf(`*${cat}:*`);
+               if (idx === -1) idx = pastedText.indexOf(`${cat}:`);
+               if (idx !== -1) found.push({ cat, index: idx, len: pastedText.includes(`*${cat}:*`) ? cat.length+3 : cat.length+1 });
+           });
+           found.sort((a, b) => a.index - b.index);
+           found.forEach((curr, i) => {
+               const start = curr.index + curr.len;
+               const end = (i + 1 < found.length) ? found[i+1].index : pastedText.length;
+               let txt = pastedText.substring(start, end).trim();
+               txt = txt.replace(/^[ \t]*[-][ \t]*/gm, '• ').replace(/\n{2,}/g, '\n');
+               const el = document.getElementById(`input-${curr.cat}`);
+               if(el) el.value = txt;
+           });
+           document.getElementById('paste-area').value = ''; 
+           saveData();
+           alert("הנתונים פוזרו בהצלחה! השדות עודכנו.");
+       }
+
+       function generatePreview() {
+           const team = document.getElementById('team-select').value;
+           const now = new Date();
+           let res = `*דרישות מל״מ*\n*צוות ${team}*\nתאריך: ${now.toLocaleDateString('he-IL')} | שעה: ${now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})}\n\n`;
+           let body = "";
+           if (currentMode === 'categories') {
+               categories.forEach(cat => {
+                   const el = document.getElementById(`input-${cat}`);
+                   const val = el ? el.value.trim() : "";
+                   if (val) body += `*${cat}:*\n${val}\n\n`;
+               });
+               const free = document.getElementById('input-free-text').value.trim();
+               if (free) body += `*דברים נוספים:*\n${free}\n\n`;
+           } else {
+               body = document.getElementById('master-free-text').value.trim();
+           }
+           if (!body) return alert("אין נתונים לשלוח! מלא לפחות שדה אחד.");
+           finalMessage = res + body.trim();
+           document.getElementById('preview-container').textContent = finalMessage;
+           document.getElementById('preview-container').style.display = 'block';
+           document.getElementById('action-buttons').style.display = 'flex';
+           window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+       }
+
+       function sendToWhatsApp() { window.location.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(finalMessage)}`; }
+       
+       function copyToClipboard() {
+           navigator.clipboard.writeText(finalMessage).then(() => {
+               const btn = document.getElementById('copy-btn');
+               const originalText = btn.innerHTML;
+               btn.innerHTML = "✅ הועתק בהצלחה!";
+               btn.style.backgroundColor = "#d4edda";
+               setTimeout(() => {
+                   btn.innerHTML = originalText;
+                   btn.style.backgroundColor = "#e0e0e0";
+               }, 2000);
+           });
+       }
+
+       window.onload = loadData;
+   </script>
+</body>
+</html>
