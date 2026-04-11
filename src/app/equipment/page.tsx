@@ -10,7 +10,8 @@ import EquipmentLoadingState from '@/components/equipment/EquipmentLoadingState'
 import EquipmentModal from '@/components/equipment/EquipmentModal';
 import TransferModal from '@/components/equipment/TransferModal';
 import { useEquipment } from '@/hooks/useEquipment';
-import { Equipment, EquipmentAction } from '@/types/equipment';
+import { Equipment, EquipmentAction, EquipmentHistoryEntry } from '@/types/equipment';
+import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 import { hasEquipmentManagementAccess, getUserPermissionLevel } from '@/utils/permissionUtils';
 import { EquipmentService } from '@/lib/equipmentService';
@@ -35,6 +36,7 @@ export default function EquipmentPage() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
+  const [historyEquipment, setHistoryEquipment] = useState<Equipment | null>(null);
   
   // Permission checks
   const canManageEquipment = hasEquipmentManagementAccess(enhancedUser);
@@ -75,17 +77,18 @@ export default function EquipmentPage() {
     }
   };
 
-  // Handle view history (placeholder - will be implemented in future steps)
+  // Handle view history — show tracking data in modal
   const handleViewHistory = (equipmentId: string) => {
-    console.log('View history:', equipmentId);
-    // TODO: Open history modal/view in future steps
+    const item = equipment.find(e => e.id === equipmentId);
+    if (item) {
+      setHistoryEquipment(item);
+    }
   };
 
-  // Handle credit equipment (placeholder - will be implemented in future steps)
+  // Handle credit equipment — not yet implemented
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleCredit = (equipmentId: string) => {
-    console.log('Credit equipment:', equipmentId);
-    // TODO: Open credit modal/form in future steps
-    // This action should clear/credit the equipment from the current holder
+    alert('פיצ\'ר זיכוי ציוד בפיתוח');
   };
 
   // Handle add equipment
@@ -288,6 +291,53 @@ export default function EquipmentPage() {
             equipment={selectedEquipment}
             onTransferSuccess={handleTransferSuccess}
           />
+
+          {/* Equipment History Modal */}
+          {historyEquipment && (
+            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+                <div className="flex items-center justify-between p-6 border-b border-neutral-200">
+                  <h2 className="text-lg font-bold text-neutral-900">
+                    היסטוריית ציוד — {historyEquipment.productName} ({historyEquipment.id})
+                  </h2>
+                  <button
+                    onClick={() => setHistoryEquipment(null)}
+                    className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="p-6 overflow-y-auto max-h-[60vh]">
+                  {(!historyEquipment.trackingHistory || historyEquipment.trackingHistory.length === 0) ? (
+                    <p className="text-neutral-500 text-center py-8">אין היסטוריה זמינה</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {[...historyEquipment.trackingHistory].reverse().map((entry: EquipmentHistoryEntry, index: number) => {
+                        const timestamp = entry.timestamp instanceof Timestamp
+                          ? entry.timestamp.toDate()
+                          : new Date(entry.timestamp as unknown as string);
+                        return (
+                          <div key={index} className="border-s-4 border-primary-300 ps-4 py-2">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-neutral-900">{entry.action}</span>
+                              <span className="text-xs text-neutral-500">
+                                {timestamp.toLocaleDateString('he-IL')} {timestamp.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <div className="text-sm text-neutral-600 mt-1">
+                              {entry.holder && <p>👤 {entry.holder}</p>}
+                              {entry.location && <p>📍 {entry.location}</p>}
+                              {entry.notes && <p>📝 {entry.notes}</p>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </EquipmentErrorBoundary>
     </AuthGuard>
