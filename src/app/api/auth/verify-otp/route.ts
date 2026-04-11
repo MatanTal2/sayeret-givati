@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OTPManager } from '@/lib/otpUtils';
+import { verifyOTPCode } from '@/lib/db/server/otpService';
 import { PhoneUtils } from '@/utils/validationUtils';
 
 export async function POST(request: NextRequest) {
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     const formattedPhoneNumber = phoneValidation.formattedNumber!;
 
     // Verify OTP code
-    const verificationResult = await OTPManager.verifyOTPCode(formattedPhoneNumber, otpCode);
+    const verificationResult = await verifyOTPCode(formattedPhoneNumber, otpCode);
 
     if (!verificationResult.success) {
       let errorMessage = 'קוד האימות שגוי';

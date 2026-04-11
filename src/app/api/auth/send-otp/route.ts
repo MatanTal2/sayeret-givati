@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OTPManager } from '@/lib/otpUtils';
+import { generateOTPCode, createOTPSession, checkRateLimit } from '@/lib/db/server/otpService';
 import { PhoneUtils } from '@/utils/validationUtils';
 import { TwilioService } from '@/lib/twilioService';
 import { TEXT_CONSTANTS } from '@/constants/text';
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const formattedPhoneNumber = phoneValidation.formattedNumber!;
 
     // Check rate limiting
-    const rateLimitCheck = await OTPManager.checkRateLimit(formattedPhoneNumber);
+    const rateLimitCheck = await checkRateLimit(formattedPhoneNumber);
     if (!rateLimitCheck.allowed) {
       const resetTimeFormatted = rateLimitCheck.resetTime?.toLocaleTimeString('he-IL', {
         timeZone: 'Asia/Jerusalem',
@@ -58,10 +58,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate OTP code
-    const otpCode = OTPManager.generateOTPCode();
+    const otpCode = generateOTPCode();
 
     // Create OTP session in database
-    await OTPManager.createOTPSession(formattedPhoneNumber, otpCode);
+    await createOTPSession(formattedPhoneNumber, otpCode);
 
     // Send SMS via Twilio
     const smsResult = await TwilioService.sendOTPSMS(formattedPhoneNumber, otpCode);

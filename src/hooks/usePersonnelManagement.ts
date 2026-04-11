@@ -5,6 +5,7 @@ import { AuthorizedPersonnelData, FormMessage, AuthorizedPersonnel, PersonnelFor
 import { ValidationUtils, AdminFirestoreService } from '@/lib/adminUtils';
 import { PersonnelCache } from '@/lib/personnelCache';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface UsePersonnelManagementReturn {
   formData: AuthorizedPersonnelData;
@@ -41,6 +42,7 @@ const initialFormData: AuthorizedPersonnelData = {
 };
 
 export function usePersonnelManagement(): UsePersonnelManagementReturn {
+  const { enhancedUser } = useAuth();
   const [formData, setFormData] = useState<AuthorizedPersonnelData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<FormMessage | null>(null);
@@ -87,7 +89,9 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     setMessage(null);
 
     try {
-      const result = await AdminFirestoreService.addAuthorizedPersonnel(formData);
+      const createdBy = (enhancedUser?.firstName && enhancedUser?.lastName ? `${enhancedUser.firstName} ${enhancedUser.lastName}` : undefined)
+        || enhancedUser?.email;
+      const result = await AdminFirestoreService.addAuthorizedPersonnel(formData, createdBy);
 
       if (result.success) {
         setMessage({
@@ -96,8 +100,10 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
         });
         resetForm();
 
-        // Refresh personnel list
-        await fetchPersonnel();
+        // Update cache so other tabs (ViewPersonnel) pick up the new entry
+        if (result.personnel) {
+          PersonnelCache.appendToCache(result.personnel);
+        }
       } else {
         setMessage({
           text: result.message,
@@ -173,11 +179,16 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     setMessage(null);
 
     try {
-      const result = await AdminFirestoreService.addAuthorizedPersonnelBulk(personnel);
+      const createdByBulk = (enhancedUser?.firstName && enhancedUser?.lastName ? `${enhancedUser.firstName} ${enhancedUser.lastName}` : undefined)
+        || enhancedUser?.email;
+      const result = await AdminFirestoreService.addAuthorizedPersonnelBulk(personnel, createdByBulk);
       setMessage({
         text: `Successfully added ${result.successful.length} personnel. Duplicates: ${result.duplicates.length}. Failed: ${result.failed.length}.`,
         type: 'success',
       });
+
+      // Clear cache so ViewPersonnel fetches fresh data on next visit
+      PersonnelCache.clearCache();
     } catch {
       setMessage({
         text: 'Failed to add personnel in bulk. Please try again.',
@@ -210,8 +221,8 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
           type: 'success'
         });
 
-        // Refresh personnel list to get updated data
-        await fetchPersonnel();
+        // Update cache so other tabs pick up the change
+        PersonnelCache.updateInCache(personnelId, updateData as Partial<AuthorizedPersonnel>);
       } else {
         setMessage({
           text: result.message,
@@ -253,8 +264,8 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
           type: 'success'
         });
 
-        // Refresh personnel list
-        await fetchPersonnel();
+        // Update cache so other tabs pick up the deletion
+        PersonnelCache.removeFromCache(personnelId);
       } else {
         setMessage({
           text: result.message,

@@ -4,43 +4,28 @@
  * Integrates with actionsLog and equipment tracking history
  */
 
-import { 
-  collection, 
-  addDoc, 
+import {
+  collection,
   doc,
   getDoc,
   getDocs,
-  query, 
-  where, 
-  orderBy, 
-  serverTimestamp,
-  runTransaction,
-  Timestamp
+  query,
+  where,
+  orderBy,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { 
-  TransferRequest, 
-  TransferStatus, 
-  TransferStatusHistoryEntry,
+import {
+  TransferRequest,
+  TransferStatus,
   Equipment,
-  EquipmentStatus
 } from '@/types/equipment';
-import { createActionLog, ActionLogHelpers } from './actionsLogService';
-import { 
-  addTrackingHistoryEntry, 
+import {
   createTransferRequestedEntry,
-  createTransferApprovedEntry,
-  createTransferRejectedEntry
 } from './equipmentHistoryService';
-import { 
-  notifyTransferRequest,
-  notifyTransferApproved,
-  notifyTransferRejected,
-  notifyTransferCompleted
-} from '@/utils/notifications';
+import { COLLECTIONS } from '@/lib/db/collections';
 
-const TRANSFER_REQUESTS_COLLECTION = 'transferRequests';
-const EQUIPMENT_COLLECTION = 'equipment';
+const TRANSFER_REQUESTS_COLLECTION = COLLECTIONS.TRANSFER_REQUESTS;
+const EQUIPMENT_COLLECTION = COLLECTIONS.EQUIPMENT;
 
 /**
  * Create a new transfer request
@@ -55,86 +40,39 @@ export async function createTransferRequest(
   note?: string
 ): Promise<string> {
   try {
-    return await runTransaction(db, async (transaction) => {
-      // Get equipment document
-      const equipmentRef = doc(db, EQUIPMENT_COLLECTION, equipmentDocId);
-      const equipmentDoc = await transaction.get(equipmentRef);
-      
-      if (!equipmentDoc.exists()) {
-        throw new Error('Equipment not found');
-      }
+    // Read equipment to build tracking history entry (client SDK read)
+    const equipmentRef = doc(db, EQUIPMENT_COLLECTION, equipmentDocId);
+    const equipmentDoc = await getDoc(equipmentRef);
 
-      const equipment = { id: equipmentDoc.id, ...equipmentDoc.data() } as Equipment;
+    if (!equipmentDoc.exists()) {
+      throw new Error('Equipment not found');
+    }
 
-      // Create transfer request
-      const now = Timestamp.now();
-      const transferRequestData: Omit<TransferRequest, 'id'> = {
-        equipmentId: equipment.id,
-        equipmentDocId: equipmentDocId,
-        equipmentName: equipment.productName,
-        fromUserId,
-        fromUserName,
-        toUserId,
-        toUserName,
-        reason,
-        note,
-        status: TransferStatus.PENDING,
-        statusHistory: [{
-          status: TransferStatus.PENDING,
-          timestamp: now, // Use regular timestamp instead of serverTimestamp() in array
-          updatedBy: fromUserId,
-          updatedByName: fromUserName,
-          note: 'Transfer request created'
-        }],
-        createdAt: serverTimestamp() as Timestamp
-      };
+    const equipment = { id: equipmentDoc.id, ...equipmentDoc.data() } as Equipment;
 
-      // Add transfer request document
-      const transferRequestRef = await addDoc(collection(db, TRANSFER_REQUESTS_COLLECTION), transferRequestData);
+    const historyEntry = createTransferRequestedEntry(
+      fromUserName, toUserName, equipment.location, reason, fromUserId
+    );
 
-      // Update equipment status and tracking history
-      const newHistoryEntry = createTransferRequestedEntry(
-        fromUserName,
-        toUserName,
-        equipment.location,
-        reason,
-        fromUserId
-      );
-
-      const updatedTrackingHistory = addTrackingHistoryEntry(
-        equipment.trackingHistory || [],
-        newHistoryEntry
-      );
-
-      transaction.update(equipmentRef, {
-        status: EquipmentStatus.PENDING_TRANSFER,
-        trackingHistory: updatedTrackingHistory,
-        updatedAt: serverTimestamp()
-      });
-
-      // Send notification to recipient after transaction completes
-      const transferRequestId = transferRequestRef.id;
-      
-      // Note: We'll send the notification outside the transaction to avoid blocking
-      // the transaction on external service calls
-      setTimeout(async () => {
-        try {
-          await notifyTransferRequest(
-            toUserId,
-            fromUserName,
-            equipment.productName,
-            equipment.id,
-            equipmentDocId,
-            transferRequestId
-          );
-        } catch (error) {
-          console.error('Error sending transfer request notification:', error);
-          // Don't throw - notification failure shouldn't break the transfer request
-        }
-      }, 100);
-
-      return transferRequestId;
+    // Create transfer request via server API route (firebase-admin transaction)
+    const response = await fetch('/api/transfer-requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        equipmentDocId, toUserId, toUserName, reason, fromUserId, fromUserName,
+        ...(note ? { note } : {}),
+        trackingHistoryEntry: historyEntry,
+        currentTrackingHistory: equipment.trackingHistory || [],
+      }),
     });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Failed to create transfer request');
+
+    const transferRequestId = result.id;
+
+    // Notifications are now created server-side in the transfer request API route
+
+    return transferRequestId;
   } catch (error) {
     console.error('Error creating transfer request:', error);
     throw new Error('Failed to create transfer request');
@@ -151,110 +89,19 @@ export async function approveTransferRequest(
   approvalNote?: string
 ): Promise<void> {
   try {
-    await runTransaction(db, async (transaction) => {
-      // Get transfer request
-      const transferRequestRef = doc(db, TRANSFER_REQUESTS_COLLECTION, transferRequestId);
-      const transferRequestDoc = await transaction.get(transferRequestRef);
-      
-      if (!transferRequestDoc.exists()) {
-        throw new Error('Transfer request not found');
-      }
-
-      const transferRequest = { id: transferRequestDoc.id, ...transferRequestDoc.data() } as TransferRequest;
-
-      if (transferRequest.status !== TransferStatus.PENDING) {
-        throw new Error('Transfer request is not pending');
-      }
-
-      // Get equipment document
-      const equipmentRef = doc(db, EQUIPMENT_COLLECTION, transferRequest.equipmentDocId);
-      const equipmentDoc = await transaction.get(equipmentRef);
-      
-      if (!equipmentDoc.exists()) {
-        throw new Error('Equipment not found');
-      }
-
-      const equipment = { id: equipmentDoc.id, ...equipmentDoc.data() } as Equipment;
-
-      // Update transfer request status
-      const now = Timestamp.now();
-      const newStatusEntry: TransferStatusHistoryEntry = {
-        status: TransferStatus.APPROVED,
-        timestamp: now, // Use regular timestamp instead of serverTimestamp() in array
-        updatedBy: approverUserId,
-        updatedByName: approverUserName,
-        note: approvalNote
-      };
-
-      transaction.update(transferRequestRef, {
-        status: TransferStatus.APPROVED,
-        statusHistory: [...transferRequest.statusHistory, newStatusEntry]
-      });
-
-      // Update equipment - transfer to new holder
-      const newHistoryEntry = createTransferApprovedEntry(
-        transferRequest.toUserName,
-        equipment.location, // Keep current location unless specified otherwise
-        approverUserId,
-        approverUserName,
-        approvalNote
-      );
-
-      const updatedTrackingHistory = addTrackingHistoryEntry(
-        equipment.trackingHistory || [],
-        newHistoryEntry
-      );
-
-      transaction.update(equipmentRef, {
-        currentHolder: transferRequest.toUserId,
-        currentHolderName: transferRequest.toUserName,
-        status: EquipmentStatus.AVAILABLE, // Reset to available after successful transfer
-        trackingHistory: updatedTrackingHistory,
-        updatedAt: serverTimestamp()
-      });
+    // Approve via server API route (firebase-admin transaction)
+    const response = await fetch('/api/transfer-requests/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        transferRequestId, approverUserId, approverUserName,
+        ...(approvalNote ? { approvalNote } : {}),
+      }),
     });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Failed to approve transfer request');
 
-    // Create action log entry (outside transaction to avoid conflicts)
-    const transferRequestDoc = await getDoc(doc(db, TRANSFER_REQUESTS_COLLECTION, transferRequestId));
-    if (transferRequestDoc.exists()) {
-      const transferRequest = { id: transferRequestDoc.id, ...transferRequestDoc.data() } as TransferRequest;
-      
-      await createActionLog(ActionLogHelpers.transferApproved(
-        transferRequest.equipmentId,
-        transferRequest.equipmentDocId,
-        transferRequest.equipmentName,
-        approverUserId,
-        approverUserName,
-        transferRequest.toUserId,
-        transferRequest.toUserName,
-        approvalNote
-      ));
-
-      // Send notifications
-      try {
-        // Notify the original requester that their request was approved
-        await notifyTransferApproved(
-          transferRequest.fromUserId,
-          approverUserName,
-          transferRequest.equipmentName,
-          transferRequest.equipmentId,
-          transferRequest.equipmentDocId,
-          transferRequestId
-        );
-
-        // Notify both parties that the transfer is completed
-        await notifyTransferCompleted(
-          [transferRequest.fromUserId, transferRequest.toUserId],
-          transferRequest.equipmentName,
-          transferRequest.equipmentId,
-          transferRequest.equipmentDocId,
-          transferRequestId
-        );
-      } catch (error) {
-        console.error('Error sending transfer approval notifications:', error);
-        // Don't throw - notification failure shouldn't break the approval
-      }
-    }
+    // Notifications are now created server-side in the approve API route
   } catch (error) {
     console.error('Error approving transfer request:', error);
     throw new Error('Failed to approve transfer request');
@@ -271,98 +118,19 @@ export async function rejectTransferRequest(
   rejectionReason?: string
 ): Promise<void> {
   try {
-    await runTransaction(db, async (transaction) => {
-      // Get transfer request
-      const transferRequestRef = doc(db, TRANSFER_REQUESTS_COLLECTION, transferRequestId);
-      const transferRequestDoc = await transaction.get(transferRequestRef);
-      
-      if (!transferRequestDoc.exists()) {
-        throw new Error('Transfer request not found');
-      }
-
-      const transferRequest = { id: transferRequestDoc.id, ...transferRequestDoc.data() } as TransferRequest;
-
-      if (transferRequest.status !== TransferStatus.PENDING) {
-        throw new Error('Transfer request is not pending');
-      }
-
-      // Get equipment document
-      const equipmentRef = doc(db, EQUIPMENT_COLLECTION, transferRequest.equipmentDocId);
-      const equipmentDoc = await transaction.get(equipmentRef);
-      
-      if (!equipmentDoc.exists()) {
-        throw new Error('Equipment not found');
-      }
-
-      const equipment = { id: equipmentDoc.id, ...equipmentDoc.data() } as Equipment;
-
-      // Update transfer request status
-      const now = Timestamp.now();
-      const newStatusEntry: TransferStatusHistoryEntry = {
-        status: TransferStatus.REJECTED,
-        timestamp: now, // Use regular timestamp instead of serverTimestamp() in array
-        updatedBy: rejectorUserId,
-        updatedByName: rejectorUserName,
-        note: rejectionReason
-      };
-
-      transaction.update(transferRequestRef, {
-        status: TransferStatus.REJECTED,
-        statusHistory: [...transferRequest.statusHistory, newStatusEntry]
-      });
-
-      // Update equipment - revert status back to available
-      const newHistoryEntry = createTransferRejectedEntry(
-        transferRequest.fromUserName,
-        equipment.location,
-        rejectorUserId,
-        rejectorUserName,
-        rejectionReason
-      );
-
-      const updatedTrackingHistory = addTrackingHistoryEntry(
-        equipment.trackingHistory || [],
-        newHistoryEntry
-      );
-
-      transaction.update(equipmentRef, {
-        status: EquipmentStatus.AVAILABLE, // Reset to available after rejection
-        trackingHistory: updatedTrackingHistory,
-        updatedAt: serverTimestamp()
-      });
+    // Reject via server API route (firebase-admin transaction)
+    const response = await fetch('/api/transfer-requests/reject', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        transferRequestId, rejectorUserId, rejectorUserName,
+        ...(rejectionReason ? { rejectionReason } : {}),
+      }),
     });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Failed to reject transfer request');
 
-    // Create action log entry (outside transaction to avoid conflicts)
-    const transferRequestDoc = await getDoc(doc(db, TRANSFER_REQUESTS_COLLECTION, transferRequestId));
-    if (transferRequestDoc.exists()) {
-      const transferRequest = { id: transferRequestDoc.id, ...transferRequestDoc.data() } as TransferRequest;
-      
-      await createActionLog(ActionLogHelpers.transferRejected(
-        transferRequest.equipmentId,
-        transferRequest.equipmentDocId,
-        transferRequest.equipmentName,
-        rejectorUserId,
-        rejectorUserName,
-        transferRequest.fromUserId,
-        transferRequest.fromUserName,
-        rejectionReason
-      ));
-
-      // Send notification to the original requester
-      try {
-        await notifyTransferRejected(
-          transferRequest.fromUserId,
-          rejectorUserName,
-          transferRequest.equipmentName,
-          transferRequest.equipmentId,
-          transferRequest.equipmentDocId,
-          transferRequestId
-        );
-      } catch (error) {
-        console.error('Error sending transfer rejection notification:', error);
-        // Don't throw - notification failure shouldn't break the rejection
-      }
-    }
+    // Notifications are now created server-side in the reject API route
   } catch (error) {
     console.error('Error rejecting transfer request:', error);
     throw new Error('Failed to reject transfer request');

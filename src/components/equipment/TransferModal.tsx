@@ -6,7 +6,6 @@ import { Equipment } from '@/types/equipment';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { useAuth } from '@/contexts/AuthContext';
 import { createTransferRequest } from '@/lib/transferRequestService';
-import { createActionLog, ActionLogHelpers } from '@/lib/actionsLogService';
 import { searchUsers, UserSearchResult } from '@/lib/userService';
 
 interface TransferModalProps {
@@ -38,7 +37,7 @@ export default function TransferModal({
   equipment,
   onTransferSuccess
 }: TransferModalProps) {
-  const { user } = useAuth();
+  const { user, enhancedUser } = useAuth();
   const [formData, setFormData] = useState<TransferFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<TransferFormData>>({});
@@ -147,27 +146,24 @@ export default function TransferModal({
 
     setIsSubmitting(true);
     try {
+      const actorName = (enhancedUser?.firstName && enhancedUser?.lastName)
+        ? `${enhancedUser.firstName} ${enhancedUser.lastName}`
+        : user?.email;
+      if (!actorName) {
+        throw new Error('Cannot identify current user — no name or email available');
+      }
+
       await createTransferRequest(
         equipment.id, // equipmentDocId
         formData.toUserId,
         formData.toUserName,
         formData.reason,
         user.uid,
-        user.displayName || user.email || 'Unknown User',
+        actorName,
         formData.note || undefined
       );
 
-      // Create action log for transfer request
-      await createActionLog(ActionLogHelpers.transferRequested(
-        equipment.id,
-        equipment.id,
-        equipment.productName,
-        user.uid,
-        user.displayName || user.email || 'Unknown User',
-        formData.toUserId,
-        formData.toUserName,
-        formData.reason
-      ));
+      // Action log is now created server-side as part of the transfer request
 
       onTransferSuccess?.();
       onClose();

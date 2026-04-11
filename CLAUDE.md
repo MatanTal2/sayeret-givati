@@ -25,7 +25,7 @@ Copy `ENV_SETUP.md` to `.env.local`. Required variables:
 - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `MESSAGING_SERVICE_SID` — OTP via SMS
 - `GOOGLE_SHEETS_*` — optional, for daily status reporting
 
-**Active infra blocker:** `GOOGLE_SERVICE_ACCOUNT_JSON` in `.env.local` decodes to project `sayeret-givati` but the target is `sayeret-givati-1983`. Admin SDK paths are broken until a new service account key is generated from Firebase console.
+`GOOGLE_SERVICE_ACCOUNT_JSON` — base64-encoded service account key for `sayeret-givati-1983`. Used by `firebase-admin` in API routes (`src/lib/db/admin.ts`). Must be a single line in `.env.local` with no line breaks.
 
 ## Architecture
 
@@ -33,7 +33,11 @@ Military equipment management system for Sayeret Givati. Hebrew RTL throughout (
 
 ### Firestore access pattern
 
-All Firestore reads use the **client SDK** (`db`, `auth` from `src/lib/firebase.ts`). There is no Server-side Firebase Admin SDK wired up yet — writes currently go through the same client SDK services. The `feature/refactor_firestorereadAndWrite` branch is building the server-write boundary (Server Actions → Admin SDK).
+**Current:** All reads and writes use the **client SDK** (`db`, `auth` from `src/lib/firebase.ts`). No server-side Firebase Admin SDK is wired up yet.
+
+**Target (in progress on `feature/refactor_firestorereadAndWrite`):** Hybrid architecture — writes via `firebase-admin` Server Actions, reads via client SDK. Migration plan and step-by-step order in `docs/spec/firestore-refactor.md`.
+
+**Infra blocker:** Service account key points to wrong project (`sayeret-givati` vs `sayeret-givati-1983`). Admin SDK is non-functional until a new key is generated from Firebase console.
 
 Firestore security rules are tightened locally but **not yet deployed** — run `firebase deploy --only firestore:rules` to activate them in production.
 
@@ -117,3 +121,4 @@ Full token reference with all shades: `docs/design-system.md`
 - **Hooks pattern:** new hooks must follow the established `{ data, isLoading, error }` return shape used in `useEquipment`, `useUsers`, etc.
 - **Test location:** `src/lib/__tests__/` for service/utility tests; `src/components/<domain>/__tests__/` for component tests.
 - **No backward-compatibility shims:** delete dead code, rename freely, change APIs completely.
+- **Documentation:** after every code change, update the corresponding docs under `docs/codebase/src/` (or create new ones if adding files). Keep `docs/firebase-operations.md`, `docs/duplications.md`, and feature specs in `docs/spec/` in sync with the code. Documentation is not optional — it ships with the code.

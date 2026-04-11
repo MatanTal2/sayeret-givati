@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, query, getDocs, deleteDoc, updateDoc, serverTimestamp, Timestamp, writeBatch, DocumentReference, setDoc, where } from 'firebase/firestore';
+import { doc, getDoc, collection, query, getDocs, Timestamp } from 'firebase/firestore';
 import {
   AdminConfig,
   PersonnelFormData,
@@ -294,7 +294,7 @@ export class AdminFirestoreService {
   /**
    * Add authorized personnel to Firestore with duplicate checking using transactions
    */
-  static async addAuthorizedPersonnel(formData: AuthorizedPersonnelData): Promise<PersonnelOperationResult> {
+  static async addAuthorizedPersonnel(formData: AuthorizedPersonnelData, createdBy?: string): Promise<PersonnelOperationResult> {
     try {
       // Validate form data using unified validation
       const validation = ValidationUtils.validateAuthorizedPersonnelData(formData);
@@ -322,42 +322,45 @@ export class AdminFirestoreService {
       // Normalize phone number to international format
       const normalizedPhone = ValidationUtils.toInternationalFormat(formData.phoneNumber);
 
-      // Create the authorized personnel document
+      // Create the authorized personnel document data (timestamps added by server)
       const personnelDoc = {
         militaryPersonalNumberHash: hash,
         phoneNumber: normalizedPhone,
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         rank: formData.rank.trim(),
-        userType: formData.userType || UserType.USER, // Include userType with default fallback
-        registered: false, // Default to false until user completes registration
-        approvedRole: 'soldier', // Default role
-        roleStatus: 'approved' as const, // Default approved status
-        status: 'active' as const, // Default active status
-        joinDate: serverTimestamp(),
-        createdAt: serverTimestamp(),
-        createdBy: 'system_admin' // TODO: Replace with actual admin user ID
+        userType: formData.userType || UserType.USER,
+        registered: false,
+        approvedRole: 'soldier',
+        roleStatus: 'approved',
+        status: 'active',
+        createdBy: createdBy || 'system_admin'
       };
 
-      // Add to Firestore using hash as document ID for O(1) lookup
-      const docRef = doc(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION, hash);
-      await setDoc(docRef, personnelDoc);
+      // Add to Firestore via server API route (firebase-admin)
+      const addResponse = await fetch('/api/authorized-personnel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ docId: hash, data: personnelDoc }),
+      });
+      const addResult = await addResponse.json();
+      if (!addResult.success) throw new Error(addResult.error || 'Failed to add personnel');
 
       const addedPersonnel: AuthorizedPersonnel = {
-        id: docRef.id,
+        id: hash,
         militaryPersonalNumberHash: hash,
         phoneNumber: normalizedPhone,
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         rank: formData.rank.trim(),
-        userType: formData.userType || UserType.USER, // Include userType with default fallback
-        registered: false, // Default to false until user completes registration
-        approvedRole: 'soldier', // Default role for all new users
-        roleStatus: 'approved', // Auto-approve basic soldier role
-        status: 'active', // Default status
-        joinDate: serverTimestamp() as unknown as Timestamp,
-        createdAt: serverTimestamp() as unknown as Timestamp, // Firestore will replace with actual timestamp
-        createdBy: 'system_admin'
+        userType: formData.userType || UserType.USER,
+        registered: false,
+        approvedRole: 'soldier',
+        roleStatus: 'approved',
+        status: 'active',
+        joinDate: Timestamp.now(),
+        createdAt: Timestamp.now(),
+        createdBy: createdBy || 'system_admin'
       };
 
       return {
@@ -467,24 +470,26 @@ export class AdminFirestoreService {
         }
       }
 
-      // Prepare update data with timestamp
-      const updateFields = {
-        ...updateData,
-        updatedAt: Timestamp.now(),
-        updatedBy: 'admin' // TODO: Get actual admin user ID when auth is implemented
-      };
-
-      // Update the document
-      await updateDoc(docRef, updateFields);
-
-      // Get updated personnel data for sync and success message
+      // Get current data for sync check and success message
       const currentPersonnel = docSnap.data() as AuthorizedPersonnel;
+      const shouldSync = currentPersonnel.registered &&
+        (updateData.firstName || updateData.lastName || updateData.rank || updateData.phoneNumber || updateData.userType);
+
+      // Update via server API route (firebase-admin)
+      const updateResponse = await fetch('/api/authorized-personnel', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          personnelId,
+          updates: updateData,
+          syncToUser: shouldSync,
+          militaryIdHash: personnelId,
+        }),
+      });
+      const updateResult = await updateResponse.json();
+      if (!updateResult.success) throw new Error(updateResult.error || 'Failed to update personnel');
+
       const updatedPersonnel = { ...currentPersonnel, ...updateData };
-      
-      // If user is registered, sync changes to users collection
-      if (currentPersonnel.registered && (updateData.firstName || updateData.lastName || updateData.rank || updateData.phoneNumber || updateData.userType)) {
-        await this.syncAuthorizedPersonnelToUser(personnelId, updateData);
-      }
 
       const fullName = `${updateData.firstName || currentPersonnel.firstName} ${updateData.lastName || currentPersonnel.lastName}`;
 
@@ -508,65 +513,11 @@ export class AdminFirestoreService {
   }
 
   /**
-   * Sync authorized personnel changes to users collection
-   * Only updates if user is registered (has completed Firebase Auth registration)
-   */
-  private static async syncAuthorizedPersonnelToUser(
-    militaryIdHash: string,
-    updateData: {
-      firstName?: string;
-      lastName?: string;
-      rank?: string;
-      phoneNumber?: string;
-      userType?: string;
-    }
-  ): Promise<void> {
-    try {
-      // Find the user in users collection by militaryPersonalNumberHash
-      const usersCollection = collection(db, ADMIN_CONFIG.FIRESTORE_USERS_COLLECTION);
-      const userQuery = query(usersCollection, where('militaryPersonalNumberHash', '==', militaryIdHash));
-      
-      const userSnapshot = await getDocs(userQuery);
-      
-      // Get the first matching user document
-      let userDocId: string | null = null;
-      if (!userSnapshot.empty) {
-        userDocId = userSnapshot.docs[0].id;
-      }
-
-      if (!userDocId) {
-        console.warn(`⚠️ No user found in users collection for militaryIdHash: ${militaryIdHash}`);
-        return;
-      }
-
-      // Prepare user update data (only fields that exist in users collection)
-      const userUpdateData = {
-        updatedAt: Timestamp.now()
-      };
-      
-      if (updateData.firstName) Object.assign(userUpdateData, { firstName: updateData.firstName });
-      if (updateData.lastName) Object.assign(userUpdateData, { lastName: updateData.lastName });
-      if (updateData.rank) Object.assign(userUpdateData, { rank: updateData.rank });
-      if (updateData.phoneNumber) Object.assign(userUpdateData, { phoneNumber: updateData.phoneNumber });
-      if (updateData.userType) Object.assign(userUpdateData, { userType: updateData.userType });
-
-      // Update user document
-      const userDocRef = doc(db, ADMIN_CONFIG.FIRESTORE_USERS_COLLECTION, userDocId);
-      await updateDoc(userDocRef, userUpdateData);
-      
-      console.log(`✅ Successfully synced changes to user: ${userDocId}`);
-
-    } catch (error) {
-      console.error('⚠️ Failed to sync changes to users collection (non-critical):', error);
-      // Don't throw error - sync failure shouldn't break the main update operation
-    }
-  }
-
-  /**
    * Bulk add authorized personnel using Firebase batched writes
    */
   static async addAuthorizedPersonnelBulk(
-    personnelList: AuthorizedPersonnelData[]
+    personnelList: AuthorizedPersonnelData[],
+    createdBy?: string
   ): Promise<{
     successful: { person: AuthorizedPersonnelData; id: string }[];
     failed: { person: AuthorizedPersonnelData; error: string; rowIndex: number }[];
@@ -618,68 +569,64 @@ export class AdminFirestoreService {
              !duplicates.some(d => d.rowIndex === rowIndex);
     });
 
-    // Process valid entries in batches (Firestore limit is 500 operations per batch)
-    const BATCH_SIZE = 100; // Use smaller batch size for safety
-    
-    for (let i = 0; i < validPersonnel.length; i += BATCH_SIZE) {
-      const batch = writeBatch(db);
-      const batchPersonnel = validPersonnel.slice(i, i + BATCH_SIZE);
-      const batchDocs: { person: AuthorizedPersonnelData; docRef: DocumentReference; hash: string }[] = [];
+    // Prepare entries for server bulk API
+    const entries: { docId: string; data: Record<string, unknown> }[] = [];
+    const entryPersonMap: { person: AuthorizedPersonnelData; hash: string }[] = [];
 
-      try {
-        // Prepare all batch operations
-        for (const person of batchPersonnel) {
-          // Hash the military personal number
-          const hash = await SecurityUtils.hashMilitaryId(person.militaryPersonalNumber);
-          
-          // Normalize phone number to international format
-          const normalizedPhone = ValidationUtils.toInternationalFormat(person.phoneNumber);
-          
-          // Create the authorized personnel document
-          const personnelDoc = {
-            militaryPersonalNumberHash: hash,
-            phoneNumber: normalizedPhone,
-            firstName: person.firstName.trim(),
-            lastName: person.lastName.trim(),
-            rank: person.rank.trim(),
-            userType: person.userType || 'user', // Include userType with default fallback
-            registered: false, // Default to false until user completes registration
-            approvedRole: 'soldier', // Default role for all new users
-            roleStatus: 'approved', // Auto-approve basic soldier role
-            status: 'active', // Default status
-            joinDate: serverTimestamp(),
-            createdAt: serverTimestamp(),
-            createdBy: 'system_admin' // TODO: Replace with actual admin user ID
-          };
+    for (const person of validPersonnel) {
+      const hash = await SecurityUtils.hashMilitaryId(person.militaryPersonalNumber);
+      const normalizedPhone = ValidationUtils.toInternationalFormat(person.phoneNumber);
 
-          const docRef = doc(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION, hash);
-          batch.set(docRef, personnelDoc);
-          
-          batchDocs.push({ person, docRef, hash });
-        }
+      entries.push({
+        docId: hash,
+        data: {
+          militaryPersonalNumberHash: hash,
+          phoneNumber: normalizedPhone,
+          firstName: person.firstName.trim(),
+          lastName: person.lastName.trim(),
+          rank: person.rank.trim(),
+          userType: person.userType || 'user',
+          registered: false,
+          approvedRole: 'soldier',
+          roleStatus: 'approved',
+          status: 'active',
+          createdBy: createdBy || 'system_admin',
+        },
+      });
+      entryPersonMap.push({ person, hash });
+    }
 
-        // Commit the batch
-        await batch.commit();
-        
-        // Add successful entries
-        batchDocs.forEach(({ person, docRef }) => {
-          successful.push({
-            person,
-            id: docRef.id
-          });
-        });
+    try {
+      const bulkResponse = await fetch('/api/authorized-personnel/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entries }),
+      });
+      const bulkResult = await bulkResponse.json();
 
-      } catch (error) {
-        // If batch fails, mark all in this batch as failed
-        batchPersonnel.forEach((person) => {
-          const originalIndex = personnelList.findIndex(p => p === person);
-          failed.push({
-            person,
-            error: `Batch operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            rowIndex: originalIndex + 2
-          });
-        });
+      if (!bulkResult.success) {
+        throw new Error(bulkResult.error || 'Bulk operation failed');
       }
+
+      // Map results back to personnel
+      entryPersonMap.forEach(({ person, hash }, index) => {
+        if (bulkResult.failedIndices?.includes(index)) {
+          const originalIndex = personnelList.findIndex(p => p === person);
+          failed.push({ person, error: 'Batch operation failed', rowIndex: originalIndex + 2 });
+        } else {
+          successful.push({ person, id: hash });
+        }
+      });
+    } catch (error) {
+      // If entire request fails, mark all as failed
+      entryPersonMap.forEach(({ person }) => {
+        const originalIndex = personnelList.findIndex(p => p === person);
+        failed.push({
+          person,
+          error: `Bulk operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          rowIndex: originalIndex + 2,
+        });
+      });
     }
 
     return { successful, failed, duplicates };
@@ -709,8 +656,13 @@ export class AdminFirestoreService {
    */
   static async deleteAuthorizedPersonnel(id: string): Promise<PersonnelOperationResult> {
     try {
-      const docRef = doc(db, ADMIN_CONFIG.FIRESTORE_PERSONNEL_COLLECTION, id);
-      await deleteDoc(docRef);
+      const deleteResponse = await fetch('/api/authorized-personnel', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      const deleteResult = await deleteResponse.json();
+      if (!deleteResult.success) throw new Error(deleteResult.error || 'Failed to delete personnel');
 
       return {
         success: true,
@@ -782,10 +734,13 @@ export class AdminFirestoreService {
         };
       }
 
-      await updateDoc(docRef, {
-        registered,
-        updatedAt: serverTimestamp()
+      const updateResponse = await fetch('/api/authorized-personnel', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ personnelId: militaryIdHash, updates: { registered } }),
       });
+      const updateResult = await updateResponse.json();
+      if (!updateResult.success) throw new Error(updateResult.error || 'Failed to update registration status');
 
       const updatedData = docSnap.data() as AuthorizedPersonnel;
       

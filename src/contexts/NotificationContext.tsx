@@ -17,7 +17,7 @@ import {
   NotificationContextType, 
   UseNotificationsReturn 
 } from '@/types/notifications';
-import { NotificationService } from '@/utils/notifications';
+import { NotificationService } from '@/utils/notifications'; // kept for client-side reads only
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
@@ -86,32 +86,44 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     };
   }, [unsubscribe]);
 
-  // Mark single notification as read
+  // Mark single notification as read (via server API route)
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      await NotificationService.markAsRead(notificationId);
+      await fetch('/api/notifications/read', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificationId }),
+      });
       // Real-time listener will update the state automatically
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
   }, []);
 
-  // Mark all notifications as read
+  // Mark all notifications as read (via server API route)
   const markAllAsRead = useCallback(async () => {
     if (!user?.uid) return;
-    
+
     try {
-      await NotificationService.markAllAsRead(user.uid);
+      await fetch('/api/notifications/read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.uid }),
+      });
       // Real-time listener will update the state automatically
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
     }
   }, [user?.uid]);
 
-  // Delete notification
+  // Delete notification (via server API route)
   const deleteNotification = useCallback(async (notificationId: string) => {
     try {
-      await NotificationService.deleteNotification(notificationId);
+      await fetch('/api/notifications', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: notificationId }),
+      });
       // Real-time listener will update the state automatically
     } catch (error) {
       console.error('Error deleting notification:', error);

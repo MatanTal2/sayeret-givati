@@ -197,8 +197,10 @@ export default function AddPersonnel() {
         {/* Message - Positioned below button for better visibility */}
         {message && (
           <div className={`rounded-lg p-4 border-2 transition-all duration-300 ${
-            message.type === 'success' 
-              ? 'bg-success-50 dark:bg-success-900/20 border-success-300 dark:border-success-700 shadow-lg' 
+            message.type === 'success'
+              ? 'bg-success-50 dark:bg-success-900/20 border-success-300 dark:border-success-700 shadow-lg'
+              : message.type === 'info'
+              ? 'bg-info-50 dark:bg-info-900/20 border-info-300 dark:border-info-700 shadow-lg'
               : 'bg-danger-50 dark:bg-danger-900/20 border-danger-300 dark:border-danger-700 shadow-lg'
           }`}>
             <div className="flex items-start">
@@ -206,6 +208,10 @@ export default function AddPersonnel() {
                 {message.type === 'success' ? (
                   <div className="w-6 h-6 rounded-full bg-success-100 dark:bg-success-800 flex items-center justify-center">
                     <span className="text-success-600 dark:text-success-400 text-lg">✅</span>
+                  </div>
+                ) : message.type === 'info' ? (
+                  <div className="w-6 h-6 rounded-full bg-info-100 dark:bg-info-800 flex items-center justify-center">
+                    <span className="text-info-600 dark:text-info-400 text-lg">ℹ️</span>
                   </div>
                 ) : (
                   <div className="w-6 h-6 rounded-full bg-danger-100 dark:bg-danger-800 flex items-center justify-center">
@@ -215,15 +221,19 @@ export default function AddPersonnel() {
               </div>
               <div className="ml-3 flex-1">
                 <p className={`text-sm font-medium ${
-                  message.type === 'success' 
-                    ? 'text-success-800 dark:text-success-300' 
+                  message.type === 'success'
+                    ? 'text-success-800 dark:text-success-300'
+                    : message.type === 'info'
+                    ? 'text-info-800 dark:text-info-300'
                     : 'text-danger-800 dark:text-danger-300'
                 }`}>
-                  {message.type === 'success' ? 'Success!' : 'Error'}
+                  {message.type === 'success' ? 'Success!' : message.type === 'info' ? 'Info' : 'Error'}
                 </p>
                 <p className={`text-sm mt-1 ${
-                  message.type === 'success' 
-                    ? 'text-success-700 dark:text-success-400' 
+                  message.type === 'success'
+                    ? 'text-success-700 dark:text-success-400'
+                    : message.type === 'info'
+                    ? 'text-info-700 dark:text-info-400'
                     : 'text-danger-700 dark:text-danger-400'
                 }`}>
                   {message.text}
@@ -237,8 +247,10 @@ export default function AddPersonnel() {
               <button
                 onClick={clearMessage}
                 className={`ml-2 flex-shrink-0 p-1 rounded-md hover:bg-opacity-20 ${
-                  message.type === 'success' 
-                    ? 'text-success-500 hover:bg-success-200 dark:hover:bg-success-800' 
+                  message.type === 'success'
+                    ? 'text-success-500 hover:bg-success-200 dark:hover:bg-success-800'
+                    : message.type === 'info'
+                    ? 'text-info-500 hover:bg-info-200 dark:hover:bg-info-800'
                     : 'text-danger-500 hover:bg-danger-200 dark:hover:bg-danger-800'
                 }`}
               >

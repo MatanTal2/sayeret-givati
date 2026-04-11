@@ -14,7 +14,8 @@
       "Bash(sort -k2 -rn)",
       "Bash(cat /c/Users/mamas/projects/sayeret-givati/tailwind.config.*)",
       "Bash(wc:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

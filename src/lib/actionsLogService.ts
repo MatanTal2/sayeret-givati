@@ -4,38 +4,35 @@
  * Provides centralized audit logging for all equipment-related actions
  */
 
-import { 
-  collection, 
-  addDoc, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  getDocs, 
-  serverTimestamp,
-  Timestamp 
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { ActionsLog, ActionType } from '@/types/equipment';
-
-const ACTIONS_LOG_COLLECTION = 'actionsLog';
+import { COLLECTIONS } from '@/lib/db/collections';
 
 /**
- * Create a new action log entry
+ * Create a new action log entry.
+ * Delegates to API route (firebase-admin) for the write.
  */
 export async function createActionLog(actionData: Omit<ActionsLog, 'id' | 'timestamp'>): Promise<string> {
-  try {
-    const actionLogData = {
-      ...actionData,
-      timestamp: serverTimestamp()
-    };
+  const response = await fetch('/api/actions-log', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(actionData),
+  });
 
-    const docRef = await addDoc(collection(db, ACTIONS_LOG_COLLECTION), actionLogData);
-    return docRef.id;
-  } catch (error) {
-    console.error('Error creating action log:', error);
-    throw new Error('Failed to create action log entry');
+  const result = await response.json();
+  if (!result.success || !result.id) {
+    throw new Error(result.error || 'Failed to create action log entry');
   }
+  return result.id;
 }
 
 /**
@@ -47,7 +44,7 @@ export async function getEquipmentActionLogs(
 ): Promise<ActionsLog[]> {
   try {
     const q = query(
-      collection(db, ACTIONS_LOG_COLLECTION),
+      collection(db, COLLECTIONS.ACTIONS_LOG),
       where('equipmentDocId', '==', equipmentDocId),
       orderBy('timestamp', 'desc'),
       limit(limitCount)
@@ -73,7 +70,7 @@ export async function getActionLogsByType(
 ): Promise<ActionsLog[]> {
   try {
     const q = query(
-      collection(db, ACTIONS_LOG_COLLECTION),
+      collection(db, COLLECTIONS.ACTIONS_LOG),
       where('actionType', '==', actionType),
       orderBy('timestamp', 'desc'),
       limit(limitCount)
@@ -99,7 +96,7 @@ export async function getActionLogsByActor(
 ): Promise<ActionsLog[]> {
   try {
     const q = query(
-      collection(db, ACTIONS_LOG_COLLECTION),
+      collection(db, COLLECTIONS.ACTIONS_LOG),
       where('actorId', '==', actorId),
       orderBy('timestamp', 'desc'),
       limit(limitCount)
@@ -122,7 +119,7 @@ export async function getActionLogsByActor(
 export async function getRecentActionLogs(limitCount: number = 50): Promise<ActionsLog[]> {
   try {
     const q = query(
-      collection(db, ACTIONS_LOG_COLLECTION),
+      collection(db, COLLECTIONS.ACTIONS_LOG),
       orderBy('timestamp', 'desc'),
       limit(limitCount)
     );
@@ -151,7 +148,7 @@ export async function getActionLogsByDateRange(
     const endTimestamp = Timestamp.fromDate(endDate);
 
     const q = query(
-      collection(db, ACTIONS_LOG_COLLECTION),
+      collection(db, COLLECTIONS.ACTIONS_LOG),
       where('timestamp', '>=', startTimestamp),
       where('timestamp', '<=', endTimestamp),
       orderBy('timestamp', 'desc'),
