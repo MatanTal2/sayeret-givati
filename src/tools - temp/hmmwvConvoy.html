@@ -1,0 +1,634 @@
+
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מארגן שיירות האמרים</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #e9ecef; margin: 0; padding: 15px; color: #333; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-top: 5px solid #4a5d23; }
+        h2 { text-align: center; color: #4a5d23; margin-top: 0; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        input[type="text"], select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-family: inherit; }
+        .row { display: flex; gap: 10px; align-items: center; }
+        .row .form-group { flex: 1; margin-bottom: 0; }
+        
+        .checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 15px; background: #fff3cd; padding: 10px; border-radius: 4px; border: 1px solid #ffeeba; }
+        .checkbox-group input { width: auto; transform: scale(1.2); margin: 0; }
+        .checkbox-group label { margin-bottom: 0; font-weight: normal; cursor: pointer; color: #856404; }
+
+        button { background-color: #4a5d23; color: white; border: none; padding: 12px 15px; cursor: pointer; border-radius: 4px; font-size: 16px; width: 100%; font-weight: bold; margin-bottom: 10px; transition: 0.2s; }
+        button:hover { background-color: #3b4a1c; }
+        .btn-add { background-color: #2b5c8f; margin-top: 5px; }
+        .btn-add:hover { background-color: #1e4166; }
+        .btn-copy { background-color: #17a2b8; }
+        .btn-copy:hover { background-color: #138496; }
+        .btn-whatsapp { background-color: #25D366; }
+        .btn-whatsapp:hover { background-color: #1ebe5d; }
+        .btn-clear { background-color: #dc3545; }
+        .btn-clear:hover { background-color: #c82333; }
+        .btn-special { background-color: #17a2b8; }
+        .btn-special:hover { background-color: #117a8b; }
+        .btn-small { padding: 8px 12px; width: auto; font-size: 14px; margin-bottom: 0; }
+        
+        .template-box { background-color: #e9f5ec; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin-bottom: 15px; }
+        
+        #extra-members, .modal-extra-members { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ccc; }
+        .extra-member-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .remove-btn { background-color: #dc3545; color: white; width: auto; padding: 8px 12px; margin: 0; font-size: 12px; }
+        
+        textarea { width: 100%; height: 250px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 15px; direction: rtl; resize: vertical; margin-top: 15px; white-space: pre-wrap; }
+        .section-title { font-size: 18px; font-weight: bold; margin: 20px 0 10px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+
+        /* Convoy Manager */
+        .convoy-manager { background: #f8f9fa; border: 2px solid #6c757d; padding: 15px; border-radius: 5px; margin-bottom: 15px; min-height: 100px;}
+        .convoy-item { display: flex; align-items: stretch; gap: 10px; background: white; padding: 10px; border: 1px solid #dee2e6; border-radius: 6px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: opacity 0.2s; cursor: grab; }
+        .convoy-item.disabled { opacity: 0.5; background: #e9ecef; }
+        .convoy-item.dragging { opacity: 0.8; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transform: scale(1.02); }
+        .drag-handle { display: flex; align-items: center; justify-content: center; padding: 0 10px; font-size: 20px; color: #adb5bd; cursor: grab; border-left: 1px solid #eee; }
+        .drag-handle:active { cursor: grabbing; }
+        .item-checkbox { display: flex; align-items: center; justify-content: center; padding-left: 5px; }
+        .item-checkbox input { transform: scale(1.5); margin: 0; }
+        .item-details { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .item-capsule { font-size: 12px; font-weight: bold; color: #17a2b8; margin-bottom: 2px; }
+        .item-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 4px; }
+        .item-crew { font-size: 12px; color: #666; line-height: 1.4; }
+        .item-actions { display: flex; flex-direction: column; gap: 5px; justify-content: center; border-right: 1px solid #eee; padding-right: 10px; }
+        .item-actions button { padding: 5px 10px; font-size: 14px; margin: 0; width: auto; background-color: #6c757d; }
+        .item-actions button:hover { background-color: #5a6268; }
+        .btn-action-delete { background-color: #dc3545 !important; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 95%; max-width: 500px; max-height: 90vh; overflow-y: auto; direction: rtl; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+        .modal-header h3 { margin: 0; color: #4a5d23; font-size: 18px; }
+        .modal-footer { display: flex; gap: 10px; margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>מארגן שיירה מתקדם</h2>
+
+    <div class="template-box">
+        <label style="color: #28a745; font-size: 16px; margin-bottom: 10px; display: block; font-weight:bold;">💾 תבניות שיירה (שומר את כל הרכבים והקפסולות)</label>
+        
+        <div class="row" style="margin-bottom: 10px;">
+            <select id="savedTemplates" style="flex: 2;" onchange="document.getElementById('newTemplateName').value = this.value;">
+                <option value="">בחר תבנית שיירה...</option>
+            </select>
+            <div style="display: flex; gap: 5px; flex: 1; justify-content: flex-end; align-items: center;">
+                <button class="btn-add btn-small" type="button" onclick="loadConvoyTemplate()" style="height: 100%;">טען לסדרן</button>
+                <button class="btn-clear" style="padding: 6px 10px; font-size: 12px; width: auto; height: 100%; margin-bottom: 0;" type="button" onclick="deleteConvoyTemplate()">🗑️ מחק</button>
+            </div>
+        </div>
+        
+        <div class="row">
+            <input type="text" id="newTemplateName" placeholder="שם לשמירת השיירה (למשל: שיירת יום א)" style="flex: 1;">
+            <button class="btn-copy btn-small" type="button" onclick="saveConvoyTemplate()">שמור שיירה נוכחית כתבנית</button>
+        </div>
+        <div style="font-size: 12px; color: #666; margin-top: 5px;">* עריכה: בחר תבנית, טען לסדרן, ערוך, ולחץ "שמור שיירה" באותו השם. המערכת תשאל אם לדרוס.</div>
+    </div>
+    
+    <div class="form-group">
+        <label>שיוך לקפסולה (לרכב זה)</label>
+        <input type="text" id="groupName" placeholder="לדוגמה: שניידר">
+    </div>
+
+    <div class="row">
+        <div class="form-group">
+            <label>סוג כלי</label>
+            <select id="vehicleType" onchange="updateVehicleUI('main')">
+                <option value="האמר">האמר</option>
+                <option value="FMtv">FMtv</option>
+                <option value="מאניטקס">מאניטקס</option>
+                <option value="ריו סולר">ריו סולר</option>
+                <option value="רעמסע">רעמסע</option>
+                <option value="אמולסיה">אמולסיה</option>
+                <option value="מוביל">מוביל</option>
+                <option value="ראש כבד">ראש כבד</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>זיהוי כלי</label>
+            <input type="text" id="humveeId" placeholder="מספר/שם (חובה)">
+        </div>
+    </div>
+    
+    <div class="checkbox-group">
+        <input type="checkbox" id="overrideHumveeId">
+        <label for="overrideHumveeId">אישור חריג: הוסף ללא מספר/זיהוי</label>
+    </div>
+
+    <div class="section-title">צוות אורגני ובעלי תפקידים</div>
+    <div class="row">
+        <div class="form-group">
+            <label>מפקד</label>
+            <input type="text" id="commander" placeholder="שם">
+        </div>
+        <div class="form-group">
+            <label>נהג</label>
+            <input type="text" id="driver" placeholder="שם">
+        </div>
+        <div class="form-group" id="gunnerGroup">
+            <label>מקלען</label>
+            <input type="text" id="gunner" placeholder="שם">
+        </div>
+    </div>
+
+    <div id="extra-members"></div>
+    <button id="btnAddExtra" class="btn-add" type="button" onclick="addExtraMember('extra-members', 'main')">+ הוסף בעל תפקיד נוסף</button>
+    <button id="btnHeavyHead" class="btn-special" type="button" style="display: none; margin-top: 10px;" onclick="openHeavyHeadModal('new')">📋 רשימת נוסעים (ראש כבד)</button>
+
+    <button type="button" onclick="addVehicleToConvoy()" style="margin-top: 20px; font-size: 18px;">הכנס כלי לסדרן השיירה ↓</button>
+
+    <div class="section-title" style="color:#d35400;">סדרן שיירה - גרור (☰) כדי לשנות סדר</div>
+    <div class="convoy-manager" id="convoyList">
+        <em style="color:#6c757d; font-size:14px;">השיירה ריקה. הוסף כלים או טען תבנית.</em>
+    </div>
+    <button class="btn-copy" type="button" onclick="generateConvoyText()" style="background-color: #d35400;">הצג שיירה מעודכנת בתיבת הטקסט ↓</button>
+
+    <div class="section-title">תוצאה - טקסט לשליחה</div>
+    <textarea id="outputText" placeholder="טקסט השיירה ייווצר כאן..."></textarea>
+    
+    <div class="row" style="margin-top: 10px;">
+        <button class="btn-copy" type="button" onclick="copyText()">העתק</button>
+        <button class="btn-whatsapp" type="button" onclick="shareWhatsApp()">שתף בוואטסאפ</button>
+        <button class="btn-clear" type="button" onclick="clearAll()">נקה הכל</button>
+    </div>
+</div>
+
+<div id="convoyEditModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header"><h3>עריכת כלי בשיירה</h3></div>
+        <input type="hidden" id="editConvoyIndex">
+
+        <div class="form-group"><label>שיוך לקפסולה</label><input type="text" id="editCapsule"></div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>סוג כלי</label>
+                <select id="editVehicleType" onchange="updateVehicleUI('convoy')">
+                    <option value="האמר">האמר</option>
+                    <option value="FMtv">FMtv</option>
+                    <option value="מאניטקס">מאניטקס</option>
+                    <option value="ריו סולר">ריו סולר</option>
+                    <option value="רעמסע">רעמסע</option>
+                    <option value="אמולסיה">אמולסיה</option>
+                    <option value="מוביל">מוביל</option>
+                    <option value="ראש כבד">ראש כבד</option>
+                </select>
+            </div>
+            <div class="form-group"><label>זיהוי כלי</label><input type="text" id="editHumveeId"></div>
+        </div>
+        
+        <div class="row">
+            <div class="form-group"><label>מפקד</label><input type="text" id="editCommander"></div>
+            <div class="form-group"><label>נהג</label><input type="text" id="editDriver"></div>
+            <div class="form-group" id="editGunnerGroup"><label>מקלען</label><input type="text" id="editGunner"></div>
+        </div>
+
+        <div id="edit-convoy-extras" class="modal-extra-members"></div>
+        <button id="btnEditAddExtra" class="btn-add" type="button" onclick="addExtraMember('edit-convoy-extras', 'convoy')">+ הוסף בעל תפקיד</button>
+        <button id="btnEditHeavyHead" class="btn-special" type="button" style="display: none; margin-top: 10px;" onclick="openHeavyHeadModal('edit')">📋 רשימת נוסעים (ראש כבד)</button>
+
+        <div class="modal-footer">
+            <button class="btn-copy" type="button" onclick="saveConvoyEdit()">שמור שינויים</button>
+            <button class="btn-clear" style="background-color: #6c757d;" type="button" onclick="closeConvoyModal()">ביטול</button>
+        </div>
+    </div>
+</div>
+
+<div id="heavyHeadModal" class="modal-overlay" style="z-index: 2000;">
+    <div class="modal-content">
+        <div class="modal-header"><h3>רשימת נוסעים - ראש כבד</h3></div>
+        <textarea id="heavyHeadPassengersText" placeholder="הדבק או הקלד כאן את רשימת השמות. טקסט חופשי..." style="height: 200px; margin-top: 0;"></textarea>
+        <div class="modal-footer">
+            <button class="btn-copy" type="button" onclick="saveHeavyHeadText()">שמור רשימה</button>
+            <button class="btn-clear" style="background-color: #6c757d;" type="button" onclick="closeHeavyHeadModal()">ביטול</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentConvoy = [];
+    let currentHeavyHeadText = "";
+    let editHeavyHeadText = "";
+    let heavyHeadMode = 'new'; 
+
+    window.onload = function() {
+        updateTemplatesDropdown();
+        updateVehicleUI('main');
+    };
+
+    // --- מערכת ניהול UI חכמה ---
+    function updateVehicleUI(mode) {
+        let typeId, containerId, btnAddId, btnHeavyId, gunnerGroupId, gunnerId;
+        
+        if (mode === 'main') {
+            typeId = 'vehicleType'; containerId = 'extra-members'; btnAddId = 'btnAddExtra';
+            btnHeavyId = 'btnHeavyHead'; gunnerGroupId = 'gunnerGroup'; gunnerId = 'gunner';
+        } else if (mode === 'convoy') {
+            typeId = 'editVehicleType'; containerId = 'edit-convoy-extras'; btnAddId = 'btnEditAddExtra';
+            btnHeavyId = 'btnEditHeavyHead'; gunnerGroupId = 'editGunnerGroup'; gunnerId = 'editGunner';
+        }
+
+        const vType = document.getElementById(typeId).value;
+
+        if (vType === 'האמר') {
+            document.getElementById(gunnerGroupId).style.display = 'block';
+        } else {
+            document.getElementById(gunnerGroupId).style.display = 'none';
+            document.getElementById(gunnerId).value = '';
+        }
+
+        if (btnHeavyId) {
+            const hhBtn = document.getElementById(btnHeavyId);
+            if (vType === 'ראש כבד') {
+                hhBtn.style.display = 'block';
+                updateHeavyHeadBtnState(mode === 'main' ? 'new' : 'edit');
+            } else {
+                hhBtn.style.display = 'none';
+            }
+        }
+
+        const container = document.getElementById(containerId);
+        if (vType !== 'האמר') {
+            const rows = container.querySelectorAll('.extra-member-row');
+            if (rows.length > 1) {
+                for (let i = 1; i < rows.length; i++) rows[i].remove();
+            }
+        }
+
+        const btnAdd = document.getElementById(btnAddId);
+        const count = container.querySelectorAll('.extra-member-row').length;
+        if (vType !== 'האמר' && count >= 1) {
+            btnAdd.style.display = 'none';
+        } else {
+            btnAdd.style.display = 'block';
+        }
+    }
+
+    function addExtraMember(containerId, mode) {
+        const container = document.getElementById(containerId);
+        const row = document.createElement('div');
+        row.className = 'extra-member-row';
+        row.innerHTML = `
+            <input type="text" placeholder="תפקיד (חובש)" class="role-input" style="flex: 1;">
+            <input type="text" placeholder="שם" class="name-input" style="flex: 2;">
+            <button class="remove-btn" type="button" onclick="this.parentElement.remove(); updateVehicleUI('${mode}')">X</button>
+        `;
+        container.appendChild(row);
+        updateVehicleUI(mode);
+    }
+
+    // --- חלונית ראש כבד ---
+    function openHeavyHeadModal(mode) {
+        heavyHeadMode = mode;
+        document.getElementById('heavyHeadPassengersText').value = mode === 'new' ? currentHeavyHeadText : editHeavyHeadText;
+        document.getElementById('heavyHeadModal').style.display = 'flex';
+    }
+    function saveHeavyHeadText() {
+        const text = document.getElementById('heavyHeadPassengersText').value.trim();
+        if (heavyHeadMode === 'new') currentHeavyHeadText = text;
+        else editHeavyHeadText = text;
+        updateHeavyHeadBtnState(heavyHeadMode);
+        closeHeavyHeadModal();
+    }
+    function closeHeavyHeadModal() { document.getElementById('heavyHeadModal').style.display = 'none'; }
+    function updateHeavyHeadBtnState(mode) {
+        const btn = mode === 'new' ? document.getElementById('btnHeavyHead') : document.getElementById('btnEditHeavyHead');
+        const text = mode === 'new' ? currentHeavyHeadText : editHeavyHeadText;
+        if (text) { btn.innerHTML = '✅ נוסעים הוזנו'; btn.style.backgroundColor = '#28a745'; } 
+        else { btn.innerHTML = '📋 רשימת נוסעים (ראש כבד)'; btn.style.backgroundColor = '#17a2b8'; }
+    }
+
+    // --- מערכת תבניות חכמה (שומרת שיירה שלמה) ---
+    const STORAGE_KEY = 'convoyMasterTemplates'; 
+
+    function getTemplatesData() { 
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } 
+        catch (e) { return {}; } 
+    }
+
+    function saveTemplatesData(data) { 
+        try { 
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); 
+            return true;
+        } catch (e) { 
+            alert("שגיאה! הדפדפן חסם את השמירה לזיכרון."); 
+            return false;
+        } 
+    }
+
+    function updateTemplatesDropdown() {
+        const select = document.getElementById('savedTemplates');
+        const currentVal = select.value;
+        select.innerHTML = '<option value="">בחר תבנית שיירה...</option>';
+        let templates = getTemplatesData();
+        for (const name in templates) {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            select.appendChild(option);
+        }
+        if (templates[currentVal]) select.value = currentVal;
+    }
+
+    // שמירה או דריסה של תבנית
+    function saveConvoyTemplate() {
+        const templateName = document.getElementById('newTemplateName').value.trim();
+        if (!templateName) { alert("אנא הכנס שם עבור התבנית."); return; }
+        if (currentConvoy.length === 0) { alert("סדרן השיירה ריק. הוסף כלים כדי לשמור תבנית שיירה."); return; }
+
+        let templates = getTemplatesData();
+        
+        // אם קיים באותו שם - שאל אם לדרוס
+        if (templates[templateName]) {
+            if (!confirm(`תבנית בשם '${templateName}' כבר קיימת.\nהאם אתה בטוח שברצונך לדרוס אותה עם השיירה המעודכנת?`)) return;
+        }
+
+        templates[templateName] = JSON.parse(JSON.stringify(currentConvoy)); 
+        
+        if(saveTemplatesData(templates)) {
+            // לא מוחקים את השם מתיבת הטקסט כדי שיהיה נוח להמשיך לערוך
+            updateTemplatesDropdown();
+            document.getElementById('savedTemplates').value = templateName;
+            alert(`✅ השיירה נשמרה בהצלחה תחת התבנית: '${templateName}'`);
+        }
+    }
+
+    // טעינת תבנית לתוך הסדרן
+    function loadConvoyTemplate() {
+        const templateName = document.getElementById('savedTemplates').value;
+        if (!templateName) { alert("אנא בחר תבנית מהרשימה."); return; }
+        
+        let templates = getTemplatesData();
+        const data = templates[templateName];
+        
+        if (!data || !Array.isArray(data)) { alert("שגיאה: התבנית פגומה או לא נמצאה."); return; }
+
+        if (currentConvoy.length > 0) {
+            if (!confirm("טעינת תבנית תמחק את השיירה הנוכחית שבסדרן ותחליף אותה בתבנית. האם להמשיך?")) return;
+        }
+
+        currentConvoy = JSON.parse(JSON.stringify(data));
+        
+        // מעתיק את השם אוטומטית לשדה העריכה למטה, כדי ששמירה חוזרת פשוט תדרוס
+        document.getElementById('newTemplateName').value = templateName;
+        
+        renderConvoyList();
+        generateConvoyText();
+        alert(`✅ התבנית '${templateName}' נטענה בהצלחה! תוכל לערוך כלים בסדרן ולשמור שוב.`);
+    }
+
+    // מחיקת תבנית שיירה
+    function deleteConvoyTemplate() {
+        const templateName = document.getElementById('savedTemplates').value;
+        if (!templateName) { alert("אנא בחר תבנית מהרשימה כדי למחוק אותה."); return; }
+        
+        if (confirm(`האם אתה בטוח שברצונך למחוק לחלוטין את התבנית '${templateName}'?\n(הפעולה לא תשפיע על הנתונים שמוצגים כעת במסך)`)) {
+            let templates = getTemplatesData();
+            delete templates[templateName];
+            if(saveTemplatesData(templates)) {
+                updateTemplatesDropdown();
+                document.getElementById('newTemplateName').value = ""; // מנקה את השדה התחתון
+                alert(`🗑️ התבנית '${templateName}' נמחקה בהצלחה.`);
+            }
+        }
+    }
+
+    // --- הוספת רכב לסדרן השיירה ---
+    function addVehicleToConvoy() {
+        let rawGroupName = document.getElementById('groupName').value.trim();
+        let rawHumveeId = document.getElementById('humveeId').value.trim();
+        const overrideHumveeId = document.getElementById('overrideHumveeId').checked;
+        const vType = document.getElementById('vehicleType').value;
+
+        if (!rawHumveeId && !overrideHumveeId) { alert("שגיאה: חובה להזין את מספר/זיהוי הכלי!"); return; }
+        if (rawGroupName && !rawGroupName.includes("קפסולה")) rawGroupName = "קפסולה " + rawGroupName.replace(/\*/g, '').trim();
+        let displayId = rawHumveeId;
+        if (displayId && !displayId.includes(vType)) displayId = vType + " " + displayId;
+
+        const extras = [];
+        document.querySelectorAll('#extra-members .extra-member-row').forEach(row => {
+            const role = row.querySelector('.role-input').value.trim();
+            const name = row.querySelector('.name-input').value.trim();
+            if(name || role) extras.push({ role: role, name: name });
+        });
+
+        const vehicleObj = {
+            id: Date.now() + Math.random(), 
+            active: true, 
+            capsule: rawGroupName, 
+            vehicleType: vType, 
+            vehicleId: displayId,
+            commander: document.getElementById('commander').value.trim(), 
+            driver: document.getElementById('driver').value.trim(),
+            gunner: (vType === 'האמר') ? document.getElementById('gunner').value.trim() : "",
+            extras: extras, 
+            heavyHeadPassengers: (vType === 'ראש כבד') ? currentHeavyHeadText : ""
+        };
+
+        currentConvoy.push(vehicleObj);
+        renderConvoyList();
+        generateConvoyText(); 
+
+        document.getElementById('humveeId').value = ""; 
+        document.getElementById('overrideHumveeId').checked = false;
+        document.getElementById('commander').value = ""; 
+        document.getElementById('driver').value = "";
+        document.getElementById('gunner').value = ""; 
+        document.getElementById('extra-members').innerHTML = "";
+        currentHeavyHeadText = ""; 
+        updateVehicleUI('main');
+    }
+
+    // --- רינדור סדרן השיירה ---
+    function renderConvoyList() {
+        const container = document.getElementById('convoyList');
+        if (currentConvoy.length === 0) { container.innerHTML = '<em style="color:#6c757d; font-size:14px;">השיירה ריקה. הוסף כלים או טען תבנית.</em>'; return; }
+        
+        container.innerHTML = '';
+        currentConvoy.forEach((vehicle, index) => {
+            const item = document.createElement('div');
+            item.className = `convoy-item ${vehicle.active ? '' : 'disabled'}`;
+            item.setAttribute('draggable', 'true'); 
+            item.setAttribute('data-id', vehicle.id);
+            
+            let crewTextParts = [];
+            if(vehicle.commander) crewTextParts.push(`מפקד: ${vehicle.commander}`);
+            if(vehicle.driver) crewTextParts.push(`נהג: ${vehicle.driver}`);
+            if(vehicle.gunner) crewTextParts.push(`מקלען: ${vehicle.gunner}`);
+            let crewText = crewTextParts.join(' | ') || 'ללא צוות בסיס';
+            let hhIndicator = (vehicle.vehicleType === 'ראש כבד' && vehicle.heavyHeadPassengers) ? ' <span style="color:#28a745; font-weight:bold;">(נוסעים)</span>' : '';
+
+            item.innerHTML = `
+                <div class="drag-handle" title="גרור">☰</div>
+                <div class="item-checkbox"><input type="checkbox" ${vehicle.active ? 'checked' : ''} onchange="toggleVehicle(${index})"></div>
+                <div class="item-details">
+                    <div class="item-capsule">${vehicle.capsule || 'ללא שיוך לקפסולה'}</div>
+                    <div class="item-title">${vehicle.vehicleId || vehicle.vehicleType}${hhIndicator}</div>
+                    <div class="item-crew">${crewText}</div>
+                </div>
+                <div class="item-actions">
+                    <button type="button" onclick="openConvoyEditModal(${index})">✏️ ערוך</button>
+                    <button type="button" class="btn-action-delete" onclick="removeVehicle(${index})">🗑️ מחק</button>
+                </div>
+            `;
+            
+            item.addEventListener('dragstart', handleDragStart); item.addEventListener('dragover', handleDragOver);
+            item.addEventListener('drop', handleDrop); item.addEventListener('dragend', handleDragEnd);
+            item.addEventListener('touchstart', handleTouchStart, {passive: true});
+            item.addEventListener('touchmove', handleTouchMove, {passive: false});
+            item.addEventListener('touchend', handleTouchEnd);
+            container.appendChild(item);
+        });
+    }
+
+    function toggleVehicle(index) { currentConvoy[index].active = !currentConvoy[index].active; renderConvoyList(); generateConvoyText(); }
+    
+    function removeVehicle(index) { 
+        if (confirm("האם להסיר את הרכב מהשיירה?")) { 
+            currentConvoy.splice(index, 1); 
+            renderConvoyList(); 
+            generateConvoyText(); 
+        } 
+    }
+
+    // --- עריכת רכב מתוך הסדרן ---
+    function openConvoyEditModal(index) {
+        const vehicle = currentConvoy[index];
+        document.getElementById('editConvoyIndex').value = index;
+        document.getElementById('editCapsule').value = vehicle.capsule || "";
+        document.getElementById('editVehicleType').value = vehicle.vehicleType || "האמר";
+        let displayId = vehicle.vehicleId;
+        if(displayId.startsWith(vehicle.vehicleType + " ")) displayId = displayId.replace(vehicle.vehicleType + " ", "");
+        document.getElementById('editHumveeId').value = displayId;
+        document.getElementById('editCommander').value = vehicle.commander || "";
+        document.getElementById('editDriver').value = vehicle.driver || "";
+        document.getElementById('editGunner').value = vehicle.gunner || "";
+        
+        const extrasContainer = document.getElementById('edit-convoy-extras');
+        extrasContainer.innerHTML = "";
+        if(vehicle.extras) {
+            vehicle.extras.forEach(ext => {
+                addExtraMember('edit-convoy-extras', 'convoy');
+                const rows = extrasContainer.querySelectorAll('.extra-member-row');
+                const lastRow = rows[rows.length - 1];
+                lastRow.querySelector('.role-input').value = ext.role || "";
+                lastRow.querySelector('.name-input').value = ext.name || "";
+            });
+        }
+        editHeavyHeadText = vehicle.heavyHeadPassengers || "";
+        updateVehicleUI('convoy');
+        document.getElementById('convoyEditModal').style.display = 'flex';
+    }
+
+    function saveConvoyEdit() {
+        const index = document.getElementById('editConvoyIndex').value;
+        const vType = document.getElementById('editVehicleType').value;
+        let rawId = document.getElementById('editHumveeId').value.trim();
+        let displayId = rawId ? (rawId.includes(vType) ? rawId : vType + " " + rawId) : "";
+        let capsule = document.getElementById('editCapsule').value.trim();
+        if (capsule && !capsule.includes("קפסולה")) capsule = "קפסולה " + capsule.replace(/\*/g, '').trim();
+
+        const extras = [];
+        document.querySelectorAll('#edit-convoy-extras .extra-member-row').forEach(row => {
+            const role = row.querySelector('.role-input').value.trim();
+            const name = row.querySelector('.name-input').value.trim();
+            if(name || role) extras.push({ role: role, name: name });
+        });
+
+        currentConvoy[index] = {
+            id: currentConvoy[index].id, 
+            active: currentConvoy[index].active, 
+            capsule: capsule,
+            vehicleType: vType, 
+            vehicleId: displayId, 
+            commander: document.getElementById('editCommander').value.trim(),
+            driver: document.getElementById('editDriver').value.trim(), 
+            gunner: (vType === 'האמר') ? document.getElementById('editGunner').value.trim() : "",
+            extras: extras, 
+            heavyHeadPassengers: (vType === 'ראש כבד') ? editHeavyHeadText : ""
+        };
+        closeConvoyModal(); 
+        renderConvoyList(); 
+        generateConvoyText();
+    }
+    
+    function closeConvoyModal() { document.getElementById('convoyEditModal').style.display = 'none'; }
+
+    // --- Drag and Drop Logic ---
+    let dragSrcEl = null;
+    function handleDragStart(e) { dragSrcEl = this; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/html', this.innerHTML); setTimeout(() => this.classList.add('dragging'), 0); }
+    function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; const container = document.getElementById('convoyList'); const afterElement = getDragAfterElement(container, e.clientY); const dragging = document.querySelector('.dragging'); if (afterElement == null) { container.appendChild(dragging); } else { container.insertBefore(dragging, afterElement); } }
+    function getDragAfterElement(container, y) { const draggableElements = [...container.querySelectorAll('.convoy-item:not(.dragging)')]; return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2; if (offset < 0 && offset > closest.offset) { return { offset: offset, element: child }; } else { return closest; } }, { offset: Number.NEGATIVE_INFINITY }).element; }
+    function handleDrop(e) { e.stopPropagation(); }
+    function handleDragEnd(e) { this.classList.remove('dragging'); const newArray = []; document.querySelectorAll('.convoy-item').forEach(item => { const id = parseFloat(item.getAttribute('data-id')); const vehicle = currentConvoy.find(v => v.id === id); if(vehicle) newArray.push(vehicle); }); currentConvoy = newArray; generateConvoyText(); }
+    
+    let touchEl = null;
+    function handleTouchStart(e) { if(e.target.classList.contains('drag-handle')) { touchEl = this; touchEl.classList.add('dragging'); } }
+    function handleTouchMove(e) { if(!touchEl) return; e.preventDefault(); const touch = e.touches[0]; const container = document.getElementById('convoyList'); const afterElement = getDragAfterElement(container, touch.clientY); if (afterElement == null) container.appendChild(touchEl); else container.insertBefore(touchEl, afterElement); }
+    function handleTouchEnd(e) { if(touchEl) { touchEl.classList.remove('dragging'); handleDragEnd.call(touchEl, e); touchEl = null; } }
+
+    // --- יצירת טקסט סופי ---
+    function generateConvoyText() {
+        let output = ""; let lastPrintedCapsule = "";
+        currentConvoy.forEach(vehicle => {
+            if (!vehicle.active) return;
+            let occupiedSeats = 0;
+            if (vehicle.capsule && vehicle.capsule !== lastPrintedCapsule) { output += `*${vehicle.capsule}*\n`; lastPrintedCapsule = vehicle.capsule; }
+            if (vehicle.vehicleId) output += `${vehicle.vehicleId}\n`;
+            if (vehicle.commander) { output += `מפקד - ${vehicle.commander}\n`; occupiedSeats++; }
+            if (vehicle.driver) { output += `נהג - ${vehicle.driver}\n`; occupiedSeats++; }
+            if (vehicle.gunner) { output += `מקלען - ${vehicle.gunner}\n`; occupiedSeats++; }
+
+            vehicle.extras.forEach(extra => {
+                if (extra.name || extra.role) { const displayRole = extra.role ? extra.role : "בעל תפקיד"; output += `${displayRole} - ${extra.name}\n`; occupiedSeats++; }
+            });
+
+            if (vehicle.vehicleType === 'האמר') {
+                const emptySeats = 10 - occupiedSeats;
+                if (emptySeats > 0) { output += `חבירים:\n`; for (let i = 1; i <= emptySeats; i++) output += `${i}.\n`; }
+            } else if (vehicle.vehicleType === 'ראש כבד') {
+                if (vehicle.heavyHeadPassengers) output += `נוסעים:\n${vehicle.heavyHeadPassengers}\n`;
+            } else {
+                let hasExtra = vehicle.extras.some(e => e.name || e.role);
+                if (!hasExtra) output += `חבירים:\n1.\n`;
+            }
+            output += "\n";
+        });
+        document.getElementById('outputText').value = output;
+    }
+
+    function copyText() { const textArea = document.getElementById('outputText'); if(!textArea.value) return alert("אין טקסט להעתקה."); textArea.select(); document.execCommand("copy"); window.getSelection().removeAllRanges(); alert("הטקסט הועתק בהצלחה!"); }
+    function shareWhatsApp() { const text = document.getElementById('outputText').value; if (!text) return alert("אין טקסט לשיתוף."); const url = "https://wa.me/?text=" + encodeURIComponent(text); window.open(url, '_blank') || (window.location.href = url); }
+    
+    // --- נקה הכל (תוקן) ---
+    function clearAll() {
+        if(confirm("לנקות את כל הנתונים, לאפס את הטופס ולרוקן את סדרן השיירה והטקסט? (פעולה זו לא תמחק את התבניות ששמרת למעלה)")) {
+            currentConvoy = []; 
+            renderConvoyList(); 
+            document.getElementById('outputText').value = ""; 
+            
+            document.getElementById('groupName').value = "";
+            document.getElementById('vehicleType').value = "האמר"; 
+            document.getElementById('humveeId').value = ""; 
+            document.getElementById('overrideHumveeId').checked = false;
+            document.getElementById('commander').value = ""; 
+            document.getElementById('driver').value = ""; 
+            document.getElementById('gunner').value = "";
+            document.getElementById('extra-members').innerHTML = ""; 
+            
+            currentHeavyHeadText = ""; 
+            updateVehicleUI('main');
+        }
+    }
+</script>
+
+</body>
+</html>
