@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Header from '@/app/components/Header';
+import { downloadTool } from '@/utils/downloadUtils';
 
 const tools = [
   {
@@ -23,15 +24,6 @@ const tools = [
     color: 'from-purple-600 to-purple-800',
   },
 ];
-
-function handleDownload(filename: string, displayName: string) {
-  const link = document.createElement('a');
-  link.href = filename;
-  link.download = `${displayName}.html`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
 
 export default function ToolsPage() {
   return (
@@ -72,7 +64,7 @@ export default function ToolsPage() {
                     פתח כלי
                   </Link>
                   <button
-                    onClick={() => handleDownload(tool.downloadFile, tool.title)}
+                    onClick={() => downloadTool(tool.downloadFile, `${tool.title}.html`)}
                     className="flex-1 text-center px-4 py-3 border-2 border-primary-600 text-primary-600 hover:bg-primary-50 font-medium rounded-xl transition-colors"
                   >
                     ⬇️ הורד לנייד
