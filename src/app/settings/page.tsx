@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthGuard from '@/components/auth/AuthGuard';
-import Header from '@/app/components/Header';
+import AppShell from '@/app/components/AppShell';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
 import { 
@@ -67,15 +67,11 @@ export default function SettingsPage() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-neutral-50" dir="rtl">
-        {/* Header */}
-        <Header 
-          title={TEXT_CONSTANTS.SETTINGS.PAGE_TITLE}
-          subtitle={TEXT_CONSTANTS.SETTINGS.PAGE_SUBTITLE}
-          showAuth={true}
-        />
-
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <AppShell
+        title={TEXT_CONSTANTS.SETTINGS.PAGE_TITLE}
+        subtitle={TEXT_CONSTANTS.SETTINGS.PAGE_SUBTITLE}
+      >
+        <div className="max-w-4xl mx-auto w-full">
           {/* Profile Settings Section */}
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
             <div className="flex items-center gap-3 mb-6">
@@ -395,7 +391,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-      </div>
+      </AppShell>
     </AuthGuard>
   );
 }

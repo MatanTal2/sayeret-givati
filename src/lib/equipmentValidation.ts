@@ -18,43 +18,43 @@ export interface ValidationResult {
 }
 
 /**
- * Validates new equipment form data
+ * Validates new equipment form data (wizard output).
+ * The wizard picks a template, so productName/category are not in the form — they come from the template.
+ * S/N is required only when the chosen template's requiresSerialNumber is true; the caller passes that flag
+ * in via the second argument so this validator stays stateless.
  */
-export function validateNewEquipmentForm(form: Partial<NewEquipmentForm>): ValidationResult {
+export function validateNewEquipmentForm(
+  form: Partial<NewEquipmentForm>,
+  opts: { requiresSerialNumber: boolean } = { requiresSerialNumber: true }
+): ValidationResult {
   const errors: Record<string, string> = {};
   const warnings: Record<string, string> = {};
 
-  // Equipment ID validation
-  if (!form.id?.trim()) {
-    errors.id = 'מספר סידורי חובה';
-  } else {
-    const idValidation = validateEquipmentId(form.id);
-    if (!idValidation.isValid) {
-      errors.id = idValidation.error!;
+  // Serial number (צ) — required only for templates marked requiresSerialNumber
+  if (opts.requiresSerialNumber) {
+    if (!form.serialNumber?.trim()) {
+      errors.serialNumber = 'מספר צ חובה';
+    } else {
+      const idValidation = validateEquipmentId(form.serialNumber);
+      if (!idValidation.isValid) {
+        errors.serialNumber = idValidation.error!;
+      }
     }
   }
 
-  // Product name validation
-  if (!form.productName?.trim()) {
-    errors.productName = 'שם הפריט חובה';
-  } else if (form.productName.trim().length < 2) {
-    errors.productName = 'שם הפריט חייב להכיל לפחות 2 תווים';
-  } else if (form.productName.trim().length > 100) {
-    errors.productName = 'שם הפריט ארוך מדי (מקסימום 100 תווים)';
+  // Template reference — always required
+  if (!form.templateId?.trim()) {
+    errors.templateId = 'יש לבחור תבנית פריט';
   }
 
-  // Category validation
-  if (!form.category?.trim()) {
-    errors.category = 'קטגוריה חובה';
-  } else if (form.category.trim().length < 2) {
-    errors.category = 'קטגוריה חייבת להכיל לפחות 2 תווים';
+  // Photo — always required at sign-up
+  if (!form.photoUrl?.trim()) {
+    errors.photoUrl = 'יש לצלם תמונה לפני שליחה';
   }
 
-  // Unit validation
-  if (!form.assignedUnit?.trim()) {
-    errors.assignedUnit = 'יחידה חובה';
-  } else if (form.assignedUnit.trim().length < 2) {
-    errors.assignedUnit = 'שם יחידה חייב להכיל לפחות 2 תווים';
+  // Catalog number — optional. If provided, basic length sanity only.
+  if (form.catalogNumber && form.catalogNumber.trim().length > 50) {
+    errors.catalogNumber = 'מספר מקט ארוך מדי';
   }
 
   // Location validation
@@ -108,10 +108,8 @@ export function validateTransferForm(
     errors.newHolder = 'מחזיק חדש חייב להיות שונה מהמחזיק הנוכחי';
   }
 
-  // Unit validation (optional)
-  if (form.newUnit && form.newUnit.trim().length < 2) {
-    errors.newUnit = 'שם יחידה חייב להכיל לפחות 2 תווים';
-  }
+  // Unit is no longer carried on the transfer form — the server derives holder's unit
+  // from the target user's profile. Nothing to validate here.
 
   // Location validation (optional)
   if (form.newLocation && form.newLocation.trim().length < 2) {
@@ -174,10 +172,8 @@ export function validateBulkTransferForm(
     errors.newHolder = 'שם מחזיק חייב להכיל לפחות 2 תווים';
   }
 
-  // Unit validation (optional)
-  if (form.newUnit && form.newUnit.trim().length < 2) {
-    errors.newUnit = 'שם יחידה חייב להכיל לפחות 2 תווים';
-  }
+  // Unit is no longer carried on the transfer form — the server derives holder's unit
+  // from the target user's profile. Nothing to validate here.
 
   // Location validation (optional)
   if (form.newLocation && form.newLocation.trim().length < 2) {

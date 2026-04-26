@@ -3,6 +3,14 @@
 
 import { Timestamp } from 'firebase/firestore';
 
+// Template moderation status — controls who can pick this template and who reviews it.
+export enum TemplateStatus {
+  CANONICAL = 'canonical',              // Manager-approved. Regular users can pick.
+  PROPOSED = 'proposed',                // Team leader proposed. Awaits manager approval.
+  PENDING_REQUEST = 'pending_request',  // Regular user requested from "not in list" flow.
+  REJECTED = 'rejected'                 // Rejected by manager. Kept for audit; not pickable.
+}
+
 // Equipment Type Definition for equipments collection
 export interface EquipmentType {
   id: string; // Equipment type ID (auto-generated document ID)
@@ -12,8 +20,17 @@ export interface EquipmentType {
   description?: string; // Optional detailed description
   notes?: string; // Optional notes - warnings/guidelines
   requiresDailyStatusCheck: boolean; // Whether this equipment type requires daily status checks
+  requiresSerialNumber: boolean; // Whether items of this type are צ (serialized). Gates S/N-required logic at sign-up.
+  defaultCatalogNumber?: string; // Optional hint copied to Equipment.catalogNumber on create
   isActive: boolean; // Whether type is available for creation (default true)
   templateCreatorId: string; // UID of user who created this template
+  status: TemplateStatus; // Moderation status
+  proposedByUserId?: string; // UID of the user who proposed or requested this template
+  proposedAt?: Timestamp; // When proposed
+  reviewedByUserId?: string; // UID of manager who reviewed (approved/rejected)
+  reviewedAt?: Timestamp; // When reviewed
+  rejectedReason?: string; // Reason supplied when status = REJECTED
+  companionTemplateIds?: string[]; // FUTURE: templates that "usually come with" this one (e.g., radio → batteries, antenna). No UI uses this in phase 1.
   createdAt: Timestamp; // Document creation timestamp
   updatedAt: Timestamp; // Last update timestamp
 }
@@ -21,7 +38,7 @@ export interface EquipmentType {
 export interface CustomizableFields {
   serialNumber: boolean; // Can customize serial number
   currentHolder: boolean; // Can set initial holder
-  assignedUnit: boolean; // Can set unit assignment
+  catalogNumber: boolean; // Can set catalog number (מקט)
   location: boolean; // Can override location
   status: boolean; // Can set initial status
   condition: boolean; // Can override condition
@@ -47,16 +64,21 @@ export interface Equipment {
   nextMaintenanceDate?: Timestamp; // Scheduled maintenance date
   
   // Assignment and Status
-  signedBy: string; // Who signed the item in initially
-  currentHolder: string; // Current responsible person (display name only - for UI)
-  currentHolderId: string; // Current responsible person (user UID - for queries and permissions)
-  assignedUnit: string; // Assigned unit or platoon
-  assignedTeam?: string; // Assigned team within the unit (for team-based permissions)
+  signedBy: string; // Signer display name
+  signedById: string; // Signer UID — legal accountability; only signer can retire; enables dimmed-but-mine UI
+  currentHolder: string; // Current physical holder (display name)
+  currentHolderId: string; // Current physical holder (UID) — for queries and permissions
+  holderTeamId?: string; // Denormalized from holder user profile. Updated on holder change.
+  signerTeamId?: string; // Denormalized from signer user profile. Updated on signer change.
   status: EquipmentStatus; // Current status
   location: string; // Physical location
   condition: EquipmentCondition; // Current condition
-  
+
   // Additional Info
+  catalogNumber?: string; // Army catalog number (מקט). Optional — not always known at sign-up.
+  photoUrl: string; // Initial sign-up photo URL (required at creation)
+  lastReportPhotoUrl?: string; // Most recent report photo (populated by report action)
+  batchId?: string; // Groups items added in a single bulk sign-up
   acquisitionCost?: number; // Original cost in ILS
   notes?: string; // Optional free text notes
   maintenanceNotes?: string; // Maintenance history and notes
@@ -76,6 +98,7 @@ export interface EquipmentHistoryEntry {
   holder: string; // Name of current or previous holder
   location: string; // Location during this action
   notes?: string; // Optional notes for this action
+  photoUrl?: string; // Photo captured at this action (report / sign-up). Optional because not all actions carry photos.
   timestamp: Timestamp; // When this action occurred
   updatedBy: string; // UID of user who performed this action
 }
@@ -113,7 +136,8 @@ export enum EquipmentStatus {
   SECURITY = 'security',
   REPAIR = 'repair',
   LOST = 'lost',
-  PENDING_TRANSFER = 'pending_transfer'
+  PENDING_TRANSFER = 'pending_transfer',
+  RETIRED = 'retired' // Returned to army; excluded from active equipment lists
 }
 
 export enum EquipmentCondition {
@@ -161,11 +185,13 @@ export enum UserRole {
 }
 
 // Form interfaces for UI components
+// Used by AddEquipmentWizard. `templateId` is required (regular users can only pick canonical templates);
+// the wizard's "didn't find your item?" branch goes through RequestNewTemplateFlow instead of this form.
 export interface NewEquipmentForm {
-  id: string;
-  productName: string;
-  category: string;
-  assignedUnit: string;
+  serialNumber: string;    // S/N (צ). Required iff template.requiresSerialNumber
+  templateId: string;      // Canonical template the user picked
+  catalogNumber?: string;  // Optional; may prefill from template.defaultCatalogNumber
+  photoUrl: string;        // Required — photo captured in wizard
   location: string;
   condition: EquipmentCondition;
   notes?: string;
@@ -173,7 +199,6 @@ export interface NewEquipmentForm {
 
 export interface TransferEquipmentForm {
   newHolder: string;
-  newUnit?: string;
   newLocation?: string;
   notes?: string;
   requiresApproval: boolean;
@@ -182,7 +207,6 @@ export interface TransferEquipmentForm {
 export interface BulkTransferForm {
   equipmentIds: string[];
   newHolder: string;
-  newUnit?: string;
   newLocation?: string;
   notes?: string;
 }
@@ -193,7 +217,7 @@ export interface EquipmentFilter {
   condition?: EquipmentCondition[];
   holder?: string; // Display name (for UI search)
   holderId?: string; // User UID (for exact queries)
-  unit?: string;
+  teamId?: string;   // Matches holderTeamId OR signerTeamId
   category?: string;
   dateRange?: {
     start: string;
@@ -217,7 +241,7 @@ export interface EquipmentOperationResult {
 }
 
 // Utility types
-export type EquipmentSortField = 'id' | 'productName' | 'currentHolder' | 'currentHolderId' | 'assignedUnit' | 'lastReportUpdate' | 'createdAt';
+export type EquipmentSortField = 'id' | 'productName' | 'currentHolder' | 'currentHolderId' | 'holderTeamId' | 'signerTeamId' | 'lastReportUpdate' | 'createdAt';
 export type SortDirection = 'asc' | 'desc';
 
 export interface EquipmentSort {
@@ -286,7 +310,7 @@ export interface RelatedDocuments {
 export interface NotificationAction {
   id: string; // Action identifier
   label: string; // Display text
-  type: ActionType; // approve, decline, view, etc.
+  type: NotificationActionType; // approve, decline, view, etc.
   style: ActionStyle; // primary, secondary, danger
   requiresConfirmation: boolean; // Show confirmation dialog
   confirmationMessage?: string; // Confirmation text
@@ -304,6 +328,16 @@ export enum NotificationType {
   EQUIPMENT_TRANSFER_APPROVED = 'equipment_transfer_approved',
   EQUIPMENT_TRANSFER_DECLINED = 'equipment_transfer_declined',
   RETIREMENT_REQUEST = 'retirement_request',
+  RETIREMENT_REQUEST_APPROVAL = 'retirement_request_approval',
+  RETIREMENT_APPROVED = 'retirement_approved',
+  RETIREMENT_REJECTED = 'retirement_rejected',
+  REPORT_REQUESTED = 'report_requested',
+  FORCE_TRANSFER_EXECUTED = 'force_transfer_executed',
+  FORCE_SIGNER_CHANGED = 'force_signer_changed',
+  TEMPLATE_REQUEST_APPROVED = 'template_request_approved',
+  TEMPLATE_REQUEST_REJECTED = 'template_request_rejected',
+  TEMPLATE_PROPOSED_FOR_REVIEW = 'template_proposed_for_review',
+  NEW_TEMPLATE_REQUEST_FOR_REVIEW = 'new_template_request_for_review',
   MAINTENANCE_REMINDER = 'maintenance_reminder',
   OVERDUE_REPORT = 'overdue_report',
   SYSTEM_ALERT = 'system_alert',
@@ -325,7 +359,9 @@ export enum NotificationPriority {
   URGENT = 'urgent'
 }
 
-export enum ActionType {
+// Notification-button action kinds (used by NotificationAction.type).
+// Renamed from ActionType to resolve collision with the action-log ActionType below.
+export enum NotificationActionType {
   APPROVE = 'approve',
   DECLINE = 'decline',
   VIEW = 'view',
@@ -360,23 +396,40 @@ export enum ActionType {
   TRANSFER_REQUESTED = 'transfer_requested',
   TRANSFER_APPROVED = 'transfer_approved',
   TRANSFER_REJECTED = 'transfer_rejected',
-  
+  FORCE_TRANSFER_HOLDER = 'force_transfer_holder',
+  FORCE_TRANSFER_SIGNER = 'force_transfer_signer',
+
+  // Retirement
+  RETIREMENT_REQUESTED = 'retirement_requested',
+  RETIREMENT_APPROVED = 'retirement_approved',
+  RETIREMENT_REJECTED = 'retirement_rejected',
+
+  // Report / daily check
+  REPORT_SUBMITTED = 'report_submitted',
+  REPORT_REQUESTED = 'report_requested',
+
   // Maintenance actions
   MAINTENANCE_START = 'maintenance_start',
   MAINTENANCE_COMPLETE = 'maintenance_complete',
-  
+
   // Status changes
   STATUS_UPDATE = 'status_update',
   CONDITION_UPDATE = 'condition_update',
-  
+
   // Equipment lifecycle
   EQUIPMENT_CREATED = 'equipment_created',
   EQUIPMENT_RETIRED = 'equipment_retired',
-  
+
+  // Template lifecycle
+  TEMPLATE_PROPOSED = 'template_proposed',
+  TEMPLATE_REQUESTED = 'template_requested',
+  TEMPLATE_APPROVED = 'template_approved',
+  TEMPLATE_REJECTED = 'template_rejected',
+
   // Sign in/out actions
   SIGN_IN = 'sign_in',
   SIGN_OUT = 'sign_out',
-  
+
   // Other actions
   LOCATION_UPDATE = 'location_update',
   NOTES_UPDATE = 'notes_update'
@@ -412,4 +465,88 @@ export interface TransferStatusHistoryEntry {
   updatedBy: string; // UID of user who made the status change
   updatedByName: string; // Display name of user who made the change
   note?: string; // Optional note for the status change
-} 
+}
+
+// Retirement Request Collection Types
+// Created when a signer wants to retire an item they do not currently hold.
+// Non-signer holders cannot retire. Signer-holds-own-item → no request needed (immediate retire).
+export interface RetirementRequestDoc {
+  id: string;
+  equipmentId: string;         // Serial number / display ID
+  equipmentDocId: string;      // Firestore document ID
+  equipmentName: string;
+  signerUserId: string;        // Initiator; must equal equipment.signedById
+  signerUserName: string;
+  holderUserId: string;        // Current holder; the approver
+  holderUserName: string;
+  reason: string;
+  status: RetirementRequestStatus;
+  statusHistory: TransferStatusHistoryEntry[];
+  createdAt: Timestamp;
+}
+
+export enum RetirementRequestStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  CANCELLED = 'cancelled'
+}
+
+// Report Request Collection Types
+// Manager-triggered "report now" demands. Target scope varies.
+export interface ReportRequestDoc {
+  id: string;
+  scope: ReportRequestScope;
+  targetUserIds: string[];            // Materialized list of users who must report
+  targetEquipmentDocIds?: string[];   // When scope='items'. Empty for other scopes → all of each target's items.
+  targetTeamId?: string;              // When scope='team'
+  requestedByUserId: string;          // Manager/commander who initiated
+  requestedByUserName: string;
+  note?: string;
+  status: ReportRequestStatus;
+  fulfillmentByUser: Record<string, ReportRequestFulfillment>; // Per-user tracking keyed by UID
+  createdAt: Timestamp;
+  expiresAt: Timestamp;               // Auto-expire; checked lazily on reads
+}
+
+export enum ReportRequestScope {
+  USER = 'user',
+  ITEMS = 'items',
+  TEAM = 'team',
+  ALL = 'all'
+}
+
+export enum ReportRequestStatus {
+  PENDING = 'pending',
+  PARTIALLY_FULFILLED = 'partially_fulfilled',
+  FULFILLED = 'fulfilled',
+  EXPIRED = 'expired'
+}
+
+export interface ReportRequestFulfillment {
+  fulfilled: boolean;
+  fulfilledAt?: Timestamp;
+}
+
+// Equipment Draft Collection Types
+// Parked user sign-ups waiting for a pending template to be approved.
+// When the template becomes canonical, the user receives a notification linking to this draft
+// so they can resume the AddWizard with S/N + photo already captured.
+export interface EquipmentDraft {
+  id: string;
+  userId: string;                // Owner of the draft
+  templateRequestId?: string;    // FK to the pending equipmentTemplates doc
+  serialNumber?: string;
+  photoUrl?: string;             // Already uploaded to Storage
+  catalogNumber?: string;
+  notes?: string;
+  status: EquipmentDraftStatus;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export enum EquipmentDraftStatus {
+  AWAITING_TEMPLATE = 'awaiting_template',
+  READY_TO_SUBMIT = 'ready_to_submit',
+  ABANDONED = 'abandoned'
+}

@@ -15,6 +15,12 @@ export const COLLECTIONS = {
   OTP_SESSIONS: 'otp_sessions',
   OTP_RATE_LIMITS: 'otp_rate_limits',
   ADMIN_CONFIG: 'admin_config',
+  ANNOUNCEMENTS: 'announcements',
+  USEFUL_LINKS: 'useful_links',
+  UNIT_MEDIA: 'unit_media',
+  RETIREMENT_REQUESTS: 'retirementRequests',
+  REPORT_REQUESTS: 'reportRequests',
+  EQUIPMENT_DRAFTS: 'equipmentDrafts',
 } as const;
 
 export type CollectionName = typeof COLLECTIONS[keyof typeof COLLECTIONS];

@@ -3,23 +3,26 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthGuard from '@/components/auth/AuthGuard';
-import Header from '@/app/components/Header';
-// Removed unused imports
+import AppShell from '@/app/components/AppShell';
 import { UserRole } from '@/types/equipment';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
 import PhoneNumberUpdate from '@/components/profile/PhoneNumberUpdate';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import { updateUserProfile } from '@/lib/userProfileService';
 
 /**
  * User Profile Page
  * Displays user information fetched from Firestore
  */
 export default function ProfilePage() {
-  const { enhancedUser, user } = useAuth();
+  const { enhancedUser, user, refreshEnhancedUser } = useAuth();
   const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(enhancedUser?.profileImage);
   const [phoneNumber, setPhoneNumber] = useState<string>(enhancedUser?.phoneNumber || '');
+  const [teamId, setTeamId] = useState<string>(enhancedUser?.teamId || '');
+  const [assignmentSaving, setAssignmentSaving] = useState(false);
+  const [assignmentMessage, setAssignmentMessage] = useState<string | null>(null);
 
   // Format date helper
   const formatDate = (date: Date | { toDate: () => Date } | string | null | undefined) => {
@@ -45,31 +48,54 @@ export default function ProfilePage() {
     return value || fallback;
   };
 
-  // Handle profile image update
-  const handleImageUpdate = (newImageUrl: string) => {
+  // Handle profile image update — persists to Firestore via admin API.
+  const handleImageUpdate = async (newImageUrl: string) => {
     setProfileImageUrl(newImageUrl);
-    // TODO: Update image in Firestore
-    console.log('Profile image updated:', newImageUrl);
+    if (!enhancedUser) return;
+    try {
+      await updateUserProfile(enhancedUser.uid, { profileImage: newImageUrl });
+      await refreshEnhancedUser();
+    } catch (err) {
+      console.error('[profile] failed to save image', err);
+    }
   };
 
   // Handle phone number update
-  const handlePhoneUpdate = (newPhoneNumber: string) => {
+  const handlePhoneUpdate = async (newPhoneNumber: string) => {
     setPhoneNumber(newPhoneNumber);
-    // TODO: Update phone number in both users and authorized_personnel collections
-    console.log('Phone number updated:', newPhoneNumber);
+    if (!enhancedUser) return;
+    try {
+      await updateUserProfile(enhancedUser.uid, { phoneNumber: newPhoneNumber });
+      await refreshEnhancedUser();
+    } catch (err) {
+      console.error('[profile] failed to save phone', err);
+    }
+  };
+
+  const handleSaveAssignment = async () => {
+    if (!enhancedUser) return;
+    setAssignmentSaving(true);
+    setAssignmentMessage(null);
+    try {
+      await updateUserProfile(enhancedUser.uid, {
+        teamId: teamId.trim(),
+      });
+      await refreshEnhancedUser();
+      setAssignmentMessage(TEXT_CONSTANTS.ONBOARDING.SAVED);
+    } catch {
+      setAssignmentMessage(TEXT_CONSTANTS.ONBOARDING.SAVE_ERROR);
+    } finally {
+      setAssignmentSaving(false);
+    }
   };
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-neutral-50" dir="rtl">
-        {/* Header */}
-        <Header 
-          title={TEXT_CONSTANTS.PROFILE.PAGE_TITLE}
-          subtitle={TEXT_CONSTANTS.PROFILE.PAGE_SUBTITLE}
-          showAuth={true}
-        />
-
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <AppShell
+        title={TEXT_CONSTANTS.PROFILE.PAGE_TITLE}
+        subtitle={TEXT_CONSTANTS.PROFILE.PAGE_SUBTITLE}
+      >
+        <div className="max-w-4xl mx-auto w-full">
           {/* Profile Header */}
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
             <div className="flex items-center gap-6">
@@ -193,6 +219,44 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* Team & Unit Assignment */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h2 className="text-xl font-bold text-neutral-900 mb-6 flex items-center gap-2">
+                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6 5.87a4 4 0 108 0 4 4 0 00-8 0z" />
+                </svg>
+                {TEXT_CONSTANTS.ONBOARDING.ASSIGNMENT_TITLE}
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="profile-team" className="block text-sm font-medium text-neutral-700 mb-1">
+                    {TEXT_CONSTANTS.ONBOARDING.TEAM_LABEL}
+                  </label>
+                  <input
+                    id="profile-team"
+                    type="text"
+                    value={teamId}
+                    onChange={(e) => setTeamId(e.target.value)}
+                    placeholder={TEXT_CONSTANTS.ONBOARDING.TEAM_PLACEHOLDER}
+                    className="input-base"
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleSaveAssignment}
+                    disabled={assignmentSaving}
+                    className="btn-primary"
+                  >
+                    {assignmentSaving ? TEXT_CONSTANTS.ONBOARDING.SAVING : TEXT_CONSTANTS.ONBOARDING.SAVE}
+                  </button>
+                  {assignmentMessage && (
+                    <span className="text-sm text-neutral-600">{assignmentMessage}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Contact Information */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-xl font-bold text-neutral-900 mb-6 flex items-center gap-2">
@@ -272,7 +336,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      </div>
+      </AppShell>
     </AuthGuard>
   );
 }

@@ -25,10 +25,10 @@ export function getFeatureRoutes(): FeatureRoute[] {
       description: TEXT_CONSTANTS.FEATURES.SOLDIER_MANAGEMENT.DESCRIPTION,
       icon: "✓",
       href: "/status",
-      available: true,
-      color: "bg-purple-600",
+      available: false,
+      color: "bg-gray-400",
       requiresAuth: true,
-      isComingSoon: false
+      isComingSoon: true
     },
     {
       title: TEXT_CONSTANTS.FEATURES.SOLDIER_TRACKING.TITLE,

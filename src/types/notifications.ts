@@ -75,6 +75,8 @@ export interface NotificationDisplayData {
   icon: string;
   color: string;
   equipmentName?: string;
+  relatedEquipmentDocId?: string;
+  relatedTransferId?: string;
 }
 
 // Notification settings

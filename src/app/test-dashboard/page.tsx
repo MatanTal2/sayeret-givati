@@ -247,9 +247,10 @@ export default function TestDashboardPage() {
           lastSeen: now as unknown as import('firebase/firestore').Timestamp,
           lastReportUpdate: now as unknown as import('firebase/firestore').Timestamp,
           signedBy: 'TEST-USER-DASHBOARD',
+          signedById: 'TEST-SIGNER-ID-DASHBOARD',
           currentHolder: 'TEST-HOLDER-DASHBOARD',
           currentHolderId: 'TEST-HOLDER-ID-DASHBOARD',
-          assignedUnit: 'TEST-UNIT-DASHBOARD',
+          photoUrl: 'https://example.test/photo.jpg',
           status: 'available' as import('@/types/equipment').EquipmentStatus,
           location: 'TEST-LOCATION-DASHBOARD',
           condition: 'good' as import('@/types/equipment').EquipmentCondition

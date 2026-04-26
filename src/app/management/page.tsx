@@ -6,7 +6,7 @@
 
 import React from 'react';
 import AuthGuard from '@/components/auth/AuthGuard';
-import Header from '@/app/components/Header';
+import AppShell from '@/app/components/AppShell';
 import { useManagementAccess } from '@/hooks/useManagementAccess';
 import { useManagementTabs } from '@/hooks/useManagementTabs';
 import { useSidebar } from '@/hooks/useSidebar';
@@ -40,14 +40,11 @@ function ManagementContent() {
   // Show access denied for users without management access
   if (!permissions.canAccessManagement) {
     return (
-      <div className="min-h-screen bg-neutral-50" dir="rtl">
-        <Header 
-          title={MANAGEMENT.PAGE_TITLE}
-          subtitle={MANAGEMENT.PAGE_SUBTITLE_LIMITED}
-          showAuth={true}
-        />
-        
-        <main className="max-w-4xl mx-auto px-4 py-8">
+      <AppShell
+        title={MANAGEMENT.PAGE_TITLE}
+        subtitle={MANAGEMENT.PAGE_SUBTITLE_LIMITED}
+      >
+        <div className="max-w-4xl mx-auto w-full">
           <Card padding="lg" className="text-center">
             <div className="w-16 h-16 mx-auto mb-4 bg-danger-100 rounded-full flex items-center justify-center">
               <Shield className="w-8 h-8 text-danger-600" />
@@ -62,8 +59,8 @@ function ManagementContent() {
               {MANAGEMENT.ACCESS_DENIED.CONTACT_ADMIN}
             </p>
           </Card>
-        </main>
-      </div>
+        </div>
+      </AppShell>
     );
   }
 

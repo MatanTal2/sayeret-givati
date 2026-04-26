@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { ToastProvider } from "@/components/ui/Toast";
 import GlobalAuthModal from "@/components/auth/GlobalAuthModal";
 
 const geistSans = Geist({
@@ -32,8 +33,10 @@ export default function RootLayout({
       >
         <AuthProvider>
           <NotificationProvider>
-            {children}
-            <GlobalAuthModal />
+            <ToastProvider>
+              {children}
+              <GlobalAuthModal />
+            </ToastProvider>
           </NotificationProvider>
         </AuthProvider>
       </body>

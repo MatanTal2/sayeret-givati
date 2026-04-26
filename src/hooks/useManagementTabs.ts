@@ -2,9 +2,12 @@
  * Hook for managing tab configuration and filtering based on permissions
  */
 import { useMemo } from 'react';
-import { Users, Shield, ArrowRightLeft, Settings, Database, UserCheck, Mail, Layers, Package } from 'lucide-react';
+import { Users, Shield, ArrowRightLeft, Settings, Database, UserCheck, Mail, Layers, Package, Zap, Archive, BellRing } from 'lucide-react';
 import { MANAGEMENT } from '@/constants/text';
 import { useManagementAccess } from './useManagementAccess';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserType } from '@/types/user';
+import { canBulkOps, isManagerOrAbove, isTeamLeaderOrAbove } from '@/lib/equipmentPolicy';
 import type { ManagementTab, TabCategory } from '@/types/management';
 
 // Tab Categories - extracted from management page
@@ -56,8 +59,7 @@ const ALL_MANAGEMENT_TABS: ManagementTab[] = [
     label: MANAGEMENT.TABS.TEMPLATE_MANAGEMENT,
     icon: Layers,
     description: MANAGEMENT.TAB_DESCRIPTIONS.TEMPLATE_MANAGEMENT,
-    category: 'equipment',
-    requiresTemplatePermission: true
+    category: 'equipment'
   },
   {
     id: 'equipment-creation',
@@ -72,6 +74,27 @@ const ALL_MANAGEMENT_TABS: ManagementTab[] = [
     label: MANAGEMENT.TABS.ENFORCE_TRANSFER,
     icon: ArrowRightLeft,
     description: MANAGEMENT.TAB_DESCRIPTIONS.ENFORCE_TRANSFER,
+    category: 'equipment'
+  },
+  {
+    id: 'force-ops',
+    label: MANAGEMENT.TABS.FORCE_OPS,
+    icon: Zap,
+    description: MANAGEMENT.TAB_DESCRIPTIONS.FORCE_OPS,
+    category: 'equipment'
+  },
+  {
+    id: 'retirement-approval',
+    label: MANAGEMENT.TABS.RETIREMENT_APPROVAL,
+    icon: Archive,
+    description: MANAGEMENT.TAB_DESCRIPTIONS.RETIREMENT_APPROVAL,
+    category: 'equipment'
+  },
+  {
+    id: 'report-request',
+    label: MANAGEMENT.TABS.REPORT_REQUEST,
+    icon: BellRing,
+    description: MANAGEMENT.TAB_DESCRIPTIONS.REPORT_REQUEST,
     category: 'equipment'
   },
   {
@@ -113,19 +136,31 @@ export interface UseManagementTabsReturn {
 
 export function useManagementTabs(): UseManagementTabsReturn {
   const { permissions } = useManagementAccess();
+  const { enhancedUser } = useAuth();
 
   const availableTabs = useMemo(() => {
+    const isTeamLeader = enhancedUser?.userType === UserType.TEAM_LEADER;
     return ALL_MANAGEMENT_TABS.filter(tab => {
       // Filter based on permissions
       if (tab.requiresTemplatePermission && !permissions.canManageTemplates) {
         return false;
       }
-      
+
       // Apply specific tab permissions
       switch (tab.id) {
         case 'users':
         case 'permissions':
           return permissions.canManageUsers || permissions.canManagePermissions;
+        case 'template-management':
+          return permissions.canManageTemplates || isTeamLeader;
+        case 'equipment-creation':
+          return permissions.canManageTemplates;
+        case 'force-ops':
+          // TL+ in any team scope can run force-ops; canForceTransfer per-item is enforced inside the tab.
+          return !!enhancedUser && isTeamLeaderOrAbove(enhancedUser);
+        case 'retirement-approval':
+        case 'report-request':
+          return !!enhancedUser && (isManagerOrAbove(enhancedUser) || canBulkOps(enhancedUser));
         case 'system-config':
         case 'data-management':
           return permissions.canManageSystem;
@@ -137,7 +172,7 @@ export function useManagementTabs(): UseManagementTabsReturn {
           return true;
       }
     });
-  }, [permissions]);
+  }, [permissions, enhancedUser]);
 
   const tabsByCategory = useMemo(() => {
     const grouped: Record<string, ManagementTab[]> = {};

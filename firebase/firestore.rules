@@ -78,6 +78,40 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Unit announcements — authenticated read; create/delete by admin / officer / commander.
+    // Writes go via client SDK until the firebase-admin migration lands.
+    match /announcements/{announcementId} {
+      function canPost() {
+        let profile = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+        return request.auth != null && (
+          profile.userType == 'admin' ||
+          profile.role == 'officer' ||
+          profile.role == 'commander'
+        );
+      }
+      allow read: if request.auth != null;
+      allow create: if canPost()
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.body is string;
+      allow delete: if canPost();
+      allow update: if false;
+    }
+
+    // Useful links — authenticated read. Writes seeded via Firestore console
+    // until admin CRUD UI ships.
+    match /useful_links/{linkId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Unit media — authenticated read. Writes seeded via Firestore console
+    // until an admin upload UI ships.
+    match /unit_media/{mediaId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // Deny everything else
     match /{document=**} {
       allow read, write: if false;

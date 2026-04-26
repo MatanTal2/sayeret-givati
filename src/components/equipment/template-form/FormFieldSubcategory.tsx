@@ -71,6 +71,7 @@ export default function FormFieldSubcategory({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             disabled={isSubcategoryDisabled}
+            className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-neutral-100 disabled:cursor-not-allowed"
           >
             <option value="">
               {!selectedCategoryId 

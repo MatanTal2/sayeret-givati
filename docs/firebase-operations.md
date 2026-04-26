@@ -26,6 +26,79 @@ All Firestore operations in the codebase, organized by collection.
 | `test` | hardcoded `'test'` | `src/app/test-dashboard/page.tsx` (dev only) |
 | `actionsLog` | hardcoded `'actionsLog'` | `src/lib/equipmentService.ts` (should import from actionsLogService) |
 | `users` | hardcoded `'users'` | `src/lib/userService.ts` (should use ADMIN_CONFIG constant) |
+| `announcements` | `COLLECTIONS.ANNOUNCEMENTS = 'announcements'` | `src/lib/db/collections.ts` |
+| `useful_links` | `COLLECTIONS.USEFUL_LINKS = 'useful_links'` | `src/lib/db/collections.ts` |
+| `unit_media` | `COLLECTIONS.UNIT_MEDIA = 'unit_media'` | `src/lib/db/collections.ts` |
+
+---
+
+## `announcements`
+
+Unit-wide announcements shown on the home page.
+
+### Reads
+
+| File | Function | Operation | Query |
+|------|----------|-----------|-------|
+| `src/lib/announcementsService.ts` | `getRecentAnnouncements` | `getDocs` | `orderBy('createdAt', 'desc')`, `limit(n)` |
+
+### Writes
+
+| File | Function | Operation | Notes |
+|------|----------|-----------|-------|
+| `src/lib/announcementsService.ts` | `createAnnouncement` | `addDoc` | Client SDK. Rule allows admin/officer/commander only |
+| `src/lib/announcementsService.ts` | `deleteAnnouncement` | `deleteDoc` | Client SDK. Same role gate |
+
+### Security rules
+
+`firestore.rules`:
+- `read` — any authenticated user
+- `create` / `delete` — user doc's `userType == 'admin'` OR `role` ∈ {`officer`, `commander`}
+- `update` — not allowed
+
+---
+
+## `useful_links`
+
+Admin-curated quick links rendered as chips on the home page.
+
+### Reads
+
+| File | Function | Operation | Query |
+|------|----------|-----------|-------|
+| `src/lib/usefulLinksService.ts` | `getUsefulLinks` | `getDocs` | `orderBy('order', 'asc')` |
+
+### Writes
+
+Not exposed via the app. Admins seed entries manually from the Firestore console until an admin CRUD UI ships.
+
+### Security rules
+
+`firestore.rules`:
+- `read` — any authenticated user
+- `write` — denied (seeded via console)
+
+---
+
+## `unit_media`
+
+Unit photos and videos shown on the home page media gallery.
+
+### Reads
+
+| File | Function | Operation | Query |
+|------|----------|-----------|-------|
+| `src/lib/unitMediaService.ts` | `getRecentUnitMedia` | `getDocs` | `orderBy('createdAt', 'desc')`, `limit(n)` |
+
+### Writes
+
+Not exposed via the app. Admins seed entries manually from the Firestore console until an admin upload UI ships.
+
+### Security rules
+
+`firestore.rules`:
+- `read` — any authenticated user
+- `write` — denied (seeded via console)
 
 ---
 
@@ -279,6 +352,146 @@ All Firestore operations in the codebase, organized by collection.
 ### Writes
 
 None currently — admin config is read-only at runtime.
+
+---
+
+## `retirementRequests` *(Phase 4)*
+
+**Document ID:** Auto-generated
+
+### Reads
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/retirementRequestService.ts` | `getPendingRetirementRequestsForHolder` | `getDocs` (`holderUserId == uid`, `status == 'pending'`) |
+| `src/lib/retirementRequestService.ts` | `getRetirementRequestsBySigner` | `getDocs` (`signerUserId == uid`) |
+| `src/lib/retirementRequestService.ts` | `getAllPendingRetirementRequests` | `getDocs` |
+
+### Writes (admin SDK)
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/db/server/equipmentService.ts` | `serverRetireEquipment` | `set` retirementRequests + `update` equipment (in one txn) |
+| `src/lib/db/server/retirementRequestService.ts` | `serverApproveRetirementRequest` | `update` retirementRequests + `update` equipment (status=RETIRED) in txn |
+| `src/lib/db/server/retirementRequestService.ts` | `serverRejectRetirementRequest` | `update` retirementRequests in txn |
+
+### API routes
+
+- `POST /api/equipment/retire`
+- `POST /api/retirement-requests/approve`
+- `POST /api/retirement-requests/reject`
+
+---
+
+## `reportRequests` *(Phase 4)*
+
+**Document ID:** Auto-generated
+
+### Reads
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/reportRequestService.ts` | `getPendingReportRequestsForUser` | `getDocs` (`targetUserIds array-contains uid`, `status in [...]`) |
+| `src/lib/reportRequestService.ts` | `getReportRequestsByRequester` | `getDocs` (`requestedByUserId == uid`) |
+
+### Writes (admin SDK)
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/db/server/reportRequestService.ts` | `serverCreateReportRequest` | `set` + batch notifications to every target |
+| `src/lib/db/server/reportRequestService.ts` | `serverFulfillReportRequest` | `update` in txn (per-user fulfillment + status roll-up) |
+
+### API routes
+
+- `POST /api/report-requests`
+- `POST /api/report-requests/fulfill`
+
+---
+
+## `equipmentDrafts` *(Phase 4)*
+
+**Document ID:** Auto-generated
+
+### Reads
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/equipmentDraftService.ts` | `getDraftsForUser` | `getDocs` |
+| `src/lib/equipmentDraftService.ts` | `getDraft` | `getDoc` |
+
+### Writes (admin SDK)
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/db/server/equipmentDraftService.ts` | `serverCreateEquipmentDraft` | `set` |
+| `src/lib/db/server/equipmentDraftService.ts` | `serverUpdateEquipmentDraft` | `update` |
+| `src/lib/db/server/equipmentDraftService.ts` | `serverDeleteEquipmentDraft` | `delete` |
+| `src/lib/db/server/equipmentDraftService.ts` | `serverPromoteDraftsForTemplate` | batched `update` on template approval |
+
+### API routes
+
+- `POST \| PUT \| DELETE /api/equipment-drafts`
+
+---
+
+## Phase 4 additions to existing collections
+
+### `equipment` — new writes
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/db/server/equipmentService.ts` | `serverCreateEquipmentBatch` (txn) | N-item `set` + N `actionsLog` entries + shared `batchId` |
+| `src/lib/db/server/equipmentService.ts` | `serverReportEquipment` (txn) | `update` (`lastReportUpdate`, `lastReportPhotoUrl`, tracking history) |
+| `src/lib/db/server/equipmentService.ts` | `serverRetireEquipment` (txn) | `update` status → RETIRED when signer==holder |
+| `src/lib/db/server/forceOpsService.ts` | `serverForceOps` (txn) | Bulk `update` of holder/signer + denormalized team/unit |
+
+### `equipmentTemplates` — new writes
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/db/server/templateRequestService.ts` | `serverProposeTemplate` | `set` (status=`proposed`\|`pending_request`), optional atomic draft `set` |
+| `src/lib/db/server/templateRequestService.ts` | `serverApproveTemplateRequest` | `update` (→ `canonical`, `isActive=true`) + draft promotion |
+| `src/lib/db/server/templateRequestService.ts` | `serverRejectTemplateRequest` | `update` (→ `rejected`, `rejectedReason`) |
+
+### New API routes (summary)
+
+`/api/equipment/batch`, `/api/equipment/report`, `/api/equipment/retire`, `/api/equipment-templates/{propose,approve,reject}`, `/api/retirement-requests/{approve,reject}`, `/api/report-requests`, `/api/report-requests/fulfill`, `/api/equipment-drafts`, `/api/force-ops`.
+
+Every route that mutates equipment state gates via `src/lib/equipmentPolicy.ts` using the client-supplied `actor` payload (see `src/lib/db/server/policyHelpers.ts`). Token verification is not yet wired — tracked in `docs/spec/firestore-refactor.md`.
+
+---
+
+## Phase 6 client reads (UI hooks)
+
+| Surface | Function | Collection / query |
+|---------|----------|---------------------|
+| `useEquipment` (`src/hooks/useEquipment.ts`) | `EquipmentService.Items.getEquipmentList` | `equipment` (no filter; client-side scope+policy filter via `equipmentPolicy.canView`) |
+| `ActionHistoryPanel` | `getEquipmentActionLogs(id)` | `actionsLog where equipmentDocId == id orderBy timestamp desc` |
+| `AddEquipmentWizard` (resume) | `getDraftsForUser(uid)` + `getDraft(id)` + `EquipmentService.Types.getEquipmentType(id)` | `equipmentDrafts` per-user, `equipmentTemplates` by id |
+| `WizardStepTemplate` | `CategoriesService.getCategories({ activeOnly, includeSubcategories })`, `EquipmentService.Types.getEquipmentTypes({ activeOnly })` | `categories` + `subcategories` + `equipmentTemplates` (filtered to `status=canonical` client-side) |
+
+Photo uploads use Firebase Storage via `src/lib/storageService.ts`. Path layout: `equipment/{equipmentId}/{kind}/{timestamp}.jpg` where kind = `signup` | `report`. Compressed client-side before upload (max 1600 px longest edge, JPEG Q 0.82).
+
+---
+
+## Phase 7 management-tab reads
+
+| Surface | Function | Collection / query |
+|---------|----------|---------------------|
+| `RetirementApprovalTab` | `getAllPendingRetirementRequests()` | `retirementRequests where status=='pending' orderBy createdAt desc` |
+| `RetirementApprovalTab` (audit) | `getRecentDecidedRetirementRequests(limit)` | three queries — `status in {approved, rejected, cancelled}` — merged + sorted client-side |
+| `ReportRequestTab` | `getReportRequestsByRequester(uid)` | `reportRequests where requestedByUserId == uid orderBy createdAt desc` |
+| `ForceOperationsTab` (recent ops panel) | `getActionLogsByType(FORCE_TRANSFER_HOLDER)` × `getActionLogsByType(FORCE_TRANSFER_SIGNER)` merged | `actionsLog where actionType == ... orderBy timestamp desc` (twin queries) |
+| `UserSearchInput` | `searchUsers(query, limit)` from `userService` | `users` filtered client-side on display fields (no composite index) |
+
+### `serverCreateReportRequest` — Phase 8 update
+
+When `targetUserIds` is empty AND scope is `team` or `all`, the server now resolves the user list from the `users` collection:
+
+- `scope='team'` → `users where teamId == targetTeamId AND status == 'active'`
+- `scope='all'` → `users where status == 'active'`
+
+The client `ReportRequestTab` therefore passes empty `targetUserIds` for those scopes; only `user` and `items` scopes require the client to pre-resolve.
 
 ---
 

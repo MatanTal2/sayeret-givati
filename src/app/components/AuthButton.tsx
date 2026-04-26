@@ -265,15 +265,14 @@ export default function AuthButton() {
 
       {/* Dropdown Menu */}
       {isMenuOpen && (
-        <div 
+        <div
           ref={menuRef}
-          className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl 
+          className="absolute end-0 top-full mt-2 w-48 max-w-[calc(100vw-1rem)] bg-white rounded-xl shadow-xl
                      border border-neutral-200 py-2 z-[9999] overflow-visible"
           role="menu"
           aria-labelledby="profile-menu-button"
-          style={{ 
+          style={{
             position: 'absolute',
-            right: 0,
             top: '100%',
             marginTop: '0.5rem',
             zIndex: 9999,

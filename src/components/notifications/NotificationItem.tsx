@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Check, Trash2 } from 'lucide-react';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { NOTIFICATIONS } from '@/constants/text';
@@ -12,6 +13,7 @@ interface NotificationItemProps {
 
 export default function NotificationItem({ notification }: NotificationItemProps) {
   const { markAsRead, deleteNotification } = useNotifications();
+  const router = useRouter();
 
   const handleMarkAsRead = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -26,13 +28,11 @@ export default function NotificationItem({ notification }: NotificationItemProps
   };
 
   const handleClick = () => {
-    // Mark as read when clicked
     if (!notification.isRead) {
       markAsRead(notification.id);
     }
-    
-    // TODO: Navigate to related content if applicable
-    // This could be implemented later to navigate to equipment or transfer details
+    const target = resolveNotificationTarget(notification);
+    if (target) router.push(target);
   };
 
   return (
@@ -129,6 +129,32 @@ export default function NotificationItem({ notification }: NotificationItemProps
       )}
     </div>
   );
+}
+
+function resolveNotificationTarget(n: NotificationDisplayData): string | null {
+  // Compare against string values directly — server writes notification types
+  // beyond the legacy NotificationType enum (template/retirement/report/force-ops types
+  // live in src/types/equipment.ts NotificationType).
+  const t = n.type as unknown as string;
+  if (t === 'template_request_approved') {
+    return n.relatedEquipmentDocId
+      ? `/equipment?resumeTemplate=${n.relatedEquipmentDocId}`
+      : '/equipment';
+  }
+  const equipmentTypes = new Set([
+    'transfer_request', 'transfer_approved', 'transfer_rejected', 'transfer_completed',
+    'equipment_update', 'equipment_status_change', 'maintenance_due', 'daily_check_reminder',
+    'equipment_transfer_request', 'equipment_transfer_approved', 'equipment_transfer_declined',
+    'retirement_request', 'retirement_request_approval', 'retirement_approved', 'retirement_rejected',
+    'report_requested', 'force_transfer_executed', 'force_signer_changed',
+  ]);
+  if (equipmentTypes.has(t)) return '/equipment';
+
+  const managementTypes = new Set([
+    'template_proposed_for_review', 'new_template_request_for_review', 'template_request_rejected',
+  ]);
+  if (managementTypes.has(t)) return '/management';
+  return null;
 }
 
 function getTypeLabel(type: string): string {

@@ -8,9 +8,12 @@ import SystemConfigTab from './SystemConfigTab';
 import PermissionsTab from './PermissionsTab';
 import AuditLogsTab from './AuditLogsTab';
 import DataManagementTab from './DataManagementTab';
-import TemplateManagementTab from './TemplateManagementTab';
+import TemplatesTab from './TemplatesTab';
 import EquipmentCreationTab from './EquipmentCreationTab';
 import EnforceTransferTab from './EnforceTransferTab';
+import ForceOperationsTab from './ForceOperationsTab';
+import RetirementApprovalTab from './RetirementApprovalTab';
+import ReportRequestTab from './ReportRequestTab';
 import { Card } from '@/components/ui';
 import { MANAGEMENT } from '@/constants/text';
 import type { ManagementTab } from '@/types/management';
@@ -33,14 +36,23 @@ export default function TabContentRenderer({ activeTab, activeTabData }: TabCont
       return <PermissionsTab />;
     
     case 'template-management':
-      return <TemplateManagementTab />;
+      return <TemplatesTab />;
     
     case 'equipment-creation':
       return <EquipmentCreationTab />;
     
     case 'enforce-transfer':
       return <EnforceTransferTab />;
-    
+
+    case 'force-ops':
+      return <ForceOperationsTab />;
+
+    case 'retirement-approval':
+      return <RetirementApprovalTab />;
+
+    case 'report-request':
+      return <ReportRequestTab />;
+
     case 'system-config':
       return <SystemConfigTab />;
     

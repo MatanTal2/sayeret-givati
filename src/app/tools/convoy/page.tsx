@@ -1,6 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import { trackRouteVisit } from '@/utils/recentRoutesStorage';
 
 function handleDownload() {
   const link = document.createElement('a');
@@ -12,6 +15,13 @@ function handleDownload() {
 }
 
 export default function ConvoyToolPage() {
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    trackRouteVisit({ href: '/tools/convoy', title: 'מארגן שיירות', icon: '🚗' });
+  }, [isAuthenticated]);
+
   return (
     <div className="min-h-screen bg-neutral-100" dir="rtl">
       {/* Top Bar */}

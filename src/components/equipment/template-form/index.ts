@@ -2,9 +2,6 @@
  * Template Form Components - Clean exports
  */
 
-// Main form component
-export { default as EquipmentTemplateForm } from '../EquipmentTemplateForm';
-
 // Individual form components
 export { default as FormHeader } from './FormHeader';
 export { default as FormFieldBasicInfo } from './FormFieldBasicInfo';
@@ -23,7 +20,6 @@ export type {
   Category,
   Subcategory,
   FormErrors,
-  EquipmentTemplateFormProps
 } from './types';
 
 export { initialFormData } from './types';

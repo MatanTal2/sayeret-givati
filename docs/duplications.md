@@ -171,6 +171,24 @@ The pattern "split array into chunks of 100, run `batch.set()` for each, commit"
 
 ---
 
+## Migration Notes
+
+### Header → AppShell (completed)
+
+The legacy `src/app/components/Header.tsx` was removed. All top-level pages now wrap their content in `src/app/components/AppShell.tsx` (which composes `TopBar`, `AppSidebar`, `PageHeader`, `QuickActionFab`). The top bar is identical on every page — previously each page constructed its own.
+
+**Not yet migrated** (follow-up work; these pages still carry bespoke inline headers rather than `Header`, so they weren't in scope):
+- `src/app/status/page.tsx` — custom inline `<header>` with logo + title + back link (line ~660).
+- `src/app/admin/page.tsx` — custom inline header block.
+
+Both should eventually migrate to `AppShell` for full visual consistency.
+
+### Collection name consolidation
+
+`COLLECTIONS` (`src/lib/db/collections.ts`) is now the canonical source of Firestore collection names. New code (e.g. `announcementsService`, `usefulLinksService`) imports from it. Existing services still use their own local constants — see items 4 and 5 in this doc.
+
+---
+
 ## Files Flagged for Splitting (> 300 lines)
 
 These files are too long and should be split in a future refactor pass. Documented here as a tracker.
@@ -179,12 +197,12 @@ These files are too long and should be split in a future refactor pass. Document
 |------|-------|-----------------|
 | `src/app/status/page.tsx` | 1175 | Extract table, filter bar, report panel into sub-components |
 | `src/constants/text.ts` | 1171 | Split by domain (soldiers, equipment, auth, admin) |
-| `src/components/equipment/AddEquipmentModal.tsx` | 998 | Extract form steps / sections |
-| `src/components/equipment/EquipmentList.tsx` | 917 | Extract filter panel, list item, empty state |
+| ~~`src/components/equipment/AddEquipmentModal.tsx`~~ | ~~998~~ | **Deleted in Phase 6** — replaced by `AddEquipmentWizard` (orchestrator + 4 step files in `wizard/`) |
+| ~~`src/components/equipment/EquipmentList.tsx`~~ | ~~917~~ | **Deleted in Phase 6** — replaced by `EquipmentTable` + `EquipmentRowActions` + `BulkActionBar` |
 | `src/lib/adminUtils.ts` | 880 | Split into security utils, validation utils, firestore service |
 | `src/lib/equipmentService.ts` | 725 | Split template service from item service |
 | `src/app/test-dashboard/page.tsx` | 778 | Remove from production build or break into test modules |
-| `src/lib/equipmentUtils.ts` | 614 | Split by concern (history, permissions, display formatting) |
+| ~~`src/lib/equipmentUtils.ts`~~ | ~~614~~ | **Deleted in Phase 6** — superseded by `equipmentService` (Phase 4) + `equipmentPolicy` (Phase 3) + `equipmentValidation` |
 | `src/hooks/useSoldiers.ts` | 442 | Extract selection logic, filter logic |
 | `src/lib/transferRequestService.ts` | 437 | Split transaction core from notification helpers |
 | `src/utils/notifications.ts` | 446 | Split query helpers from email sending |

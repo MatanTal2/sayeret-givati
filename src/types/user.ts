@@ -54,10 +54,13 @@ export interface EnhancedAuthUser {
   joinDate?: Timestamp;
   profileImage?: string;
   testUser?: boolean;
-  
+
+  // Team assignment (used by equipment scope queries)
+  teamId?: string;
+
   // Communication preferences
   communicationPreferences?: CommunicationPreferences;
-  
+
   // Computed fields
   initials?: string;
 }
@@ -84,6 +87,7 @@ export interface FirestoreUserProfile {
   updatedAt: Timestamp;
   profileImage?: string;
   testUser?: boolean;
+  teamId?: string;
   communicationPreferences?: CommunicationPreferences;
 }
 

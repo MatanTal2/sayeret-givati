@@ -19,14 +19,24 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 
-import { 
-  EquipmentType, 
-  Equipment, 
+import {
+  EquipmentType,
+  Equipment,
   EquipmentStatus,
   EquipmentAction,
   EquipmentHistoryEntry,
-  ApprovalDetails
+  ApprovalDetails,
+  TemplateStatus,
 } from '@/types/equipment';
+import { UserType } from '@/types/user';
+
+// Actor context passed to API routes so the server can run equipmentPolicy checks.
+export interface ApiActor {
+  uid: string;
+  userType: UserType;
+  teamId?: string;
+  displayName?: string;
+}
 import { EquipmentTemplate } from '@/data/equipmentTemplates';
 import { 
   addTrackingHistoryEntry, 
@@ -386,7 +396,6 @@ export class EquipmentItemsService {
   static async getEquipmentList(filters: {
     holder?: string; // Display name search
     holderId?: string; // User UID for exact queries
-    unit?: string;
     status?: EquipmentStatus[];
     category?: string;
     equipmentType?: string;
@@ -394,7 +403,7 @@ export class EquipmentItemsService {
   } = {}): Promise<EquipmentListResult> {
     try {
       let q = query(collection(db, EQUIPMENT_COLLECTION), orderBy('updatedAt', 'desc'));
-      
+
       // Apply filters
       // Prefer holderId for exact queries, fallback to holder for display name search
       if (filters.holderId) {
@@ -402,11 +411,7 @@ export class EquipmentItemsService {
       } else if (filters.holder) {
         q = query(q, where('currentHolder', '==', filters.holder));
       }
-      
-      if (filters.unit) {
-        q = query(q, where('assignedUnit', '==', filters.unit));
-      }
-      
+
       if (filters.status && filters.status.length > 0) {
         q = query(q, where('status', 'in', filters.status));
       }
@@ -527,6 +532,151 @@ export class EquipmentItemsService {
   }
 
   /**
+   * Create N equipment items in a single atomic batch.
+   * Each item must have a unique id (S/N) and its own photoUrl.
+   */
+  static async createEquipmentBatch(
+    items: Array<Omit<Equipment, 'createdAt' | 'updatedAt' | 'trackingHistory'>>,
+    initialHolderName: string,
+    initialHolderId: string,
+    signedBy: string,
+    signedById: string,
+    actor: ApiActor,
+    notes?: string
+  ): Promise<EquipmentServiceResult> {
+    try {
+      if (items.length === 0) {
+        return { success: false, message: 'At least one item is required', error: 'EMPTY_BATCH' };
+      }
+
+      const batchId = `batch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const initialNote = notes || TEXT_CONSTANTS.FEATURES.EQUIPMENT.INITIAL_SIGN_IN || 'Initial sign-in';
+
+      const payloadItems = items.map((equipmentData) => {
+        const historyEntry = createEquipmentCreatedEntry(
+          initialHolderName,
+          equipmentData.location,
+          initialHolderId,
+          initialNote
+        );
+        const trackingHistory = addTrackingHistoryEntry([], historyEntry);
+        return {
+          equipmentData,
+          trackingHistory,
+          actionLog: ActionLogHelpers.equipmentCreated(
+            equipmentData.id,
+            equipmentData.id,
+            equipmentData.productName,
+            initialHolderId,
+            initialHolderName
+          ),
+        };
+      });
+
+      const response = await fetch('/api/equipment/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          actor,
+          items: payloadItems,
+          batchId,
+          initialHolderName,
+          initialHolderId,
+          signedBy,
+          signedById,
+        }),
+      });
+      const result = await response.json();
+      if (!result.success) {
+        return { success: false, message: result.error || 'Failed to create batch', error: result.error };
+      }
+      return {
+        success: true,
+        message: TEXT_CONSTANTS.FEATURES.EQUIPMENT.EQUIPMENT_CREATED || 'Equipment batch created',
+        data: { batchId: result.batchId, ids: result.ids },
+      };
+    } catch (error) {
+      console.error('Error creating equipment batch:', error);
+      return {
+        success: false,
+        message: TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR || 'Failed to create equipment batch',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * Submit a report on an equipment item.
+   * Pass photoUrl=null only when the actor is privileged (enforced server-side
+   * via equipmentPolicy.canReportWithoutPhoto).
+   */
+  static async reportEquipment(
+    equipmentId: string,
+    photoUrl: string | null,
+    actor: ApiActor,
+    actorName: string,
+    note?: string
+  ): Promise<EquipmentServiceResult> {
+    try {
+      const response = await fetch('/api/equipment/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          actor,
+          equipmentId,
+          photoUrl,
+          actorName,
+          ...(note ? { note } : {}),
+        }),
+      });
+      const result = await response.json();
+      if (!result.success) {
+        return { success: false, message: result.error || 'Failed to submit report', error: result.error };
+      }
+      return { success: true, message: 'Report submitted' };
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      return {
+        success: false,
+        message: TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR || 'Failed to submit report',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * Retire an equipment item (signer-only).
+   * Returns { kind: 'retired' } when signer == holder, or
+   * { kind: 'request_created', requestId } when a holder-approval step is needed.
+   */
+  static async retireEquipment(
+    equipmentId: string,
+    actor: ApiActor,
+    actorName: string,
+    reason: string
+  ): Promise<EquipmentServiceResult> {
+    try {
+      const response = await fetch('/api/equipment/retire', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actor, equipmentId, actorName, reason }),
+      });
+      const result = await response.json();
+      if (!result.success) {
+        return { success: false, message: result.error || 'Failed to retire equipment', error: result.error };
+      }
+      return { success: true, message: 'Retire action recorded', data: result.outcome };
+    } catch (error) {
+      console.error('Error retiring equipment:', error);
+      return {
+        success: false,
+        message: TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR || 'Failed to retire equipment',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
    * Transfer equipment to new holder
    */
   static async transferEquipment(
@@ -583,11 +733,9 @@ export class EquipmentItemsService {
           equipmentId,
           newHolder,
           newHolderId,
-          newUnit,
           newLocation,
           transferEntry,
           currentTrackingHistory: currentEquipment.trackingHistory,
-          currentAssignedUnit: currentEquipment.assignedUnit,
           currentLocation: currentEquipment.location,
         }),
       });
@@ -674,8 +822,10 @@ export class EquipmentService {
             description: template.description,
             notes: 'commonNotes' in template ? (template as { commonNotes?: string }).commonNotes : undefined,
             requiresDailyStatusCheck: template.requiresDailyStatusCheck || false,
+            requiresSerialNumber: true,
             isActive: true,
             templateCreatorId: 'system', // System-created templates
+            status: TemplateStatus.CANONICAL,
             createdAt: serverTimestamp() as Timestamp,
             updatedAt: serverTimestamp() as Timestamp
           };
