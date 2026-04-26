@@ -2,7 +2,7 @@
  * Hook for managing tab configuration and filtering based on permissions
  */
 import { useMemo } from 'react';
-import { Users, Shield, ArrowRightLeft, Settings, Database, UserCheck, Mail, Layers, Package, Zap, Archive, BellRing } from 'lucide-react';
+import { Users, Shield, ArrowRightLeft, Settings, Database, UserCheck, Mail, Layers, Package, Zap, Archive, BellRing, Crosshair } from 'lucide-react';
 import { MANAGEMENT } from '@/constants/text';
 import { useManagementAccess } from './useManagementAccess';
 import { useAuth } from '@/contexts/AuthContext';
@@ -98,6 +98,13 @@ const ALL_MANAGEMENT_TABS: ManagementTab[] = [
     category: 'equipment'
   },
   {
+    id: 'ammunition',
+    label: MANAGEMENT.TABS.AMMUNITION,
+    icon: Crosshair,
+    description: MANAGEMENT.TAB_DESCRIPTIONS.AMMUNITION,
+    category: 'equipment'
+  },
+  {
     id: 'system-config',
     label: MANAGEMENT.TABS.SYSTEM_CONFIG,
     icon: Settings,
@@ -161,6 +168,8 @@ export function useManagementTabs(): UseManagementTabsReturn {
         case 'retirement-approval':
         case 'report-request':
           return !!enhancedUser && (isManagerOrAbove(enhancedUser) || canBulkOps(enhancedUser));
+        case 'ammunition':
+          return permissions.canManageTemplates || isTeamLeader;
         case 'system-config':
         case 'data-management':
           return permissions.canManageSystem;

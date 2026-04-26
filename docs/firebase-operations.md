@@ -29,7 +29,7 @@ All Firestore operations in the codebase, organized by collection.
 | `announcements` | `COLLECTIONS.ANNOUNCEMENTS = 'announcements'` | `src/lib/db/collections.ts` |
 | `useful_links` | `COLLECTIONS.USEFUL_LINKS = 'useful_links'` | `src/lib/db/collections.ts` |
 | `unit_media` | `COLLECTIONS.UNIT_MEDIA = 'unit_media'` | `src/lib/db/collections.ts` |
-| `ammunitionTemplates` | `COLLECTIONS.AMMUNITION_TEMPLATES = 'ammunitionTemplates'` | `src/lib/db/collections.ts` (services land in Phase 2 — see `docs/spec/ammunition-feature.md`) |
+| `ammunitionTemplates` | `COLLECTIONS.AMMUNITION_TEMPLATES = 'ammunitionTemplates'` | `src/lib/db/collections.ts` (Phase 2 — see `docs/spec/ammunition-feature.md`) |
 | `ammunition` | `COLLECTIONS.AMMUNITION = 'ammunition'` | `src/lib/db/collections.ts` (SERIAL items — Phase 3) |
 | `ammunitionInventory` | `COLLECTIONS.AMMUNITION_INVENTORY = 'ammunitionInventory'` | `src/lib/db/collections.ts` (BRUCE / LOOSE_COUNT stock per holder — Phase 3) |
 | `ammunitionReports` | `COLLECTIONS.AMMUNITION_REPORTS = 'ammunitionReports'` | `src/lib/db/collections.ts` (Phase 4) |
@@ -358,6 +358,44 @@ Not exposed via the app. Admins seed entries manually from the Firestore console
 ### Writes
 
 None currently — admin config is read-only at runtime.
+
+---
+
+## `ammunitionTemplates` *(Ammunition Phase 2)*
+
+**Document ID:** Auto-generated. `id` field stored on the doc as well for
+client convenience.
+
+Backed by `src/types/ammunition.ts → AmmunitionType`. Statuses: `CANONICAL`
+(approved unit-standard), `PROPOSED` (TL), `PENDING_REQUEST` (user — Phase 5).
+
+### Reads
+
+| File | Function | Operation | Query |
+|------|----------|-----------|-------|
+| `src/lib/db/server/ammunitionTemplatesService.ts` | `serverListAmmunitionTemplates` | `get` | Collection scan (admin SDK) |
+| `src/lib/ammunition/templatesService.ts` | `listAmmunitionTemplates` | `getDocs` | Collection scan (client SDK) |
+| `src/app/api/ammunition-templates/route.ts` (GET) | (route handler) | invokes `serverListAmmunitionTemplates` | — |
+
+### Writes
+
+| File | Function | Operation | Notes |
+|------|----------|-----------|-------|
+| `src/lib/db/server/ammunitionTemplatesService.ts` | `serverCreateAmmunitionTemplate` | `set` | Auto-id; computes `totalBulletsPerBruce` for BRUCE templates |
+| `src/lib/db/server/ammunitionTemplatesService.ts` | `serverUpdateAmmunitionTemplate` | `update` | Recomputes `totalBulletsPerBruce` when both BRUCE constants are present |
+| `src/lib/db/server/ammunitionTemplatesService.ts` | `serverDeleteAmmunitionTemplate` | `delete` | — |
+| `src/lib/db/server/ammunitionTemplatesService.ts` | `serverSeedCanonicalAmmunitionTemplates` | batch `set` | Idempotent on `name` against existing `status == 'CANONICAL'` docs |
+
+### API gates
+
+- POST/PUT/DELETE require admin/system_manager/manager.
+- TL may POST with `status: 'PROPOSED'`; CANONICAL is admin/manager only.
+- `seed_canonical` action is admin/manager only.
+
+### Security rules
+
+Not yet deployed. Phase 8 will add Firestore rules. The API route is the gate
+today.
 
 ---
 

@@ -868,7 +868,8 @@ export const TEXT_CONSTANTS = {
       SYSTEM_CONFIG: 'הגדרות מערכת',
       DATA_MANAGEMENT: 'ניהול נתונים',
       AUDIT_LOGS: 'יומני ביקורת',
-      SEND_EMAIL: 'שליחת אימייל'
+      SEND_EMAIL: 'שליחת אימייל',
+      AMMUNITION: 'תחמושת'
     },
 
     // Tab Descriptions
@@ -884,7 +885,8 @@ export const TEXT_CONSTANTS = {
       SYSTEM_CONFIG: 'הגדרות כלליות ותצורת מערכת',
       DATA_MANAGEMENT: 'גיבוי, שחזור ואחזקת נתונים',
       AUDIT_LOGS: 'מעקב פעילות ויומני מערכת',
-      SEND_EMAIL: 'שליחת הודעות אימייל לקבוצות משתמשים או משתמשים ספציפיים'
+      SEND_EMAIL: 'שליחת הודעות אימייל לקבוצות משתמשים או משתמשים ספציפיים',
+      AMMUNITION: 'ניהול תבניות, מלאי, דיווחים ובקשות תחמושת'
     },
     
     // Access Denied

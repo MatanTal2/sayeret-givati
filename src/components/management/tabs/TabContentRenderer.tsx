@@ -14,6 +14,7 @@ import EnforceTransferTab from './EnforceTransferTab';
 import ForceOperationsTab from './ForceOperationsTab';
 import RetirementApprovalTab from './RetirementApprovalTab';
 import ReportRequestTab from './ReportRequestTab';
+import AmmunitionTab from './AmmunitionTab';
 import { Card } from '@/components/ui';
 import { MANAGEMENT } from '@/constants/text';
 import type { ManagementTab } from '@/types/management';
@@ -52,6 +53,9 @@ export default function TabContentRenderer({ activeTab, activeTabData }: TabCont
 
     case 'report-request':
       return <ReportRequestTab />;
+
+    case 'ammunition':
+      return <AmmunitionTab />;
 
     case 'system-config':
       return <SystemConfigTab />;
