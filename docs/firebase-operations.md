@@ -33,7 +33,7 @@ All Firestore operations in the codebase, organized by collection.
 | `ammunition` | `COLLECTIONS.AMMUNITION = 'ammunition'` | `src/lib/db/collections.ts` (Phase 3) |
 | `ammunitionInventory` | `COLLECTIONS.AMMUNITION_INVENTORY = 'ammunitionInventory'` | `src/lib/db/collections.ts` (Phase 3) |
 | `ammunitionReports` | `COLLECTIONS.AMMUNITION_REPORTS = 'ammunitionReports'` | `src/lib/db/collections.ts` (Phase 4 — server: `src/lib/db/server/ammunitionReportsService.ts`; client: `src/lib/ammunition/reportsService.ts`) |
-| `ammunitionReportRequests` | `COLLECTIONS.AMMUNITION_REPORT_REQUESTS = 'ammunitionReportRequests'` | `src/lib/db/collections.ts` (Phase 6) |
+| `ammunitionReportRequests` | `COLLECTIONS.AMMUNITION_REPORT_REQUESTS = 'ammunitionReportRequests'` | `src/lib/db/collections.ts` (Phase 6 — server: `src/lib/db/server/ammunitionReportRequestService.ts`) |
 | `systemConfig` | `COLLECTIONS.SYSTEM_CONFIG = 'systemConfig'` | `src/lib/db/collections.ts` (Phase 1 — `ammoNotificationRecipientUserId`) |
 
 ---
@@ -392,6 +392,32 @@ Phase 8 will tighten to manager+ + the responsible manager.
 - `notifications` — fan out to TL(s) of the reporter's team plus the user
   configured at `systemConfig/main.ammoNotificationRecipientUserId`. The
   reporter is excluded; recipients are deduped.
+
+---
+
+## `ammunitionReportRequests` *(Ammunition Phase 6)*
+
+**Document ID:** Auto-generated.
+
+### Reads
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/db/server/ammunitionReportRequestService.ts` | `serverListAmmunitionReportRequests` | collection scan (admin SDK) |
+| `src/app/api/ammunition-report-requests/route.ts` (GET) | (route handler) | invokes the list service |
+
+### Writes
+
+| File | Function | Operation | Notes |
+|------|----------|-----------|-------|
+| `src/lib/db/server/ammunitionReportRequestService.ts` | `serverCreateAmmunitionReportRequest` | `set` | Materializes `targetUserIds` from `users` for TEAM/ALL. Side effects: `actionsLog` + `notifications` (with `relatedEquipmentDocId = request.id`). |
+| `src/lib/db/server/ammunitionReportRequestService.ts` | `serverCancelAmmunitionReportRequest` | `update status='CANCELED'` | — |
+| `src/lib/db/server/ammunitionReportRequestService.ts` | `serverPatchFulfillment` | transactional `update` | Called from `serverSubmitAmmunitionReport` when the report carries a `reportRequestId`. Closes the request when all targets are fulfilled. |
+
+### API gates
+
+`/api/ammunition-report-requests` requires manager+ or team_leader for POST
+and PATCH. Phase 8 will add Firestore rules to match.
 
 ---
 

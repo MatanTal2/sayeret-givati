@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Plus, Send } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import AppShell from '@/app/components/AppShell';
@@ -10,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAmmunitionTemplates } from '@/hooks/useAmmunitionTemplates';
 import { useAmmunitionInventory } from '@/hooks/useAmmunitionInventory';
 import { useAmmunitionReports } from '@/hooks/useAmmunitionReports';
+import { useAmmunitionReportRequests } from '@/hooks/useAmmunitionReportRequests';
 import AmmunitionInventoryView from '@/components/ammunition/AmmunitionInventoryView';
 import AddInventoryModal from '@/components/ammunition/AddInventoryModal';
 import ReportUsageForm from '@/components/ammunition/ReportUsageForm';
@@ -43,8 +45,24 @@ function AmmunitionPageContent() {
     refresh: refreshInventory,
   } = useAmmunitionInventory();
   const { submit: submitReport } = useAmmunitionReports();
+  const { requests } = useAmmunitionReportRequests();
+  const searchParams = useSearchParams();
+  const requestIdParam = searchParams.get('requestId');
   const [showAdd, setShowAdd] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (requestIdParam) {
+      setActiveRequestId(requestIdParam);
+      setShowReport(true);
+    }
+  }, [requestIdParam]);
+
+  const activeRequest = useMemo(
+    () => (activeRequestId ? requests.find((r) => r.id === activeRequestId) : null),
+    [requests, activeRequestId]
+  );
 
   const isManagerOrTL =
     enhancedUser?.userType === UserType.ADMIN ||
@@ -166,7 +184,12 @@ function AmmunitionPageContent() {
           myItems={items.filter(
             (i) => i.currentHolderType === 'USER' && i.currentHolderId === enhancedUser.uid
           )}
-          onClose={() => setShowReport(false)}
+          reportRequestId={activeRequest?.id}
+          restrictTemplateIds={activeRequest?.templateIds}
+          onClose={() => {
+            setShowReport(false);
+            setActiveRequestId(null);
+          }}
           onSubmit={async (payload) => {
             const result = await submitReport(payload);
             if (result.ok) await refreshInventory();

@@ -21,6 +21,7 @@ import { COLLECTIONS } from '../collections';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { serverCreateActionLog } from './actionsLogService';
 import { serverCreateBatchNotifications } from './notificationService';
+import { serverPatchFulfillment } from './ammunitionReportRequestService';
 import type { ApiActor } from './policyHelpers';
 import { UserType } from '@/types/user';
 import type {
@@ -277,6 +278,14 @@ export async function serverSubmitAmmunitionReport(
     });
   } catch (e) {
     console.error('[Server] action log for ammo report failed:', e);
+  }
+
+  if (input.reportRequestId) {
+    try {
+      await serverPatchFulfillment(input.reportRequestId, reporterUid, reportRef.id);
+    } catch (e) {
+      console.error('[Server] patching ammo report-request fulfillment failed:', e);
+    }
   }
 
   if (recipientIds.length > 0) {

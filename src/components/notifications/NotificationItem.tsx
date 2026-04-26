@@ -156,7 +156,11 @@ function resolveNotificationTarget(n: NotificationDisplayData): string | null {
   if (managementTypes.has(t)) return '/management';
 
   if (t === 'ammo_report_submitted') return '/ammunition';
-  if (t === 'ammo_report_requested') return '/ammunition';
+  if (t === 'ammo_report_requested') {
+    return n.relatedEquipmentDocId
+      ? `/ammunition?requestId=${n.relatedEquipmentDocId}`
+      : '/ammunition';
+  }
 
   return null;
 }

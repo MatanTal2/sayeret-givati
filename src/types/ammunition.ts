@@ -108,8 +108,10 @@ export interface AmmunitionReportRequest {
   requestedByName: string;
   scope: AmmunitionReportRequestScope;
   targetUserIds: string[];
+  targetTeamId?: string;
   templateIds?: string[];
   dueAt?: Timestamp;
+  note?: string;
   fulfillmentByUser: Record<string, AmmunitionReportRequestFulfillment>;
   createdAt: Timestamp;
   status: AmmunitionReportRequestStatus;

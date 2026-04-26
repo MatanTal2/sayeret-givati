@@ -21,6 +21,11 @@ export interface ReportUsageFormProps {
   /** Reporter's stock + items, already filtered to USER holder == reporter. */
   myStock: AmmunitionStock[];
   myItems: AmmunitionItem[];
+  /** When set, the report is attached to this manager-triggered request and the
+   *  template picker is constrained to the request's templateIds (if any). */
+  reportRequestId?: string;
+  /** Optional template-id allowlist (typically from the linked request). */
+  restrictTemplateIds?: string[];
   onClose: () => void;
   onSubmit: (payload: SubmitReportPayload) => Promise<{ ok: boolean; reportId?: string }>;
 }
@@ -36,6 +41,8 @@ export default function ReportUsageForm({
   templates,
   myStock,
   myItems,
+  reportRequestId,
+  restrictTemplateIds,
   onClose,
   onSubmit,
 }: ReportUsageFormProps) {
@@ -46,10 +53,14 @@ export default function ReportUsageForm({
     return ids;
   }, [myStock, myItems]);
 
-  const reportableTemplates = useMemo(
-    () => templates.filter((t) => reportableTemplateIds.has(t.id)),
-    [templates, reportableTemplateIds]
-  );
+  const reportableTemplates = useMemo(() => {
+    let list = templates.filter((t) => reportableTemplateIds.has(t.id));
+    if (restrictTemplateIds && restrictTemplateIds.length > 0) {
+      const allow = new Set(restrictTemplateIds);
+      list = list.filter((t) => allow.has(t.id));
+    }
+    return list;
+  }, [templates, reportableTemplateIds, restrictTemplateIds]);
 
   const [templateId, setTemplateId] = useState<string>('');
   const [bruces, setBruces] = useState('');
@@ -126,6 +137,7 @@ export default function ReportUsageForm({
       reason: reason.trim(),
       usedAtMs,
     };
+    if (reportRequestId) payload.reportRequestId = reportRequestId;
 
     if (template.trackingMode === 'BRUCE') {
       const b = bruces ? Number(bruces) : 0;
