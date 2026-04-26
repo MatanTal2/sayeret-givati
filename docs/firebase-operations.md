@@ -361,6 +361,37 @@ None currently — admin config is read-only at runtime.
 
 ---
 
+## `systemConfig` *(Ammunition Phase 1)*
+
+**Document ID:** Fixed — single doc with id `main`. There is exactly one system-config document.
+
+Backed by `src/types/ammunition.ts → SystemConfig`. Phase 1 ships only one
+field: `ammoNotificationRecipientUserId` (the user who is CC'd on every
+ammunition report submission). Future phases may add more system-wide flags.
+
+### Reads
+
+| File | Function | Operation | Query |
+|------|----------|-----------|-------|
+| `src/lib/db/server/systemConfigService.ts` | `serverGetSystemConfig` | `get` | Direct doc `systemConfig/main` (admin SDK) |
+| `src/app/api/system-config/route.ts` (GET) | (route handler) | invokes `serverGetSystemConfig` | — |
+| `src/hooks/useSystemConfig.ts` | `refresh` | `fetch GET /api/system-config` | — |
+
+### Writes
+
+| File | Function | Operation | Notes |
+|------|----------|-----------|-------|
+| `src/lib/db/server/systemConfigService.ts` | `serverUpdateSystemConfig` | `set(..., { merge: true })` | Stamps `updatedAt`/`updatedBy`. Doc is created on first save. |
+| `src/app/api/system-config/route.ts` (PUT) | (route handler) | invokes service after admin gate | Rejects non-admin/non-system_manager actors with 403 |
+
+### Security rules
+
+Not yet deployed for this collection. The API route is the gate — `PUT` requires
+`UserType.ADMIN` or `UserType.SYSTEM_MANAGER`. Phase 8 will add a Firestore rule
+mirroring this so direct client SDK reads/writes are also locked down.
+
+---
+
 ## `retirementRequests` *(Phase 4)*
 
 **Document ID:** Auto-generated
