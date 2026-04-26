@@ -11,12 +11,6 @@ export default function SystemConfigTab() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h3 className="text-lg font-semibold text-neutral-900">הגדרות מערכת</h3>
-        <p className="text-sm text-neutral-600">נהל הגדרות כלליות ותצורת המערכת</p>
-      </div>
-
       {/* Security Settings */}
       <div className="bg-white rounded-lg border border-neutral-200 p-6">
         <h4 className="text-lg font-medium text-neutral-900 mb-4">🔒 הגדרות אבטחה</h4>

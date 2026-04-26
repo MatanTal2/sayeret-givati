@@ -39,11 +39,6 @@ export default function RetirementApprovalTab() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h3 className="text-lg font-semibold text-neutral-900">{labels.TITLE}</h3>
-        <p className="text-sm text-neutral-600">{labels.SUBTITLE}</p>
-      </header>
-
       <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
         <div className="px-6 py-4 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between">
           <h4 className="text-sm font-medium text-neutral-900">{labels.TITLE}</h4>

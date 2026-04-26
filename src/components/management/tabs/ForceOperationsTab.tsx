@@ -121,11 +121,6 @@ export default function ForceOperationsTab() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h3 className="text-lg font-semibold text-neutral-900">{labels.TITLE}</h3>
-        <p className="text-sm text-neutral-600">{labels.SUBTITLE}</p>
-      </header>
-
       <div className="bg-warning-50 border border-warning-200 rounded-lg p-3 flex items-start gap-2">
         <AlertTriangle className="w-4 h-4 text-warning-700 mt-0.5 flex-shrink-0" />
         <p className="text-sm text-warning-800">{labels.WARNING}</p>

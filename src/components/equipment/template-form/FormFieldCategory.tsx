@@ -67,7 +67,7 @@ export default function FormFieldCategory({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             disabled={disabled}
-            className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-neutral-100 disabled:cursor-not-allowed"
+            className="input-base max-w-sm text-sm"
           >
             <option value="">
               {categories.length === 0 

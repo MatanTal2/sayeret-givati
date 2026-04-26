@@ -318,27 +318,19 @@ export default function TemplatesTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <div>
-          <h3 className="text-lg font-semibold text-neutral-900">ניהול תבניות ציוד</h3>
-          <p className="text-sm text-neutral-600">
-            סקירה ואישור של תבניות ציוד — קנוניות, מוצעות ובקשות מחיילים
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {isManagerOrAbove && (
-            <Button onClick={() => setDialog({ kind: 'create_canonical' })} className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              צור תבנית קנונית
-            </Button>
-          )}
-          {isTeamLeader && (
-            <Button onClick={() => setDialog({ kind: 'propose' })} variant="secondary" className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              הצע תבנית
-            </Button>
-          )}
-        </div>
+      <div className="flex justify-end gap-2">
+        {isManagerOrAbove && (
+          <Button onClick={() => setDialog({ kind: 'create_canonical' })} className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            צור תבנית קנונית
+          </Button>
+        )}
+        {isTeamLeader && (
+          <Button onClick={() => setDialog({ kind: 'propose' })} variant="secondary" className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            הצע תבנית
+          </Button>
+        )}
       </div>
 
       {error && (

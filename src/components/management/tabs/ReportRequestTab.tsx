@@ -109,11 +109,6 @@ export default function ReportRequestTab() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h3 className="text-lg font-semibold text-neutral-900">{labels.TITLE}</h3>
-        <p className="text-sm text-neutral-600">{labels.SUBTITLE}</p>
-      </header>
-
       <section className="bg-white border border-neutral-200 rounded-lg p-4 space-y-4">
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">{labels.SCOPE_LABEL}</label>

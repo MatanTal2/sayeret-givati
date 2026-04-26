@@ -67,7 +67,7 @@ function ManagementContent() {
   const activeTabData = getTabById(activeTab);
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex" dir="rtl">
+    <div className="min-h-screen bg-neutral-50 flex overflow-x-hidden">
       {/* Mobile Sidebar Overlay */}
       {isOpen && (
         <div 
@@ -96,10 +96,10 @@ function ManagementContent() {
         />
 
         {/* Main Content */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto overflow-x-hidden">
           <div className="max-w-7xl mx-auto">
-            <TabContentRenderer 
-              activeTab={activeTab} 
+            <TabContentRenderer
+              activeTab={activeTab}
               activeTabData={activeTabData}
             />
           </div>

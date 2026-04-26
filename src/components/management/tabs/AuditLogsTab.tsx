@@ -81,12 +81,6 @@ export default function AuditLogsTab() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h3 className="text-lg font-semibold text-neutral-900">רישום פעולות</h3>
-        <p className="text-sm text-neutral-600">צפה ופלטר פעולות משתמשים במערכת</p>
-      </div>
-
       {/* Filters */}
       <div className="bg-white rounded-lg border border-neutral-200 p-4">
         <h4 className="text-md font-medium text-neutral-900 mb-4">🔍 מסננים</h4>

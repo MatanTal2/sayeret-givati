@@ -11,3 +11,7 @@ Loads `CategoriesService.getCategories({ activeOnly, includeSubcategories })` an
 ## "Didn't find?" link
 
 Renders a "request a new template" link that emits `onRequestNew` to the orchestrator. The orchestrator swaps the wizard body to `RequestNewTemplateFlow`.
+
+## Styling
+
+Both selects (category + subcategory) use the shared `input-base` component class with `text-sm truncate`. This keeps them within the wizard modal's inner padding on small viewports and prevents long Hebrew option labels from blowing the field's width past the screen edge.

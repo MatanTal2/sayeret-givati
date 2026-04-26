@@ -80,7 +80,7 @@ export default function WizardStepTemplate({
             onSelectSubcategory(null);
           }}
           disabled={loadingCats}
-          className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg bg-white focus:ring-2 focus:ring-primary-500"
+          className="input-base text-sm truncate"
         >
           <option value="">—</option>
           {categories.map((c) => (
@@ -98,7 +98,7 @@ export default function WizardStepTemplate({
           <select
             value={subcategoryId ?? ''}
             onChange={(e) => onSelectSubcategory(e.target.value || null)}
-            className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg bg-white focus:ring-2 focus:ring-primary-500"
+            className="input-base text-sm truncate"
           >
             <option value="">—</option>
             {subcategories.map((s) => (

@@ -113,12 +113,6 @@ export default function EmailTab() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div>
-        <h3 className="text-lg font-semibold text-neutral-900">שליחת מייל למשתמשים</h3>
-        <p className="text-sm text-neutral-600">שלח הודעות לקבוצות משתמשים או לכל המערכת</p>
-      </div>
-
       {/* Email Form */}
       <Card>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
