@@ -1,5 +1,11 @@
 # Ammunition Reporting Feature
 
+## SESSION CHECKPOINT
+
+- **Branch:** `feat/ammunition-reporting` (off `fixBugs20.4.26`).
+- **Phase 0 status:** COMPLETE. Foundation merged into the branch — `src/types/ammunition.ts`, `src/lib/db/collections.ts` (+6 constants), `src/types/notifications.ts` (+2 enum values), `src/constants/text.ts` (`FEATURES.AMMUNITION` block), plus docs (`docs/codebase/src/types/ammunition.md`, `docs/codebase/src/types/notifications.md`, `docs/firebase-operations.md`). `npm run lint` + `npm run build` clean.
+- **Resume at:** **Phase 1 — System Config persistence**. Make the existing System Config tab actually save. Files: create `src/lib/db/server/systemConfigService.ts` (read/write `systemConfig/main`), `src/app/api/system-config/route.ts` (GET + PUT, admin-only), `src/hooks/useSystemConfig.ts`. Modify `src/components/management/tabs/SystemConfigTab.tsx` — replace the placeholder with a real form that persists `ammoNotificationRecipientUserId` via a UserPicker. Verify: admin saves recipient, value round-trips on refresh, non-admin write rejected, Jest test for the service. Docs to add: `docs/codebase/src/lib/db/server/systemConfigService.md`, `docs/codebase/src/hooks/useSystemConfig.md`, refresh `SystemConfigTab.md`.
+
 ## Context
 
 Sayeret Givati needs visibility into ammunition: what the unit owns, what gets consumed, what's left, and who holds it. Today there is no system — it lives in spreadsheets and verbal reports.

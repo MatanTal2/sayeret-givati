@@ -662,6 +662,68 @@ export const TEXT_CONSTANTS = {
         STATUS_EXPIRED: 'פג תוקף',
       },
     },
+    AMMUNITION: {
+      TITLE: 'תחמושת',
+      DESCRIPTION: 'ניהול ודיווח על תחמושת',
+      ADD_NEW: 'הוסף תחמושת',
+      REPORT_USE: 'דווח על שימוש',
+      EMPTY_INVENTORY: 'אין תחמושת רשומה',
+      SECTION_PERSONAL: 'תחמושת אישית',
+      SECTION_TEAM: 'תחמושת צוות',
+      SUBCATEGORIES: {
+        BULLETS: 'כדורים',
+        GRENADES: 'רימונים',
+        LAUNCHER_GRENADES: 'רימוני משגר',
+        SHOULDER_MISSILES: 'טילי כתף',
+        MINES: 'מוקשים',
+        OTHER: 'אחר'
+      },
+      TRACKING_MODE: {
+        BRUCE: 'ברוס',
+        SERIAL: 'צ׳',
+        LOOSE_COUNT: 'תפזורת'
+      },
+      ALLOCATION: {
+        USER: 'אישי',
+        TEAM: 'צוות',
+        BOTH: 'אישי וצוות'
+      },
+      SECURITY_LEVEL: {
+        EXPLOSIVE: 'נפיץ',
+        GRABBABLE: 'חמידה'
+      },
+      BRUCE_STATE: {
+        FULL: 'מלא',
+        MORE_THAN_HALF: 'יותר מחצי',
+        LESS_THAN_HALF: 'פחות מחצי',
+        EMPTY: 'ריק'
+      },
+      TEMPLATE_FORM: {
+        NAME: 'שם הפריט',
+        SUBCATEGORY: 'תת-קטגוריה',
+        ALLOCATION: 'הקצאה',
+        TRACKING_MODE: 'מצב מעקב',
+        SECURITY_LEVEL: 'רמת אבטחה',
+        BULLETS_PER_CARDBOARD: 'כדורים בקרטג\'',
+        CARDBOARDS_PER_BRUCE: 'קרטג\'ים בברוס',
+        DESCRIPTION: 'תיאור'
+      },
+      REPORT_FORM: {
+        TEMPLATE: 'פריט',
+        BRUCES_CONSUMED: 'ברוסים שנעשה בהם שימוש',
+        CARDBOARDS_CONSUMED: 'קרטג\'ים שנעשה בהם שימוש',
+        BULLETS_CONSUMED: 'כדורים שנעשה בהם שימוש',
+        FINAL_BRUCE_STATE: 'מצב ברוס פתוח לאחר שימוש',
+        SERIALS_CONSUMED: 'מספרים סידוריים',
+        QUANTITY_CONSUMED: 'כמות',
+        REASON: 'סיבה',
+        USED_AT: 'תאריך ושעת שימוש'
+      },
+      NOTIFICATIONS: {
+        REPORT_SUBMITTED_TITLE: 'דיווח תחמושת חדש',
+        REPORT_REQUESTED_TITLE: 'בקשה לדיווח תחמושת'
+      }
+    },
     CONVOYS: {
       TITLE: 'שיירות',
       DESCRIPTION: 'תכנון וניהול שיירות'

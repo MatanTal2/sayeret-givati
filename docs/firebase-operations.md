@@ -29,6 +29,12 @@ All Firestore operations in the codebase, organized by collection.
 | `announcements` | `COLLECTIONS.ANNOUNCEMENTS = 'announcements'` | `src/lib/db/collections.ts` |
 | `useful_links` | `COLLECTIONS.USEFUL_LINKS = 'useful_links'` | `src/lib/db/collections.ts` |
 | `unit_media` | `COLLECTIONS.UNIT_MEDIA = 'unit_media'` | `src/lib/db/collections.ts` |
+| `ammunitionTemplates` | `COLLECTIONS.AMMUNITION_TEMPLATES = 'ammunitionTemplates'` | `src/lib/db/collections.ts` (services land in Phase 2 — see `docs/spec/ammunition-feature.md`) |
+| `ammunition` | `COLLECTIONS.AMMUNITION = 'ammunition'` | `src/lib/db/collections.ts` (SERIAL items — Phase 3) |
+| `ammunitionInventory` | `COLLECTIONS.AMMUNITION_INVENTORY = 'ammunitionInventory'` | `src/lib/db/collections.ts` (BRUCE / LOOSE_COUNT stock per holder — Phase 3) |
+| `ammunitionReports` | `COLLECTIONS.AMMUNITION_REPORTS = 'ammunitionReports'` | `src/lib/db/collections.ts` (Phase 4) |
+| `ammunitionReportRequests` | `COLLECTIONS.AMMUNITION_REPORT_REQUESTS = 'ammunitionReportRequests'` | `src/lib/db/collections.ts` (Phase 6) |
+| `systemConfig` | `COLLECTIONS.SYSTEM_CONFIG = 'systemConfig'` | `src/lib/db/collections.ts` (Phase 1 — `ammoNotificationRecipientUserId`) |
 
 ---
 
