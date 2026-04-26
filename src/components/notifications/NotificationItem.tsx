@@ -154,6 +154,10 @@ function resolveNotificationTarget(n: NotificationDisplayData): string | null {
     'template_proposed_for_review', 'new_template_request_for_review', 'template_request_rejected',
   ]);
   if (managementTypes.has(t)) return '/management';
+
+  if (t === 'ammo_report_submitted') return '/ammunition';
+  if (t === 'ammo_report_requested') return '/ammunition';
+
   return null;
 }
 
@@ -179,6 +183,10 @@ function getTypeLabel(type: string): string {
       return 'מפקד';
     case 'daily_check_reminder':
       return 'בדיקה יומית';
+    case 'ammo_report_submitted':
+      return 'דיווח תחמושת';
+    case 'ammo_report_requested':
+      return 'בקשת דיווח תחמושת';
     default:
       return 'התראה';
   }

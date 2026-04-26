@@ -32,7 +32,7 @@ All Firestore operations in the codebase, organized by collection.
 | `ammunitionTemplates` | `COLLECTIONS.AMMUNITION_TEMPLATES = 'ammunitionTemplates'` | `src/lib/db/collections.ts` (Phase 2 — see `docs/spec/ammunition-feature.md`) |
 | `ammunition` | `COLLECTIONS.AMMUNITION = 'ammunition'` | `src/lib/db/collections.ts` (Phase 3) |
 | `ammunitionInventory` | `COLLECTIONS.AMMUNITION_INVENTORY = 'ammunitionInventory'` | `src/lib/db/collections.ts` (Phase 3) |
-| `ammunitionReports` | `COLLECTIONS.AMMUNITION_REPORTS = 'ammunitionReports'` | `src/lib/db/collections.ts` (Phase 4) |
+| `ammunitionReports` | `COLLECTIONS.AMMUNITION_REPORTS = 'ammunitionReports'` | `src/lib/db/collections.ts` (Phase 4 — server: `src/lib/db/server/ammunitionReportsService.ts`; client: `src/lib/ammunition/reportsService.ts`) |
 | `ammunitionReportRequests` | `COLLECTIONS.AMMUNITION_REPORT_REQUESTS = 'ammunitionReportRequests'` | `src/lib/db/collections.ts` (Phase 6) |
 | `systemConfig` | `COLLECTIONS.SYSTEM_CONFIG = 'systemConfig'` | `src/lib/db/collections.ts` (Phase 1 — `ammoNotificationRecipientUserId`) |
 
@@ -358,6 +358,40 @@ Not exposed via the app. Admins seed entries manually from the Firestore console
 ### Writes
 
 None currently — admin config is read-only at runtime.
+
+---
+
+## `ammunitionReports` *(Ammunition Phase 4)*
+
+**Document ID:** Auto-generated.
+
+### Reads
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/db/server/ammunitionReportsService.ts` | `serverListAmmunitionReports` | filtered query (admin SDK) — usedAt range, teamId, reporterId, templateId; orderBy usedAt desc |
+| `src/lib/ammunition/reportsService.ts` | `listAmmunitionReports` | filtered query (client SDK), same filters |
+
+### Writes
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/db/server/ammunitionReportsService.ts` | `serverSubmitAmmunitionReport` | Runs a single Firestore transaction — write the report, decrement inventory or flip SERIAL items to CONSUMED. Reads `users/{reporterUid}`, `users where teamId+userType==TL`, `systemConfig/main`, then fans out notifications (non-transactional). |
+
+### API gates
+
+`POST /api/ammunition-reports` — Phase 4 ships self-report only; the
+transaction's holder check is the source of truth.
+
+`GET /api/ammunition-reports` — open to any authenticated caller for now;
+Phase 8 will tighten to manager+ + the responsible manager.
+
+### Side effects
+
+- `actionsLog` — single `AMMO_REPORT_SUBMITTED` entry per submission.
+- `notifications` — fan out to TL(s) of the reporter's team plus the user
+  configured at `systemConfig/main.ammoNotificationRecipientUserId`. The
+  reporter is excluded; recipients are deduped.
 
 ---
 

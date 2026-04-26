@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Send } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import AppShell from '@/app/components/AppShell';
 import { Button } from '@/components/ui';
@@ -9,8 +9,10 @@ import { FEATURES } from '@/constants/text';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAmmunitionTemplates } from '@/hooks/useAmmunitionTemplates';
 import { useAmmunitionInventory } from '@/hooks/useAmmunitionInventory';
+import { useAmmunitionReports } from '@/hooks/useAmmunitionReports';
 import AmmunitionInventoryView from '@/components/ammunition/AmmunitionInventoryView';
 import AddInventoryModal from '@/components/ammunition/AddInventoryModal';
+import ReportUsageForm from '@/components/ammunition/ReportUsageForm';
 import { UserType } from '@/types/user';
 import type { HolderType } from '@/types/ammunition';
 
@@ -38,8 +40,11 @@ function AmmunitionPageContent() {
     deleteStock,
     createSerialItem,
     deleteSerialItem,
+    refresh: refreshInventory,
   } = useAmmunitionInventory();
+  const { submit: submitReport } = useAmmunitionReports();
   const [showAdd, setShowAdd] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   const isManagerOrTL =
     enhancedUser?.userType === UserType.ADMIN ||
@@ -90,6 +95,17 @@ function AmmunitionPageContent() {
         <Button onClick={() => setShowAdd(true)} disabled={templates.length === 0}>
           <Plus className="w-4 h-4 ms-1" /> {T.ADD_NEW}
         </Button>
+        <Button
+          variant="secondary"
+          onClick={() => setShowReport(true)}
+          disabled={
+            templates.length === 0 ||
+            (stock.filter((s) => s.holderType === 'USER' && s.holderId === enhancedUser.uid).length === 0 &&
+              items.filter((i) => i.currentHolderType === 'USER' && i.currentHolderId === enhancedUser.uid).length === 0)
+          }
+        >
+          <Send className="w-4 h-4 ms-1" /> {T.REPORT_USE}
+        </Button>
       </div>
 
       {isLoading ? (
@@ -138,6 +154,24 @@ function AmmunitionPageContent() {
           onClose={() => setShowAdd(false)}
           onSubmitStock={async (payload) => upsertStock(payload)}
           onSubmitItem={async (payload) => createSerialItem(payload)}
+        />
+      )}
+
+      {showReport && (
+        <ReportUsageForm
+          templates={templates}
+          myStock={stock.filter(
+            (s) => s.holderType === 'USER' && s.holderId === enhancedUser.uid
+          )}
+          myItems={items.filter(
+            (i) => i.currentHolderType === 'USER' && i.currentHolderId === enhancedUser.uid
+          )}
+          onClose={() => setShowReport(false)}
+          onSubmit={async (payload) => {
+            const result = await submitReport(payload);
+            if (result.ok) await refreshInventory();
+            return result;
+          }}
         />
       )}
     </div>
