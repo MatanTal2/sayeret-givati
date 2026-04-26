@@ -661,11 +661,11 @@ export default function StatusPage() {
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <Link href="/" className="hover:opacity-80 transition-opacity">
-              <Image 
-                src="/sayeret-givati-logo.png" 
-                alt={TEXT_CONSTANTS.ARIA_LABELS.LOGO} 
-                width={80} 
-                height={80}
+              <Image
+                src="/sayeret-givati-logo.png"
+                alt={TEXT_CONSTANTS.ARIA_LABELS.LOGO}
+                width={567}
+                height={400}
                 priority
                 className="h-16 w-auto"
               />

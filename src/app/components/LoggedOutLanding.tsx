@@ -30,8 +30,8 @@ export default function LoggedOutLanding() {
             <Image
               src="/sayeret-givati-logo.png"
               alt={TEXT_CONSTANTS.ARIA_LABELS.LOGO}
-              width={140}
-              height={140}
+              width={567}
+              height={400}
               priority
               className="relative h-28 w-auto drop-shadow-sm"
             />

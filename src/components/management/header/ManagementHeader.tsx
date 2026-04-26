@@ -53,8 +53,8 @@ export default function ManagementHeader({
             <Image
               src="/sayeret-givati-logo.png"
               alt={TEXT_CONSTANTS.ARIA_LABELS.LOGO}
-              width={40}
-              height={40}
+              width={567}
+              height={400}
               priority
               className="h-10 w-auto"
             />
