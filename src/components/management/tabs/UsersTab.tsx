@@ -132,7 +132,7 @@ export default function UsersTab() {
   return (
     <div className="space-y-6">
       {/* Header Actions */}
-      <div className="flex justify-end gap-2">
+      <div className="flex items-center justify-start gap-2 flex-wrap">
         <button
           onClick={() => fetchUsers(true)}
           className="px-4 py-2 bg-neutral-600 hover:bg-neutral-700 text-white font-medium rounded-lg transition-colors shadow-sm flex items-center"

@@ -318,7 +318,7 @@ export default function TemplatesTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end gap-2">
+      <div className="flex items-center justify-start gap-2 flex-wrap">
         {isManagerOrAbove && (
           <Button onClick={() => setDialog({ kind: 'create_canonical' })} className="flex items-center gap-2">
             <Plus className="w-4 h-4" />

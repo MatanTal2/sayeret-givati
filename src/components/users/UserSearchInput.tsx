@@ -90,7 +90,7 @@ export default function UserSearchInput({
         />
       </div>
       {isOpen && (
-        <div className="absolute z-30 mt-1 w-full bg-white border border-neutral-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 mt-1 w-full bg-white border border-neutral-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
           {searching && results.length === 0 ? (
             <div className="p-3 text-sm text-neutral-500 text-center">...</div>
           ) : results.length === 0 ? (
