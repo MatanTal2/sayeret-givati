@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Plus, Send } from 'lucide-react';
+import { Plus, Send, Target } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import AppShell from '@/app/components/AppShell';
 import { Button } from '@/components/ui';
@@ -124,6 +125,13 @@ function AmmunitionPageContent() {
         >
           <Send className="w-4 h-4 ms-1" /> {T.REPORT_USE}
         </Button>
+        <Link
+          href="/ammunition/training"
+          className="ms-auto inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+        >
+          <Target className="w-4 h-4" />
+          אימונים
+        </Link>
       </div>
 
       {isLoading ? (

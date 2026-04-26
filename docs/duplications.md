@@ -187,6 +187,19 @@ Both should eventually migrate to `AppShell` for full visual consistency.
 
 `COLLECTIONS` (`src/lib/db/collections.ts`) is now the canonical source of Firestore collection names. New code (e.g. `announcementsService`, `usefulLinksService`) imports from it. Existing services still use their own local constants — see items 4 and 5 in this doc.
 
+### Equipment ↔ Ammunition parallel structures
+
+The Ammunition feature (Phases 0–8) deliberately mirrors several Equipment patterns rather than abstracting them. Listed here for visibility — none are bugs today, but if a third domain needs the same shape we should extract a shared base.
+
+| Equipment | Ammunition |
+|-----------|------------|
+| `equipmentTemplates` + `TemplatesTab` | `ammunitionTemplates` + `AmmunitionTemplatesSection` |
+| `reportRequests` + `ReportRequestTab` + `serverCreateReportRequest` | `ammunitionReportRequests` + `AmmunitionRequestsSection` + `serverCreateAmmunitionReportRequest` |
+| Equipment notification fan-out | Ammunition `serverPatchFulfillment` + recipient resolution in `ammunitionReportsService` |
+| `useEquipment` + scope filter | `useAmmunitionInventory` (no scope yet — filtered in the consumer) |
+
+The ammunition policy gate (`canMutateAmmunitionInventory`) is intentionally separate from `equipmentPolicy` — the two domains have different semantics around `BOTH` allocation and the responsible-manager override. If a third domain needs tiered actor permission, consider extracting a generic `domainPolicy` helper that takes the four roles + a per-domain rule.
+
 ---
 
 ## Files Flagged for Splitting (> 300 lines)
