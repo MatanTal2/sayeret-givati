@@ -30,8 +30,8 @@ All Firestore operations in the codebase, organized by collection.
 | `useful_links` | `COLLECTIONS.USEFUL_LINKS = 'useful_links'` | `src/lib/db/collections.ts` |
 | `unit_media` | `COLLECTIONS.UNIT_MEDIA = 'unit_media'` | `src/lib/db/collections.ts` |
 | `ammunitionTemplates` | `COLLECTIONS.AMMUNITION_TEMPLATES = 'ammunitionTemplates'` | `src/lib/db/collections.ts` (Phase 2 — see `docs/spec/ammunition-feature.md`) |
-| `ammunition` | `COLLECTIONS.AMMUNITION = 'ammunition'` | `src/lib/db/collections.ts` (SERIAL items — Phase 3) |
-| `ammunitionInventory` | `COLLECTIONS.AMMUNITION_INVENTORY = 'ammunitionInventory'` | `src/lib/db/collections.ts` (BRUCE / LOOSE_COUNT stock per holder — Phase 3) |
+| `ammunition` | `COLLECTIONS.AMMUNITION = 'ammunition'` | `src/lib/db/collections.ts` (Phase 3) |
+| `ammunitionInventory` | `COLLECTIONS.AMMUNITION_INVENTORY = 'ammunitionInventory'` | `src/lib/db/collections.ts` (Phase 3) |
 | `ammunitionReports` | `COLLECTIONS.AMMUNITION_REPORTS = 'ammunitionReports'` | `src/lib/db/collections.ts` (Phase 4) |
 | `ammunitionReportRequests` | `COLLECTIONS.AMMUNITION_REPORT_REQUESTS = 'ammunitionReportRequests'` | `src/lib/db/collections.ts` (Phase 6) |
 | `systemConfig` | `COLLECTIONS.SYSTEM_CONFIG = 'systemConfig'` | `src/lib/db/collections.ts` (Phase 1 — `ammoNotificationRecipientUserId`) |
@@ -358,6 +358,63 @@ Not exposed via the app. Admins seed entries manually from the Firestore console
 ### Writes
 
 None currently — admin config is read-only at runtime.
+
+---
+
+## `ammunitionInventory` *(Ammunition Phase 3)*
+
+**Document ID:** Deterministic — `${holderType}_${holderId}_${templateId}`.
+The format is chosen so `set(merge)` is idempotent and a holder/template
+combination always points to the same doc.
+
+Holds BRUCE + LOOSE_COUNT stock. SERIAL items live in the `ammunition`
+collection instead.
+
+### Reads
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/db/server/ammunitionInventoryService.ts` | `serverListAmmunitionStock` | collection scan (admin SDK) |
+| `src/lib/ammunition/inventoryService.ts` | `listAmmunitionStock` | collection scan (client SDK) |
+
+### Writes
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/db/server/ammunitionInventoryService.ts` | `serverUpsertAmmunitionStock` | `set(merge)`. First write stamps `createdBy`. |
+| `src/lib/db/server/ammunitionInventoryService.ts` | `serverDeleteAmmunitionStock` | `delete` after permission re-check |
+
+### API gates
+
+`POST /api/ammunition-inventory` (kind=stock) and `DELETE
+/api/ammunition-inventory/[id]` (kind=stock) gate via
+`canMutateAmmunitionInventory`.
+
+---
+
+## `ammunition` *(Ammunition Phase 3)*
+
+**Document ID:** Serial number (צ). One doc per item.
+
+### Reads
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/db/server/ammunitionInventoryService.ts` | `serverListSerialItems` | collection scan (admin SDK) |
+| `src/lib/ammunition/inventoryService.ts` | `listSerialAmmunitionItems` | collection scan (client SDK) |
+
+### Writes
+
+| File | Function | Operation |
+|------|----------|-----------|
+| `src/lib/db/server/ammunitionInventoryService.ts` | `serverCreateSerialItem` | `set` — rejects duplicates and non-SERIAL templates |
+| `src/lib/db/server/ammunitionInventoryService.ts` | `serverUpdateSerialItem` | `update` — re-checks permission against both old and new holder |
+| `src/lib/db/server/ammunitionInventoryService.ts` | `serverDeleteSerialItem` | `delete` after permission re-check |
+
+### API gates
+
+`/api/ammunition-inventory` (kind=item) for create/update/delete. Permission
+matrix mirrors `ammunitionInventory`.
 
 ---
 

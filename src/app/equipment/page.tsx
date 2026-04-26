@@ -20,6 +20,7 @@ import ReturnModal from '@/components/equipment/ReturnModal';
 import TransferModal from '@/components/equipment/TransferModal';
 import ActionHistoryPanel from '@/components/equipment/ActionHistoryPanel';
 import { type Equipment, EquipmentStatus } from '@/types/equipment';
+import PersonalAmmunitionSection from '@/components/equipment/PersonalAmmunitionSection';
 
 type ActiveModal =
   | { kind: 'wizard' }
@@ -184,6 +185,8 @@ function EquipmentPageContent() {
         onAction={handleBulk}
         allowRetire={false}
       />
+
+      <PersonalAmmunitionSection user={enhancedUser} />
 
       {activeModal?.kind === 'wizard' && (
         <AddEquipmentWizard
