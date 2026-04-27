@@ -46,6 +46,12 @@ export default function ProfileImageUpload({
     large: 'text-3xl'
   };
 
+  // Pre-Storage builds wrote `blob:` URLs into Firestore via the old mock; those are
+  // origin-scoped to a dead session and the browser blocks them on reload. Treat
+  // anything that is not http(s) as missing so the placeholder icon renders instead.
+  const renderableImageUrl =
+    currentImageUrl && /^https?:\/\//i.test(currentImageUrl) ? currentImageUrl : undefined;
+
   const handleImageSelect = () => {
     fileInputRef.current?.click();
   };
@@ -122,11 +128,11 @@ export default function ProfileImageUpload({
         >
           {uploadState.isUploading ? (
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-          ) : currentImageUrl ? (
+          ) : renderableImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img 
-              src={currentImageUrl} 
-              alt={TEXT_CONSTANTS.PROFILE_COMPONENTS.PROFILE_ALT} 
+            <img
+              src={renderableImageUrl}
+              alt={TEXT_CONSTANTS.PROFILE_COMPONENTS.PROFILE_ALT}
               className="w-full h-full object-cover"
             />
           ) : (

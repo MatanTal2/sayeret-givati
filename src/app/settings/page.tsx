@@ -38,8 +38,12 @@ export default function SettingsPage() {
     theme: 'light'
   });
 
-  // Profile image state
-  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(enhancedUser?.profileImage);
+  // Profile image state. Drop legacy blob: URLs from the old mock — they error on render.
+  const initialProfileImage =
+    enhancedUser?.profileImage && /^https?:\/\//i.test(enhancedUser.profileImage)
+      ? enhancedUser.profileImage
+      : undefined;
+  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(initialProfileImage);
 
   // TODO: Replace with actual data when backend is implemented
   const mockPhoneNumber = enhancedUser?.phoneNumber || '+972-50-123-4567';

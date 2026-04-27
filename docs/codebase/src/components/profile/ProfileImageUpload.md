@@ -14,6 +14,20 @@ Profile image selection and upload with file validation (type, size), preview, a
 - Rules: `firebase/storage.rules` — owner-only write (`request.auth.uid == userId`), authenticated read, 10 MB cap, image/* content type only.
 - Persisted to Firestore by the parent via `updateUserProfile(uid, { profileImage: downloadUrl })` (existing whitelist already covers `profileImage`).
 
+## Bucket CORS (manual, one-time)
+
+Browser uploads from `localhost` or Vercel preview origins fail the CORS preflight unless the bucket is configured. Run once per bucket from a machine with `gsutil` (Google Cloud SDK):
+
+```
+gsutil cors set firebase/storage.cors.json gs://sayeret-givati-1983.firebasestorage.app
+```
+
+Adjust origins in `firebase/storage.cors.json` if production domains change. Verify with `gsutil cors get gs://sayeret-givati-1983.firebasestorage.app`.
+
+## Defensive rendering
+
+Pre-Storage builds (mock upload) wrote `blob:` URLs into the user document. Those URLs are origin-scoped to a dead session and the browser blocks them on reload. The component (and the three call-site state initialisers in `profile/page.tsx`, `settings/page.tsx`, `WelcomeModal.tsx`) treat anything that is not `http(s)://` as missing — placeholder icon renders instead, and an explicit re-upload overwrites the bad value with a real download URL.
+
 ## Props
 
 | Prop | Type | Required | Default | Description |

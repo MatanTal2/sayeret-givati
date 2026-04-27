@@ -16,7 +16,12 @@ import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
 export default function WelcomeModal() {
   const { enhancedUser, refreshEnhancedUser } = useAuth();
   const [teamId, setTeamId] = useState(enhancedUser?.teamId ?? '');
-  const [profileImage, setProfileImage] = useState<string | undefined>(enhancedUser?.profileImage);
+  // Drop legacy blob: URLs from the old mock — they error on render and would re-persist on save.
+  const initialProfileImage =
+    enhancedUser?.profileImage && /^https?:\/\//i.test(enhancedUser.profileImage)
+      ? enhancedUser.profileImage
+      : undefined;
+  const [profileImage, setProfileImage] = useState<string | undefined>(initialProfileImage);
   const [errors, setErrors] = useState<{ teamId?: string; submit?: string }>({});
   const [saving, setSaving] = useState(false);
 

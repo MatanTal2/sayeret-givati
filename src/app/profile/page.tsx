@@ -18,7 +18,12 @@ import { updateUserProfile } from '@/lib/userProfileService';
  */
 export default function ProfilePage() {
   const { enhancedUser, user, refreshEnhancedUser } = useAuth();
-  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(enhancedUser?.profileImage);
+  // Drop legacy `blob:` URLs left over from the old mock upload; they error on render.
+  const initialProfileImage =
+    enhancedUser?.profileImage && /^https?:\/\//i.test(enhancedUser.profileImage)
+      ? enhancedUser.profileImage
+      : undefined;
+  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(initialProfileImage);
   const [phoneNumber, setPhoneNumber] = useState<string>(enhancedUser?.phoneNumber || '');
   const [teamId, setTeamId] = useState<string>(enhancedUser?.teamId || '');
   const [assignmentSaving, setAssignmentSaving] = useState(false);
