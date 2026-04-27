@@ -2,6 +2,8 @@
 
 import { useState, useRef } from 'react';
 import { CameraIcon, UserIcon, UploadIcon } from 'lucide-react';
+import { getDownloadURL, ref as storageRef, uploadBytes } from 'firebase/storage';
+import { storage } from '@/lib/firebase';
 import { ProfileImageUploadProps, ImageUploadState } from '@/types/profile';
 import { TEXT_CONSTANTS } from '@/constants/text';
 
@@ -9,11 +11,13 @@ import { TEXT_CONSTANTS } from '@/constants/text';
  * ProfileImageUpload component for uploading and updating profile images
  * Follows the app's existing UI/UX patterns
  */
-export default function ProfileImageUpload({ 
-  currentImageUrl, 
-  onImageUpdate, 
+export default function ProfileImageUpload({
+  userId,
+  currentImageUrl,
+  onImageUpdate,
   size = 'medium',
-  className = '' 
+  className = '',
+  showInstructions = true,
 }: ProfileImageUploadProps) {
   const [uploadState, setUploadState] = useState<ImageUploadState>({
     isUploading: false,
@@ -77,24 +81,24 @@ export default function ProfileImageUpload({
     });
 
     try {
-      // TODO: Replace with actual image upload service
-      await mockImageUpload(file);
-      
-      // Create temporary URL for preview
-      const imageUrl = URL.createObjectURL(file);
-      onImageUpdate(imageUrl);
-      
+      const ext = file.name.includes('.') ? file.name.split('.').pop() : 'jpg';
+      const path = `users/${userId}/profile/${Date.now()}.${ext}`;
+      const objectRef = storageRef(storage, path);
+      await uploadBytes(objectRef, file, { contentType: file.type });
+      const downloadUrl = await getDownloadURL(objectRef);
+
+      onImageUpdate(downloadUrl);
+
       setUploadState({
         isUploading: false,
         error: null,
         success: true
       });
 
-      // Clear success message after 3 seconds
       setTimeout(() => {
         setUploadState(prev => ({ ...prev, success: false }));
       }, 3000);
-      
+
     } catch (error) {
       setUploadState({
         isUploading: false,
@@ -103,24 +107,9 @@ export default function ProfileImageUpload({
       });
     }
 
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  };
-
-  // Mock image upload function
-  const mockImageUpload = async (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Simulate random success/failure for demo
-        if (Math.random() > 0.1) { // 90% success rate
-          resolve(`/api/uploads/${file.name}`);
-        } else {
-          reject(new Error(TEXT_CONSTANTS.PROFILE_COMPONENTS.SERVER_UPLOAD_ERROR));
-        }
-      }, 2000); // Simulate upload time
-    });
   };
 
   return (
@@ -182,7 +171,7 @@ export default function ProfileImageUpload({
       />
 
       {/* Upload Instructions */}
-      {size !== 'small' && (
+      {size !== 'small' && showInstructions && (
         <div className="mt-2 text-center">
           <p className="text-xs text-neutral-500">
             לחץ להעלאת תמונה חדשה

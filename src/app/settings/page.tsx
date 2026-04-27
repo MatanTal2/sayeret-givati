@@ -88,11 +88,14 @@ export default function SettingsPage() {
               {/* Profile Image */}
               <div className="flex items-center justify-between p-4 border border-neutral-200 rounded-xl">
                 <div className="flex items-center gap-4">
-                  <ProfileImageUpload
-                    currentImageUrl={profileImageUrl}
-                    onImageUpdate={handleImageUpdate}
-                    size="small"
-                  />
+                  {enhancedUser?.uid && (
+                    <ProfileImageUpload
+                      userId={enhancedUser.uid}
+                      currentImageUrl={profileImageUrl}
+                      onImageUpdate={handleImageUpdate}
+                      size="small"
+                    />
+                  )}
                   <div>
                     <h3 className="font-medium text-neutral-900">
                       {TEXT_CONSTANTS.SETTINGS.PROFILE_IMAGE}

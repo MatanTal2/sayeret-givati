@@ -100,11 +100,15 @@ export default function ProfilePage() {
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
             <div className="flex items-center gap-6">
               {/* Profile Avatar with Upload */}
-              <ProfileImageUpload
-                currentImageUrl={profileImageUrl}
-                onImageUpdate={handleImageUpdate}
-                size="medium"
-              />
+              {enhancedUser?.uid && (
+                <ProfileImageUpload
+                  userId={enhancedUser.uid}
+                  currentImageUrl={profileImageUrl}
+                  onImageUpdate={handleImageUpdate}
+                  size="medium"
+                  showInstructions={false}
+                />
+              )}
 
               {/* Basic Info */}
               <div className="flex-1">
