@@ -4,7 +4,6 @@
 import React, { useState, useMemo } from 'react';
 import { Users, AlertCircle, RefreshCw } from 'lucide-react';
 import { useUsers } from '@/hooks/useUsers';
-import { MANAGEMENT } from '@/constants/text';
 import { TEXT_CONSTANTS } from '@/constants/text';
 
 export default function UsersTab() {
@@ -133,24 +132,18 @@ export default function UsersTab() {
   return (
     <div className="space-y-6">
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <div>
-          <h3 className="text-lg font-semibold text-neutral-900">{MANAGEMENT.TABS.USERS}</h3>
-          <p className="text-sm text-neutral-600">{MANAGEMENT.TAB_DESCRIPTIONS.USERS}</p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => fetchUsers(true)}
-            className="px-4 py-2 bg-neutral-600 hover:bg-neutral-700 text-white font-medium rounded-lg transition-colors shadow-sm flex items-center"
-            disabled={loading}
-          >
-            <RefreshCw className={`w-4 h-4 ml-2 ${loading ? 'animate-spin' : ''}`} />
-            {TEXT_CONSTANTS.MANAGEMENT.USERS.REFRESH_BUTTON}
-          </button>
-          <button className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors shadow-sm">
-            {TEXT_CONSTANTS.MANAGEMENT.USERS.ADD_USER_BUTTON}
-          </button>
-        </div>
+      <div className="flex items-center justify-start gap-2 flex-wrap">
+        <button
+          onClick={() => fetchUsers(true)}
+          className="px-4 py-2 bg-neutral-600 hover:bg-neutral-700 text-white font-medium rounded-lg transition-colors shadow-sm flex items-center"
+          disabled={loading}
+        >
+          <RefreshCw className={`w-4 h-4 ml-2 ${loading ? 'animate-spin' : ''}`} />
+          {TEXT_CONSTANTS.MANAGEMENT.USERS.REFRESH_BUTTON}
+        </button>
+        <button className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors shadow-sm">
+          {TEXT_CONSTANTS.MANAGEMENT.USERS.ADD_USER_BUTTON}
+        </button>
       </div>
 
       {/* Filters */}

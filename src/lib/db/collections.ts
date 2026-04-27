@@ -15,6 +15,18 @@ export const COLLECTIONS = {
   OTP_SESSIONS: 'otp_sessions',
   OTP_RATE_LIMITS: 'otp_rate_limits',
   ADMIN_CONFIG: 'admin_config',
+  ANNOUNCEMENTS: 'announcements',
+  USEFUL_LINKS: 'useful_links',
+  UNIT_MEDIA: 'unit_media',
+  RETIREMENT_REQUESTS: 'retirementRequests',
+  REPORT_REQUESTS: 'reportRequests',
+  EQUIPMENT_DRAFTS: 'equipmentDrafts',
+  AMMUNITION_TEMPLATES: 'ammunitionTemplates',
+  AMMUNITION: 'ammunition',
+  AMMUNITION_INVENTORY: 'ammunitionInventory',
+  AMMUNITION_REPORTS: 'ammunitionReports',
+  AMMUNITION_REPORT_REQUESTS: 'ammunitionReportRequests',
+  SYSTEM_CONFIG: 'systemConfig',
 } as const;
 
 export type CollectionName = typeof COLLECTIONS[keyof typeof COLLECTIONS];

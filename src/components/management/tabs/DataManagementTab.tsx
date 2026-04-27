@@ -16,12 +16,6 @@ export default function DataManagementTab() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h3 className="text-lg font-semibold text-neutral-900">ניהול נתונים</h3>
-        <p className="text-sm text-neutral-600">ייבוא, ייצוא וניהול נתוני המערכת</p>
-      </div>
-
       {/* Database Overview */}
       <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
         <div className="px-6 py-4 bg-neutral-50 border-b border-neutral-200">

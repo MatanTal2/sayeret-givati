@@ -30,7 +30,9 @@ export enum NotificationType {
   SYSTEM_MESSAGE = 'system_message',
   MAINTENANCE_DUE = 'maintenance_due',
   COMMANDER_MESSAGE = 'commander_message',
-  DAILY_CHECK_REMINDER = 'daily_check_reminder'
+  DAILY_CHECK_REMINDER = 'daily_check_reminder',
+  AMMO_REPORT_SUBMITTED = 'ammo_report_submitted',
+  AMMO_REPORT_REQUESTED = 'ammo_report_requested'
 }
 
 export interface CreateNotificationData {
@@ -75,6 +77,8 @@ export interface NotificationDisplayData {
   icon: string;
   color: string;
   equipmentName?: string;
+  relatedEquipmentDocId?: string;
+  relatedTransferId?: string;
 }
 
 // Notification settings

@@ -1,32 +1,35 @@
 # useEquipment.ts
 
-**File:** `src/hooks/useEquipment.ts`  
-**Lines:** 390 ⚠️ LONG  
-**Status:** Active
+**File:** `src/hooks/useEquipment.ts`
 
-## Purpose
+Equipment hook owning items + types state and the Phase 6 lifecycle methods.
 
-Manages equipment items and types with Firestore CRUD. Loads on mount and reloads when auth state changes. Provides methods for creating, transferring, and updating equipment items and types.
+## Scope (Phase 6)
 
-## Return Shape
-
-```typescript
-{
-  equipment[], equipmentTypes[], loading, error, typesLoading, typesError,
-  refreshEquipment, refreshTypes, addEquipment, transferEquipment,
-  updateEquipment, addEquipmentType,
-  getEquipmentById, getByStatus, getByCondition, getByHolder, getByUnit
-}
+```ts
+useEquipment({ scope: 'self' })
 ```
 
-## Firebase Operations
+The hook keeps a raw list (`getEquipmentList()`) and derives `equipment` per scope:
 
-- **Read:** `EquipmentService.Items.getEquipmentItems()`, `EquipmentService.Types.getEquipmentTypes()`
-- **Write:** `EquipmentService.Items.createEquipmentItem()`, `.updateEquipmentItem()`, `.transferEquipment()`
-- **Write:** `EquipmentService.Types.createEquipmentType()`
+- `self` — items where the user is signer or holder.
+- `team` — items the user is in via `holder*TeamId/UnitId` or `signer*TeamId/UnitId`, **plus** their own.
+- `all` — every item the user can see (`canView` from `equipmentPolicy`).
 
-## Known Issues
+`canView` runs first regardless of scope, so the scope filter never accidentally widens visibility past what the policy allows.
 
-- Reloads all data on every auth state change.
-- No caching mechanism.
-- 390 lines — candidate for split.
+`scope` and `setScope` are returned so the page can flip via `EquipmentTabs`.
+
+## Phase-6 mutation methods
+
+- `reportEquipment(id, photoUrl|null, note?)` → `EquipmentService.Items.reportEquipment` with the actor.
+- `retireEquipment(id, reason)` → returns `{ success, kind?: 'immediate' | 'request', error? }` so the caller (ReturnModal) can show "retired" vs "request sent" copy without inferring it.
+- `createEquipmentBatch(items, notes?)` → wraps `EquipmentService.Items.createEquipmentBatch`. Used by `AddEquipmentWizard` for both single and bulk submits (single mode is a 1-element batch).
+
+## Legacy methods kept
+
+`addEquipment`, `transferEquipment`, `updateEquipmentStatus`, `updateEquipmentCondition`, `performDailyCheck`, plus the `getEquipmentBy*` selectors.
+
+## Auth wiring
+
+`onAuthStateChanged` triggers a refresh; sign-out clears state. The hook does not subscribe to Firestore live updates — refresh-on-mutation is the consistency model.

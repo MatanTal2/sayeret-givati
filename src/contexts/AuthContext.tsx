@@ -44,6 +44,7 @@ export interface AuthContextType {
   login: (credentials: AuthCredentials) => Promise<void>;
   logout: () => Promise<void>;
   clearMessage: () => void;
+  refreshEnhancedUser: () => Promise<void>;
   
   // UI State
   showAuthModal: boolean;
@@ -103,6 +104,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               joinDate: firestoreData.joinDate,
               profileImage: firestoreData.profileImage,
               testUser: firestoreData.testUser,
+              teamId: firestoreData.teamId,
               communicationPreferences: firestoreData.communicationPreferences,
               initials: UserDataService.generateInitials(firestoreData)
             };
@@ -238,6 +240,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setMessage(null);
   };
 
+  const refreshEnhancedUser = async (): Promise<void> => {
+    const firebaseUser = auth.currentUser;
+    if (!firebaseUser) return;
+    const result = await UserDataService.fetchUserDataByUid(firebaseUser.uid);
+    if (!result.success || !result.userData) return;
+    const firestoreData = result.userData;
+    const refreshed: EnhancedAuthUser = {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email || undefined,
+      displayName: firebaseUser.displayName || undefined,
+      userType: firestoreData.userType,
+      firstName: firestoreData.firstName,
+      lastName: firestoreData.lastName,
+      gender: firestoreData.gender,
+      birthday: firestoreData.birthday,
+      phoneNumber: firestoreData.phoneNumber,
+      rank: firestoreData.rank,
+      role: firestoreData.role,
+      status: firestoreData.status,
+      militaryPersonalNumberHash: firestoreData.militaryPersonalNumberHash,
+      permissions: firestoreData.permissions,
+      joinDate: firestoreData.joinDate,
+      profileImage: firestoreData.profileImage,
+      testUser: firestoreData.testUser,
+      teamId: firestoreData.teamId,
+      communicationPreferences: firestoreData.communicationPreferences,
+      initials: UserDataService.generateInitials(firestoreData),
+    };
+    setUser(refreshed);
+    setEnhancedUser(refreshed);
+  };
+
   const contextValue: AuthContextType = {
     // State
     user,
@@ -245,12 +279,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isAuthenticated,
     isLoading,
     message,
-    
+
     // Actions
     login,
     logout,
     clearMessage,
-    
+    refreshEnhancedUser,
+
     // UI State
     showAuthModal,
     setShowAuthModal,

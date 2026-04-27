@@ -23,12 +23,6 @@ export default function PermissionsTab() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h3 className="text-lg font-semibold text-neutral-900">ניהול הרשאות</h3>
-        <p className="text-sm text-neutral-600">נהל הרשאות לתפקידים שונים במערכת</p>
-      </div>
-
       {/* Roles Management */}
       <div className="bg-white rounded-lg border border-neutral-200 p-6">
         <h4 className="text-lg font-medium text-neutral-900 mb-4">תפקידים והרשאות</h4>

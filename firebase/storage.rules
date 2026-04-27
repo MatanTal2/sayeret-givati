@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Equipment photos: authenticated users can read all equipment photos
+    // (they need to view thumbnails from other users' items in team/all scope).
+    // Writes are permitted for any authenticated user in phase 1 — server-side
+    // policy enforcement (only holder / signer may upload for an equipment id)
+    // is deferred to phase 2 when uploads move behind an API route.
+    match /equipment/{equipmentId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Profile images: the owner can write their own; everyone authenticated can read.
+    match /users/{userId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Everything else denied.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

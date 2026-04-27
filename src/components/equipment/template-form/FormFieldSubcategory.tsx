@@ -71,6 +71,7 @@ export default function FormFieldSubcategory({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             disabled={isSubcategoryDisabled}
+            className="input-base max-w-sm text-sm"
           >
             <option value="">
               {!selectedCategoryId 

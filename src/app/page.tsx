@@ -1,112 +1,80 @@
 'use client';
 
-import Image from 'next/image';
-// import Link from 'next/link';
+import { LayoutGrid } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import AppShell from './components/AppShell';
 import FeatureCard from './components/FeatureCard';
-import Header from './components/Header';
-
+import LoggedOutLanding from './components/LoggedOutLanding';
+import AnnouncementsWidget from './components/home/AnnouncementsWidget';
+import MediaWidget from './components/home/MediaWidget';
+import RecentRoutesWidget from './components/home/RecentRoutesWidget';
+import LinksWidget from './components/home/LinksWidget';
+import CollapsibleSection from './components/home/CollapsibleSection';
 import { getFeatureRoutes } from '@/utils/navigationUtils';
 import { TEXT_CONSTANTS } from '@/constants/text';
 
 export default function HomePage() {
-
-  // Use centralized feature routes configuration
+  const { isAuthenticated, isLoading } = useAuth();
   const features = getFeatureRoutes();
 
-  return (
-    <div className="min-h-screen bg-neutral-50 relative" dir="rtl">
-      {/* Header with Auth Button */}
-      <Header 
-        title={TEXT_CONSTANTS.APP_NAME}
-        subtitle={TEXT_CONSTANTS.APP_SUBTITLE}
-        showAuth={true}
-      />
-
-      {/* Background Logo */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-5">
-        <Image 
-          src="/sayeret-givati-logo.png" 
-          alt="לוגו סיירת גבעתי" 
-          width={520} 
-          height={520}
-          priority
-          className="object-contain"
-          style={{ width: "auto", height: "auto" }}
+  // Avoid flash of either view while auth is resolving
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <div
+          className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"
+          role="status"
+          aria-label={TEXT_CONSTANTS.BUTTONS.LOADING}
         />
       </div>
+    );
+  }
 
-      {/* Main Content */}
-      <main className="relative z-10 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Features Introduction */}
-          <div className="text-center mb-12">
-            <p className="text-xl text-neutral-600 max-w-2xl mx-auto">
-              {TEXT_CONSTANTS.APP_SUBTITLE}
-            </p>
+  if (!isAuthenticated) {
+    return <LoggedOutLanding />;
+  }
+
+  return (
+    <AppShell title={TEXT_CONSTANTS.APP_NAME} subtitle={TEXT_CONSTANTS.APP_SUBTITLE}>
+      <div className="max-w-6xl mx-auto w-full flex flex-col gap-5 lg:gap-6">
+        {/* Bento row: announcements + media on the left (wider), recent + links on the right */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-5 lg:gap-6">
+          <div className="flex flex-col gap-5 lg:gap-6 min-w-0">
+            <AnnouncementsWidget />
+            <MediaWidget />
           </div>
-
-
-
-          {/* All Features */}
-          <div className="mb-12">
-            <h3 className="text-2xl font-semibold text-neutral-900 mb-6 text-center">
-              {TEXT_CONSTANTS.FEATURES.SECTION_TITLE}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {features.map((feature, index) => (
-                <div key={index}>
-                  <FeatureCard
-                    title={feature.title}
-                    description={feature.description}
-                    icon={feature.icon}
-                    href={feature.href}
-                    available={feature.available}
-                    color={feature.color}
-                  />
-                </div>
-              ))}
-            </div>
+          <div className="flex flex-col gap-5 lg:gap-6 min-w-0">
+            <RecentRoutesWidget />
+            <LinksWidget />
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="max-w-4xl mx-auto mt-16 pt-8 border-t border-neutral-200 text-center text-neutral-600">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <h4 className="font-semibold mb-3">{TEXT_CONSTANTS.FOOTER.QUICK_LINKS}</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="/status" className="hover:text-primary-600 transition-colors">{TEXT_CONSTANTS.FEATURES.SOLDIER_MANAGEMENT.TITLE}</a></li>
-                <li><a href="/admin" className="hover:text-primary-600 transition-colors">{TEXT_CONSTANTS.FOOTER.ADMIN_INTERFACE}</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-3">{TEXT_CONSTANTS.FOOTER.SUPPORT}</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="/help" className="hover:text-primary-600 transition-colors">{TEXT_CONSTANTS.FOOTER.USER_GUIDE}</a></li>
-                <li><a href="/contact" className="hover:text-primary-600 transition-colors">{TEXT_CONSTANTS.FOOTER.CONTACT}</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-3">{TEXT_CONSTANTS.FOOTER.INFO}</h4>
-              <ul className="space-y-2 text-sm">
-                <li><span>{TEXT_CONSTANTS.VERSION}</span></li>
-                <li><span>{TEXT_CONSTANTS.LAST_UPDATED}</span></li>
-              </ul>
-            </div>
+        {/* Features grid — collapsed by default */}
+        <CollapsibleSection
+          id="features"
+          title={TEXT_CONSTANTS.HOME.FEATURES_TITLE}
+          icon={<LayoutGrid className="w-4 h-4" aria-hidden="true" />}
+          defaultCollapsed
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {features.map((feature) => (
+              <FeatureCard
+                key={feature.href}
+                title={feature.title}
+                description={feature.description}
+                icon={feature.icon}
+                href={feature.href}
+                available={feature.available}
+                color={feature.color}
+              />
+            ))}
           </div>
-          
-          {/* Version & Copyright */}
-          <div className="border-t border-neutral-200 pt-4">
-            <p className="text-sm">
-              {TEXT_CONSTANTS.COMPANY_NAME} • {TEXT_CONSTANTS.VERSION}
-            </p>
-            <p className="text-xs mt-2">
-              © Matan Tal
-            </p>
-          </div>
-        </footer>
-      </main>
+        </CollapsibleSection>
 
-    </div>
+        <footer className="pt-2 text-center text-xs text-neutral-500">
+          {TEXT_CONSTANTS.COMPANY_NAME} • {TEXT_CONSTANTS.VERSION} • © Matan Tal
+        </footer>
+      </div>
+    </AppShell>
   );
 }

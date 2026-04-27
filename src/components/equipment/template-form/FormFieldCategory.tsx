@@ -67,6 +67,7 @@ export default function FormFieldCategory({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             disabled={disabled}
+            className="input-base max-w-sm text-sm"
           >
             <option value="">
               {categories.length === 0 

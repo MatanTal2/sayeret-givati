@@ -95,12 +95,11 @@ export default function NotificationBell({ className = '' }: NotificationBellPro
         )}
       </button>
 
-      {/* Dropdown */}
+      {/* Dropdown — pinned to the viewport's end side so it never clips on narrow screens */}
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute left-1/2 transform -translate-x-1/2 mt-2 z-50"
-          style={{ minWidth: '320px', maxWidth: '400px' }}
+          className="fixed top-16 end-2 w-80 max-w-[calc(100vw-1rem)] z-50"
         >
           <NotificationDropdown onClose={() => setIsOpen(false)} />
         </div>

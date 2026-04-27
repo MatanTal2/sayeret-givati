@@ -15,7 +15,14 @@
       "Bash(cat /c/Users/mamas/projects/sayeret-givati/tailwind.config.*)",
       "Bash(wc:*)",
       "Bash(npm run:*)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(xxd)",
+      "Bash(grep -E \"\\\\.tsx$\")",
+      "Bash(grep -r \"//.*transfer\\\\|/\\\\*.*transfer\" /c/Users/mamas/projects/sayeret-givati/src --include=\"*.ts\" --include=\"*.tsx\" -i)",
+      "Bash(xargs ls *)",
+      "Bash(git checkout *)",
+      "Bash(npm test *)",
+      "Bash(npx jest *)"
     ]
   }
 }

@@ -25,10 +25,10 @@ export function getFeatureRoutes(): FeatureRoute[] {
       description: TEXT_CONSTANTS.FEATURES.SOLDIER_MANAGEMENT.DESCRIPTION,
       icon: "✓",
       href: "/status",
-      available: true,
-      color: "bg-purple-600",
+      available: false,
+      color: "bg-gray-400",
       requiresAuth: true,
-      isComingSoon: false
+      isComingSoon: true
     },
     {
       title: TEXT_CONSTANTS.FEATURES.SOLDIER_TRACKING.TITLE,
@@ -54,11 +54,21 @@ export function getFeatureRoutes(): FeatureRoute[] {
       title: TEXT_CONSTANTS.FEATURES.EQUIPMENT.TITLE,
       description: TEXT_CONSTANTS.FEATURES.EQUIPMENT.DESCRIPTION,
       icon: "🔢",
-      href: "/equipment", 
+      href: "/equipment",
       available: false,
       color: "bg-gray-400",
       requiresAuth: true,
       isComingSoon: true
+    },
+    {
+      title: TEXT_CONSTANTS.FEATURES.AMMUNITION.TITLE,
+      description: TEXT_CONSTANTS.FEATURES.AMMUNITION.DESCRIPTION,
+      icon: "🎯",
+      href: "/ammunition",
+      available: true,
+      color: "bg-primary-600",
+      requiresAuth: true,
+      isComingSoon: false
     },
     {
       title: TEXT_CONSTANTS.FEATURES.CONVOYS.TITLE,

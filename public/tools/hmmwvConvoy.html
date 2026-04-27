@@ -176,7 +176,10 @@
     <div style="background: #e8f4fd; border: 1px solid #b8daff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
         <label style="font-weight: bold; margin-bottom: 8px; display: block;">הדבק רשימת שמות (שם בכל שורה, עם או בלי בולט):</label>
         <textarea id="personnelList" style="height: 120px; margin-top: 0;" placeholder="• יוסי כהן&#10;• דוד לוי&#10;שרה אבן&#10;..."></textarea>
-        <button class="btn-add" type="button" onclick="spreadPersonnel()" style="margin-top: 10px;">פזר אנשים לשיירה ↓</button>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button class="btn-add" type="button" onclick="spreadPersonnel()" style="margin: 0; flex: 2;">פזר אנשים לשיירה ↓</button>
+            <button class="btn-special" type="button" onclick="openManualSpread()" style="margin: 0; flex: 1;">פזר ידנית</button>
+        </div>
         <div id="spreadResult" style="display: none; margin-top: 10px; padding: 10px; border-radius: 4px;"></div>
     </div>
 
@@ -254,6 +257,17 @@
     </div>
 </div>
 
+<div id="manualSpreadModal" class="modal-overlay" style="z-index: 2000;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="manualSpreadTitle">פיזור ידני</h3>
+            <button type="button" onclick="closeManualSpreadModal()" style="background: none; border: none; color: #6c757d; font-size: 24px; cursor: pointer; padding: 0; margin: 0; width: auto; font-weight: bold;">×</button>
+        </div>
+        <div id="manualSpreadBody"></div>
+        <div id="manualSpreadFooter" class="modal-footer"></div>
+    </div>
+</div>
+
 <script>
     function showToast(message, type = 'success', duration = 2500) {
         const toast = document.getElementById('toast');
@@ -266,7 +280,19 @@
     let currentConvoy = [];
     let currentHeavyHeadText = "";
     let editHeavyHeadText = "";
-    let heavyHeadMode = 'new'; 
+    let heavyHeadMode = 'new';
+
+    // Single source of truth: how many back seats a vehicle has and how many are free.
+    function vehicleOccupiedExtras(v) {
+        return (v.extras || []).filter(e => e.name || e.role).length;
+    }
+    function vehicleBackCapacity(v) {
+        return v.backSeatCapacity ?? 7;
+    }
+    function vehicleRemainingSeats(v) {
+        const occupied = vehicleOccupiedExtras(v) + (v.passengers || []).length;
+        return Math.max(0, vehicleBackCapacity(v) - occupied);
+    }
 
     window.onload = function() {
         updateTemplatesDropdown();
@@ -326,8 +352,8 @@
         const row = document.createElement('div');
         row.className = 'extra-member-row';
         row.innerHTML = `
-            <input type="text" placeholder="תפקיד (חובש)" class="role-input" style="flex: 1;">
-            <input type="text" placeholder="שם" class="name-input" style="flex: 2;">
+            <input type="text" placeholder="תפקיד (חובש)" class="role-input" style="flex: 1;" oninput="updateAvailableSeats('${mode}')">
+            <input type="text" placeholder="שם" class="name-input" style="flex: 2;" oninput="updateAvailableSeats('${mode}')">
             <button class="remove-btn" type="button" onclick="this.parentElement.remove(); updateVehicleUI('${mode}'); updateAvailableSeats('${mode}')">X</button>
         `;
         container.appendChild(row);
@@ -343,7 +369,9 @@
             capacityId = 'editBackSeatCapacity'; containerId = 'edit-convoy-extras'; infoId = 'editAvailableSeatsInfo';
         }
         const capacity = parseInt(document.getElementById(capacityId).value) || 0;
-        const extraCount = document.getElementById(containerId).querySelectorAll('.extra-member-row').length;
+        const extraCount = [...document.getElementById(containerId).querySelectorAll('.extra-member-row')]
+            .filter(row => row.querySelector('.name-input').value.trim() || row.querySelector('.role-input').value.trim())
+            .length;
         const available = Math.max(0, capacity - extraCount);
         const infoEl = document.getElementById(infoId);
         if (infoEl) {
@@ -599,6 +627,7 @@
         }
         editHeavyHeadText = vehicle.heavyHeadPassengers || "";
         updateVehicleUI('convoy');
+        updateAvailableSeats('convoy');
         document.getElementById('convoyEditModal').style.display = 'flex';
     }
 
@@ -670,13 +699,10 @@
             });
 
             if (vehicle.vehicleType === 'האמר') {
-                const backCapacity = vehicle.backSeatCapacity ?? 7;
-                const roleExtras = vehicle.extras.filter(e => e.name || e.role).length;
                 const passengers = vehicle.passengers || [];
-                const filledPassengerSlots = passengers.length;
-                const emptySlots = Math.max(0, backCapacity - roleExtras - filledPassengerSlots);
+                const emptySlots = vehicleRemainingSeats(vehicle);
 
-                if (filledPassengerSlots > 0 || emptySlots > 0) {
+                if (passengers.length > 0 || emptySlots > 0) {
                     output += `חבירים:\n`;
                     let slotNum = 1;
                     // Named passengers first
@@ -735,10 +761,7 @@
         for (const vehicle of sortedVehicles) {
             if (nameIndex >= names.length) break;
 
-            const roleExtras = vehicle.extras.filter(e => e.name).length;
-            const existingPassengers = (vehicle.passengers || []).length;
-            const totalCapacity = Math.max(0, (vehicle.backSeatCapacity ?? 7) - roleExtras);
-            const availableSeats = Math.max(0, totalCapacity - existingPassengers);
+            const availableSeats = vehicleRemainingSeats(vehicle);
 
             const assigned = [];
             for (let i = 0; i < availableSeats && nameIndex < names.length; i++) {
@@ -794,9 +817,171 @@
             document.getElementById('gunner').value = "";
             document.getElementById('extra-members').innerHTML = ""; 
             
-            currentHeavyHeadText = ""; 
+            currentHeavyHeadText = "";
             updateVehicleUI('main');
         }
+    }
+
+    // --- פיזור ידני ---
+    let manualSpreadState = { screen: 'vehicles', selectedVehicleIndex: null, selectedNames: new Set() };
+    let manualUnassigned = [];
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function parsePersonnelText(raw) {
+        return raw.split('\n')
+            .map(line => line.replace(/^[\s•\-\*\d\.]+/, '').trim())
+            .filter(name => name.length > 0);
+    }
+
+    function openManualSpread() {
+        const raw = document.getElementById('personnelList').value.trim();
+        if (!raw) { showToast('הדבק רשימת שמות קודם', 'warning'); return; }
+
+        const names = parsePersonnelText(raw);
+        if (names.length === 0) { showToast('לא נמצאו שמות ברשימה', 'warning'); return; }
+
+        const activeHmmwvs = currentConvoy.filter(v => v.active && v.vehicleType === 'האמר');
+        if (activeHmmwvs.length === 0) { showToast('אין האמרים פעילים בשיירה', 'warning'); return; }
+
+        manualUnassigned = names;
+        manualSpreadState = { screen: 'vehicles', selectedVehicleIndex: null, selectedNames: new Set() };
+        renderManualSpreadBody();
+        document.getElementById('manualSpreadModal').style.display = 'flex';
+    }
+
+    function closeManualSpreadModal() {
+        document.getElementById('personnelList').value = manualUnassigned.join('\n');
+        document.getElementById('manualSpreadModal').style.display = 'none';
+    }
+
+    function renderManualSpreadBody() {
+        if (manualSpreadState.screen === 'vehicles') renderManualSpreadVehicles();
+        else renderManualSpreadPassengers();
+    }
+
+    function renderManualSpreadVehicles() {
+        document.getElementById('manualSpreadTitle').textContent = 'פיזור ידני - בחר כלי';
+
+        const body = document.getElementById('manualSpreadBody');
+        let html = `<div style="background: #e8f4fd; border: 1px solid #b8daff; padding: 10px; border-radius: 4px; margin-bottom: 12px; font-weight: bold; text-align: center;">נותרו ${manualUnassigned.length} אנשים לשבץ</div>`;
+
+        if (manualUnassigned.length === 0) {
+            html += `<div style="padding: 15px; text-align: center; color: #28a745; font-weight: bold;">✅ כל האנשים שובצו</div>`;
+        } else {
+            html += `<div style="display: flex; flex-direction: column; gap: 8px;">`;
+            currentConvoy.forEach((v, idx) => {
+                if (!v.active || v.vehicleType !== 'האמר') return;
+                const remaining = vehicleRemainingSeats(v);
+                const total = vehicleBackCapacity(v);
+                const full = remaining === 0;
+                const badgeColor = full ? '#dc3545' : (remaining <= 2 ? '#f59e0b' : '#28a745');
+                const cardStyle = full
+                    ? 'opacity: 0.5; background: #e9ecef; cursor: not-allowed;'
+                    : 'background: white; cursor: pointer;';
+                const onClick = full ? '' : `onclick="selectVehicleForManual(${idx})"`;
+                const capsule = v.capsule ? `<div style="font-size: 12px; color: #17a2b8; font-weight: bold; margin-bottom: 2px;">${escapeHtml(v.capsule)}</div>` : '';
+                const label = escapeHtml(v.vehicleId || v.vehicleType);
+                html += `
+                    <div ${onClick} style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #dee2e6; border-radius: 6px; ${cardStyle}">
+                        <div style="flex: 1;">
+                            ${capsule}
+                            <div style="font-size: 16px; font-weight: bold; color: #333;">${label}</div>
+                        </div>
+                        <div style="background: ${badgeColor}; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; white-space: nowrap;">${remaining}/${total} פנויים</div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        }
+
+        body.innerHTML = html;
+        document.getElementById('manualSpreadFooter').innerHTML = `
+            <button class="btn-clear" style="background-color: #6c757d;" type="button" onclick="closeManualSpreadModal()">סגור</button>
+        `;
+    }
+
+    function selectVehicleForManual(index) {
+        const v = currentConvoy[index];
+        if (!v || vehicleRemainingSeats(v) === 0) return;
+        manualSpreadState.selectedVehicleIndex = index;
+        manualSpreadState.selectedNames = new Set();
+        manualSpreadState.screen = 'passengers';
+        renderManualSpreadBody();
+    }
+
+    function renderManualSpreadPassengers() {
+        const idx = manualSpreadState.selectedVehicleIndex;
+        const v = currentConvoy[idx];
+        const remaining = vehicleRemainingSeats(v);
+        const selected = manualSpreadState.selectedNames.size;
+        const label = escapeHtml(v.vehicleId || v.vehicleType);
+        const atMax = selected >= remaining;
+
+        document.getElementById('manualSpreadTitle').textContent = `${v.vehicleId || v.vehicleType} — בחר עד ${remaining} אנשים`;
+
+        let html = `<div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; border-radius: 4px; margin-bottom: 12px; text-align: center; font-weight: bold;">נבחרו <span style="color: ${atMax ? '#dc3545' : '#2b5c8f'};">${selected}/${remaining}</span></div>`;
+
+        if (manualUnassigned.length === 0) {
+            html += `<div style="padding: 15px; text-align: center; color: #6c757d;">אין שמות לשיבוץ</div>`;
+        } else {
+            html += `<div style="display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto;">`;
+            manualUnassigned.forEach((name, i) => {
+                const isSelected = manualSpreadState.selectedNames.has(name);
+                const disabled = !isSelected && atMax;
+                const rowStyle = disabled
+                    ? 'background: #e9ecef; opacity: 0.5; cursor: not-allowed;'
+                    : (isSelected ? 'background: #d4edda; border-color: #c3e6cb;' : 'background: white; cursor: pointer;');
+                html += `
+                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #dee2e6; border-radius: 4px; ${rowStyle}">
+                        <input type="checkbox" ${isSelected ? 'checked' : ''} ${disabled ? 'disabled' : ''} onchange="toggleManualName(${i}, this.checked)" style="width: auto; transform: scale(1.3); margin: 0;">
+                        <span style="flex: 1; font-size: 15px;">${escapeHtml(name)}</span>
+                    </label>
+                `;
+            });
+            html += `</div>`;
+        }
+
+        document.getElementById('manualSpreadBody').innerHTML = html;
+        document.getElementById('manualSpreadFooter').innerHTML = `
+            <button class="btn-copy" type="button" onclick="confirmManualAssign()" ${selected === 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>שבץ (${selected})</button>
+            <button class="btn-clear" style="background-color: #6c757d;" type="button" onclick="backToVehicleList()">חזור</button>
+        `;
+    }
+
+    function toggleManualName(nameIndex, checked) {
+        const name = manualUnassigned[nameIndex];
+        if (!name) return;
+        if (checked) manualSpreadState.selectedNames.add(name);
+        else manualSpreadState.selectedNames.delete(name);
+        renderManualSpreadBody();
+    }
+
+    function backToVehicleList() {
+        manualSpreadState.selectedVehicleIndex = null;
+        manualSpreadState.selectedNames = new Set();
+        manualSpreadState.screen = 'vehicles';
+        renderManualSpreadBody();
+    }
+
+    function confirmManualAssign() {
+        const idx = manualSpreadState.selectedVehicleIndex;
+        const v = currentConvoy[idx];
+        if (!v || manualSpreadState.selectedNames.size === 0) return;
+
+        const toAssign = [...manualSpreadState.selectedNames];
+        v.passengers = [...(v.passengers || []), ...toAssign];
+        manualUnassigned = manualUnassigned.filter(n => !manualSpreadState.selectedNames.has(n));
+
+        document.getElementById('personnelList').value = manualUnassigned.join('\n');
+
+        renderConvoyList();
+        generateConvoyText();
+        showToast(`✅ ${toAssign.length} אנשים שובצו ל-${v.vehicleId || v.vehicleType}`, 'success');
+
+        backToVehicleList();
     }
 </script>
 

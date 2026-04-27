@@ -91,12 +91,6 @@ export default function EnforceTransferTab() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h3 className="text-lg font-semibold text-neutral-900">העברות כפויות</h3>
-        <p className="text-sm text-neutral-600">נהל העברות ציוד בין משתמשים במצבי חירום</p>
-      </div>
-
       {/* Force Transfer Form */}
       <div className="bg-white rounded-lg border border-neutral-200 p-6">
         <h4 className="text-lg font-medium text-danger-600 mb-4">⚠️ יצירת העברה כפויה</h4>

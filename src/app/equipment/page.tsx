@@ -1,345 +1,304 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Plus, Search } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
-import Header from '@/app/components/Header';
+import AppShell from '@/app/components/AppShell';
 import { TEXT_CONSTANTS } from '@/constants/text';
-import EquipmentErrorBoundary from '@/components/equipment/EquipmentErrorBoundary';
-import EquipmentList from '@/components/equipment/EquipmentList';
-import EquipmentLoadingState from '@/components/equipment/EquipmentLoadingState';
-import EquipmentModal from '@/components/equipment/EquipmentModal';
-import TransferModal from '@/components/equipment/TransferModal';
-import { useEquipment } from '@/hooks/useEquipment';
-import { Equipment, EquipmentAction, EquipmentHistoryEntry } from '@/types/equipment';
-import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
-import { hasEquipmentManagementAccess, getUserPermissionLevel } from '@/utils/permissionUtils';
-import { EquipmentService } from '@/lib/equipmentService';
+import { useEquipment } from '@/hooks/useEquipment';
+import EquipmentErrorBoundary from '@/components/equipment/EquipmentErrorBoundary';
+import EquipmentLoadingState from '@/components/equipment/EquipmentLoadingState';
+import EquipmentTabs from '@/components/equipment/EquipmentTabs';
+import EquipmentTable from '@/components/equipment/EquipmentTable';
+import BulkActionBar, { type BulkAction } from '@/components/equipment/BulkActionBar';
+import type { EquipmentRowAction } from '@/components/equipment/EquipmentRowActions';
+import AddEquipmentWizard from '@/components/equipment/AddEquipmentWizard';
+import ReportModal from '@/components/equipment/ReportModal';
+import ReturnModal from '@/components/equipment/ReturnModal';
+import TransferModal from '@/components/equipment/TransferModal';
+import ActionHistoryPanel from '@/components/equipment/ActionHistoryPanel';
+import { type Equipment, EquipmentStatus } from '@/types/equipment';
+import PersonalAmmunitionSection from '@/components/equipment/PersonalAmmunitionSection';
 
-/**
- * Equipment Page - צלם
- * Military equipment management with serial numbers
- * Step 1.2: Basic Equipment Interface Implementation
- */
+type ActiveModal =
+  | { kind: 'wizard' }
+  | { kind: 'report'; equipment: Equipment }
+  | { kind: 'return'; equipment: Equipment }
+  | { kind: 'transfer'; equipment: Equipment }
+  | { kind: 'history'; equipment: Equipment }
+  | null;
+
 export default function EquipmentPage() {
+  return (
+    <AuthGuard>
+      <EquipmentErrorBoundary>
+        <AppShell
+          title={`🎖️ ${TEXT_CONSTANTS.FEATURES.EQUIPMENT.TITLE}`}
+          subtitle={TEXT_CONSTANTS.FEATURES.EQUIPMENT.DESCRIPTION}
+        >
+          <EquipmentPageContent />
+        </AppShell>
+      </EquipmentErrorBoundary>
+    </AuthGuard>
+  );
+}
+
+function EquipmentPageContent() {
+  const { enhancedUser } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const resumeTemplate = searchParams.get('resumeTemplate');
+  const resumeDraft = searchParams.get('resumeDraft');
+
   const {
     equipment,
     loading,
     error,
+    scope,
+    setScope,
     refreshEquipment,
-    addEquipment,
-  } = useEquipment();
+    reportEquipment,
+    retireEquipment,
+  } = useEquipment({ scope: 'self' });
 
-  const { enhancedUser } = useAuth();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
-  const [historyEquipment, setHistoryEquipment] = useState<Equipment | null>(null);
-  
-  // Permission checks
-  const canManageEquipment = hasEquipmentManagementAccess(enhancedUser);
-  const userPermissionLevel = getUserPermissionLevel(enhancedUser);
+  const [activeModal, setActiveModal] = useState<ActiveModal>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<EquipmentStatus | 'all'>('all');
 
-  // Handle refresh with loading state
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      await refreshEquipment();
-    } finally {
-      setIsRefreshing(false);
+  // Auto-open wizard when notification deep-links here
+  useEffect(() => {
+    if ((resumeTemplate || resumeDraft) && !activeModal) {
+      setActiveModal({ kind: 'wizard' });
     }
-  };
+  }, [resumeTemplate, resumeDraft, activeModal]);
 
-  // Handle transfer - open transfer modal
-  const handleTransfer = async (equipmentId: string) => {
-    const equipmentItem = equipment.find(item => item.id === equipmentId);
-    if (equipmentItem) {
-      setSelectedEquipment(equipmentItem);
-      setShowTransferModal(true);
-    }
-  };
-
-  // Handle transfer success
-  const handleTransferSuccess = () => {
-    setShowTransferModal(false);
-    setSelectedEquipment(null);
-    refreshEquipment(); // Refresh the equipment list
-  };
-
-  // Handle status update - open update modal
-  const handleUpdateStatus = async (equipmentId: string) => {
-    const equipmentToUpdate = equipment.find(item => item.id === equipmentId);
-    if (equipmentToUpdate) {
-      setSelectedEquipment(equipmentToUpdate);
-      setShowUpdateModal(true);
-    }
-  };
-
-  // Handle view history — show tracking data in modal
-  const handleViewHistory = (equipmentId: string) => {
-    const item = equipment.find(e => e.id === equipmentId);
-    if (item) {
-      setHistoryEquipment(item);
-    }
-  };
-
-  // Handle credit equipment — not yet implemented
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleCredit = (equipmentId: string) => {
-    alert('פיצ\'ר זיכוי ציוד בפיתוח');
-  };
-
-  // Handle add equipment
-  const handleAddEquipment = async (equipmentData: Omit<Equipment, 'createdAt' | 'updatedAt' | 'trackingHistory'>) => {
-    try {
-      // For now, use the current user as the signer (in production, get from auth context)
-      const signedBy = 'מנהל-מערכת'; // TODO: Get from authentication context
-      const success = await addEquipment(equipmentData, signedBy);
-      if (!success) {
-        throw new Error('Failed to add equipment');
+  const filtered = useMemo(() => {
+    return equipment.filter((it) => {
+      if (statusFilter !== 'all' && it.status !== statusFilter) return false;
+      if (searchTerm) {
+        const q = searchTerm.toLowerCase();
+        const hit =
+          it.id.toLowerCase().includes(q) ||
+          it.productName.toLowerCase().includes(q) ||
+          it.currentHolder.toLowerCase().includes(q) ||
+          it.category.toLowerCase().includes(q) ||
+          (it.location ?? '').toLowerCase().includes(q);
+        if (!hit) return false;
       }
-    } catch (error) {
-      console.error('Error adding equipment:', error);
-      throw error; // Re-throw to let the modal handle the error
+      return true;
+    });
+  }, [equipment, statusFilter, searchTerm]);
+
+  const closeModal = () => {
+    setActiveModal(null);
+    if (resumeTemplate || resumeDraft) {
+      router.replace('/equipment');
     }
   };
 
-  // Handle update equipment
-  const handleUpdateEquipment = async (equipmentId: string, updates: Partial<Equipment>) => {
-    try {
-      if (!enhancedUser) {
-        throw new Error('User not authenticated');
-      }
-
-      const updatedBy = enhancedUser.uid;
-      const updatedByName = `${enhancedUser.firstName || ''} ${enhancedUser.lastName || ''}`.trim();
-      const userType = enhancedUser.userType?.toLowerCase();
-      
-      // Call the equipment service to update
-      const result = await EquipmentService.Items.updateEquipment(
-        equipmentId,
-        updates,
-        updatedBy,
-        updatedByName,
-        EquipmentAction.STATUS_UPDATE, // Default action, could be made dynamic
-        'Equipment updated via form', // Default notes
-        userType
-      );
-
-      if (!result.success) {
-        throw new Error(result.message || 'Failed to update equipment');
-      }
-      
-      // Refresh the equipment list to show updated data
-      await refreshEquipment();
-      
-      // Close the modal
-      setShowUpdateModal(false);
-      setSelectedEquipment(null);
-    } catch (error) {
-      console.error('Error updating equipment:', error);
-      throw error; // Re-throw to let the modal handle the error
+  const handleRowAction = (item: Equipment, action: EquipmentRowAction) => {
+    switch (action) {
+      case 'report':   setActiveModal({ kind: 'report', equipment: item }); break;
+      case 'transfer': setActiveModal({ kind: 'transfer', equipment: item }); break;
+      case 'return':   setActiveModal({ kind: 'return', equipment: item }); break;
+      case 'history':  setActiveModal({ kind: 'history', equipment: item }); break;
     }
   };
+
+  const handleBulk = async (action: BulkAction) => {
+    if (selectedIds.size === 0 || !enhancedUser) return;
+    if (action === 'report') {
+      // Only an aggregate "report now" pass without photos — privileged users only.
+      // For non-privileged we'd need to walk each item with a camera; that's a future enhancement.
+      for (const id of selectedIds) {
+        await reportEquipment(id, null, 'Bulk report');
+      }
+      setSelectedIds(new Set());
+    } else if (action === 'transfer') {
+      // Bulk transfer requires a single target — beyond current TransferModal. Left for ForceOps in /management.
+      alert('בחר פריטים בודדים והעבר אותם דרך תפריט הפעולות.');
+    } else if (action === 'retire') {
+      const reason = prompt(TEXT_CONSTANTS.FEATURES.EQUIPMENT.RETURN_MODAL.REASON_PLACEHOLDER);
+      if (!reason) return;
+      for (const id of selectedIds) {
+        await retireEquipment(id, reason);
+      }
+      setSelectedIds(new Set());
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const toggleSelectAllVisible = () => {
+    setSelectedIds((prev) => {
+      const visibleIds = filtered.map((i) => i.id);
+      const allSelected = visibleIds.every((id) => prev.has(id));
+      const next = new Set(prev);
+      if (allSelected) visibleIds.forEach((id) => next.delete(id));
+      else visibleIds.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+
+  if (!enhancedUser) return <EquipmentLoadingState count={3} />;
 
   return (
-    <AuthGuard>
-      <EquipmentErrorBoundary>
-        <div className="min-h-screen bg-neutral-50" dir="rtl">
-          {/* Header */}
-          <Header 
-            title={`🎖️ ${TEXT_CONSTANTS.FEATURES.EQUIPMENT.TITLE}`}
-            subtitle={TEXT_CONSTANTS.FEATURES.EQUIPMENT.DESCRIPTION}
-            showAuth={true}
-          />
+    <div className="max-w-7xl mx-auto w-full pb-24">
+      <PageHeader onAdd={() => setActiveModal({ kind: 'wizard' })} />
 
-          {/* Main Content */}
-          <main className="relative z-10 pb-16 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
-              
-              {/* Page Controls */}
-              <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => setShowAddModal(true)}
-                    className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors shadow-sm"
-                  >
-                    ➕ {TEXT_CONSTANTS.FEATURES.EQUIPMENT.ADD_NEW}
-                  </button>
-                </div>
-                <div>
-                  {/* Development Badge */}
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
-                    🚧 {TEXT_CONSTANTS.FEATURES.EQUIPMENT.STEP_INTERFACE_DEV}
-                  </span>
-                </div>
-                
-                {/* Refresh Button */}
-                <button
-                  onClick={handleRefresh}
-                  disabled={loading || isRefreshing}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 
-                             disabled:bg-neutral-400 disabled:cursor-not-allowed transition-colors
-                             focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                >
-                  {loading || isRefreshing ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.REFRESHING}</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <span>🔄</span>
-                      <span>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.REFRESH}</span>
-                    </div>
-                  )}
-                </button>
-              </div>
+      <EquipmentTabs scope={scope} onChange={setScope} user={enhancedUser} />
 
-              {/* Development Tools */}
-              {process.env.NODE_ENV === 'development' && (
-                <div className="bg-info-50 border border-info-200 rounded-lg p-4 mb-6">
-                  <h3 className="font-semibold text-info-800 mb-2">🧪 כלי פיתוח</h3>
-                  <div className="space-y-2">
-                    <a
-                      href="/test-dashboard"
-                      className="inline-block bg-info-600 text-white px-4 py-2 rounded-md hover:bg-info-700 transition-colors"
-                    >
-                      🚀 מרכז בדיקות מערכת
-                    </a>
-                    <p className="text-sm text-info-700">
-                      ממשק מאוחד לכל בדיקות המערכת - ציוד, מסד נתונים, ואבטחה
-                    </p>
-                    {/* Permission Debug Info */}
-                    <div className="mt-3 p-3 bg-warning-50 border border-warning-200 rounded-md">
-                      <h4 className="font-medium text-warning-800 mb-1">🔒 מידע הרשאות</h4>
-                      <div className="text-sm text-warning-700 space-y-1">
-                        <p><strong>משתמש:</strong> {enhancedUser?.firstName} {enhancedUser?.lastName}</p>
-                        <p><strong>סוג משתמש:</strong> {enhancedUser?.userType || 'לא מוגדר'}</p>
-                        <p><strong>רמת הרשאה:</strong> {userPermissionLevel}</p>
-                        <p><strong>יכול לנהל ציוד:</strong> {canManageEquipment ? '✅ כן' : '❌ לא'}</p>
-                        <p className="text-xs mt-2">
-                          רק משתמשים מסוג admin, system_manager, או manager יכולים להעביר/לעדכן ציוד בטאב &quot;ציוד נוסף&quot;
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+      <FilterBar
+        searchTerm={searchTerm}
+        onSearch={setSearchTerm}
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+      />
 
-              {/* Equipment Content */}
-              {loading && !equipment.length ? (
-                <EquipmentLoadingState count={6} />
-              ) : (
-                <EquipmentList
-                  equipment={equipment}
-                  loading={loading}
-                  error={error}
-                  onTransfer={handleTransfer}
-                  onUpdateStatus={handleUpdateStatus}
-                  onViewHistory={handleViewHistory}
-                  onCredit={handleCredit}
-                  onRefresh={handleRefresh}
-                />
-              )}
+      {loading && equipment.length === 0 ? (
+        <EquipmentLoadingState count={6} />
+      ) : error ? (
+        <ErrorState message={error} onRetry={refreshEquipment} />
+      ) : (
+        <EquipmentTable
+          equipment={filtered}
+          user={enhancedUser}
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelect}
+          onToggleSelectAllVisible={toggleSelectAllVisible}
+          onRowAction={handleRowAction}
+          emptyMessage={emptyMessageFor(scope)}
+        />
+      )}
 
-              {/* Development Info */}
-              <div className="mt-12 p-4 bg-info-50 border border-info-200 rounded-lg">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm">
-                  <div className="text-info-700">
-                    <strong>🎯 Development Status:</strong> {TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_UI_COMPLETED}
-                  </div>
-                  <div className="text-info-600">
-                    {TEXT_CONSTANTS.FEATURES.EQUIPMENT.NEXT_FORMS_ACTIONS}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </main>
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        onClear={() => setSelectedIds(new Set())}
+        onAction={handleBulk}
+        allowRetire={false}
+      />
 
-          {/* Add Equipment Modal */}
-          <EquipmentModal
-            isOpen={showAddModal}
-            onClose={() => setShowAddModal(false)}
-            onSubmit={handleAddEquipment}
-            loading={loading}
-            mode="create"
-          />
+      <PersonalAmmunitionSection user={enhancedUser} />
 
-          {/* Update Equipment Modal */}
-          <EquipmentModal
-            isOpen={showUpdateModal}
-            onClose={() => {
-              setShowUpdateModal(false);
-              setSelectedEquipment(null);
-            }}
-            onUpdate={handleUpdateEquipment}
-            loading={loading}
-            mode="update"
-            existingEquipment={selectedEquipment || undefined}
-          />
-
-          {/* Transfer Equipment Modal */}
-          <TransferModal
-            isOpen={showTransferModal}
-            onClose={() => {
-              setShowTransferModal(false);
-              setSelectedEquipment(null);
-            }}
-            equipment={selectedEquipment}
-            onTransferSuccess={handleTransferSuccess}
-          />
-
-          {/* Equipment History Modal */}
-          {historyEquipment && (
-            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-                <div className="flex items-center justify-between p-6 border-b border-neutral-200">
-                  <h2 className="text-lg font-bold text-neutral-900">
-                    היסטוריית ציוד — {historyEquipment.productName} ({historyEquipment.id})
-                  </h2>
-                  <button
-                    onClick={() => setHistoryEquipment(null)}
-                    className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <div className="p-6 overflow-y-auto max-h-[60vh]">
-                  {(!historyEquipment.trackingHistory || historyEquipment.trackingHistory.length === 0) ? (
-                    <p className="text-neutral-500 text-center py-8">אין היסטוריה זמינה</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {[...historyEquipment.trackingHistory].reverse().map((entry: EquipmentHistoryEntry, index: number) => {
-                        const timestamp = entry.timestamp instanceof Timestamp
-                          ? entry.timestamp.toDate()
-                          : new Date(entry.timestamp as unknown as string);
-                        return (
-                          <div key={index} className="border-s-4 border-primary-300 ps-4 py-2">
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium text-neutral-900">{entry.action}</span>
-                              <span className="text-xs text-neutral-500">
-                                {timestamp.toLocaleDateString('he-IL')} {timestamp.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            </div>
-                            <div className="text-sm text-neutral-600 mt-1">
-                              {entry.holder && <p>👤 {entry.holder}</p>}
-                              {entry.location && <p>📍 {entry.location}</p>}
-                              {entry.notes && <p>📝 {entry.notes}</p>}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </EquipmentErrorBoundary>
-    </AuthGuard>
+      {activeModal?.kind === 'wizard' && (
+        <AddEquipmentWizard
+          user={enhancedUser}
+          resumeDraftId={resumeDraft}
+          resumeTemplateId={resumeTemplate}
+          onClose={closeModal}
+          onSubmitted={() => { refreshEquipment(); closeModal(); }}
+        />
+      )}
+      {activeModal?.kind === 'report' && (
+        <ReportModal
+          equipment={activeModal.equipment}
+          user={enhancedUser}
+          onClose={closeModal}
+          onSubmit={async (photoUrl, note) => {
+            const ok = await reportEquipment(activeModal.equipment.id, photoUrl, note);
+            return { success: ok, error: ok ? undefined : TEXT_CONSTANTS.FEATURES.EQUIPMENT.REPORT_MODAL.ERROR };
+          }}
+        />
+      )}
+      {activeModal?.kind === 'return' && (
+        <ReturnModal
+          equipment={activeModal.equipment}
+          isHolder={activeModal.equipment.currentHolderId === enhancedUser.uid}
+          onClose={closeModal}
+          onSubmit={async (reason) => retireEquipment(activeModal.equipment.id, reason)}
+        />
+      )}
+      {activeModal?.kind === 'transfer' && (
+        <TransferModal
+          isOpen
+          equipment={activeModal.equipment}
+          onClose={closeModal}
+          onTransferSuccess={() => { refreshEquipment(); closeModal(); }}
+        />
+      )}
+      {activeModal?.kind === 'history' && (
+        <ActionHistoryPanel equipment={activeModal.equipment} onClose={closeModal} />
+      )}
+    </div>
   );
+}
+
+function PageHeader({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className="flex items-center justify-between mb-6">
+      <button
+        type="button"
+        onClick={onAdd}
+        className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
+      >
+        <Plus className="w-4 h-4" />
+        {TEXT_CONSTANTS.FEATURES.EQUIPMENT.ADD_NEW}
+      </button>
+    </div>
+  );
+}
+
+function FilterBar({
+  searchTerm,
+  onSearch,
+  statusFilter,
+  onStatusChange,
+}: {
+  searchTerm: string;
+  onSearch: (s: string) => void;
+  statusFilter: EquipmentStatus | 'all';
+  onStatusChange: (s: EquipmentStatus | 'all') => void;
+}) {
+  return (
+    <div className="bg-white rounded-b-xl border-x border-b border-neutral-200 p-3 mb-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="sm:col-span-2 relative">
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+        <input
+          type="search"
+          value={searchTerm}
+          onChange={(e) => onSearch(e.target.value)}
+          placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.SEARCH_PLACEHOLDER}
+          className="w-full ps-9 pe-3 py-2 text-sm border border-neutral-200 rounded-lg bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-primary-500"
+        />
+      </div>
+      <select
+        value={statusFilter}
+        onChange={(e) => onStatusChange(e.target.value as EquipmentStatus | 'all')}
+        className="px-3 py-2 text-sm border border-neutral-200 rounded-lg bg-neutral-50 focus:ring-2 focus:ring-primary-500"
+      >
+        <option value="all">{TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}</option>
+        <option value={EquipmentStatus.AVAILABLE}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.AVAILABLE}</option>
+        <option value={EquipmentStatus.SECURITY}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.SECURITY}</option>
+        <option value={EquipmentStatus.REPAIR}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.REPAIR}</option>
+        <option value={EquipmentStatus.LOST}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.LOST}</option>
+        <option value={EquipmentStatus.PENDING_TRANSFER}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.PENDING_TRANSFER}</option>
+      </select>
+    </div>
+  );
+}
+
+function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="bg-white rounded-xl border border-danger-200 p-8 text-center">
+      <p className="text-sm text-danger-700 mb-3">❌ {message}</p>
+      <button onClick={onRetry} className="btn-secondary">
+        {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TRY_AGAIN}
+      </button>
+    </div>
+  );
+}
+
+function emptyMessageFor(scope: 'self' | 'team' | 'all'): string {
+  const t = TEXT_CONSTANTS.FEATURES.EQUIPMENT;
+  if (scope === 'self') return t.EMPTY_TAB_SELF;
+  if (scope === 'team') return t.EMPTY_TAB_TEAM;
+  return t.EMPTY_TAB_ALL;
 }

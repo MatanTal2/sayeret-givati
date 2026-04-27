@@ -23,4 +23,5 @@ All state delegated to hooks:
 ## Notes
 
 - Shows access-denied view if `!permissions.canAccessManagement`.
-- `dir="rtl"` on the access-denied wrapper div — redundant.
+- The outer wrapper carries `overflow-x-hidden` to stop the closed mobile sidebar (translated off-screen via `translate-x-full`) from inflating the document width and pushing the layout to the right.
+- No `dir="rtl"` on this page — the global `<html dir="rtl">` in `src/app/layout.tsx` is the single source.

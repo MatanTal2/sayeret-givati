@@ -201,6 +201,25 @@ export function useNotificationDisplay() {
         return '👨‍✈️';
       case 'daily_check_reminder':
         return '📋';
+      case 'template_request_approved':
+        return '✅';
+      case 'template_request_rejected':
+        return '❌';
+      case 'template_proposed_for_review':
+        return '📝';
+      case 'new_template_request_for_review':
+        return '🆕';
+      case 'retirement_request_approval':
+        return '📦';
+      case 'retirement_approved':
+        return '✅';
+      case 'retirement_rejected':
+        return '❌';
+      case 'report_requested':
+        return '📋';
+      case 'force_transfer_executed':
+      case 'force_signer_changed':
+        return '⚡';
       default:
         return '🔔';
     }
@@ -228,6 +247,25 @@ export function useNotificationDisplay() {
         return 'text-blue-800';
       case 'daily_check_reminder':
         return 'text-teal-600';
+      case 'template_request_approved':
+        return 'text-success-600';
+      case 'template_request_rejected':
+        return 'text-danger-600';
+      case 'template_proposed_for_review':
+        return 'text-info-600';
+      case 'new_template_request_for_review':
+        return 'text-info-700';
+      case 'retirement_request_approval':
+        return 'text-warning-700';
+      case 'retirement_approved':
+        return 'text-success-700';
+      case 'retirement_rejected':
+        return 'text-danger-700';
+      case 'report_requested':
+        return 'text-primary-600';
+      case 'force_transfer_executed':
+      case 'force_signer_changed':
+        return 'text-orange-600';
       default:
         return 'text-gray-500';
     }
@@ -290,7 +328,9 @@ export function useNotificationDisplay() {
       timeAgo: getTimeAgo(notification.createdAt),
       icon: getNotificationIcon(notification.type),
       color: getNotificationColor(notification.type),
-      equipmentName: notification.equipmentName
+      equipmentName: notification.equipmentName,
+      relatedEquipmentDocId: notification.relatedEquipmentDocId,
+      relatedTransferId: notification.relatedTransferId,
     };
   });
 
