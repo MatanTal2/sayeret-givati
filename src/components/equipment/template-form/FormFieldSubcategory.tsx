@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { FormField, Button } from '@/components/ui';
+import { FormField, Button, Select } from '@/components/ui';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { Subcategory } from './types';
 import { CategoriesService } from '@/lib/categoriesService';
@@ -66,27 +66,21 @@ export default function FormFieldSubcategory({
         required
         error={error}
       >
-        <div className="space-y-2">
-          <select
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            disabled={isSubcategoryDisabled}
-            className="input-base max-w-sm text-sm"
-          >
-            <option value="">
-              {!selectedCategoryId 
+        <div className="space-y-2 max-w-sm">
+          <Select
+            value={value || null}
+            onChange={(v) => onChange(v ?? '')}
+            options={subcategories.map((s) => ({ value: s.id, label: s.name }))}
+            placeholder={
+              !selectedCategoryId
                 ? 'בחר קטגוריה תחילה'
-                : subcategories.length === 0 
+                : subcategories.length === 0
                   ? 'אין תת-קטגוריות עדיין - צור ראשונה'
                   : TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.SELECT_SUBCATEGORY
-              }
-            </option>
-            {subcategories.map(subcategory => (
-              <option key={subcategory.id} value={subcategory.id}>
-                {subcategory.name}
-              </option>
-            ))}
-          </select>
+            }
+            disabled={isSubcategoryDisabled}
+            ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.SUBCATEGORY}
+          />
           {selectedCategoryId && (
             <button
               type="button"

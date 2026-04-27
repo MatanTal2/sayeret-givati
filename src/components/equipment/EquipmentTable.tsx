@@ -7,6 +7,7 @@ import type { Equipment } from '@/types/equipment';
 import { EquipmentStatus } from '@/types/equipment';
 import type { EnhancedAuthUser } from '@/types/user';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import { Select } from '@/components/ui';
 import StatusComponent from './EquipmentStatus';
 import ConditionComponent from './EquipmentCondition';
 import EquipmentRowActions, { type EquipmentRowAction } from './EquipmentRowActions';
@@ -142,15 +143,18 @@ function SortBar({
       </label>
       <span className="text-neutral-300">|</span>
       <span className="text-neutral-500">מיון:</span>
-      <select
-        value={sortField}
-        onChange={(e) => onChangeField(e.target.value as SortField)}
-        className="px-2 py-1 text-xs border border-neutral-200 rounded-md bg-white focus:ring-2 focus:ring-primary-500"
-      >
-        {(Object.keys(sortLabels) as SortField[]).map((f) => (
-          <option key={f} value={f}>{sortLabels[f]}</option>
-        ))}
-      </select>
+      <div className="min-w-[8rem]">
+        <Select
+          value={sortField}
+          onChange={(v) => v && onChangeField(v as SortField)}
+          options={(Object.keys(sortLabels) as SortField[]).map((f) => ({
+            value: f,
+            label: sortLabels[f],
+          }))}
+          className="text-xs py-1"
+          ariaLabel="מיון"
+        />
+      </div>
       <button
         type="button"
         onClick={onToggleOrder}

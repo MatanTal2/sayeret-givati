@@ -5,6 +5,7 @@ import React, { useState, useMemo } from 'react';
 import { Users, AlertCircle, RefreshCw } from 'lucide-react';
 import { useUsers } from '@/hooks/useUsers';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import { Select } from '@/components/ui';
 
 export default function UsersTab() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -161,34 +162,38 @@ export default function UsersTab() {
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">תפקיד</label>
-            <select
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value)}
-            >
-              <option value="all">{TEXT_CONSTANTS.MANAGEMENT.USERS.ALL_ROLES}</option>
-              <option value="admin">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_ADMIN}</option>
-              <option value="manager">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_MANAGER}</option>
-              <option value="user">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_USER}</option>
-              <option value="team_leader">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_TEAM_LEADER}</option>
-              <option value="officer">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_OFFICER}</option>
-              <option value="commander">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_COMMANDER}</option>
-              <option value="equipment_manager">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_EQUIPMENT_MANAGER}</option>
-            </select>
+            <Select
+              value={selectedRole === 'all' ? null : selectedRole}
+              onChange={(v) => setSelectedRole(v ?? 'all')}
+              options={[
+                { value: 'admin', label: TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_ADMIN },
+                { value: 'manager', label: TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_MANAGER },
+                { value: 'user', label: TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_USER },
+                { value: 'team_leader', label: TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_TEAM_LEADER },
+                { value: 'officer', label: TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_OFFICER },
+                { value: 'commander', label: TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_COMMANDER },
+                { value: 'equipment_manager', label: TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_EQUIPMENT_MANAGER },
+              ]}
+              placeholder={TEXT_CONSTANTS.MANAGEMENT.USERS.ALL_ROLES}
+              clearable
+              ariaLabel="תפקיד"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">סטטוס</label>
-            <select
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-            >
-              <option value="all">{TEXT_CONSTANTS.MANAGEMENT.USERS.ALL_STATUSES}</option>
-              <option value="active">{TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_ACTIVE}</option>
-              <option value="inactive">{TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_INACTIVE}</option>
-              <option value="transferred">{TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_TRANSFERRED}</option>
-              <option value="discharged">{TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_DISCHARGED}</option>
-            </select>
+            <Select
+              value={selectedStatus === 'all' ? null : selectedStatus}
+              onChange={(v) => setSelectedStatus(v ?? 'all')}
+              options={[
+                { value: 'active', label: TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_ACTIVE },
+                { value: 'inactive', label: TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_INACTIVE },
+                { value: 'transferred', label: TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_TRANSFERRED },
+                { value: 'discharged', label: TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_DISCHARGED },
+              ]}
+              placeholder={TEXT_CONSTANTS.MANAGEMENT.USERS.ALL_STATUSES}
+              clearable
+              ariaLabel="סטטוס"
+            />
           </div>
         </div>
         

@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { FormField, Button } from '@/components/ui';
+import { FormField, Button, Select } from '@/components/ui';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { Category } from './types';
 import { CategoriesService } from '@/lib/categoriesService';
@@ -62,25 +62,19 @@ export default function FormFieldCategory({
         required
         error={error}
       >
-        <div className="space-y-2">
-          <select
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            disabled={disabled}
-            className="input-base max-w-sm text-sm"
-          >
-            <option value="">
-              {categories.length === 0 
-                ? 'אין קטגוריות עדיין - צור ראשונה' 
+        <div className="space-y-2 max-w-sm">
+          <Select
+            value={value || null}
+            onChange={(v) => onChange(v ?? '')}
+            options={categories.map((c) => ({ value: c.id, label: c.name }))}
+            placeholder={
+              categories.length === 0
+                ? 'אין קטגוריות עדיין - צור ראשונה'
                 : TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.SELECT_CATEGORY
-              }
-            </option>
-            {categories.map(category => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+            }
+            disabled={disabled}
+            ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.CATEGORY}
+          />
           <button
             type="button"
             onClick={() => setShowAddModal(true)}

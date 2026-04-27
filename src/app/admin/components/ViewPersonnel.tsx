@@ -6,6 +6,7 @@ import { formatPhoneForDisplay, normalizePhoneForSearch } from '@/utils/validati
 import { UserType } from '@/types/user';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import { Select } from '@/components/ui';
 
 
 export default function ViewPersonnel() {
@@ -187,18 +188,14 @@ export default function ViewPersonnel() {
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               🎖️ Filter by Rank
             </label>
-            <select
-              value={selectedRank}
-              onChange={(e) => setSelectedRank(e.target.value)}
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                         bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
-                         focus:ring-2 focus:ring-info-500 focus:border-info-500"
-            >
-              <option value="">All Ranks</option>
-              {uniqueRanks.map(rank => (
-                <option key={rank} value={rank}>{rank}</option>
-              ))}
-            </select>
+            <Select
+              value={selectedRank || null}
+              onChange={(v) => setSelectedRank(v ?? '')}
+              options={uniqueRanks.map((r) => ({ value: r, label: r }))}
+              placeholder="All Ranks"
+              clearable
+              ariaLabel="Filter by Rank"
+            />
           </div>
 
           {/* User Type Filter */}
@@ -206,20 +203,17 @@ export default function ViewPersonnel() {
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               🔑 Filter by User Type
             </label>
-            <select
-              value={selectedUserType}
-              onChange={(e) => setSelectedUserType(e.target.value)}
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                         bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
-                         focus:ring-2 focus:ring-info-500 focus:border-info-500"
-            >
-              <option value="">All User Types</option>
-              {uniqueUserTypes.map(userType => (
-                <option key={userType} value={userType}>
-                  {userType.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                </option>
-              ))}
-            </select>
+            <Select
+              value={selectedUserType || null}
+              onChange={(v) => setSelectedUserType(v ?? '')}
+              options={uniqueUserTypes.map((u) => ({
+                value: u,
+                label: u.replace('_', ' ').split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+              }))}
+              placeholder="All User Types"
+              clearable
+              ariaLabel="Filter by User Type"
+            />
           </div>
 
           {/* Filter by Registration Status */}
@@ -227,17 +221,16 @@ export default function ViewPersonnel() {
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               📋 Registration Status
             </label>
-            <select
+            <Select
               value={registrationFilter}
-              onChange={(e) => setRegistrationFilter(e.target.value as 'all' | 'registered' | 'pending')}
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                         bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
-                         focus:ring-2 focus:ring-info-500 focus:border-info-500"
-            >
-              <option value="all">All Status</option>
-              <option value="registered">✅ Registered</option>
-              <option value="pending">⏳ Pending</option>
-            </select>
+              onChange={(v) => v && setRegistrationFilter(v as 'all' | 'registered' | 'pending')}
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'registered', label: '✅ Registered' },
+                { value: 'pending', label: '⏳ Pending' },
+              ]}
+              ariaLabel="Registration Status"
+            />
           </div>
 
           {/* Sort By */}
@@ -245,17 +238,16 @@ export default function ViewPersonnel() {
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               📊 Sort By
             </label>
-            <select
+            <Select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as 'name' | 'rank' | 'created')}
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                         bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
-                         focus:ring-2 focus:ring-info-500 focus:border-info-500"
-            >
-              <option value="created">Creation Date</option>
-              <option value="name">Name</option>
-              <option value="rank">Rank</option>
-            </select>
+              onChange={(v) => v && setSortBy(v as 'name' | 'rank' | 'created')}
+              options={[
+                { value: 'created', label: 'Creation Date' },
+                { value: 'name', label: 'Name' },
+                { value: 'rank', label: 'Rank' },
+              ]}
+              ariaLabel="Sort By"
+            />
           </div>
 
           {/* Sort Order */}
@@ -263,16 +255,15 @@ export default function ViewPersonnel() {
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               🔄 Order
             </label>
-            <select
+            <Select
               value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                         bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
-                         focus:ring-2 focus:ring-info-500 focus:border-info-500"
-            >
-              <option value="desc">Newest First</option>
-              <option value="asc">Oldest First</option>
-            </select>
+              onChange={(v) => v && setSortOrder(v as 'asc' | 'desc')}
+              options={[
+                { value: 'desc', label: 'Newest First' },
+                { value: 'asc', label: 'Oldest First' },
+              ]}
+              ariaLabel="Sort Order"
+            />
           </div>
         </div>
 

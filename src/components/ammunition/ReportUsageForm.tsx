@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { Button, Select } from '@/components/ui';
 import { FEATURES } from '@/constants/text';
 import type {
   AmmunitionItem,
@@ -204,17 +204,15 @@ export default function ReportUsageForm({
                 <label className="block text-sm font-medium text-neutral-700 mb-1">
                   {T.REPORT_FORM.TEMPLATE}
                 </label>
-                <select
+                <Select
                   value={templateId}
-                  onChange={(e) => setTemplateId(e.target.value)}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                >
-                  {reportableTemplates.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name} · {T.TRACKING_MODE[t.trackingMode]}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => v && setTemplateId(v)}
+                  options={reportableTemplates.map((t) => ({
+                    value: t.id,
+                    label: `${t.name} · ${T.TRACKING_MODE[t.trackingMode]}`,
+                  }))}
+                  ariaLabel={T.REPORT_FORM.TEMPLATE}
+                />
               </div>
 
               {template?.trackingMode === 'BRUCE' && (
@@ -261,17 +259,15 @@ export default function ReportUsageForm({
                     <label className="block text-xs font-medium text-neutral-700 mb-1">
                       {T.REPORT_FORM.FINAL_BRUCE_STATE}
                     </label>
-                    <select
+                    <Select
                       value={finalState}
-                      onChange={(e) => setFinalState(e.target.value as BruceState)}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    >
-                      {BRUCE_STATES.map((s) => (
-                        <option key={s} value={s}>
-                          {T.BRUCE_STATE[s]}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(v) => v && setFinalState(v as BruceState)}
+                      options={BRUCE_STATES.map((s) => ({
+                        value: s,
+                        label: T.BRUCE_STATE[s],
+                      }))}
+                      ariaLabel={T.REPORT_FORM.FINAL_BRUCE_STATE}
+                    />
                   </div>
                   {myStockEntry && (
                     <p className="text-xs text-neutral-500">

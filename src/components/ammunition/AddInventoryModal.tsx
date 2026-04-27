@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { Button, Select } from '@/components/ui';
 import { FEATURES } from '@/constants/text';
 import UserSearchInput from '@/components/users/UserSearchInput';
 import type { UserSearchResult } from '@/lib/userService';
@@ -179,17 +179,15 @@ export default function AddInventoryModal({
 
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">פריט</label>
-            <select
+            <Select
               value={templateId}
-              onChange={(e) => setTemplateId(e.target.value)}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-            >
-              {selectableTemplates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name} · {T.TRACKING_MODE[t.trackingMode]}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => v && setTemplateId(v)}
+              options={selectableTemplates.map((t) => ({
+                value: t.id,
+                label: `${t.name} · ${T.TRACKING_MODE[t.trackingMode]}`,
+              }))}
+              ariaLabel="פריט"
+            />
           </div>
 
           {allowHolderPicker && isManagerOrTL && (
@@ -262,17 +260,15 @@ export default function AddInventoryModal({
                 <label className="block text-sm font-medium text-neutral-700 mb-1">
                   מצב ברוס פתוח
                 </label>
-                <select
+                <Select
                   value={openBruceState}
-                  onChange={(e) => setOpenBruceState(e.target.value as BruceState)}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                >
-                  {BRUCE_STATES.map((s) => (
-                    <option key={s} value={s}>
-                      {T.BRUCE_STATE[s]}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => v && setOpenBruceState(v as BruceState)}
+                  options={BRUCE_STATES.map((s) => ({
+                    value: s,
+                    label: T.BRUCE_STATE[s],
+                  }))}
+                  ariaLabel="מצב ברוס פתוח"
+                />
               </div>
             </div>
           )}

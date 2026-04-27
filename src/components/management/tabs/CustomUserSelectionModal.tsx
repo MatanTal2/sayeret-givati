@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Card, Button, FormField } from '@/components/ui';
+import { Card, Button, FormField, Select } from '@/components/ui';
 import { useUsers, UserForEmail } from '@/hooks/useUsers';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import { TEXT_CONSTANTS } from '@/constants/text';
@@ -187,18 +187,16 @@ export default function CustomUserSelectionModal({
               <label className="text-sm font-medium text-neutral-700 whitespace-nowrap">
                 סינון לפי אות ראשונה:
               </label>
-              <select
-                value={alphabetFilter}
-                onChange={(e) => setAlphabetFilter(e.target.value as AlphabetFilter)}
-                className="px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-20 text-center"
-              >
-                <option value="all">הכל</option>
-                {hebrewAlphabet.map(letter => (
-                  <option key={letter} value={letter}>
-                    {letter}
-                  </option>
-                ))}
-              </select>
+              <div className="w-24">
+                <Select
+                  value={alphabetFilter === 'all' ? null : alphabetFilter}
+                  onChange={(v) => setAlphabetFilter((v ?? 'all') as AlphabetFilter)}
+                  options={hebrewAlphabet.map((letter) => ({ value: letter, label: letter }))}
+                  placeholder="הכל"
+                  clearable
+                  ariaLabel="סינון לפי אות ראשונה"
+                />
+              </div>
             </div>
 
             {/* Selection Controls */}

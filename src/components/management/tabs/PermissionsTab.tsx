@@ -2,6 +2,7 @@
  * Permissions management tab component - extracted from management page
  */
 import React, { useState } from 'react';
+import { Select } from '@/components/ui';
 
 export default function PermissionsTab() {
   const [selectedUser, setSelectedUser] = useState('');
@@ -55,18 +56,20 @@ export default function PermissionsTab() {
       <div className="bg-white rounded-lg border border-neutral-200 p-6">
         <h4 className="text-lg font-medium text-neutral-900 mb-4">הרשאות מותאמות אישית</h4>
         <div className="space-y-4">
-          <div>
+          <div className="md:max-w-xs">
             <label className="block text-sm font-medium text-neutral-700 mb-2">בחר משתמש</label>
-            <select
-              className="w-full md:w-64 px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              value={selectedUser}
-              onChange={(e) => setSelectedUser(e.target.value)}
-            >
-              <option value="">בחר משתמש...</option>
-              <option value="1">יוסי כהן</option>
-              <option value="2">שרה לוי</option>
-              <option value="3">דוד אבן</option>
-            </select>
+            <Select
+              value={selectedUser || null}
+              onChange={(v) => setSelectedUser(v ?? '')}
+              options={[
+                { value: '1', label: 'יוסי כהן' },
+                { value: '2', label: 'שרה לוי' },
+                { value: '3', label: 'דוד אבן' },
+              ]}
+              placeholder="בחר משתמש..."
+              clearable
+              ariaLabel="בחר משתמש"
+            />
           </div>
           {selectedUser && (
             <div className="border border-neutral-200 rounded-lg p-4">

@@ -21,6 +21,7 @@ import TransferModal from '@/components/equipment/TransferModal';
 import ActionHistoryPanel from '@/components/equipment/ActionHistoryPanel';
 import { type Equipment, EquipmentStatus } from '@/types/equipment';
 import PersonalAmmunitionSection from '@/components/equipment/PersonalAmmunitionSection';
+import { Select } from '@/components/ui';
 
 type ActiveModal =
   | { kind: 'wizard' }
@@ -269,18 +270,20 @@ function FilterBar({
           className="w-full ps-9 pe-3 py-2 text-sm border border-neutral-200 rounded-lg bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-primary-500"
         />
       </div>
-      <select
-        value={statusFilter}
-        onChange={(e) => onStatusChange(e.target.value as EquipmentStatus | 'all')}
-        className="px-3 py-2 text-sm border border-neutral-200 rounded-lg bg-neutral-50 focus:ring-2 focus:ring-primary-500"
-      >
-        <option value="all">{TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}</option>
-        <option value={EquipmentStatus.AVAILABLE}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.AVAILABLE}</option>
-        <option value={EquipmentStatus.SECURITY}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.SECURITY}</option>
-        <option value={EquipmentStatus.REPAIR}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.REPAIR}</option>
-        <option value={EquipmentStatus.LOST}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.LOST}</option>
-        <option value={EquipmentStatus.PENDING_TRANSFER}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.PENDING_TRANSFER}</option>
-      </select>
+      <Select
+        value={statusFilter === 'all' ? null : statusFilter}
+        onChange={(v) => onStatusChange(v === null ? 'all' : (v as EquipmentStatus))}
+        options={[
+          { value: EquipmentStatus.AVAILABLE, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.AVAILABLE },
+          { value: EquipmentStatus.SECURITY, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.SECURITY },
+          { value: EquipmentStatus.REPAIR, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.REPAIR },
+          { value: EquipmentStatus.LOST, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.LOST },
+          { value: EquipmentStatus.PENDING_TRANSFER, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.PENDING_TRANSFER },
+        ]}
+        placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}
+        clearable
+        ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}
+      />
     </div>
   );
 }

@@ -14,6 +14,7 @@ import {
 } from '@/lib/transferRequestService';
 import { TransferRequest } from '@/types/equipment';
 import { Timestamp } from 'firebase/firestore';
+import { Select } from '@/components/ui';
 
 export default function EnforceTransferTab() {
   const { enhancedUser } = useAuth();
@@ -102,47 +103,52 @@ export default function EnforceTransferTab() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">ציוד</label>
-            <select
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-danger-500 focus:border-danger-500"
-              value={selectedEquipment}
-              onChange={(e) => setSelectedEquipment(e.target.value)}
-            >
-              <option value="">בחר ציוד...</option>
-            </select>
+            <Select
+              value={selectedEquipment || null}
+              onChange={(v) => setSelectedEquipment(v ?? '')}
+              options={[]}
+              placeholder="בחר ציוד..."
+              clearable
+              ariaLabel="ציוד"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">מ-משתמש</label>
-            <select
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-danger-500 focus:border-danger-500"
-              value={fromUser}
-              onChange={(e) => setFromUser(e.target.value)}
-            >
-              <option value="">בחר משתמש...</option>
-            </select>
+            <Select
+              value={fromUser || null}
+              onChange={(v) => setFromUser(v ?? '')}
+              options={[]}
+              placeholder="בחר משתמש..."
+              clearable
+              ariaLabel="מ-משתמש"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">אל-משתמש</label>
-            <select
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-danger-500 focus:border-danger-500"
-              value={toUser}
-              onChange={(e) => setToUser(e.target.value)}
-            >
-              <option value="">בחר משתמש...</option>
-            </select>
+            <Select
+              value={toUser || null}
+              onChange={(v) => setToUser(v ?? '')}
+              options={[]}
+              placeholder="בחר משתמש..."
+              clearable
+              ariaLabel="אל-משתמש"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">סיבה להעברה</label>
-            <select
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-danger-500 focus:border-danger-500"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-            >
-              <option value="">בחר סיבה...</option>
-              <option value="emergency">מצב חירום</option>
-              <option value="unavailable">משתמש לא זמין</option>
-              <option value="maintenance">תחזוקה</option>
-              <option value="other">אחר</option>
-            </select>
+            <Select
+              value={reason || null}
+              onChange={(v) => setReason(v ?? '')}
+              options={[
+                { value: 'emergency', label: 'מצב חירום' },
+                { value: 'unavailable', label: 'משתמש לא זמין' },
+                { value: 'maintenance', label: 'תחזוקה' },
+                { value: 'other', label: 'אחר' },
+              ]}
+              placeholder="בחר סיבה..."
+              clearable
+              ariaLabel="סיבה להעברה"
+            />
           </div>
         </div>
         <div className="mt-4">
