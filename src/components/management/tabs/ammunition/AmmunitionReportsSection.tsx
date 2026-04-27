@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { Download, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { Button, Select } from '@/components/ui';
 import { FEATURES } from '@/constants/text';
 import { useAmmunitionTemplates } from '@/hooks/useAmmunitionTemplates';
 import { useAmmunitionReports } from '@/hooks/useAmmunitionReports';
@@ -158,36 +158,31 @@ export default function AmmunitionReportsSection() {
         </div>
         <div>
           <label className="block text-xs font-medium text-neutral-700 mb-1">תת-קטגוריה</label>
-          <select
-            value={subcategory}
-            onChange={(e) => {
-              setSubcategory(e.target.value as AmmunitionSubcategory | '');
+          <Select
+            value={subcategory || null}
+            onChange={(v) => {
+              setSubcategory((v as AmmunitionSubcategory | null) ?? '');
               setTemplateId('');
             }}
-            className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500"
-          >
-            <option value="">הכל</option>
-            {AMMUNITION_SUBCATEGORIES.map((s) => (
-              <option key={s} value={s}>
-                {T.SUBCATEGORIES[s]}
-              </option>
-            ))}
-          </select>
+            options={AMMUNITION_SUBCATEGORIES.map((s) => ({
+              value: s,
+              label: T.SUBCATEGORIES[s],
+            }))}
+            placeholder="הכל"
+            clearable
+            ariaLabel="תת-קטגוריה"
+          />
         </div>
         <div>
           <label className="block text-xs font-medium text-neutral-700 mb-1">פריט</label>
-          <select
-            value={templateId}
-            onChange={(e) => setTemplateId(e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500"
-          >
-            <option value="">הכל</option>
-            {filteredTemplates.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
+          <Select
+            value={templateId || null}
+            onChange={(v) => setTemplateId(v ?? '')}
+            options={filteredTemplates.map((t) => ({ value: t.id, label: t.name }))}
+            placeholder="הכל"
+            clearable
+            ariaLabel="פריט"
+          />
         </div>
         <div>
           <label className="block text-xs font-medium text-neutral-700 mb-1">צוות</label>

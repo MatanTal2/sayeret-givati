@@ -17,6 +17,7 @@ import { Download } from "lucide-react";
 import SoldiersTableDesktop from '../components/SoldiersTableDesktop';
 import SoldiersTableMobile from '../components/SoldiersTableMobile';
 import AuthGuard from '@/components/auth/AuthGuard';
+import { Select } from '@/components/ui';
 // import { 
 //   createToggleAllVisibleHandler,
 //   createSelectAllHandler,
@@ -849,20 +850,14 @@ export default function StatusPage() {
                     <label className="block text-sm font-medium text-neutral-700 mb-1 pr-1.5">
                       צוות <span className="text-danger-500">*</span>
                     </label>
-                    <select 
-                      value={newSoldier.platoon}
-                      onChange={handlePlatoonChange}
-                      className={`w-full h-10 border-2 rounded-md px-3 py-2 text-neutral-800 focus:outline-none focus:ring-2 ${
-                        formErrors.platoon 
-                          ? 'border-danger-500 focus:ring-danger-500 focus:border-danger-500' 
-                          : 'border-neutral-400 focus:ring-primary-500 focus:border-primary-500'
-                      }`}
-                    >
-                      <option value="">{TEXT_CONSTANTS.STATUS_PAGE.SELECT_TEAM}</option>
-                      {uniquePlatoons.map(platoon => (
-                        <option key={platoon} value={platoon}>{platoon}</option>
-                      ))}
-                    </select>
+                    <Select
+                      value={newSoldier.platoon || null}
+                      onChange={(v) => handlePlatoonChange({ target: { value: v ?? '' } } as React.ChangeEvent<HTMLSelectElement>)}
+                      options={uniquePlatoons.map((p) => ({ value: p, label: p }))}
+                      placeholder={TEXT_CONSTANTS.STATUS_PAGE.SELECT_TEAM}
+                      clearable
+                      ariaLabel="צוות"
+                    />
                     {formErrors.platoon && (
                       <p className="mt-1 text-sm text-danger-600">{formErrors.platoon}</p>
                     )}

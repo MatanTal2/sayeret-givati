@@ -2,6 +2,7 @@
  * Data management tab component - extracted from management page
  */
 import React, { useState } from 'react';
+import { Select } from '@/components/ui';
 
 export default function DataManagementTab() {
   const [selectedTable, setSelectedTable] = useState('');
@@ -57,31 +58,34 @@ export default function DataManagementTab() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">בחר טבלה</label>
-            <select
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              value={selectedTable}
-              onChange={(e) => setSelectedTable(e.target.value)}
-            >
-              <option value="">בחר טבלה...</option>
-              <option value="users">משתמשים</option>
-              <option value="equipment">ציוד</option>
-              <option value="logs">התיאמויות</option>
-              <option value="templates">תבניות</option>
-              <option value="all">כל הנתונים</option>
-            </select>
+            <Select
+              value={selectedTable || null}
+              onChange={(v) => setSelectedTable(v ?? '')}
+              options={[
+                { value: 'users', label: 'משתמשים' },
+                { value: 'equipment', label: 'ציוד' },
+                { value: 'logs', label: 'התיאמויות' },
+                { value: 'templates', label: 'תבניות' },
+                { value: 'all', label: 'כל הנתונים' },
+              ]}
+              placeholder="בחר טבלה..."
+              clearable
+              ariaLabel="בחר טבלה"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">פורמט ייצוא</label>
-            <select
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            <Select
               value={exportFormat}
-              onChange={(e) => setExportFormat(e.target.value)}
-            >
-              <option value="excel">Excel (.xlsx)</option>
-              <option value="csv">CSV (.csv)</option>
-              <option value="json">JSON (.json)</option>
-              <option value="pdf">PDF (.pdf)</option>
-            </select>
+              onChange={(v) => v && setExportFormat(v)}
+              options={[
+                { value: 'excel', label: 'Excel (.xlsx)' },
+                { value: 'csv', label: 'CSV (.csv)' },
+                { value: 'json', label: 'JSON (.json)' },
+                { value: 'pdf', label: 'PDF (.pdf)' },
+              ]}
+              ariaLabel="פורמט ייצוא"
+            />
           </div>
         </div>
         <div className="mt-4">

@@ -7,6 +7,7 @@ import { formatPhoneForDisplay, normalizePhoneForSearch } from '@/utils/validati
 import { AuthorizedPersonnel } from '@/types/admin';
 import { UserType } from '@/types/user';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import { Select } from '@/components/ui';
 
 
 
@@ -365,23 +366,15 @@ export default function UpdatePersonnel() {
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     Military Rank (דרגה) *
                   </label>
-                  <select
-                    value={editForm.rank}
-                    onChange={(e) => handleFormChange('rank', e.target.value)}
-                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                               bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
-                               focus:ring-2 focus:ring-info-500 focus:border-info-500
-                               disabled:opacity-50"
+                  <Select
+                    value={editForm.rank || null}
+                    onChange={(v) => handleFormChange('rank', v ?? '')}
+                    options={RANK_OPTIONS.map((r) => ({ value: r.value, label: r.label }))}
+                    placeholder="Select Rank"
+                    clearable
                     disabled={isUpdating}
-                    required
-                  >
-                    <option value="">Select Rank</option>
-                    {RANK_OPTIONS.map(rank => (
-                      <option key={rank.value} value={rank.value}>
-                        {rank.label}
-                      </option>
-                    ))}
-                  </select>
+                    ariaLabel="Military Rank"
+                  />
                 </div>
 
                 {/* User Type */}
@@ -389,22 +382,13 @@ export default function UpdatePersonnel() {
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     User Type (סוג משתמש) *
                   </label>
-                  <select
+                  <Select
                     value={editForm.userType}
-                    onChange={(e) => handleFormChange('userType', e.target.value)}
-                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                               bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
-                               focus:ring-2 focus:ring-info-500 focus:border-info-500
-                               disabled:opacity-50"
+                    onChange={(v) => v && handleFormChange('userType', v)}
+                    options={USER_TYPE_OPTIONS.map((t) => ({ value: t.value, label: t.label }))}
                     disabled={isUpdating}
-                    required
-                  >
-                    {USER_TYPE_OPTIONS.map(type => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
+                    ariaLabel="User Type"
+                  />
                 </div>
 
                 {/* Phone Number */}

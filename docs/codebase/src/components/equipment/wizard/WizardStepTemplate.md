@@ -14,4 +14,4 @@ Renders a "request a new template" link that emits `onRequestNew` to the orchest
 
 ## Styling
 
-Both selects (category + subcategory) use the shared `input-base` component class with `text-sm truncate`. This keeps them within the wizard modal's inner padding on small viewports and prevents long Hebrew option labels from blowing the field's width past the screen edge.
+Category + subcategory pickers use the shared `Select` component (`src/components/ui/Select.tsx`) — a Headless UI `Listbox` wrapper. Native `<select>` was removed because OS-rendered option panels overflow the modal and ignore site CSS. Both selects are `clearable` so the user can deselect back to no choice. See `docs/codebase/src/components/ui/Select.md`.

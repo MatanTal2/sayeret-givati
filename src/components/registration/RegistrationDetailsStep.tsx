@@ -8,6 +8,7 @@ import {
   validateConsent 
 } from '@/utils/validationUtils';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
+import { Select } from '@/components/ui';
 
 interface RegistrationDetailsStepProps {
   firstName: string;
@@ -243,22 +244,18 @@ export default function RegistrationDetailsStep({
             <label className="block text-sm font-medium text-neutral-700">
               {TEXT_CONSTANTS.AUTH.GENDER} *
             </label>
-            <select
-              value={formData.gender}
-              onChange={(e) => handleInputChange('gender', e.target.value)}
-              className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                       text-right text-neutral-800 bg-neutral-50 focus:bg-white ${
-                validationErrors.gender && formData.gender
-                  ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
-                  : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
-              }`}
-              data-testid="gender-select"
-            >
-              <option value="">בחר מין</option>
-              <option value="male">{TEXT_CONSTANTS.AUTH.GENDER_MALE}</option>
-              <option value="female">{TEXT_CONSTANTS.AUTH.GENDER_FEMALE}</option>
-              <option value="other">{TEXT_CONSTANTS.AUTH.GENDER_OTHER}</option>
-            </select>
+            <Select
+              value={formData.gender || null}
+              onChange={(v) => handleInputChange('gender', v ?? '')}
+              options={[
+                { value: 'male', label: TEXT_CONSTANTS.AUTH.GENDER_MALE },
+                { value: 'female', label: TEXT_CONSTANTS.AUTH.GENDER_FEMALE },
+                { value: 'other', label: TEXT_CONSTANTS.AUTH.GENDER_OTHER },
+              ]}
+              placeholder="בחר מין"
+              clearable
+              ariaLabel={TEXT_CONSTANTS.AUTH.GENDER}
+            />
             {validationErrors.gender && (
               <p className="text-sm text-danger-600 text-right px-1" data-testid="gender-error">
                 {validationErrors.gender}

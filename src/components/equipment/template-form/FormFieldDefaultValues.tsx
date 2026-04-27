@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { FormField } from '@/components/ui';
+import { FormField, Select } from '@/components/ui';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { EquipmentStatus, EquipmentCondition } from '@/types/equipment';
 
@@ -22,35 +22,42 @@ export default function FormFieldDefaultValues({
   onConditionChange,
   disabled = false
 }: FormFieldDefaultValuesProps) {
+  const statusOptions = [
+    { value: EquipmentStatus.AVAILABLE, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.AVAILABLE },
+    { value: EquipmentStatus.SECURITY, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.SECURITY },
+    { value: EquipmentStatus.REPAIR, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.REPAIR },
+    { value: EquipmentStatus.LOST, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.LOST },
+  ];
+  const conditionOptions = [
+    { value: EquipmentCondition.GOOD, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_OPTIONS.GOOD },
+    { value: EquipmentCondition.NEEDS_REPAIR, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_OPTIONS.NEEDS_REPAIR },
+    { value: EquipmentCondition.WORN, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_OPTIONS.WORN },
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
         label={TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.DEFAULT_STATUS}
       >
-        <select
+        <Select
           value={defaultStatus}
-          onChange={(e) => onStatusChange(e.target.value as EquipmentStatus)}
+          onChange={(v) => v && onStatusChange(v as EquipmentStatus)}
+          options={statusOptions}
           disabled={disabled}
-        >
-          <option value={EquipmentStatus.AVAILABLE}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.AVAILABLE}</option>
-          <option value={EquipmentStatus.SECURITY}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.SECURITY}</option>
-          <option value={EquipmentStatus.REPAIR}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.REPAIR}</option>
-          <option value={EquipmentStatus.LOST}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.LOST}</option>
-        </select>
+          ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.DEFAULT_STATUS}
+        />
       </FormField>
 
       <FormField
         label={TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.DEFAULT_CONDITION}
       >
-        <select
+        <Select
           value={defaultCondition}
-          onChange={(e) => onConditionChange(e.target.value as EquipmentCondition)}
+          onChange={(v) => v && onConditionChange(v as EquipmentCondition)}
+          options={conditionOptions}
           disabled={disabled}
-        >
-          <option value={EquipmentCondition.GOOD}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_OPTIONS.GOOD}</option>
-          <option value={EquipmentCondition.NEEDS_REPAIR}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_OPTIONS.NEEDS_REPAIR}</option>
-          <option value={EquipmentCondition.WORN}>{TEXT_CONSTANTS.FEATURES.EQUIPMENT.CONDITION_OPTIONS.WORN}</option>
-        </select>
+          ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.DEFAULT_CONDITION}
+        />
       </FormField>
     </div>
   );

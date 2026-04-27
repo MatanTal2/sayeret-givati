@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { validateHebrewName, validateGender, validateBirthdate } from '@/utils/validationUtils';
 import { PersonalDetailsStepProps, PersonalDetailsData, PersonalDetailsValidationErrors } from '@/types/registration';
+import { Select } from '@/components/ui';
 
 export default function PersonalDetailsStep({ 
   firstName, 
@@ -137,22 +138,18 @@ export default function PersonalDetailsStep({
           <div className="flex gap-4">
             {/* Gender Dropdown - No Label */}
             <div className="flex-1 space-y-1">
-              <select
-                value={formData.gender}
-                onChange={(e) => handleInputChange('gender', e.target.value)}
-                className={`w-full px-3 py-2 border-2 rounded-lg focus:ring-2 outline-none transition-all
-                         text-right text-neutral-800 bg-white text-sm ${
-                  validationErrors.gender && formData.gender
-                    ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
-                    : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
-                }`}
-                data-testid="gender-select"
-              >
-                <option value="">בחר מין</option>
-                <option value="male">{TEXT_CONSTANTS.AUTH.GENDER_MALE}</option>
-                <option value="female">{TEXT_CONSTANTS.AUTH.GENDER_FEMALE}</option>
-                <option value="other">{TEXT_CONSTANTS.AUTH.GENDER_OTHER}</option>
-              </select>
+              <Select
+                value={formData.gender || null}
+                onChange={(v) => handleInputChange('gender', v ?? '')}
+                options={[
+                  { value: 'male', label: TEXT_CONSTANTS.AUTH.GENDER_MALE },
+                  { value: 'female', label: TEXT_CONSTANTS.AUTH.GENDER_FEMALE },
+                  { value: 'other', label: TEXT_CONSTANTS.AUTH.GENDER_OTHER },
+                ]}
+                placeholder="בחר מין"
+                clearable
+                ariaLabel={TEXT_CONSTANTS.AUTH.GENDER}
+              />
               
               {/* Gender Error Message */}
               {validationErrors.gender && formData.gender && (

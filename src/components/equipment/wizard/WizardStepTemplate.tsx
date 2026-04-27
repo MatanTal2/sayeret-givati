@@ -5,6 +5,7 @@ import { TEXT_CONSTANTS } from '@/constants/text';
 import { type EquipmentType, TemplateStatus } from '@/types/equipment';
 import { CategoriesService, type Category } from '@/lib/categories';
 import { EquipmentService } from '@/lib/equipmentService';
+import { Select } from '@/components/ui';
 
 interface Props {
   categoryId: string | null;
@@ -58,7 +59,10 @@ export default function WizardStepTemplate({
     () => categories.find((c) => c.id === categoryId) ?? null,
     [categories, categoryId],
   );
-  const subcategories = selectedCategory?.subcategories ?? [];
+  const subcategories = useMemo(
+    () => selectedCategory?.subcategories ?? [],
+    [selectedCategory],
+  );
 
   const filteredTemplates = useMemo(() => {
     if (!categoryId) return [];
@@ -69,24 +73,30 @@ export default function WizardStepTemplate({
     });
   }, [allTemplates, categoryId, subcategoryId]);
 
+  const categoryOptions = useMemo(
+    () => categories.map((c) => ({ value: c.id, label: c.name })),
+    [categories],
+  );
+  const subcategoryOptions = useMemo(
+    () => subcategories.map((s) => ({ value: s.id, label: s.name })),
+    [subcategories],
+  );
+
   return (
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-neutral-700 mb-1">{labels.CATEGORY}</label>
-        <select
-          value={categoryId ?? ''}
-          onChange={(e) => {
-            onSelectCategory(e.target.value || null);
+        <Select
+          value={categoryId}
+          onChange={(v) => {
+            onSelectCategory(v);
             onSelectSubcategory(null);
           }}
+          options={categoryOptions}
+          clearable
           disabled={loadingCats}
-          className="input-base text-sm truncate"
-        >
-          <option value="">—</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+          ariaLabel={labels.CATEGORY}
+        />
         {!loadingCats && categories.length === 0 && (
           <p className="text-xs text-neutral-500 mt-1">{labels.EMPTY_CATEGORIES}</p>
         )}
@@ -95,16 +105,13 @@ export default function WizardStepTemplate({
       {selectedCategory && subcategories.length > 0 && (
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">{labels.SUBCATEGORY}</label>
-          <select
-            value={subcategoryId ?? ''}
-            onChange={(e) => onSelectSubcategory(e.target.value || null)}
-            className="input-base text-sm truncate"
-          >
-            <option value="">—</option>
-            {subcategories.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
+          <Select
+            value={subcategoryId}
+            onChange={(v) => onSelectSubcategory(v)}
+            options={subcategoryOptions}
+            clearable
+            ariaLabel={labels.SUBCATEGORY}
+          />
         </div>
       )}
 

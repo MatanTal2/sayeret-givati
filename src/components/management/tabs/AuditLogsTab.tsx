@@ -10,6 +10,7 @@ import {
 } from '@/lib/actionsLogService';
 import { ActionsLog } from '@/types/equipment';
 import { Timestamp } from 'firebase/firestore';
+import { Select } from '@/components/ui';
 
 export default function AuditLogsTab() {
   const [dateFrom, setDateFrom] = useState('');
@@ -105,17 +106,19 @@ export default function AuditLogsTab() {
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">סוג פעולה</label>
-            <select
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              value={actionFilter}
-              onChange={(e) => setActionFilter(e.target.value)}
-            >
-              <option value="all">כל הפעולות</option>
-              <option value="transfer">העברות</option>
-              <option value="created">יצירה</option>
-              <option value="update">עדכון</option>
-              <option value="reject">דחייה</option>
-            </select>
+            <Select
+              value={actionFilter === 'all' ? null : actionFilter}
+              onChange={(v) => setActionFilter(v ?? 'all')}
+              options={[
+                { value: 'transfer', label: 'העברות' },
+                { value: 'created', label: 'יצירה' },
+                { value: 'update', label: 'עדכון' },
+                { value: 'reject', label: 'דחייה' },
+              ]}
+              placeholder="כל הפעולות"
+              clearable
+              ariaLabel="סוג פעולה"
+            />
           </div>
           <div className="flex items-end">
             <button

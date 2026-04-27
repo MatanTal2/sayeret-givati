@@ -5,6 +5,7 @@ import { usePersonnelManagement } from '@/hooks/usePersonnelManagement';
 import { RANK_OPTIONS, USER_TYPE_OPTIONS, FORM_CONSTRAINTS } from '@/constants/admin';
 import { UserType } from '@/types/user';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import { Select } from '@/components/ui';
 
 
 export default function AddPersonnel() {
@@ -104,23 +105,16 @@ export default function AddPersonnel() {
             <label htmlFor="rank" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Military Rank *
             </label>
-            <select
+            <Select
               id="rank"
-              value={formData.rank}
-              onChange={(e) => handleInputChange('rank', e.target.value)}
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                         bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
-                         focus:ring-2 focus:ring-info-500 focus:border-info-500
-                         disabled:opacity-50"
+              value={formData.rank || null}
+              onChange={(v) => handleInputChange('rank', v ?? '')}
+              options={RANK_OPTIONS.map((r) => ({ value: r.value, label: r.label }))}
+              placeholder="Select Rank"
+              clearable
               disabled={isLoading}
-            >
-              <option value="">Select Rank</option>
-              {RANK_OPTIONS.map((rank) => (
-                <option key={rank.value} value={rank.value}>
-                  {rank.label}
-                </option>
-              ))}
-            </select>
+              ariaLabel="Military Rank"
+            />
           </div>
 
           {/* User Type */}
@@ -128,22 +122,14 @@ export default function AddPersonnel() {
             <label htmlFor="userType" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               User Type *
             </label>
-            <select
+            <Select
               id="userType"
               value={formData.userType || UserType.USER}
-              onChange={(e) => handleInputChange('userType', e.target.value)}
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                         bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
-                         focus:ring-2 focus:ring-info-500 focus:border-info-500
-                         disabled:opacity-50"
+              onChange={(v) => v && handleInputChange('userType', v)}
+              options={USER_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
               disabled={isLoading}
-            >
-              {USER_TYPE_OPTIONS.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              ariaLabel="User Type"
+            />
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
               🔑 Determines system access level
             </p>

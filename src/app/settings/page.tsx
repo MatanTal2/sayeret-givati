@@ -6,6 +6,7 @@ import AuthGuard from '@/components/auth/AuthGuard';
 import AppShell from '@/app/components/AppShell';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
+import { Select } from '@/components/ui';
 import { 
   UserIcon, 
   PhoneIcon, 
@@ -273,15 +274,18 @@ export default function SettingsPage() {
                     </p>
                   </div>
                 </div>
-                <select
-                  value={settings.language}
-                  onChange={(e) => setSettings(prev => ({ ...prev, language: e.target.value }))}
-                  disabled
-                  className="px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-neutral-100 text-neutral-400 cursor-not-allowed"
-                >
-                  <option value="hebrew">{TEXT_CONSTANTS.SETTINGS.LANGUAGE_HEBREW}</option>
-                  <option value="english">{TEXT_CONSTANTS.SETTINGS.LANGUAGE_ENGLISH}</option>
-                </select>
+                <div className="min-w-[10rem]">
+                  <Select
+                    value={settings.language}
+                    onChange={(v) => v && setSettings(prev => ({ ...prev, language: v }))}
+                    options={[
+                      { value: 'hebrew', label: TEXT_CONSTANTS.SETTINGS.LANGUAGE_HEBREW },
+                      { value: 'english', label: TEXT_CONSTANTS.SETTINGS.LANGUAGE_ENGLISH },
+                    ]}
+                    disabled
+                    ariaLabel={TEXT_CONSTANTS.SETTINGS.LANGUAGE_HEBREW}
+                  />
+                </div>
               </div>
 
               {/* Theme Switcher */}
@@ -297,15 +301,18 @@ export default function SettingsPage() {
                     </p>
                   </div>
                 </div>
-                <select
-                  value={settings.theme}
-                  onChange={(e) => setSettings(prev => ({ ...prev, theme: e.target.value }))}
-                  disabled
-                  className="px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-neutral-100 text-neutral-400 cursor-not-allowed"
-                >
-                  <option value="light">{TEXT_CONSTANTS.SETTINGS.THEME_LIGHT}</option>
-                  <option value="dark">{TEXT_CONSTANTS.SETTINGS.THEME_DARK}</option>
-                </select>
+                <div className="min-w-[10rem]">
+                  <Select
+                    value={settings.theme}
+                    onChange={(v) => v && setSettings(prev => ({ ...prev, theme: v }))}
+                    options={[
+                      { value: 'light', label: TEXT_CONSTANTS.SETTINGS.THEME_LIGHT },
+                      { value: 'dark', label: TEXT_CONSTANTS.SETTINGS.THEME_DARK },
+                    ]}
+                    disabled
+                    ariaLabel={TEXT_CONSTANTS.SETTINGS.THEME_SWITCHER}
+                  />
+                </div>
               </div>
             </div>
           </div>

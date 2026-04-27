@@ -2,7 +2,7 @@
  * Email tab component - extracted from management page
  */
 import React, { useState } from 'react';
-import { Card, Button, FormField, ConfirmationModal } from '@/components/ui';
+import { Card, Button, FormField, Select, ConfirmationModal } from '@/components/ui';
 import { UserType } from '@/types/user';
 import type { EmailRecipientType, EmailPriority, UserTypeOption, TeamOption } from '@/types/management';
 import CustomUserSelectionModal from './CustomUserSelectionModal';
@@ -118,17 +118,20 @@ export default function EmailTab() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Left Column */}
           <div className="space-y-4">
-            <FormField label="נמענים">
-              <select
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-neutral-700">נמענים</label>
+              <Select
                 value={recipients}
-                onChange={(e) => handleRecipientsChange(e.target.value as EmailRecipientType)}
-              >
-                <option value="all">כל המשתמשים</option>
-                <option value="roles">לפי תפקידים</option>
-                <option value="teams">לפי צוותים</option>
-                <option value="custom">בחירה מותאמת</option>
-              </select>
-            </FormField>
+                onChange={(v) => v && handleRecipientsChange(v as EmailRecipientType)}
+                options={[
+                  { value: 'all', label: 'כל המשתמשים' },
+                  { value: 'roles', label: 'לפי תפקידים' },
+                  { value: 'teams', label: 'לפי צוותים' },
+                  { value: 'custom', label: 'בחירה מותאמת' },
+                ]}
+                ariaLabel="נמענים"
+              />
+            </div>
 
             {/* Role Selection */}
             {recipients === 'roles' && (
@@ -213,17 +216,20 @@ export default function EmailTab() {
               </div>
             )}
 
-            <FormField label="עדיפות">
-              <select
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-neutral-700">עדיפות</label>
+              <Select
                 value={priority}
-                onChange={(e) => setPriority(e.target.value as EmailPriority)}
-              >
-                <option value="low">נמוכה</option>
-                <option value="normal">רגילה</option>
-                <option value="high">גבוהה</option>
-                <option value="urgent">דחוף</option>
-              </select>
-            </FormField>
+                onChange={(v) => v && setPriority(v as EmailPriority)}
+                options={[
+                  { value: 'low', label: 'נמוכה' },
+                  { value: 'normal', label: 'רגילה' },
+                  { value: 'high', label: 'גבוהה' },
+                  { value: 'urgent', label: 'דחוף' },
+                ]}
+                ariaLabel="עדיפות"
+              />
+            </div>
           </div>
 
           {/* Right Column */}
