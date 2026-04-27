@@ -1,8 +1,9 @@
 # PhoneNumberUpdate.tsx
 
 **File:** `src/components/profile/PhoneNumberUpdate.tsx`  
-**Lines:** 362 ⚠️ LONG  
+**Lines:** 365 ⚠️ LONG  
 **Status:** Active (mock OTP)
+**Tests:** `src/components/profile/__tests__/PhoneNumberUpdate.test.tsx`
 
 ## Purpose
 
@@ -25,8 +26,12 @@ Phone number update workflow with OTP verification. Steps: (1) show current numb
 | `otpCode` | `string` | OTP input |
 | `updateState` | `object` | `{ isUpdating, otpSent, otpVerified, error, success, countdown }` |
 
+## Display formatting
+
+`formatPhoneDisplay()` accepts numbers in international (`+972...`) or local (`0XX...`) format and renders them as `0XX-XXX-XXXX`. The leading `0` is preserved when stripping the `972` country code.
+
 ## Known Issues / TODO
 
 - Mock OTP/SMS services — not integrated with Twilio or real backend.
-- 362 lines — should be split.
+- 365 lines — should be split.
 - Extensive inline Hebrew text.

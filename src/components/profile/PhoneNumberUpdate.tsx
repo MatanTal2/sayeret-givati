@@ -26,13 +26,16 @@ export default function PhoneNumberUpdate({
     countdown: 0
   });
 
-  // Format phone number for display
+  // Format phone number for display as 0XX-XXX-XXXX (Israeli local format)
   const formatPhoneDisplay = (phone: string) => {
     if (!phone) return '';
-    // Remove country code and format as XXX-XXX-XXXX
     const cleaned = phone.replace(/\D/g, '');
     if (cleaned.startsWith('972')) {
-      return cleaned.slice(3).replace(/(\d{2})(\d{3})(\d{4})/, '$1-$2-$3');
+      const local = `0${cleaned.slice(3)}`;
+      return local.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+    }
+    if (/^0\d{9}$/.test(cleaned)) {
+      return cleaned.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
     }
     return phone;
   };
