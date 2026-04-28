@@ -1,18 +1,33 @@
 # ProfileImageUpload.tsx
 
 **File:** `src/components/profile/ProfileImageUpload.tsx`
-**Lines:** 198
-**Status:** Active (Firebase Storage)
+**Lines:** 225
+**Status:** Active (Firebase Storage + cropper)
 
 ## Purpose
 
-Profile image selection and upload with file validation (type, size), preview, and configurable display sizes (small/medium/large). Uploads to Firebase Storage at `users/{userId}/profile/{timestamp}.{ext}` and returns the public download URL via `onImageUpdate`.
+Profile image picker → circular cropper → resize → Firebase Storage upload. Returns the public download URL via `onImageUpdate`.
+
+Pipeline:
+1. User clicks the avatar (or the hover overlay). Hidden `<input type="file" accept="image/*">` opens.
+2. Validate (must be `image/*`, ≤ 5 MB).
+3. Read file as `data:` URL, mount `ProfileImageCropper` with the data URL.
+4. User drags / zooms (range slider) → on **אישור**, cropper renders the cropped region to a 512×512 canvas, exports as JPEG `Blob` (quality 0.92).
+5. Cropped blob is re-compressed via `browser-image-compression` (`maxWidthOrHeight: 512`, `maxSizeMB: 0.2`, `useWebWorker: true`, forced `image/jpeg`).
+6. Compressed file uploaded to `users/{userId}/profile/{timestamp}.jpg` with `cacheControl: 'public, max-age=31536000, immutable'`.
+7. Download URL persisted via `onImageUpdate`.
+
+The trigger is now the avatar + hover overlay only — the small upload-icon button at the bottom-right of the avatar was removed (bug #6).
 
 ## Storage path & rules
 
-- Path: `users/{userId}/profile/{timestamp}.{ext}` — one new object per upload, never overwrites prior images.
+- Path: `users/{userId}/profile/{timestamp}.jpg` — one new object per upload, never overwrites prior images. Always JPEG output regardless of source format.
 - Rules: `firebase/storage.rules` — owner-only write (`request.auth.uid == userId`), authenticated read, 10 MB cap, image/* content type only.
-- Persisted to Firestore by the parent via `updateUserProfile(uid, { profileImage: downloadUrl })` (existing whitelist already covers `profileImage`).
+- Persisted to Firestore by the parent via `updateUserProfile(uid, { profileImage: downloadUrl })`.
+
+## HTTP cache strategy
+
+Each upload writes to a **new** timestamped path; the URL itself is the version signal. Combined with `Cache-Control: public, max-age=31536000, immutable` on the object metadata, the browser HTTP cache stores the image for 1 year and never re-validates. Replacing the avatar yields a different URL → browser fetches once, then serves from `(disk cache)` on subsequent loads. No localStorage / IndexedDB / version-field plumbing needed.
 
 ## Bucket CORS (manual, one-time)
 
@@ -44,8 +59,14 @@ Pre-Storage builds (mock upload) wrote `blob:` URLs into the user document. Thos
 | State | Type | Purpose |
 |-------|------|---------|
 | `uploadState` | `{ isUploading, error, success }` | Upload progress tracking |
+| `pendingImage` | `string \| null` | Data URL of the picked image while the cropper modal is open. `null` ⇒ cropper closed. |
 
-## Notes
+## Constants
 
-- Inline Hebrew text — should move to `TEXT_CONSTANTS` next time the file is touched.
-- Profile page passes `showInstructions={false}` to keep the avatar baseline-aligned with the user's name in the header card.
+- `MAX_PICK_BYTES = 5 * 1024 * 1024` — pick-stage size cap (the post-crop file is always far smaller).
+- `OUTPUT_DIMENSION = 512` — final width/height in pixels.
+- `MAX_OUTPUT_MB = 0.2` — `browser-image-compression` size cap (~200 KB).
+
+## Companion components
+
+- `ProfileImageCropper.tsx` — circular crop UI. See `ProfileImageCropper.md`.

@@ -3,7 +3,8 @@
     "origin": [
       "http://localhost:3000",
       "https://sayeret-givati.vercel.app",
-      "https://*.vercel.app"
+      "https://*.vercel.app",
+      "https://m846.net"
     ],
     "method": ["GET", "HEAD", "PUT", "POST", "DELETE"],
     "maxAgeSeconds": 3600,

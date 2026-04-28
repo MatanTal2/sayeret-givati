@@ -1245,7 +1245,14 @@ export const TEXT_CONSTANTS = {
     SERVER_UPLOAD_ERROR: 'שגיאה בהעלאת התמונה לשרת',
     UPLOAD_IMAGE_TITLE: 'העלה תמונה',
     PROFILE_ALT: 'Profile',
-    
+
+    // Profile Image Cropper
+    CROPPER_TITLE: 'התאם את התמונה',
+    CROPPER_ZOOM_LABEL: 'זום',
+    CROPPER_CONFIRM: 'אישור',
+    CROPPER_CANCEL: 'ביטול',
+    CROPPER_PROCESSING: 'מעבד...',
+
     // Phone Number Update
     INVALID_PHONE_ERROR: 'מספר טלפון לא חוקי. אנא הזן מספר ישראלי תקין',
     OTP_SEND_ERROR: 'שגיאה בשליחת קוד אימות',
