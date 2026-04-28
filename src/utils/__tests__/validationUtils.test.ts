@@ -925,10 +925,22 @@ describe('Personal Number Validation', () => {
           expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.NAME_INVALID);
         });
 
-        it('should reject hyphens (special case)', () => {
+        it('should accept Hebrew name with hyphen (compound surname)', () => {
           const result = validateHebrewName('כהן-לוי');
-          expect(result.isValid).toBe(false);
-          expect(result.errorMessage).toBe(VALIDATION_MESSAGES_HE.NAME_INVALID);
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept Hebrew name with apostrophe', () => {
+          const result = validateHebrewName("ז'אן");
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
+        });
+
+        it('should accept Hebrew name with geresh (׳)', () => {
+          const result = validateHebrewName('ז׳אן');
+          expect(result.isValid).toBe(true);
+          expect(result.errorMessage).toBeNull();
         });
       });
     });

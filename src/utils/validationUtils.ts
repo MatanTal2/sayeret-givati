@@ -7,7 +7,7 @@ export const VALIDATION_PATTERNS = {
   PERSONAL_NUMBER: /^[0-9]{5,7}$/,
   EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   PHONE: /^(?:\+972-?|0)(5[0-9])-?\d{7}$/,
-  HEBREW_NAME: /^[\u05D0-\u05EA\s]+$/,
+  HEBREW_NAME: /^[\u05D0-\u05EA\s\-'\u05F3]+$/,
   PASSWORD: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/,
 } as const;
 
@@ -22,7 +22,7 @@ export const VALIDATION_MESSAGES_HE = {
   PHONE_REQUIRED: 'מספר טלפון הוא שדה חובה',
   PHONE_INVALID: 'מספר טלפון לא תקין',
   NAME_REQUIRED: 'שם הוא שדה חובה',
-  NAME_INVALID: 'השם חייב להכיל רק אותיות עבריות',
+  NAME_INVALID: 'השם חייב להכיל רק אותיות עבריות, רווחים, מקפים (-) או גרש (\')',
   OTP_INVALID: 'הקוד חייב להכיל 6 ספרות בדיוק',
   PASSWORD_REQUIRED: 'סיסמה היא שדה חובה',
   PASSWORD_INVALID: 'סיסמה חייבת להכיל לפחות 8 תווים, אות גדולה, אות קטנה ומספר',

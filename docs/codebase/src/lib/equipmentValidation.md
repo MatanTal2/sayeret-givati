@@ -29,3 +29,4 @@ Comprehensive validation for equipment forms and individual fields. Validates se
 
 - 417 lines — could be split by validation domain.
 - Pure functions, no side effects.
+- `validateUserName` accepts Hebrew letters, English letters, whitespace, dots, ASCII hyphen `-`, ASCII apostrophe `'`, Hebrew geresh `׳` (U+05F3) — supports compound surnames and transliterated names. Used by `adminUtils.validateFirstName` / `validateLastName` for `authorized_personnel` flows. Bug #1 fix.
