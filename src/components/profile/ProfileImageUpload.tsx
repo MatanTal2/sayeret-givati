@@ -1,16 +1,27 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { CameraIcon, UserIcon, UploadIcon } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { CameraIcon, UserIcon } from 'lucide-react';
 import { getDownloadURL, ref as storageRef, uploadBytes } from 'firebase/storage';
+import imageCompression from 'browser-image-compression';
 import { storage } from '@/lib/firebase';
 import { ProfileImageUploadProps, ImageUploadState } from '@/types/profile';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import ProfileImageCropper from './ProfileImageCropper';
 
-/**
- * ProfileImageUpload component for uploading and updating profile images
- * Follows the app's existing UI/UX patterns
- */
+const MAX_PICK_BYTES = 5 * 1024 * 1024;
+const OUTPUT_DIMENSION = 512;
+const MAX_OUTPUT_MB = 0.2;
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error ?? new Error('FileReader failed'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function ProfileImageUpload({
   userId,
   currentImageUrl,
@@ -22,28 +33,27 @@ export default function ProfileImageUpload({
   const [uploadState, setUploadState] = useState<ImageUploadState>({
     isUploading: false,
     error: null,
-    success: false
+    success: false,
   });
-  
+  const [pendingImage, setPendingImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Size configurations
   const sizeClasses = {
     small: 'w-16 h-16',
-    medium: 'w-24 h-24', 
-    large: 'w-32 h-32'
+    medium: 'w-24 h-24',
+    large: 'w-32 h-32',
   };
 
   const iconSizes = {
     small: 'w-4 h-4',
     medium: 'w-5 h-5',
-    large: 'w-6 h-6'
+    large: 'w-6 h-6',
   };
 
   const textSizes = {
     small: 'text-lg',
     medium: 'text-2xl',
-    large: 'text-3xl'
+    large: 'text-3xl',
   };
 
   // Pre-Storage builds wrote `blob:` URLs into Firestore via the old mock; those are
@@ -52,79 +62,98 @@ export default function ProfileImageUpload({
   const renderableImageUrl =
     currentImageUrl && /^https?:\/\//i.test(currentImageUrl) ? currentImageUrl : undefined;
 
-  const handleImageSelect = () => {
+  const openPicker = () => {
+    if (uploadState.isUploading) return;
     fileInputRef.current?.click();
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    if (fileInputRef.current) fileInputRef.current.value = '';
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       setUploadState({
         isUploading: false,
         error: TEXT_CONSTANTS.PROFILE_COMPONENTS.INVALID_FILE_ERROR,
-        success: false
+        success: false,
       });
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_PICK_BYTES) {
       setUploadState({
         isUploading: false,
         error: TEXT_CONSTANTS.PROFILE_COMPONENTS.FILE_SIZE_ERROR,
-        success: false
+        success: false,
       });
       return;
     }
 
-    setUploadState({
-      isUploading: true,
-      error: null,
-      success: false
-    });
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setUploadState({ isUploading: false, error: null, success: false });
+      setPendingImage(dataUrl);
+    } catch {
+      setUploadState({
+        isUploading: false,
+        error: TEXT_CONSTANTS.PROFILE_COMPONENTS.UPLOAD_ERROR,
+        success: false,
+      });
+    }
+  };
+
+  const handleCropConfirm = async (croppedBlob: Blob) => {
+    setPendingImage(null);
+    setUploadState({ isUploading: true, error: null, success: false });
 
     try {
-      const ext = file.name.includes('.') ? file.name.split('.').pop() : 'jpg';
-      const path = `users/${userId}/profile/${Date.now()}.${ext}`;
+      const croppedFile = new File([croppedBlob], `profile-${Date.now()}.jpg`, {
+        type: 'image/jpeg',
+      });
+      const compressed = await imageCompression(croppedFile, {
+        maxWidthOrHeight: OUTPUT_DIMENSION,
+        maxSizeMB: MAX_OUTPUT_MB,
+        useWebWorker: true,
+        fileType: 'image/jpeg',
+      });
+
+      const path = `users/${userId}/profile/${Date.now()}.jpg`;
       const objectRef = storageRef(storage, path);
-      await uploadBytes(objectRef, file, { contentType: file.type });
+      await uploadBytes(objectRef, compressed, {
+        contentType: 'image/jpeg',
+        cacheControl: 'public, max-age=31536000, immutable',
+      });
       const downloadUrl = await getDownloadURL(objectRef);
 
       onImageUpdate(downloadUrl);
-
-      setUploadState({
-        isUploading: false,
-        error: null,
-        success: true
-      });
+      setUploadState({ isUploading: false, error: null, success: true });
 
       setTimeout(() => {
-        setUploadState(prev => ({ ...prev, success: false }));
+        setUploadState((prev) => ({ ...prev, success: false }));
       }, 3000);
-
     } catch (error) {
       setUploadState({
         isUploading: false,
-        error: error instanceof Error ? error.message : TEXT_CONSTANTS.PROFILE_COMPONENTS.UPLOAD_ERROR,
-        success: false
+        error:
+          error instanceof Error
+            ? error.message
+            : TEXT_CONSTANTS.PROFILE_COMPONENTS.UPLOAD_ERROR,
+        success: false,
       });
     }
+  };
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+  const handleCropCancel = () => {
+    setPendingImage(null);
   };
 
   return (
     <div className={`relative ${className}`}>
-      {/* Profile Image Container */}
       <div className="relative group">
-        <div 
+        <div
           className={`${sizeClasses[size]} bg-primary-600 rounded-full flex items-center justify-center text-white ${textSizes[size]} font-bold cursor-pointer transition-all duration-200 group-hover:bg-primary-700 overflow-hidden`}
-          onClick={handleImageSelect}
+          onClick={openPicker}
         >
           {uploadState.isUploading ? (
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
@@ -140,33 +169,17 @@ export default function ProfileImageUpload({
           )}
         </div>
 
-        {/* Upload Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
-             onClick={handleImageSelect}>
+        <div
+          className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+          onClick={openPicker}
+        >
           <div className="text-center text-white">
             <CameraIcon className={`${iconSizes[size]} mx-auto mb-1`} />
             <span className="text-xs font-medium">שנה תמונה</span>
           </div>
         </div>
-
-        {/* Upload Button for larger sizes */}
-        {size !== 'small' && (
-          <button
-            onClick={handleImageSelect}
-            disabled={uploadState.isUploading}
-            className="absolute -bottom-2 -right-2 bg-primary-600 hover:bg-primary-700 text-white p-2 rounded-full shadow-lg transition-colors duration-200 disabled:bg-neutral-400"
-            title={TEXT_CONSTANTS.PROFILE_COMPONENTS.UPLOAD_IMAGE_TITLE}
-          >
-            {uploadState.isUploading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            ) : (
-              <UploadIcon className="w-4 h-4" />
-            )}
-          </button>
-        )}
       </div>
 
-      {/* Hidden File Input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -176,19 +189,13 @@ export default function ProfileImageUpload({
         disabled={uploadState.isUploading}
       />
 
-      {/* Upload Instructions */}
       {size !== 'small' && showInstructions && (
         <div className="mt-2 text-center">
-          <p className="text-xs text-neutral-500">
-            לחץ להעלאת תמונה חדשה
-          </p>
-          <p className="text-xs text-neutral-400">
-            JPG, PNG עד 5MB
-          </p>
+          <p className="text-xs text-neutral-500">לחץ להעלאת תמונה חדשה</p>
+          <p className="text-xs text-neutral-400">JPG, PNG עד 5MB</p>
         </div>
       )}
 
-      {/* Status Messages */}
       {uploadState.error && (
         <div className="mt-2 text-center">
           <p className="text-xs text-danger-600 bg-danger-50 px-2 py-1 rounded">
@@ -203,6 +210,15 @@ export default function ProfileImageUpload({
             התמונה הועלתה בהצלחה!
           </p>
         </div>
+      )}
+
+      {pendingImage && (
+        <ProfileImageCropper
+          imageSrc={pendingImage}
+          outputSize={OUTPUT_DIMENSION}
+          onCancel={handleCropCancel}
+          onConfirm={handleCropConfirm}
+        />
       )}
     </div>
   );
