@@ -56,15 +56,15 @@ export default function SystemStats() {
     <div className="space-y-6">
       {/* Cache Status Banner */}
       {cacheInfo.isValid && (
-        <div className="bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-lg p-4">
+        <div className="bg-success-50 border border-success-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="text-success-600 dark:text-success-400 mr-2">💾</div>
+              <div className="text-success-600 me-2">💾</div>
               <div>
-                <div className="text-sm font-medium text-success-800 dark:text-success-200">
+                <div className="text-sm font-medium text-success-800">
                   נתונים נטענו מהמטמון המקומי
                 </div>
-                <div className="text-xs text-success-600 dark:text-success-400">
+                <div className="text-xs text-success-600">
                   עדכון אחרון: {Math.round(cacheInfo.ageInHours)} שעות | TTL: 24 שעות
                 </div>
               </div>
@@ -72,8 +72,8 @@ export default function SystemStats() {
             <button
               onClick={handleManualRefresh}
               disabled={isLoading}
-              className="text-xs px-3 py-1 bg-success-100 dark:bg-success-800 text-success-700 dark:text-success-200 
-                         rounded-md hover:bg-success-200 dark:hover:bg-success-700 transition-colors
+              className="text-xs px-3 py-1 bg-success-100 text-success-700 
+                         rounded-md hover:bg-success-200 transition-colors
                          disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? TEXT_CONSTANTS.ADMIN_COMPONENTS.REFRESHING : TEXT_CONSTANTS.ADMIN_COMPONENTS.REFRESH_NOW}
@@ -85,45 +85,45 @@ export default function SystemStats() {
       {/* Main Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Total Personnel */}
-        <div className="bg-info-50 dark:bg-info-900/20 p-6 rounded-lg border border-info-200 dark:border-info-800">
+        <div className="bg-info-50 p-6 rounded-lg border border-info-200">
           <div className="flex items-center">
-            <div className="text-3xl mr-4">👥</div>
+            <div className="text-3xl me-4">👥</div>
             <div>
-              <div className="text-2xl font-bold text-info-600 dark:text-info-400">
+              <div className="text-2xl font-bold text-info-600">
                 {isLoading ? '...' : stats.totalPersonnel}
               </div>
-              <div className="text-sm text-info-600 dark:text-info-400">
-                Total Authorized Personnel
+              <div className="text-sm text-info-600">
+                {TEXT_CONSTANTS.ADMIN.STATS_TOTAL_PERSONNEL}
               </div>
             </div>
           </div>
         </div>
 
         {/* Recently Added */}
-        <div className="bg-warning-50 dark:bg-warning-900/20 p-6 rounded-lg border border-warning-200 dark:border-warning-800">
+        <div className="bg-warning-50 p-6 rounded-lg border border-warning-200">
           <div className="flex items-center">
-            <div className="text-3xl mr-4">📈</div>
+            <div className="text-3xl me-4">📈</div>
             <div>
-              <div className="text-2xl font-bold text-warning-600 dark:text-warning-400">
+              <div className="text-2xl font-bold text-warning-600">
                 {isLoading ? '...' : stats.recentlyAdded}
               </div>
-              <div className="text-sm text-warning-600 dark:text-warning-400">
-                Added This Week
+              <div className="text-sm text-warning-600">
+                {TEXT_CONSTANTS.ADMIN.STATS_ADDED_THIS_WEEK}
               </div>
             </div>
           </div>
         </div>
 
         {/* System Status */}
-        <div className="bg-primary-50 dark:bg-primary-900/20 p-6 rounded-lg border border-primary-200 dark:border-primary-800">
+        <div className="bg-primary-50 p-6 rounded-lg border border-primary-200">
           <div className="flex items-center">
-            <div className="text-3xl mr-4">⚡</div>
+            <div className="text-3xl me-4">⚡</div>
             <div>
-              <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                Online
+              <div className="text-2xl font-bold text-primary-600">
+                {TEXT_CONSTANTS.ADMIN.STATS_ONLINE}
               </div>
-              <div className="text-sm text-primary-600 dark:text-primary-400">
-                System Status
+              <div className="text-sm text-primary-600">
+                {TEXT_CONSTANTS.ADMIN.STATS_SYSTEM_STATUS}
               </div>
             </div>
           </div>
@@ -133,49 +133,49 @@ export default function SystemStats() {
       {/* Detailed Information */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* System Information */}
-        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
-            📊 System Information
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-neutral-900 mb-4">
+            {TEXT_CONSTANTS.ADMIN.STATS_INFO_TITLE}
           </h3>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">Database Status:</span>
-              <span className="text-sm font-medium text-success-600 dark:text-success-400">✅ Connected</span>
+              <span className="text-sm text-neutral-600">{TEXT_CONSTANTS.ADMIN.STATS_DB_STATUS}</span>
+              <span className="text-sm font-medium text-success-600">{TEXT_CONSTANTS.ADMIN.STATS_CONNECTED}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">Authentication:</span>
-              <span className="text-sm font-medium text-success-600 dark:text-success-400">✅ Active</span>
+              <span className="text-sm text-neutral-600">{TEXT_CONSTANTS.ADMIN.STATS_AUTH}</span>
+              <span className="text-sm font-medium text-success-600">{TEXT_CONSTANTS.ADMIN.STATS_ACTIVE}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">Security Rules:</span>
-              <span className="text-sm font-medium text-success-600 dark:text-success-400">✅ Applied</span>
+              <span className="text-sm text-neutral-600">{TEXT_CONSTANTS.ADMIN.STATS_SECURITY_RULES}</span>
+              <span className="text-sm font-medium text-success-600">{TEXT_CONSTANTS.ADMIN.STATS_APPLIED}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">Last Updated:</span>
-              <span className="text-sm font-medium text-info-600 dark:text-info-400">
-                {formatLastUpdated() || 'Never'}
+              <span className="text-sm text-neutral-600">{TEXT_CONSTANTS.ADMIN.STATS_LAST_UPDATED}</span>
+              <span className="text-sm font-medium text-info-600">
+                {formatLastUpdated() || TEXT_CONSTANTS.ADMIN.STATS_NEVER}
               </span>
             </div>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
-            🚀 Quick Actions
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-neutral-900 mb-4">
+            {TEXT_CONSTANTS.ADMIN.STATS_QUICK_ACTIONS}
           </h3>
           <div className="space-y-3">
             <button
               onClick={handleManualRefresh}
               disabled={isLoading}
-              className="w-full text-left p-3 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-700 
-                         border border-neutral-200 dark:border-neutral-600 transition-colors
+              className="w-full text-start p-3 rounded-md hover:bg-neutral-50 
+                         border border-neutral-200 transition-colors
                          disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <div className="text-sm font-medium text-neutral-900 dark:text-white">
+              <div className="text-sm font-medium text-neutral-900">
                 🔄 רענן נתוני כוח אדם
               </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">
+              <div className="text-xs text-neutral-500">
                 {cacheInfo.isValid 
                   ? `מטמון בן ${Math.round(cacheInfo.ageInHours)} שעות - עדכן מהמאגר`
                   : TEXT_CONSTANTS.ADMIN_COMPONENTS.UPDATE_PERSONNEL_TOOLTIP
@@ -183,21 +183,21 @@ export default function SystemStats() {
               </div>
             </button>
             
-            <div className="p-3 rounded-md border border-neutral-200 dark:border-neutral-600">
-              <div className="text-sm font-medium text-neutral-900 dark:text-white">
-                📊 Export Data
+            <div className="p-3 rounded-md border border-neutral-200">
+              <div className="text-sm font-medium text-neutral-900">
+                {TEXT_CONSTANTS.ADMIN.STATS_EXPORT}
               </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                Export personnel list (Coming Soon)
+              <div className="text-xs text-neutral-500">
+                {TEXT_CONSTANTS.ADMIN.STATS_EXPORT_HINT}
               </div>
             </div>
-            
-            <div className="p-3 rounded-md border border-neutral-200 dark:border-neutral-600">
-              <div className="text-sm font-medium text-neutral-900 dark:text-white">
-                📋 Backup Database
+
+            <div className="p-3 rounded-md border border-neutral-200">
+              <div className="text-sm font-medium text-neutral-900">
+                {TEXT_CONSTANTS.ADMIN.STATS_BACKUP}
               </div>
-              <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                Create system backup (Coming Soon)
+              <div className="text-xs text-neutral-500">
+                {TEXT_CONSTANTS.ADMIN.STATS_BACKUP_HINT}
               </div>
             </div>
           </div>
@@ -205,20 +205,20 @@ export default function SystemStats() {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6">
-        <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
-          📈 Recent Activity
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h3 className="text-lg font-semibold text-neutral-900 mb-4">
+          📈 פעילות אחרונה
         </h3>
         {isLoading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-info-600 mx-auto mb-4"></div>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">Loading activity...</p>
+            <p className="text-sm text-neutral-600">טוען פעילות...</p>
           </div>
         ) : personnel.length === 0 ? (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">📋</div>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              No activity yet. Add some personnel to see recent activity.
+            <p className="text-sm text-neutral-600">
+              עדיין אין פעילות. הוסף כוח אדם כדי לראות פעילות אחרונה.
             </p>
           </div>
         ) : (
@@ -233,20 +233,20 @@ export default function SystemStats() {
               .slice(0, 5)
               .map((person) => (
                 <div key={person.id} className="flex items-center justify-between p-3 
-                                                  bg-neutral-50 dark:bg-neutral-700 rounded-md">
+                                                  bg-neutral-50 rounded-md">
                   <div className="flex items-center">
-                    <div className="text-lg mr-3">👤</div>
+                    <div className="text-lg me-3">👤</div>
                     <div>
-                      <div className="text-sm font-medium text-neutral-900 dark:text-white">
+                      <div className="text-sm font-medium text-neutral-900">
                         {person.firstName} {person.lastName}
                       </div>
-                      <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                        Added to authorized personnel • {person.rank}
+                      <div className="text-xs text-neutral-500">
+                        נוסף לכוח אדם מורשה • {person.rank}
                       </div>
                     </div>
                   </div>
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                    {person.createdAt?.toDate?.()?.toLocaleDateString('he-IL') || 'Unknown date'}
+                  <div className="text-xs text-neutral-500">
+                    {person.createdAt?.toDate?.()?.toLocaleDateString('he-IL') || 'תאריך לא ידוע'}
                   </div>
                 </div>
               ))}

@@ -1,12 +1,13 @@
 # page.tsx (Admin)
 
 **File:** `src/app/admin/page.tsx`
-**Lines:** 35
 **Status:** Active
 
 ## Purpose
 
-Admin section entry point (`/admin`). Routes to `AdminLogin` or `AdminDashboard` based on authentication state from `useAdminAuth`. Shows a spinner while auth state is loading.
+Admin section entry point (`/admin`). Routes to `AdminLogin` or `AdminDashboard` based on authentication state from `useAdminAuth`. Shows a spinner inside `AppShell` while auth state is loading.
+
+When authenticated, the dashboard is wrapped in `AppShell` (top bar + sidebar + page header) so the admin panel matches the rest of the app and reuses the profile/avatar menu via `AuthButton`. The login screen renders standalone (no shell) — the user has no profile yet at that point.
 
 ## Exports / Public API
 
@@ -14,5 +15,5 @@ Admin section entry point (`/admin`). Routes to `AdminLogin` or `AdminDashboard`
 
 ## Notes
 
-- `handleLoginSuccess` and `handleLogout` callbacks are no-ops. Auth state is fully managed by `useAdminAuth` and `AdminDashboard` internally.
-- Loading spinner uses `info-600` color instead of `primary-600` — inconsistency with the rest of the app.
+- The `onLoginSuccess` / `onLogout` callbacks are no-ops; auth state is fully managed by `useAdminAuth` internally.
+- Loading spinner uses `info-600` color (legacy) — could be aligned to `primary-600` in a follow-up sweep.

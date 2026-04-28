@@ -13,7 +13,7 @@ interface UsePersonnelManagementReturn {
   message: FormMessage | null;
   personnel: AuthorizedPersonnel[];
   updateFormField: (field: keyof AuthorizedPersonnelData, value: string) => void;
-  addPersonnel: () => Promise<void>;
+  addPersonnel: () => Promise<PersonnelOperationResult>;
   addPersonnelBulk: (personnel: PersonnelFormData[]) => Promise<void>;
   updatePersonnel: (personnelId: string, updateData: {
     firstName?: string;
@@ -65,24 +65,28 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
     setMessage(null);
   };
 
-  const validateForm = (): boolean => {
+  const validateForm = (): { isValid: boolean; errorMessage: string | null } => {
     const validation = ValidationUtils.validateAuthorizedPersonnelData(formData);
-    
+
     if (!validation.isValid) {
       const firstError = Object.values(validation.errors)[0];
       setMessage({
         text: firstError,
         type: 'error'
       });
-      return false;
+      return { isValid: false, errorMessage: firstError };
     }
 
-    return true;
+    return { isValid: true, errorMessage: null };
   };
 
-  const addPersonnel = async () => {
-    if (!validateForm()) {
-      return;
+  const addPersonnel = async (): Promise<PersonnelOperationResult> => {
+    const validation = validateForm();
+    if (!validation.isValid) {
+      return {
+        success: false,
+        message: validation.errorMessage ?? 'Validation failed'
+      };
     }
 
     setIsLoading(true);
@@ -110,15 +114,23 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
           type: 'error'
         });
       }
+
+      setIsLoading(false);
+      return result;
     } catch (error) {
       console.error('Error adding personnel:', error);
+      const errorResult: PersonnelOperationResult = {
+        success: false,
+        message: 'Failed to add personnel. Please try again.',
+        error: error instanceof Error ? error : new Error('Unknown error')
+      };
       setMessage({
-        text: 'Failed to add personnel. Please try again.',
+        text: errorResult.message,
         type: 'error'
       });
+      setIsLoading(false);
+      return errorResult;
     }
-
-    setIsLoading(false);
   };
 
   const fetchPersonnel = useCallback(async (forceRefresh: boolean = false) => {

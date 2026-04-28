@@ -149,7 +149,7 @@ export default function UpdatePersonnel() {
       // Only update if there are changes
       if (Object.keys(updateData).length === 0) {
         setUpdateMessage({
-          text: '⚠️ No changes detected',
+          text: TEXT_CONSTANTS.ADMIN.UPDATE_NO_CHANGES,
           type: 'error'
         });
         setIsUpdating(false);
@@ -183,7 +183,7 @@ export default function UpdatePersonnel() {
     } catch (error) {
       console.error('Error updating personnel:', error);
       setUpdateMessage({
-        text: '❌ Failed to update personnel. Please try again.',
+        text: TEXT_CONSTANTS.ADMIN.UPDATE_FAILED,
         type: 'error'
       });
     } finally {
@@ -201,10 +201,10 @@ export default function UpdatePersonnel() {
   return (
     <div className="space-y-6">
       {/* Search Section */}
-      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6">
+      <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="mb-4">
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            🔍 Search Personnel
+          <label className="block text-sm font-medium text-neutral-700 mb-2">
+            {TEXT_CONSTANTS.ADMIN.UPDATE_SEARCH_LABEL}
           </label>
           <div className="flex gap-4">
             <input
@@ -212,16 +212,16 @@ export default function UpdatePersonnel() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={TEXT_CONSTANTS.ADMIN_COMPONENTS.SEARCH_BY_NAME_PHONE}
-              className="flex-1 px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                         bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+              className="flex-1 px-3 py-2 border border-neutral-300 rounded-md 
+                         bg-white text-neutral-900
                          focus:ring-2 focus:ring-info-500 focus:border-info-500"
             />
             {searchTerm && (
               <button
                 onClick={clearSearch}
-                className="px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200"
+                className="px-4 py-2 text-neutral-600 hover:text-neutral-800"
               >
-                🗑️ Clear
+                {TEXT_CONSTANTS.ADMIN.UPDATE_CLEAR}
               </button>
             )}
           </div>
@@ -229,17 +229,17 @@ export default function UpdatePersonnel() {
 
         {/* Search Results */}
         {searchTerm && (
-          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+          <div className="border-t border-neutral-200 pt-4">
             {personnelLoading ? (
               <div className="text-center py-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-info-600 mx-auto mb-2"></div>
-                <p className="text-neutral-600 dark:text-neutral-400">Searching...</p>
+                <p className="text-neutral-600">{TEXT_CONSTANTS.ADMIN.UPDATE_SEARCHING}</p>
               </div>
             ) : filteredPersonnel.length === 0 ? (
               <div className="text-center py-4">
                 <div className="text-2xl mb-2">🔍</div>
-                <p className="text-neutral-600 dark:text-neutral-400">
-                  No personnel found matching &quot;{searchTerm}&quot;
+                <p className="text-neutral-600">
+                  לא נמצאו תוצאות עבור &quot;{searchTerm}&quot;
                 </p>
               </div>
             ) : (
@@ -250,19 +250,19 @@ export default function UpdatePersonnel() {
                     onClick={() => handlePersonSelect(person)}
                     className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                       selectedPerson?.id === person.id
-                        ? 'border-info-500 bg-info-50 dark:bg-info-900/20'
-                        : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700'
+                        ? 'border-info-500 bg-info-50'
+                        : 'border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50'
                     }`}
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <div className="font-medium text-neutral-900 dark:text-white">
+                        <div className="font-medium text-neutral-900">
                           {person.firstName} {person.lastName}
                         </div>
-                        <div className="text-sm text-neutral-500 dark:text-neutral-400 flex items-center gap-4">
+                        <div className="text-sm text-neutral-500 flex items-center gap-4">
                           <span>🎖️ {person.rank}</span>
                           <span>📱 {formatPhoneForDisplay(person.phoneNumber)}</span>
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-info-100 text-info-800 dark:bg-info-800 dark:text-info-100">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-info-100 text-info-800">
                             {(person.userType || UserType.USER).replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                           </span>
                         </div>
@@ -281,10 +281,10 @@ export default function UpdatePersonnel() {
 
       {/* Selected Person Details & Edit Form */}
       {selectedPerson && (
-        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6">
+        <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
-              👤 Personnel Details
+            <h3 className="text-lg font-semibold text-neutral-900">
+              👤 {TEXT_CONSTANTS.ADMIN.UPDATE_PERSONAL_DETAILS}
             </h3>
             {!isEditing && (
               <button
@@ -293,7 +293,7 @@ export default function UpdatePersonnel() {
                            focus:ring-2 focus:ring-info-500 focus:ring-offset-2
                            transition-colors"
               >
-                ✏️ Edit Information
+                {TEXT_CONSTANTS.ADMIN.UPDATE_EDIT}
               </button>
             )}
           </div>
@@ -302,13 +302,13 @@ export default function UpdatePersonnel() {
           {updateMessage && (
             <div className={`rounded-md p-4 mb-6 ${
               updateMessage.type === 'success' 
-                ? 'bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800' 
-                : 'bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800'
+                ? 'bg-success-50 border border-success-200' 
+                : 'bg-danger-50 border border-danger-200'
             }`}>
               <p className={`text-sm ${
                 updateMessage.type === 'success' 
-                  ? 'text-success-700 dark:text-success-400' 
-                  : 'text-danger-700 dark:text-danger-400'
+                  ? 'text-success-700' 
+                  : 'text-danger-700'
               }`}>
                 {updateMessage.text}
               </p>
@@ -323,15 +323,15 @@ export default function UpdatePersonnel() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* First Name */}
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    First Name (שם פרטי) *
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    {TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_FIRST_NAME} *
                   </label>
                   <input
                     type="text"
                     value={editForm.firstName}
                     onChange={(e) => handleFormChange('firstName', e.target.value)}
-                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                               bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-md 
+                               bg-white text-neutral-900
                                focus:ring-2 focus:ring-info-500 focus:border-info-500
                                disabled:opacity-50"
                     placeholder={TEXT_CONSTANTS.ADMIN_COMPONENTS.FIRST_NAME_PLACEHOLDER}
@@ -343,15 +343,15 @@ export default function UpdatePersonnel() {
 
                 {/* Last Name */}
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Last Name (שם משפחה) *
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    {TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_LAST_NAME} *
                   </label>
                   <input
                     type="text"
                     value={editForm.lastName}
                     onChange={(e) => handleFormChange('lastName', e.target.value)}
-                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                               bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-md 
+                               bg-white text-neutral-900
                                focus:ring-2 focus:ring-info-500 focus:border-info-500
                                disabled:opacity-50"
                     placeholder={TEXT_CONSTANTS.ADMIN_COMPONENTS.LAST_NAME_PLACEHOLDER}
@@ -363,45 +363,45 @@ export default function UpdatePersonnel() {
 
                 {/* Military Rank */}
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Military Rank (דרגה) *
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    {TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_RANK} *
                   </label>
                   <Select
                     value={editForm.rank || null}
                     onChange={(v) => handleFormChange('rank', v ?? '')}
                     options={RANK_OPTIONS.map((r) => ({ value: r.value, label: r.label }))}
-                    placeholder="Select Rank"
+                    placeholder="בחר דרגה"
                     clearable
                     disabled={isUpdating}
-                    ariaLabel="Military Rank"
+                    ariaLabel={TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_RANK}
                   />
                 </div>
 
                 {/* User Type */}
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    User Type (סוג משתמש) *
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    {TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_USER_TYPE} *
                   </label>
                   <Select
                     value={editForm.userType}
                     onChange={(v) => v && handleFormChange('userType', v)}
                     options={USER_TYPE_OPTIONS.map((t) => ({ value: t.value, label: t.label }))}
                     disabled={isUpdating}
-                    ariaLabel="User Type"
+                    ariaLabel={TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_USER_TYPE}
                   />
                 </div>
 
                 {/* Phone Number */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Phone Number (מספר טלפון) *
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    {TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_PHONE} *
                   </label>
                   <input
                     type="tel"
                     value={editForm.phoneNumber}
                     onChange={(e) => handleFormChange('phoneNumber', e.target.value)}
-                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                               bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-md 
+                               bg-white text-neutral-900
                                focus:ring-2 focus:ring-info-500 focus:border-info-500
                                disabled:opacity-50"
                     placeholder={TEXT_CONSTANTS.ADMIN_COMPONENTS.PHONE_NUMBER_PLACEHOLDER}
@@ -425,11 +425,11 @@ export default function UpdatePersonnel() {
                 >
                   {isUpdating ? (
                     <div className="flex items-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Updating...
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2"></div>
+                      {TEXT_CONSTANTS.ADMIN.UPDATE_SAVING}
                     </div>
                   ) : (
-                    '💾 Save Changes'
+                    TEXT_CONSTANTS.ADMIN.UPDATE_SAVE
                   )}
                 </button>
                 
@@ -442,7 +442,7 @@ export default function UpdatePersonnel() {
                              focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2
                              disabled:cursor-not-allowed transition-colors"
                 >
-                  ❌ Cancel
+                  ❌ {TEXT_CONSTANTS.ADMIN.UPDATE_CANCEL}
                 </button>
               </div>
             </form>
@@ -451,19 +451,19 @@ export default function UpdatePersonnel() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                    Full Name
+                  <label className="block text-sm font-medium text-neutral-500">
+                    שם מלא
                   </label>
-                  <p className="text-lg text-neutral-900 dark:text-white">
+                  <p className="text-lg text-neutral-900">
                     {selectedPerson.firstName} {selectedPerson.lastName}
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                    Military Rank
+                  <label className="block text-sm font-medium text-neutral-500">
+                    דרגה
                   </label>
-                  <p className="text-lg text-neutral-900 dark:text-white">
+                  <p className="text-lg text-neutral-900">
                     🎖️ {selectedPerson.rank}
                   </p>
                 </div>
@@ -471,38 +471,38 @@ export default function UpdatePersonnel() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                    Phone Number
+                  <label className="block text-sm font-medium text-neutral-500">
+                    מספר טלפון
                   </label>
-                  <p className="text-lg text-neutral-900 dark:text-white">
+                  <p className="text-lg text-neutral-900">
                     📱 {formatPhoneForDisplay(selectedPerson.phoneNumber)}
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                    User Type
+                  <label className="block text-sm font-medium text-neutral-500">
+                    סוג משתמש
                   </label>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-info-100 text-info-800 dark:bg-info-800 dark:text-info-100">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-info-100 text-info-800">
                     {(selectedPerson.userType || UserType.USER).replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                   </span>
                 </div>
               </div>
 
               {/* Read-only info */}
-              <div className="md:col-span-2 pt-4 border-t border-neutral-200 dark:border-neutral-700">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-neutral-500 dark:text-neutral-400">
+              <div className="md:col-span-2 pt-4 border-t border-neutral-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-neutral-500">
                   <div>
-                    <span className="font-medium">Registration Status:</span>{' '}
+                    <span className="font-medium">סטטוס רישום:</span>{' '}
                     {selectedPerson.registered ? (
-                      <span className="text-success-600 dark:text-success-400">✅ Registered</span>
+                      <span className="text-success-600">✅ רשום</span>
                     ) : (
-                      <span className="text-warning-600 dark:text-warning-400">⏳ Pending</span>
+                      <span className="text-warning-600">⏳ ממתין</span>
                     )}
                   </div>
                   <div>
-                    <span className="font-medium">Military ID:</span>{' '}
-                    <span className="font-mono">******* (Protected)</span>
+                    <span className="font-medium">מספר אישי:</span>{' '}
+                    <span className="font-mono">******* (מוגן)</span>
                   </div>
                 </div>
               </div>
@@ -513,19 +513,19 @@ export default function UpdatePersonnel() {
 
       {/* Help Text */}
       {!selectedPerson && !searchTerm && (
-        <div className="bg-info-50 dark:bg-info-900/20 rounded-lg p-6 border border-info-200 dark:border-info-800">
+        <div className="bg-info-50 rounded-lg p-6 border border-info-200">
           <div className="flex items-start">
-            <div className="text-2xl mr-3">💡</div>
+            <div className="text-2xl me-3">💡</div>
             <div>
-              <h3 className="text-lg font-medium text-info-800 dark:text-info-200 mb-2">
-                How to Update Personnel Information
+              <h3 className="text-lg font-medium text-info-800 mb-2">
+                איך לעדכן פרטי כוח אדם
               </h3>
-              <ul className="text-info-700 dark:text-info-300 space-y-1">
-                <li>• Use the search box to find personnel by name or phone number</li>
-                <li>• Click on a person from the search results to select them</li>
-                <li>• Click &quot;Edit Information&quot; to modify their details</li>
-                <li>• You can update: Name, Rank, Phone Number, and User Type</li>
-                <li>• Military ID cannot be changed for security reasons</li>
+              <ul className="text-info-700 space-y-1">
+                <li>• השתמש בחיפוש למציאת כוח אדם לפי שם או מספר טלפון</li>
+                <li>• לחץ על אדם מתוצאות החיפוש לבחירה</li>
+                <li>• לחץ &quot;ערוך&quot; לעדכון פרטים</li>
+                <li>• ניתן לעדכן: שם, דרגה, מספר טלפון וסוג משתמש</li>
+                <li>• המספר האישי אינו ניתן לשינוי מטעמי אבטחה</li>
               </ul>
             </div>
           </div>

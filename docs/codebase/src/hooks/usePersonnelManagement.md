@@ -19,6 +19,8 @@ Manages authorized personnel CRUD with Firestore integration and `PersonnelCache
 }
 ```
 
+`addPersonnel` and `updatePersonnel` both return `Promise<PersonnelOperationResult>` so consumers can drive their own UX (e.g. `AddPersonnel`'s submit-state machine). The hook still populates the shared `message` field for any consumers that prefer that channel.
+
 ## Firebase Operations
 
 - Via `AdminFirestoreService`: read/write/delete on `authorized_personnel` collection

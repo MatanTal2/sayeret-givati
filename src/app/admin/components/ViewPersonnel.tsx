@@ -152,56 +152,56 @@ export default function ViewPersonnel() {
     <div className="space-y-6">
       {/* Header with Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-info-50 dark:bg-info-900/20 p-4 rounded-lg border border-info-200 dark:border-info-800">
+        <div className="bg-info-50 p-4 rounded-lg border border-info-200">
           <div className="text-2xl mb-1">👥</div>
-          <div className="text-2xl font-bold text-info-600 dark:text-info-400">{personnel.length}</div>
-          <div className="text-sm text-info-600 dark:text-info-400">Total Authorized Personnel</div>
+          <div className="text-2xl font-bold text-info-600">{personnel.length}</div>
+          <div className="text-sm text-info-600">{TEXT_CONSTANTS.ADMIN.VIEW_TOTAL_PERSONNEL}</div>
         </div>
-        <div className="bg-success-50 dark:bg-success-900/20 p-4 rounded-lg border border-success-200 dark:border-success-800">
+        <div className="bg-success-50 p-4 rounded-lg border border-success-200">
           <div className="text-2xl mb-1">📱</div>
-          <div className="text-2xl font-bold text-success-600 dark:text-success-400">{filteredPersonnel.length}</div>
-          <div className="text-sm text-success-600 dark:text-success-400">Filtered Results</div>
+          <div className="text-2xl font-bold text-success-600">{filteredPersonnel.length}</div>
+          <div className="text-sm text-success-600">{TEXT_CONSTANTS.ADMIN.VIEW_FILTERED_RESULTS}</div>
         </div>
       </div>
 
       {/* Search and Filter Controls */}
-      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6">
+      <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {/* Search */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-              🔍 Search
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              {TEXT_CONSTANTS.ADMIN.VIEW_SEARCH}
             </label>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={TEXT_CONSTANTS.ADMIN_COMPONENTS.SEARCH_BY_NAME_PHONE}
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                         bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+              className="w-full px-3 py-2 border border-neutral-300 rounded-md 
+                         bg-white text-neutral-900
                          focus:ring-2 focus:ring-info-500 focus:border-info-500"
             />
           </div>
 
           {/* Rank Filter */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-              🎖️ Filter by Rank
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              {TEXT_CONSTANTS.ADMIN.VIEW_FILTER_RANK}
             </label>
             <Select
               value={selectedRank || null}
               onChange={(v) => setSelectedRank(v ?? '')}
               options={uniqueRanks.map((r) => ({ value: r, label: r }))}
-              placeholder="All Ranks"
+              placeholder={TEXT_CONSTANTS.ADMIN.VIEW_ALL_RANKS}
               clearable
-              ariaLabel="Filter by Rank"
+              ariaLabel={TEXT_CONSTANTS.ADMIN.VIEW_FILTER_RANK}
             />
           </div>
 
           {/* User Type Filter */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-              🔑 Filter by User Type
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              {TEXT_CONSTANTS.ADMIN.VIEW_FILTER_USER_TYPE}
             </label>
             <Select
               value={selectedUserType || null}
@@ -210,59 +210,59 @@ export default function ViewPersonnel() {
                 value: u,
                 label: u.replace('_', ' ').split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
               }))}
-              placeholder="All User Types"
+              placeholder={TEXT_CONSTANTS.ADMIN.VIEW_ALL_TYPES}
               clearable
-              ariaLabel="Filter by User Type"
+              ariaLabel={TEXT_CONSTANTS.ADMIN.VIEW_FILTER_USER_TYPE}
             />
           </div>
 
           {/* Filter by Registration Status */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-              📋 Registration Status
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              {TEXT_CONSTANTS.ADMIN.VIEW_FILTER_REGISTRATION}
             </label>
             <Select
               value={registrationFilter}
               onChange={(v) => v && setRegistrationFilter(v as 'all' | 'registered' | 'pending')}
               options={[
-                { value: 'all', label: 'All Status' },
-                { value: 'registered', label: '✅ Registered' },
-                { value: 'pending', label: '⏳ Pending' },
+                { value: 'all', label: TEXT_CONSTANTS.ADMIN.VIEW_REG_ALL },
+                { value: 'registered', label: `✅ ${TEXT_CONSTANTS.ADMIN.VIEW_REG_REGISTERED}` },
+                { value: 'pending', label: `⏳ ${TEXT_CONSTANTS.ADMIN.VIEW_REG_PENDING}` },
               ]}
-              ariaLabel="Registration Status"
+              ariaLabel={TEXT_CONSTANTS.ADMIN.VIEW_FILTER_REGISTRATION}
             />
           </div>
 
           {/* Sort By */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-              📊 Sort By
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              📊 {TEXT_CONSTANTS.ADMIN.VIEW_SORT_BY}
             </label>
             <Select
               value={sortBy}
               onChange={(v) => v && setSortBy(v as 'name' | 'rank' | 'created')}
               options={[
-                { value: 'created', label: 'Creation Date' },
-                { value: 'name', label: 'Name' },
-                { value: 'rank', label: 'Rank' },
+                { value: 'created', label: TEXT_CONSTANTS.ADMIN.VIEW_SORT_CREATED },
+                { value: 'name', label: TEXT_CONSTANTS.ADMIN.VIEW_SORT_NAME },
+                { value: 'rank', label: TEXT_CONSTANTS.ADMIN.VIEW_SORT_RANK },
               ]}
-              ariaLabel="Sort By"
+              ariaLabel={TEXT_CONSTANTS.ADMIN.VIEW_SORT_BY}
             />
           </div>
 
           {/* Sort Order */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-              🔄 Order
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              🔄 סדר
             </label>
             <Select
               value={sortOrder}
               onChange={(v) => v && setSortOrder(v as 'asc' | 'desc')}
               options={[
-                { value: 'desc', label: 'Newest First' },
-                { value: 'asc', label: 'Oldest First' },
+                { value: 'desc', label: 'חדש קודם' },
+                { value: 'asc', label: 'ישן קודם' },
               ]}
-              ariaLabel="Sort Order"
+              ariaLabel="סדר מיון"
             />
           </div>
         </div>
@@ -278,9 +278,9 @@ export default function ViewPersonnel() {
                 setRegistrationFilter('all');
                 clearMessage();
               }}
-              className="text-sm text-info-600 dark:text-info-400 hover:text-info-800 dark:hover:text-info-300"
+              className="text-sm text-info-600 hover:text-info-800"
             >
-              🗑️ Clear Filters
+              🗑️ נקה מסננים
             </button>
           </div>
         )}
@@ -290,13 +290,13 @@ export default function ViewPersonnel() {
       {message && (
         <div className={`rounded-md p-4 ${
           message.type === 'success' 
-            ? 'bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800' 
-            : 'bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800'
+            ? 'bg-success-50 border border-success-200' 
+            : 'bg-danger-50 border border-danger-200'
         }`}>
           <p className={`text-sm ${
             message.type === 'success' 
-              ? 'text-success-700 dark:text-success-400' 
-              : 'text-danger-700 dark:text-danger-400'
+              ? 'text-success-700' 
+              : 'text-danger-700'
           }`}>
             {message.text}
           </p>
@@ -304,94 +304,94 @@ export default function ViewPersonnel() {
       )}
 
       {/* Personnel List */}
-      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg overflow-hidden">
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-info-600 mx-auto mb-4"></div>
-            <p className="text-neutral-600 dark:text-neutral-400">Loading personnel...</p>
+            <p className="text-neutral-600">טוען כוח אדם...</p>
           </div>
         ) : filteredPersonnel.length === 0 ? (
           <div className="p-8 text-center">
             <div className="text-4xl mb-4">👥</div>
-            <p className="text-neutral-600 dark:text-neutral-400">
-              {personnel.length === 0 
-                ? 'No authorized personnel found. Add some personnel first.'
-                : 'No personnel match your search criteria.'
+            <p className="text-neutral-600">
+              {personnel.length === 0
+                ? 'לא נמצא כוח אדם מורשה. הוסף כוח אדם תחילה.'
+                : 'לא נמצאו תוצאות התואמות את החיפוש.'
               }
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
-              <thead className="bg-neutral-50 dark:bg-neutral-700">
+            <table className="min-w-full divide-y divide-neutral-200">
+              <thead className="bg-neutral-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">
-                    Name & Rank
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    שם ודרגה
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">
-                    Phone Number
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    מספר טלפון
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">
-                    User Type
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    סוג משתמש
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">
-                    Registration
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    סטטוס רישום
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">
-                    Added Date
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    תאריך הוספה
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-300 uppercase tracking-wider">
-                    Actions
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    פעולות
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-neutral-800 divide-y divide-neutral-200 dark:divide-neutral-700">
+              <tbody className="bg-white divide-y divide-neutral-200">
                 {filteredPersonnel.map((person) => (
-                  <tr key={person.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                  <tr key={person.id} className="hover:bg-neutral-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-neutral-900 dark:text-white">
+                        <div className="text-sm font-medium text-neutral-900">
                           {person.firstName} {person.lastName}
                         </div>
-                        <div className="text-sm text-neutral-500 dark:text-neutral-400 flex items-center gap-2">
-                          <span className="text-xs bg-neutral-100 dark:bg-neutral-700 px-2 py-1 rounded">
+                        <div className="text-sm text-neutral-500 flex items-center gap-2">
+                          <span className="text-xs bg-neutral-100 px-2 py-1 rounded">
                             {person.rank}
                           </span>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-white">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
                       📱 {formatPhoneForDisplay(person.phoneNumber)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-100 text-info-800 dark:bg-info-800 dark:text-info-100">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-100 text-info-800">
                         {(person.userType || UserType.USER).replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         {person.registered ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800 dark:bg-success-800 dark:text-success-100">
-                            ✅ Registered
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">
+                            ✅ {TEXT_CONSTANTS.ADMIN.VIEW_REGISTERED_BADGE}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800 dark:bg-warning-800 dark:text-warning-100">
-                            ⏳ Pending
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
+                            ⏳ {TEXT_CONSTANTS.ADMIN.VIEW_PENDING_BADGE}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
                       📅 {formatDate(person.createdAt)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => handleDeleteClick(person.id!, `${person.firstName} ${person.lastName}`)}
                         disabled={isLoading}
-                        className="text-danger-600 hover:text-danger-900 dark:text-danger-400 dark:hover:text-danger-300 
+                        className="text-danger-600 hover:text-danger-900 
                                    disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
-                        🗑️ Remove
+                        🗑️ הסר
                       </button>
                     </td>
                   </tr>
@@ -414,11 +414,11 @@ export default function ViewPersonnel() {
         >
           {isLoading ? (
             <div className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Refreshing...
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2"></div>
+              מרענן...
             </div>
           ) : (
-            '🔄 Refresh Personnel List'
+            '🔄 רענן רשימת כוח אדם'
           )}
         </button>
       </div>
@@ -427,14 +427,14 @@ export default function ViewPersonnel() {
       <ConfirmationModal
         isOpen={deleteModal.isOpen}
         title={TEXT_CONSTANTS.ADMIN_COMPONENTS.CONFIRM_DELETION_TITLE}
-        message={`Are you sure you want to remove ${deleteModal.personName} from the authorized personnel list?`}
-        confirmText="🗑️ Remove Personnel"
-        cancelText="Cancel"
+        message={`האם להסיר את ${deleteModal.personName} מרשימת הכוח אדם המורשה?`}
+        confirmText="🗑️ הסר כוח אדם"
+        cancelText="ביטול"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
         isLoading={isLoading}
         variant="danger"
-        additionalInfo="⚠️ Warning: This action cannot be undone. The person will need to be re-added if you want to authorize them again."
+        additionalInfo="⚠️ אזהרה: פעולה זו אינה ניתנת לשחזור. יש להוסיף את האדם מחדש כדי לאשר אותו שוב."
       />
     </div>
   );

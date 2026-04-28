@@ -50,13 +50,16 @@ export default function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProp
         aria-label={TEXT_CONSTANTS.ARIA_LABELS.MAIN_MENU}
         className={cn(
           'hidden lg:flex flex-col shrink-0 border-s border-neutral-200 bg-white transition-[width] duration-200 ease-out',
-          expanded ? 'w-64' : 'w-16'
+          expanded ? 'w-64' : 'w-24'
         )}
       >
         <button
           type="button"
           onClick={toggleExpanded}
-          className="flex items-center justify-center h-12 border-b border-neutral-200 text-neutral-600 hover:text-primary-600 hover:bg-neutral-50 transition-colors"
+          className={cn(
+            'flex items-center h-12 px-3 border-b border-neutral-200 text-neutral-600 hover:text-primary-600 hover:bg-neutral-50 transition-colors',
+            expanded ? 'justify-end' : 'justify-center'
+          )}
           aria-label={expanded ? TEXT_CONSTANTS.SHELL.COLLAPSE_SIDEBAR : TEXT_CONSTANTS.SHELL.EXPAND_SIDEBAR}
           aria-expanded={expanded}
         >
@@ -66,7 +69,7 @@ export default function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProp
             <ChevronLeft className="w-5 h-5" aria-hidden="true" />
           )}
         </button>
-        <nav className="flex-1 overflow-y-auto py-2">
+        <nav className="flex-1 overflow-y-auto py-2 scrollbar-hide">
           <ul className="flex flex-col gap-1 px-2">
             {menuItems.map((item) => (
               <SidebarItem

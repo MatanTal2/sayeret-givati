@@ -761,16 +761,111 @@ export const TEXT_CONSTANTS = {
 
   // Admin Panel
   ADMIN: {
-    PANEL_TITLE: '🔧 System Admin Panel',
-    PANEL_SUBTITLE: 'Sayeret Givati Equipment Management System',
-    LOADING_MESSAGE: 'Loading...',
-    SETUP_TITLE: '🔧 Admin User Setup',
-    SETUP_INSTRUCTIONS: 'Setup Instructions:',
-    ADMIN_PASSWORD_LABEL: 'Admin Password:',
-    PASSWORD_PLACEHOLDER: 'Enter a secure password...',
-    CREATE_ADMIN_USER: '🔧 Create Admin User',
-    CREATING: '⏳ Creating...',
-    CREATED: '✅ Created'
+    PANEL_TITLE: '🔧 לוח ניהול מערכת',
+    PANEL_SUBTITLE: 'מערכת ניהול ציוד — סיירת גבעתי',
+    LOADING_MESSAGE: 'טוען...',
+    SETUP_TITLE: '🔧 הגדרת משתמש אדמין',
+    SETUP_INSTRUCTIONS: 'הוראות הגדרה:',
+    ADMIN_PASSWORD_LABEL: 'סיסמת אדמין:',
+    PASSWORD_PLACEHOLDER: 'הזן סיסמה מאובטחת...',
+    CREATE_ADMIN_USER: '🔧 צור משתמש אדמין',
+    CREATING: '⏳ יוצר...',
+    CREATED: '✅ נוצר',
+
+    // Login
+    LOGIN_TITLE: 'התחברות אדמין',
+    LOGIN_SUBTITLE: 'גישת מנהל מערכת',
+    LOGIN_EMAIL_LABEL: 'דוא״ל אדמין',
+    LOGIN_PASSWORD_LABEL: 'סיסמה',
+    LOGIN_AUTHENTICATING: 'מאמת...',
+    LOGIN_SUBMIT: 'התחבר ללוח האדמין',
+    LOGIN_SECURE_NOTE: '🔒 גישה מאובטחת למנהלי מערכת בלבד',
+    SECTIONS_ARIA: 'אזורי אדמין',
+
+    // System stats
+    STATS_TOTAL_PERSONNEL: 'סה״כ כוח אדם מורשה',
+    STATS_ADDED_THIS_WEEK: 'נוספו השבוע',
+    STATS_SYSTEM_STATUS: 'מצב מערכת',
+    STATS_ONLINE: 'מחובר',
+    STATS_INFO_TITLE: '📊 פרטי מערכת',
+    STATS_DB_STATUS: 'מצב מאגר:',
+    STATS_AUTH: 'אימות:',
+    STATS_SECURITY_RULES: 'כללי אבטחה:',
+    STATS_LAST_UPDATED: 'עדכון אחרון:',
+    STATS_CONNECTED: '✅ מחובר',
+    STATS_ACTIVE: '✅ פעיל',
+    STATS_APPLIED: '✅ הוחל',
+    STATS_NEVER: 'אף פעם',
+    STATS_QUICK_ACTIONS: '🚀 פעולות מהירות',
+    STATS_REFRESH_TITLE: '🔄 רענן נתוני כוח אדם',
+    STATS_EXPORT: '📊 ייצוא נתונים',
+    STATS_EXPORT_HINT: 'ייצוא רשימת כוח אדם (בקרוב)',
+    STATS_BACKUP: '📋 גיבוי מאגר',
+    STATS_BACKUP_HINT: 'גיבוי מאגר אוטומטי (בקרוב)',
+    STATS_CACHE_BANNER: 'נתונים נטענו מהמטמון המקומי',
+
+    // Bulk upload
+    BULK_TITLE: 'העלאה מרובה של כוח אדם',
+    BULK_SUBTITLE: 'העלה כוח אדם מורשה במרוכז באמצעות קובץ CSV',
+    BULK_INSTRUCTIONS_TITLE: '📋 הוראות העלאה',
+    BULK_UPLOAD_FILE_TITLE: '📤 העלאת קובץ CSV',
+    BULK_PREVIEW_TITLE: '👀 תצוגה מקדימה',
+    BULK_RESULTS_TITLE: '📊 תוצאות ההעלאה',
+    BULK_PROCESS: '✅ עבד העלאה',
+    BULK_PROCESSING: 'מעבד...',
+    BULK_CANCEL: '❌ ביטול',
+    BULK_UPLOAD_ANOTHER: '🔄 העלה קובץ נוסף',
+    BULK_TABLE_MILITARY_ID: 'מספר אישי',
+    BULK_TABLE_NAME: 'שם',
+    BULK_TABLE_RANK: 'דרגה',
+    BULK_TABLE_PHONE: 'טלפון',
+    BULK_TABLE_USER_TYPE: 'סוג משתמש',
+    BULK_SHOWING_FIRST: 'מציג 5 שורות ראשונות. סה״כ:',
+    BULK_PERSONNEL_UNIT: 'אנשים',
+    BULK_SUCCESS_ADDED: 'נוספו בהצלחה',
+    BULK_FAILED: 'נכשלו',
+    BULK_SUCCESS_LIST: '✅ נוספו בהצלחה:',
+    BULK_ERRORS_LIST: '❌ שגיאות:',
+
+    // View personnel
+    VIEW_TOTAL_PERSONNEL: 'סה״כ כוח אדם מורשה',
+    VIEW_FILTERED_RESULTS: 'תוצאות מסוננות',
+    VIEW_SEARCH: '🔍 חיפוש',
+    VIEW_FILTER_RANK: '🎖️ סינון לפי דרגה',
+    VIEW_FILTER_USER_TYPE: '🔑 סינון לפי סוג משתמש',
+    VIEW_ALL_RANKS: 'כל הדרגות',
+    VIEW_ALL_TYPES: 'כל הסוגים',
+    VIEW_FILTER_REGISTRATION: '📝 סטטוס רישום',
+    VIEW_REG_ALL: 'הכול',
+    VIEW_REG_REGISTERED: 'רשומים',
+    VIEW_REG_PENDING: 'ממתינים',
+    VIEW_SORT_BY: 'מיון לפי',
+    VIEW_SORT_NAME: 'שם',
+    VIEW_SORT_RANK: 'דרגה',
+    VIEW_SORT_CREATED: 'תאריך הוספה',
+    VIEW_NO_RESULTS: 'לא נמצאו תוצאות',
+    VIEW_LOADING: 'טוען...',
+    VIEW_DELETE: '🗑️ מחק',
+    VIEW_REGISTERED_BADGE: 'רשום',
+    VIEW_PENDING_BADGE: 'ממתין',
+
+    // Update personnel
+    UPDATE_SEARCH_LABEL: '🔍 חיפוש כוח אדם',
+    UPDATE_CLEAR: '🗑️ נקה',
+    UPDATE_SEARCHING: 'מחפש...',
+    UPDATE_NO_RESULTS: 'לא נמצאו תוצאות',
+    UPDATE_EDIT: '✏️ ערוך',
+    UPDATE_SAVE: '💾 שמור',
+    UPDATE_SAVING: 'שומר...',
+    UPDATE_CANCEL: 'ביטול',
+    UPDATE_NO_CHANGES: '⚠️ לא בוצעו שינויים',
+    UPDATE_FAILED: '❌ עדכון נכשל. נסה שוב.',
+    UPDATE_PERSONAL_DETAILS: 'פרטי כוח אדם',
+    UPDATE_FIELD_FIRST_NAME: 'שם פרטי',
+    UPDATE_FIELD_LAST_NAME: 'שם משפחה',
+    UPDATE_FIELD_RANK: 'דרגה',
+    UPDATE_FIELD_PHONE: 'מספר טלפון',
+    UPDATE_FIELD_USER_TYPE: 'סוג משתמש'
   },
 
   // Error Messages
@@ -1220,7 +1315,15 @@ export const TEXT_CONSTANTS = {
 3456789,"דוד","לוי","רב״ט","0546789012","manager"`,
     
     // View Personnel
-    CONFIRM_DELETION_TITLE: 'Confirm Deletion'
+    CONFIRM_DELETION_TITLE: 'Confirm Deletion',
+
+    // Add Personnel — submit feedback
+    PERSONNEL_ADD_SUBMIT: 'הוסף כוח אדם מורשה',
+    PERSONNEL_ADD_SUBMITTING: 'מוסיף...',
+    PERSONNEL_ADDED_TITLE: 'נוסף בהצלחה',
+    PERSONNEL_ADDED_HINT: 'הכוח אדם יכול להירשם כעת באמצעות המספר האישי ומספר הטלפון',
+    PERSONNEL_ADD_ERROR_TITLE: 'הוספת כוח אדם נכשלה',
+    DISMISS: 'סגור'
   },
 
   // Registration Components

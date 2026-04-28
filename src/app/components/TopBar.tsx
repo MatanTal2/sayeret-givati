@@ -17,7 +17,7 @@ export default function TopBar({ showBackArrow = false, onOpenSidebar }: TopBarP
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm shadow-sm border-b border-neutral-200">
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 h-14 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+      <div className="w-full px-3 sm:px-4 h-14 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         {/* Start side (right in RTL): hamburger + optional back */}
         <div className="flex items-center gap-1 justify-self-start">
           <button

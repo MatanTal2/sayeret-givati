@@ -196,3 +196,12 @@
   outline: none;
   box-shadow: 0 0 0 2px var(--color-primary-500), 0 0 0 4px var(--color-primary-focus-ring);
 }
+
+/* ─── Hide scrollbar visually (still scrollable via wheel/keyboard) ───────── */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

@@ -36,20 +36,20 @@ export const VALIDATION_MESSAGES = {
 
 // Success/Error messages
 export const ADMIN_MESSAGES = {
-  LOGIN_SUCCESS: 'Successfully logged in to admin panel',
-  LOGIN_FAILED: 'Login failed. Please check your credentials.',
-  LOGIN_EMAIL_INVALID: 'Invalid admin email address',
-  LOGIN_PASSWORD_INVALID: 'Invalid password',
-  LOGIN_CONFIG_NOT_FOUND: 'Admin configuration not found. Please contact system administrator.',
-  LOGIN_CONNECTION_ERROR: 'Login failed. Please check your connection and try again.',
+  LOGIN_SUCCESS: 'התחברת בהצלחה ללוח האדמין',
+  LOGIN_FAILED: 'התחברות נכשלה. בדוק את פרטי הזיהוי.',
+  LOGIN_EMAIL_INVALID: 'כתובת דוא״ל לא חוקית',
+  LOGIN_PASSWORD_INVALID: 'סיסמה לא חוקית',
+  LOGIN_CONFIG_NOT_FOUND: 'הגדרות אדמין לא נמצאו. פנה למנהל המערכת.',
+  LOGIN_CONNECTION_ERROR: 'התחברות נכשלה. בדוק את החיבור ונסה שוב.',
+
+  PERSONNEL_ADD_SUCCESS: (name: string) => `✅ ${name} נוסף בהצלחה לרשימת הכוח אדם המורשה`,
+  PERSONNEL_ADD_FAILED: '❌ הוספת כוח אדם נכשלה. בדוק את החיבור ונסה שוב.',
+  PERSONNEL_DELETE_SUCCESS: (name: string) => `✅ ${name} הוסר בהצלחה מרשימת הכוח אדם המורשה`,
+  PERSONNEL_DELETE_FAILED: '❌ הסרת כוח אדם נכשלה. נסה שוב.',
   
-  PERSONNEL_ADD_SUCCESS: (name: string) => `✅ Successfully added ${name} to authorized personnel list`,
-  PERSONNEL_ADD_FAILED: '❌ Failed to add personnel. Please check your connection and try again.',
-  PERSONNEL_DELETE_SUCCESS: (name: string) => `✅ Successfully removed ${name} from authorized personnel list`,
-  PERSONNEL_DELETE_FAILED: '❌ Failed to remove personnel. Please try again.',
-  
-  SESSION_EXPIRED: 'Your session has expired. Please login again.',
-  LOGOUT_CONFIRM: 'Are you sure you want to logout?'
+  SESSION_EXPIRED: 'תוקף ההפעלה פג. התחבר שוב.',
+  LOGOUT_CONFIRM: 'האם להתנתק?'
 } as const;
 
 // Military ranks for dropdown
@@ -60,39 +60,39 @@ export const RANK_OPTIONS = MILITARY_RANKS.map(rank => ({
 
 // User types for dropdown
 export const USER_TYPE_OPTIONS = [
-  { value: UserType.USER, label: 'User' },
-  { value: UserType.TEAM_LEADER, label: 'Team Leader' },
-  { value: UserType.MANAGER, label: 'Manager' },
-  { value: UserType.SYSTEM_MANAGER, label: 'System Manager' },
-  { value: UserType.ADMIN, label: 'Admin' }
+  { value: UserType.USER, label: 'משתמש' },
+  { value: UserType.TEAM_LEADER, label: 'מפקד צוות' },
+  { value: UserType.MANAGER, label: 'מנהל' },
+  { value: UserType.SYSTEM_MANAGER, label: 'מנהל מערכת' },
+  { value: UserType.ADMIN, label: 'אדמין' }
 ];
 
 // Admin tabs configuration
 export const ADMIN_TABS = [
   {
     id: 'add-personnel' as const,
-    name: '🔐 Add Authorized Personnel',
-    description: 'Add military personnel to the authorized list. Only authorized personnel can register in the system.'
+    name: '🔐 הוספת כוח אדם מורשה',
+    description: 'הוסף כוח אדם לרשימת המורשים. רק כוח אדם מורשה יכול להירשם במערכת.'
   },
   {
     id: 'bulk-upload' as const,
-    name: '📁 Bulk Upload',
-    description: 'Upload multiple authorized personnel via CSV file for bulk operations.'
+    name: '📁 העלאה מרובה',
+    description: 'העלה כוח אדם מורשה במרוכז באמצעות קובץ CSV.'
   },
   {
     id: 'view-personnel' as const,
-    name: '📋 View Personnel', 
-    description: 'View and manage authorized personnel list.'
+    name: '📋 צפייה בכוח אדם',
+    description: 'צפייה וניהול רשימת הכוח אדם המורשה.'
   },
   {
     id: 'update-personnel' as const,
-    name: '✏️ Update Personnel',
-    description: 'Search and update personnel information including name, rank, phone number, and user type.'
+    name: '✏️ עדכון כוח אדם',
+    description: 'חיפוש ועדכון פרטי כוח אדם — שם, דרגה, טלפון וסוג משתמש.'
   },
   {
     id: 'system-stats' as const,
-    name: '📊 System Stats',
-    description: 'Overview of system usage and status.'
+    name: '📊 סטטיסטיקות מערכת',
+    description: 'סקירה של נתוני המערכת ומצבה.'
   }
 ] as const;
 
@@ -114,9 +114,9 @@ export const FORM_CONSTRAINTS = {
 
 // Loading states
 export const LOADING_OPERATIONS = {
-  LOGIN: 'Authenticating...',
-  ADD_PERSONNEL: 'Adding Personnel...',
-  DELETE_PERSONNEL: 'Removing Personnel...',
-  FETCH_PERSONNEL: 'Loading Personnel...',
-  HASH_GENERATION: 'Generating Security Hash...'
+  LOGIN: 'מאמת...',
+  ADD_PERSONNEL: 'מוסיף כוח אדם...',
+  DELETE_PERSONNEL: 'מסיר כוח אדם...',
+  FETCH_PERSONNEL: 'טוען כוח אדם...',
+  HASH_GENERATION: 'מחולל hash אבטחה...'
 } as const; 

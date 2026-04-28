@@ -23,29 +23,29 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
 
   return (
     <div className="max-w-md mx-auto">
-      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-8">
+      <div className="bg-white rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
           <div className="text-4xl mb-4">🔐</div>
-          <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
-            Admin Login
+          <h2 className="text-2xl font-bold text-neutral-900">
+            {TEXT_CONSTANTS.ADMIN.LOGIN_TITLE}
           </h2>
-          <p className="text-neutral-600 dark:text-neutral-400 mt-2">
-            System Administrator Access
+          <p className="text-neutral-600 mt-2">
+            {TEXT_CONSTANTS.ADMIN.LOGIN_SUBTITLE}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-              Admin Email
+            <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-2">
+              {TEXT_CONSTANTS.ADMIN.LOGIN_EMAIL_LABEL}
             </label>
             <input
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                         bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+              className="w-full px-3 py-2 border border-neutral-300 rounded-md 
+                         bg-white text-neutral-900
                          focus:ring-2 focus:ring-info-500 focus:border-info-500
                          disabled:opacity-50"
               placeholder={TEXT_CONSTANTS.ADMIN_COMPONENTS.EMAIL_PLACEHOLDER}
@@ -56,16 +56,16 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-              Password
+            <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-2">
+              {TEXT_CONSTANTS.ADMIN.LOGIN_PASSWORD_LABEL}
             </label>
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md 
-                         bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white
+              className="w-full px-3 py-2 border border-neutral-300 rounded-md 
+                         bg-white text-neutral-900
                          focus:ring-2 focus:ring-info-500 focus:border-info-500
                          disabled:opacity-50"
               placeholder={TEXT_CONSTANTS.ADMIN_COMPONENTS.ADMIN_PASSWORD_PLACEHOLDER}
@@ -78,18 +78,18 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
           {message && (
             <div className={`rounded-md p-4 ${
               message.type === 'success' 
-                ? 'bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800' 
-                : 'bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800'
+                ? 'bg-success-50 border border-success-200' 
+                : 'bg-danger-50 border border-danger-200'
             }`}>
               <div className="flex">
                 <div className={message.type === 'success' ? 'text-success-400' : 'text-danger-400'}>
                   {message.type === 'success' ? '✅' : '⚠️'}
                 </div>
-                <div className="ml-3">
+                <div className="ms-3">
                   <p className={`text-sm ${
                     message.type === 'success' 
-                      ? 'text-success-700 dark:text-success-400' 
-                      : 'text-danger-700 dark:text-danger-400'
+                      ? 'text-success-700' 
+                      : 'text-danger-700'
                   }`}>
                     {message.text}
                   </p>
@@ -108,18 +108,18 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
           >
             {isLoading ? (
               <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Authenticating...
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2"></div>
+                {TEXT_CONSTANTS.ADMIN.LOGIN_AUTHENTICATING}
               </div>
             ) : (
-              'Login to Admin Panel'
+              TEXT_CONSTANTS.ADMIN.LOGIN_SUBMIT
             )}
           </button>
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            🔒 Secure system administrator access only
+          <p className="text-xs text-neutral-500">
+            {TEXT_CONSTANTS.ADMIN.LOGIN_SECURE_NOTE}
           </p>
         </div>
       </div>
