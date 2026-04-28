@@ -47,10 +47,12 @@ export interface OTPVerificationResult {
 }
 
 export interface ProfileImageUploadProps {
+  userId: string;
   currentImageUrl?: string;
   onImageUpdate: (imageUrl: string) => void;
   size?: 'small' | 'medium' | 'large';
   className?: string;
+  showInstructions?: boolean;
 }
 
 export interface PhoneNumberUpdateProps {

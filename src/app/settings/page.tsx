@@ -38,8 +38,12 @@ export default function SettingsPage() {
     theme: 'light'
   });
 
-  // Profile image state
-  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(enhancedUser?.profileImage);
+  // Profile image state. Drop legacy blob: URLs from the old mock — they error on render.
+  const initialProfileImage =
+    enhancedUser?.profileImage && /^https?:\/\//i.test(enhancedUser.profileImage)
+      ? enhancedUser.profileImage
+      : undefined;
+  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(initialProfileImage);
 
   // TODO: Replace with actual data when backend is implemented
   const mockPhoneNumber = enhancedUser?.phoneNumber || '+972-50-123-4567';
@@ -88,11 +92,14 @@ export default function SettingsPage() {
               {/* Profile Image */}
               <div className="flex items-center justify-between p-4 border border-neutral-200 rounded-xl">
                 <div className="flex items-center gap-4">
-                  <ProfileImageUpload
-                    currentImageUrl={profileImageUrl}
-                    onImageUpdate={handleImageUpdate}
-                    size="small"
-                  />
+                  {enhancedUser?.uid && (
+                    <ProfileImageUpload
+                      userId={enhancedUser.uid}
+                      currentImageUrl={profileImageUrl}
+                      onImageUpdate={handleImageUpdate}
+                      size="small"
+                    />
+                  )}
                   <div>
                     <h3 className="font-medium text-neutral-900">
                       {TEXT_CONSTANTS.SETTINGS.PROFILE_IMAGE}

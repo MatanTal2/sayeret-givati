@@ -18,7 +18,12 @@ import { updateUserProfile } from '@/lib/userProfileService';
  */
 export default function ProfilePage() {
   const { enhancedUser, user, refreshEnhancedUser } = useAuth();
-  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(enhancedUser?.profileImage);
+  // Drop legacy `blob:` URLs left over from the old mock upload; they error on render.
+  const initialProfileImage =
+    enhancedUser?.profileImage && /^https?:\/\//i.test(enhancedUser.profileImage)
+      ? enhancedUser.profileImage
+      : undefined;
+  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(initialProfileImage);
   const [phoneNumber, setPhoneNumber] = useState<string>(enhancedUser?.phoneNumber || '');
   const [teamId, setTeamId] = useState<string>(enhancedUser?.teamId || '');
   const [assignmentSaving, setAssignmentSaving] = useState(false);
@@ -100,11 +105,15 @@ export default function ProfilePage() {
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
             <div className="flex items-center gap-6">
               {/* Profile Avatar with Upload */}
-              <ProfileImageUpload
-                currentImageUrl={profileImageUrl}
-                onImageUpdate={handleImageUpdate}
-                size="medium"
-              />
+              {enhancedUser?.uid && (
+                <ProfileImageUpload
+                  userId={enhancedUser.uid}
+                  currentImageUrl={profileImageUrl}
+                  onImageUpdate={handleImageUpdate}
+                  size="medium"
+                  showInstructions={false}
+                />
+              )}
 
               {/* Basic Info */}
               <div className="flex-1">
