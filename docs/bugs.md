@@ -1,8 +1,12 @@
 
 # bugs need to be fix UI/UX
 
-1. in the admin routs when we add CSV or just one personnal to the authorized_personnel we can't use - or ' for names
-wqe need to support this chars
+1. ~~in the admin routs when we add CSV or just one personnal to the authorized_personnel we can't use - or ' for names~~
+   - **FIXED (2026-04-28):** Two regex broadened to accept hyphens and apostrophes/geresh.
+     - `src/utils/validationUtils.ts` `VALIDATION_PATTERNS.HEBREW_NAME`: `/^[א-ת\s\-'׳]+$/` (registration flow).
+     - `src/lib/equipmentValidation.ts` `validateUserName.validNamePattern`: `/^[א-תA-Za-z\s\.\-'׳]+$/` (admin AddPersonnel / BulkUpload / UpdatePersonnel via `adminUtils.validateFirstName` / `validateLastName`).
+   - Accepts: ASCII hyphen `-`, ASCII apostrophe `'`, Hebrew geresh `׳` (U+05F3). Examples now valid: `כהן-לוי`, `ז'אן`, `ז׳אן`.
+   - Tests in `src/utils/__tests__/validationUtils.test.ts` updated: prior reject-hyphen test flipped to accept; new tests for apostrophe and geresh.
 2. make sure we can handle multiple possibility to insert phone numbers
 ignore not digits charas and multiple -  or spaces
 3. in the admin panel we need the ability to update some fields in the authorized_personnel.

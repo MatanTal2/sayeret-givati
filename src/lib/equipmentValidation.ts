@@ -287,10 +287,10 @@ export function validateUserName(name: string): { isValid: boolean; error?: stri
     return { isValid: false, error: 'שם ארוך מדי (מקסימום 50 תווים)' };
   }
 
-  // Check for valid name characters (Hebrew, English, spaces, dots)
-  const validNamePattern = /^[א-תA-Za-z\s\.]+$/;
+  // Check for valid name characters (Hebrew, English, spaces, dots, hyphens, apostrophes/geresh)
+  const validNamePattern = /^[א-תA-Za-z\s\.\-'׳]+$/;
   if (!validNamePattern.test(trimmedName)) {
-    return { isValid: false, error: 'שם יכול להכיל רק אותיות עבריות, אנגליות, רווחים ונקודות' };
+    return { isValid: false, error: 'שם יכול להכיל רק אותיות עבריות, אנגליות, רווחים, נקודות, מקפים (-) או גרש (\')' };
   }
 
   return { isValid: true };
