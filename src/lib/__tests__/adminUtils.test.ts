@@ -142,6 +142,67 @@ describe('SecurityUtils', () => {
   });
 });
 
+describe('ValidationUtils — phone normalization (bug #2)', () => {
+  describe('normalizePhoneInput', () => {
+    it('strips spaces, dashes, dots, parens', () => {
+      expect(ValidationUtils.normalizePhoneInput('050-123 4567')).toBe('0501234567');
+      expect(ValidationUtils.normalizePhoneInput('050.123.4567')).toBe('0501234567');
+      expect(ValidationUtils.normalizePhoneInput('(050) 123-4567')).toBe('0501234567');
+      expect(ValidationUtils.normalizePhoneInput('050  -  1234567')).toBe('0501234567');
+    });
+
+    it('preserves a single leading + for international form', () => {
+      expect(ValidationUtils.normalizePhoneInput('+972 50 123 4567')).toBe('+972501234567');
+      expect(ValidationUtils.normalizePhoneInput('+972-50-1234567')).toBe('+972501234567');
+    });
+
+    it('drops embedded + signs, keeps only the leading one', () => {
+      expect(ValidationUtils.normalizePhoneInput('+972+50+1234567')).toBe('+972501234567');
+      expect(ValidationUtils.normalizePhoneInput('050+1234567')).toBe('0501234567');
+    });
+
+    it('returns empty string for empty / whitespace input', () => {
+      expect(ValidationUtils.normalizePhoneInput('')).toBe('');
+      expect(ValidationUtils.normalizePhoneInput('   ')).toBe('');
+    });
+  });
+
+  describe('isValidIsraeliMobile — accepts noisy inputs', () => {
+    it.each([
+      '050-123-4567',
+      '050.123.4567',
+      '(050) 123-4567',
+      '050  1234567',
+      '+972-50-1234567',
+      '+972 50 123 4567',
+      '0501234567',
+      '528966085', // Excel-stripped leading zero
+    ])('accepts %s', (input) => {
+      expect(ValidationUtils.isValidIsraeliMobile(input)).toBe(true);
+    });
+
+    it.each([
+      'abc',
+      '050-12',
+      '12345',
+      '',
+    ])('rejects %s', (input) => {
+      expect(ValidationUtils.isValidIsraeliMobile(input)).toBe(false);
+    });
+  });
+
+  describe('toInternationalFormat — canonicalizes noisy inputs', () => {
+    it.each([
+      ['050-123-4567', '+972501234567'],
+      ['(050) 123 4567', '+972501234567'],
+      ['+972 50 123 4567', '+972501234567'],
+      ['528966085', '+972528966085'],
+    ])('%s → %s', (input, expected) => {
+      expect(ValidationUtils.toInternationalFormat(input)).toBe(expected);
+    });
+  });
+});
+
 describe('AdminFirestoreService', () => {
   afterEach(() => {
     jest.clearAllMocks();

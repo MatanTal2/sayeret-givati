@@ -67,6 +67,18 @@ export const USER_TYPE_OPTIONS = [
   { value: UserType.ADMIN, label: 'אדמין' }
 ];
 
+// Service status enum (matches AuthorizedPersonnel.status)
+export const PERSONNEL_STATUSES = ['active', 'inactive', 'transferred', 'discharged'] as const;
+export type PersonnelStatus = typeof PERSONNEL_STATUSES[number];
+
+// Status options for dropdown — labels are read at usage site from TEXT_CONSTANTS
+export const PERSONNEL_STATUS_OPTIONS: { value: PersonnelStatus; labelKey: 'STATUS_ACTIVE' | 'STATUS_INACTIVE' | 'STATUS_TRANSFERRED' | 'STATUS_DISCHARGED' }[] = [
+  { value: 'active', labelKey: 'STATUS_ACTIVE' },
+  { value: 'inactive', labelKey: 'STATUS_INACTIVE' },
+  { value: 'transferred', labelKey: 'STATUS_TRANSFERRED' },
+  { value: 'discharged', labelKey: 'STATUS_DISCHARGED' },
+];
+
 // Admin tabs configuration
 export const ADMIN_TABS = [
   {

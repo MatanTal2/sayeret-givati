@@ -9,6 +9,8 @@ export default function SystemStats() {
   const [stats, setStats] = useState({
     totalPersonnel: 0,
     recentlyAdded: 0,
+    registeredCount: 0,
+    pendingCount: 0,
     lastUpdated: null as Date | null
   });
 
@@ -36,9 +38,13 @@ export default function SystemStats() {
         }
       }).length;
 
+      const registeredCount = personnel.filter(p => p.registered).length;
+
       setStats({
         totalPersonnel: personnel.length,
         recentlyAdded: recentCount,
+        registeredCount,
+        pendingCount: personnel.length - registeredCount,
         lastUpdated: new Date()
       });
     }
@@ -83,7 +89,7 @@ export default function SystemStats() {
       )}
       
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Personnel */}
         <div className="bg-info-50 p-6 rounded-lg border border-info-200">
           <div className="flex items-center">
@@ -99,31 +105,46 @@ export default function SystemStats() {
           </div>
         </div>
 
-        {/* Recently Added */}
-        <div className="bg-warning-50 p-6 rounded-lg border border-warning-200">
+        {/* Registered */}
+        <div className="bg-success-50 p-6 rounded-lg border border-success-200">
           <div className="flex items-center">
-            <div className="text-3xl me-4">📈</div>
+            <div className="text-3xl me-4">✅</div>
             <div>
-              <div className="text-2xl font-bold text-warning-600">
-                {isLoading ? '...' : stats.recentlyAdded}
+              <div className="text-2xl font-bold text-success-600">
+                {isLoading ? '...' : stats.registeredCount}
               </div>
-              <div className="text-sm text-warning-600">
-                {TEXT_CONSTANTS.ADMIN.STATS_ADDED_THIS_WEEK}
+              <div className="text-sm text-success-600">
+                {TEXT_CONSTANTS.ADMIN.STATS_REGISTERED}
               </div>
             </div>
           </div>
         </div>
 
-        {/* System Status */}
+        {/* Pending Registration */}
+        <div className="bg-warning-50 p-6 rounded-lg border border-warning-200">
+          <div className="flex items-center">
+            <div className="text-3xl me-4">⏳</div>
+            <div>
+              <div className="text-2xl font-bold text-warning-600">
+                {isLoading ? '...' : stats.pendingCount}
+              </div>
+              <div className="text-sm text-warning-600">
+                {TEXT_CONSTANTS.ADMIN.STATS_PENDING}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recently Added */}
         <div className="bg-primary-50 p-6 rounded-lg border border-primary-200">
           <div className="flex items-center">
-            <div className="text-3xl me-4">⚡</div>
+            <div className="text-3xl me-4">📈</div>
             <div>
               <div className="text-2xl font-bold text-primary-600">
-                {TEXT_CONSTANTS.ADMIN.STATS_ONLINE}
+                {isLoading ? '...' : stats.recentlyAdded}
               </div>
               <div className="text-sm text-primary-600">
-                {TEXT_CONSTANTS.ADMIN.STATS_SYSTEM_STATUS}
+                {TEXT_CONSTANTS.ADMIN.STATS_ADDED_THIS_WEEK}
               </div>
             </div>
           </div>
@@ -232,7 +253,7 @@ export default function SystemStats() {
               })
               .slice(0, 5)
               .map((person) => (
-                <div key={person.id} className="flex items-center justify-between p-3 
+                <div key={person.id} className="flex items-center justify-between p-3
                                                   bg-neutral-50 rounded-md">
                   <div className="flex items-center">
                     <div className="text-lg me-3">👤</div>
@@ -245,8 +266,19 @@ export default function SystemStats() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-xs text-neutral-500">
-                    {person.createdAt?.toDate?.()?.toLocaleDateString('he-IL') || 'תאריך לא ידוע'}
+                  <div className="flex items-center gap-3">
+                    {person.registered ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">
+                        ✅ {TEXT_CONSTANTS.ADMIN.VIEW_REGISTERED_BADGE}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
+                        ⏳ {TEXT_CONSTANTS.ADMIN.VIEW_PENDING_BADGE}
+                      </span>
+                    )}
+                    <div className="text-xs text-neutral-500">
+                      {person.createdAt?.toDate?.()?.toLocaleDateString('he-IL') || 'תאריך לא ידוע'}
+                    </div>
                   </div>
                 </div>
               ))}

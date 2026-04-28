@@ -104,9 +104,10 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
         });
         resetForm();
 
-        // Update cache so other tabs (ViewPersonnel) pick up the new entry
+        // Update cache + local state so the UI reflects the new entry immediately
         if (result.personnel) {
           PersonnelCache.appendToCache(result.personnel);
+          setPersonnel(prev => [...prev, result.personnel!]);
         }
       } else {
         setMessage({
@@ -212,13 +213,14 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
   };
 
   const updatePersonnel = async (
-    personnelId: string, 
+    personnelId: string,
     updateData: {
       firstName?: string;
       lastName?: string;
       rank?: string;
       phoneNumber?: string;
       userType?: string;
+      status?: 'active' | 'inactive' | 'transferred' | 'discharged';
     }
   ): Promise<PersonnelOperationResult> => {
     setIsLoading(true);
@@ -233,8 +235,11 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
           type: 'success'
         });
 
-        // Update cache so other tabs pick up the change
+        // Update cache + local state so the UI reflects the change immediately
         PersonnelCache.updateInCache(personnelId, updateData as Partial<AuthorizedPersonnel>);
+        setPersonnel(prev => prev.map(p =>
+          p.id === personnelId ? { ...p, ...(updateData as Partial<AuthorizedPersonnel>) } : p
+        ));
       } else {
         setMessage({
           text: result.message,
@@ -276,8 +281,9 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
           type: 'success'
         });
 
-        // Update cache so other tabs pick up the deletion
+        // Update cache + local state so the row disappears immediately
         PersonnelCache.removeFromCache(personnelId);
+        setPersonnel(prev => prev.filter(p => p.id !== personnelId));
       } else {
         setMessage({
           text: result.message,
