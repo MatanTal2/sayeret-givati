@@ -64,13 +64,34 @@ export const TEXT_CONSTANTS = {
     
     // OTP API Messages
     OTP_PHONE_REQUIRED: 'Phone number is required and must be a string',
-    OTP_INVALID_PHONE_FORMAT: 'Invalid phone number format',
+    OTP_INVALID_PHONE_FORMAT: 'מספר טלפון לא תקין',
     OTP_RATE_LIMITED: 'יותר מדי ניסיונות. נסה שוב ב-{resetTime}',
     OTP_RATE_LIMITED_FALLBACK: 'יותר מדי ניסיונות. נסה שוב במספר דקות',
     OTP_SMS_SEND_ERROR: 'שגיאה בשליחת הודעה. אנא נסה שוב מאוחר יותר.',
     OTP_SENT_SUCCESS: 'קוד אימות נשלח בהצלחה',
     OTP_INTERNAL_ERROR: 'שגיאה פנימית במערכת. אנא נסה שוב מאוחר יותר.',
     OTP_METHOD_NOT_ALLOWED: 'Method not allowed. Use POST to send OTP.',
+    OTP_CAPTCHA_FAILED: 'אימות reCAPTCHA נכשל. רענן את הדף ונסה שוב.',
+
+    // Account linking errors (linkWithCredential)
+    EMAIL_ALREADY_LINKED: 'כתובת האימייל כבר משויכת לחשבון אחר. אנא השתמש באימייל אחר.',
+    PROVIDER_ALREADY_LINKED: 'שיטת ההתחברות כבר משויכת לחשבון.',
+    WEAK_PASSWORD: 'הסיסמה חלשה מדי. בחר סיסמה חזקה יותר.',
+    INVALID_EMAIL: 'כתובת אימייל לא תקינה.',
+
+    // Email verification (soft)
+    EMAIL_VERIFICATION_BANNER: 'אנא אמת את כתובת האימייל שלך כדי לאפשר איפוס סיסמה.',
+    EMAIL_VERIFICATION_RESEND: 'שלח קישור אימות מחדש',
+    EMAIL_VERIFICATION_SENT: 'קישור אימות נשלח לאימייל שלך.',
+    EMAIL_VERIFICATION_SEND_FAILED: 'שליחת קישור האימות נכשלה. נסה שוב מאוחר יותר.',
+
+    // Forgot password
+    FORGOT_PASSWORD_TITLE: 'איפוס סיסמה',
+    FORGOT_PASSWORD_SUBTITLE: 'הזן את כתובת האימייל שלך ונשלח לך קישור לאיפוס.',
+    FORGOT_PASSWORD_SUBMIT: 'שלח קישור איפוס',
+    FORGOT_PASSWORD_EMAIL_SENT: 'קישור לאיפוס סיסמה נשלח לאימייל שלך.',
+    FORGOT_PASSWORD_VERIFY_FIRST: 'יש לאמת את כתובת האימייל לפני איפוס הסיסמה. בדוק את תיבת הדואר שלך לקישור אימות.',
+    FORGOT_PASSWORD_USER_NOT_FOUND: 'לא נמצא משתמש עם כתובת אימייל זו.',
     
     // System Policy Content
     SYSTEM_POLICY_TITLE: 'תנאי השימוש ומדיניות הפרטיות',

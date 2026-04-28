@@ -10,7 +10,6 @@ import { ADMIN_CONFIG } from '@/constants/admin';
  */
 export interface RegistrationData {
   email: string;
-  password: string;
   firstName: string;
   lastName: string;
   gender: string;
@@ -18,6 +17,7 @@ export interface RegistrationData {
   phoneNumber: string;
   militaryPersonalNumber: string; // For linking to authorized_personnel
   firebaseAuthUid?: string; // Firebase Auth UID to use as document ID
+  emailVerified?: boolean; // Whether email is verified at registration time
 }
 
 /**
@@ -42,6 +42,7 @@ export interface UserProfile {
   updatedAt: Timestamp;
   profileImage?: string;
   testUser?: boolean;
+  emailVerified?: boolean;
   communicationPreferences?: CommunicationPreferences;
 }
 
@@ -126,6 +127,7 @@ export class UserService {
         joinDate: serverTimestamp() as Timestamp,
         createdAt: serverTimestamp() as Timestamp,
         updatedAt: serverTimestamp() as Timestamp,
+        emailVerified: registrationData.emailVerified ?? false,
         communicationPreferences: defaultCommunicationPreferences
       };
 

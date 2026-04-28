@@ -12,8 +12,6 @@ export const COLLECTIONS = {
   NOTIFICATIONS: 'notifications',
   CATEGORIES: 'categories',
   SUBCATEGORIES: 'subcategories',
-  OTP_SESSIONS: 'otp_sessions',
-  OTP_RATE_LIMITS: 'otp_rate_limits',
   ADMIN_CONFIG: 'admin_config',
   ANNOUNCEMENTS: 'announcements',
   USEFUL_LINKS: 'useful_links',

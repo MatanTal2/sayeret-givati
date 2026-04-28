@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { sendVerificationEmail as sendVerificationEmailHelper } from '@/lib/firebasePhoneAuth';
 import { ADMIN_CONFIG, ADMIN_MESSAGES } from '@/constants/admin';
 import { UserDataService } from '@/lib/userDataService';
 import { EnhancedAuthUser, UserType } from '@/types/user';
@@ -45,6 +46,8 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   clearMessage: () => void;
   refreshEnhancedUser: () => Promise<void>;
+  resendVerificationEmail: () => Promise<{ success: boolean; error?: string }>;
+  refreshEmailVerified: () => Promise<void>;
   
   // UI State
   showAuthModal: boolean;
@@ -90,6 +93,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               uid: firebaseUser.uid,
               email: firebaseUser.email || undefined,
               displayName: firebaseUser.displayName || undefined,
+              emailVerified: firebaseUser.emailVerified,
               userType,
               firstName: firestoreData.firstName,
               lastName: firestoreData.lastName,
@@ -122,16 +126,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
               displayName: firebaseUser.displayName || undefined,
               userType,
             };
-            
+
             setUser(authUser);
-            setEnhancedUser(authUser);
+            setEnhancedUser({ ...authUser, emailVerified: firebaseUser.emailVerified });
             console.log('⚠️ Could not fetch user data from Firestore, using Firebase Auth data only with userType:', userType);
           }
         } catch (error) {
           console.error('❌ Error fetching user data:', error);
           // Fallback: use email-based admin check if error occurs
           userType = firebaseUser.email === ADMIN_CONFIG.EMAIL ? UserType.ADMIN : null;
-          
+
           const authUser: AuthUser = {
             uid: firebaseUser.uid,
             email: firebaseUser.email || undefined,
@@ -140,7 +144,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           };
           
           setUser(authUser);
-          setEnhancedUser(authUser);
+          setEnhancedUser({ ...authUser, emailVerified: firebaseUser.emailVerified });
           console.log('❌ Error loading user data, using fallback with userType:', userType);
         }
         
@@ -250,6 +254,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       uid: firebaseUser.uid,
       email: firebaseUser.email || undefined,
       displayName: firebaseUser.displayName || undefined,
+      emailVerified: firebaseUser.emailVerified,
       userType: firestoreData.userType,
       firstName: firestoreData.firstName,
       lastName: firestoreData.lastName,
@@ -272,6 +277,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setEnhancedUser(refreshed);
   };
 
+  const resendVerificationEmail = async (): Promise<{ success: boolean; error?: string }> => {
+    const firebaseUser = auth.currentUser;
+    if (!firebaseUser) return { success: false, error: 'No authenticated user' };
+    try {
+      await sendVerificationEmailHelper(firebaseUser);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'unknown',
+      };
+    }
+  };
+
+  const refreshEmailVerified = async (): Promise<void> => {
+    const firebaseUser = auth.currentUser;
+    if (!firebaseUser) return;
+    await firebaseUser.reload();
+    setEnhancedUser((prev) => (prev ? { ...prev, emailVerified: firebaseUser.emailVerified } : prev));
+  };
+
   const contextValue: AuthContextType = {
     // State
     user,
@@ -285,6 +312,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     clearMessage,
     refreshEnhancedUser,
+    resendVerificationEmail,
+    refreshEmailVerified,
 
     // UI State
     showAuthModal,

@@ -4,6 +4,10 @@ All known redundancies in the codebase. Address these before adding new code tha
 
 Severity: **High** (causes bugs or real maintenance pain) | **Medium** (friction and inconsistency) | **Low** (cosmetic / nice-to-fix)
 
+## 2026-04-28 — Twilio OTP stack removed
+
+The previous Twilio + custom-OTP stack (`src/lib/twilioService.ts`, `src/lib/otpUtils.ts`, `src/lib/db/server/otpService.ts`, `/api/auth/send-otp`, `/api/auth/verify-otp`, `OTP_SESSIONS` / `OTP_RATE_LIMITS` Firestore collections) was deleted in favor of Firebase Phone Auth via the unified `src/lib/firebasePhoneAuth.ts` wrapper. No duplicate-OTP-paths remain.
+
 ---
 
 ## Types

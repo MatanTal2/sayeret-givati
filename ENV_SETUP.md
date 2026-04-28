@@ -18,14 +18,13 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
 
 # ==============================================
-# 📱 TWILIO SMS CONFIGURATION (Required for OTP)
+# 📱 OTP via Firebase Phone Auth
 # ==============================================
-# Get these from Twilio Console (https://console.twilio.com/)
-TWILIO_ACCOUNT_SID=AC_your_account_sid_here
-TWILIO_AUTH_TOKEN=your_auth_token_here
-
-# Messaging Service SID - Create in Twilio Console > Messaging > Services
-MESSAGING_SERVICE_SID=MG_your_messaging_service_sid_here
+# No env vars required — phone auth is enabled in Firebase Console
+# (Authentication → Sign-in method → Phone). Project must be on
+# Blaze (pay-as-you-go) plan; 10K verifications/month are free.
+# Add localhost + production domains to Authorized Domains.
+# Add a test phone (with fixed OTP code) for local dev / CI.
 
 # ==============================================
 # 📊 GOOGLE SHEETS INTEGRATION (Optional)
@@ -54,14 +53,13 @@ NODE_ENV=development
 4. Scroll to "Your apps" section
 5. Copy the config values
 
-### Twilio Configuration  
+### Firebase Phone Auth
 
-1. Sign up at [Twilio Console](https://console.twilio.com/)
-2. **Account SID & Auth Token**: From main dashboard
-3. **Messaging Service SID**:
-   - Go to Messaging > Services
-   - Create new Messaging Service
-   - Copy the SID (starts with MG)
+1. [Firebase Console](https://console.firebase.google.com/) → Project `sayeret-givati-1983`
+2. Authentication → Sign-in method → Phone → Enable
+3. Settings → Authorized domains → add `localhost`, `*.vercel.app`, prod domain
+4. Phone numbers for testing → add test phone (e.g. `+972 50 123 4567` → fixed code `123456`) for local dev / CI
+5. Upgrade project to Blaze plan if not already (Identity Platform features require it)
 
 ### Google Sheets (Optional)
 

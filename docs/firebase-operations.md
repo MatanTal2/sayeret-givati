@@ -21,7 +21,6 @@ All Firestore operations in the codebase, organized by collection.
 | `notifications` | `NOTIFICATIONS_COLLECTION = 'notifications'` | `src/utils/notifications.ts` (hardcoded string in `NotificationContext`) |
 | `categories` | `COLLECTIONS.CATEGORIES = 'categories'` | `src/lib/categories/constants.ts` |
 | `subcategories` | `COLLECTIONS.SUBCATEGORIES = 'subcategories'` | `src/lib/categories/constants.ts` |
-| `otp_sessions` | `OTP_COLLECTION = 'otp_sessions'` | `src/lib/otpUtils.ts` |
 | `admin_config` | hardcoded `'admin_config'` | `src/lib/adminUtils.ts` |
 | `test` | hardcoded `'test'` | `src/app/test-dashboard/page.tsx` (dev only) |
 | `actionsLog` | hardcoded `'actionsLog'` | `src/lib/equipmentService.ts` (should import from actionsLogService) |
@@ -324,24 +323,9 @@ Not exposed via the app. Admins seed entries manually from the Firestore console
 
 ---
 
-## `otp_sessions`
+## ~~`otp_sessions`~~ (removed)
 
-**Document ID:** Phone number (E.164 format)
-
-### Reads
-
-| File | Function | Operation | Query |
-|------|----------|-----------|-------|
-| `src/lib/otpUtils.ts` | `OTPService.verifyOTP` | `getDoc` | Direct doc by phone number |
-| `src/lib/otpUtils.ts` | `OTPService.checkRateLimit` | `getDocs` | Query for recent attempts within 1-hour window |
-
-### Writes
-
-| File | Function | Operation | Fields changed |
-|------|----------|-----------|----------------|
-| `src/lib/otpUtils.ts` | `OTPService.storeOTP` | `setDoc` | OTP hash, expiry, attempt count, phone |
-| `src/lib/otpUtils.ts` | `OTPService.incrementAttempts` | `updateDoc` | `attempts` counter |
-| `src/lib/otpUtils.ts` | `OTPService.clearOTP` | `updateDoc` | `verified: true`, `verifiedAt` |
+OTP session storage was deleted with the Twilio → Firebase Phone Auth migration. Firebase manages the verification lifecycle in-memory via `ConfirmationResult` (no Firestore collection involved). See `docs/spec/firebase-otp-migration.md`.
 
 ---
 

@@ -16,6 +16,7 @@ module.exports = {
     '^firebase/firestore$': '<rootDir>/src/lib/__mocks__/firebase.ts',
     '^firebase/app$': '<rootDir>/src/lib/__mocks__/firebase.ts',
     '^firebase/auth$': '<rootDir>/src/lib/__mocks__/firebase.ts',
+    '^firebase/storage$': '<rootDir>/src/lib/__mocks__/firebase.ts',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.new.js'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],

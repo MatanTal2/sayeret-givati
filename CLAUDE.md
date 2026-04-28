@@ -22,8 +22,9 @@ npx jest src/lib/__tests__/adminUtils.test.ts
 
 Copy `ENV_SETUP.md` to `.env.local`. Required variables:
 - `NEXT_PUBLIC_FIREBASE_*` — Firebase client SDK config
-- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `MESSAGING_SERVICE_SID` — OTP via SMS
 - `GOOGLE_SHEETS_*` — optional, for daily status reporting
+
+OTP is provided by Firebase Phone Auth (no env vars). Phone provider must be enabled in Firebase Console → Authentication → Sign-in method, and the project must be on the Blaze plan. Add a test phone number in the console for local dev / CI.
 
 `GOOGLE_SERVICE_ACCOUNT_JSON` — base64-encoded service account key for `sayeret-givati-1983`. Used by `firebase-admin` in API routes (`src/lib/db/admin.ts`). Must be a single line in `.env.local` with no line breaks.
 
@@ -52,7 +53,7 @@ Firestore security rules are tightened locally but **not yet deployed** — run 
 | `src/constants/` | Centralized config constants (collection names, admin config, text) |
 | `src/data/` | Static data (equipment templates) |
 | `src/app/` | Next.js App Router pages and layouts |
-| `src/app/api/` | API routes: `auth/` (send-otp, verify-otp, register, verify-military-id), `sheets/` |
+| `src/app/api/` | API routes: `auth/` (register, verify-military-id, check-email-verified), `sheets/` |
 | `src/components/` | Shared UI components |
 | `src/utils/` | Pure utility functions |
 
@@ -66,9 +67,18 @@ Firestore security rules are tightened locally but **not yet deployed** — run 
 
 ### Auth flow
 
-1. Registration: user provides military personal number → verified against `authorized_personnel` → Firebase Auth account created → user profile written to `users`
-2. OTP: Twilio SMS via `/api/auth/send-otp` and `/api/auth/verify-otp` API routes
-3. Session: `AuthContext` holds both the Firebase `User` and an `EnhancedAuthUser` (enriched with Firestore profile data)
+1. Registration:
+   - Military personal number → verified against `authorized_personnel` (`/api/auth/verify-military-id`).
+   - `signInWithPhoneNumber` (Firebase) → `confirmationResult.confirm(code)` creates the Firebase Auth user with the phone credential.
+   - User enters email + password → `linkWithCredential(EmailAuthProvider.credential(email, password))` attaches a second provider to the same user.
+   - `sendEmailVerification()` is fired (soft — login not blocked).
+   - `POST /api/auth/register` → writes Firestore profile via `UserService.registerUser`.
+2. Login: email + password via `signInWithEmailAndPassword`. Phone OTP is never used at login.
+3. Forgot password: `/forgot-password` page → `/api/auth/check-email-verified` (Admin SDK) gates by `emailVerified`; if verified, client calls `sendPasswordResetEmail`.
+4. Session: `AuthContext` holds both the Firebase `User` and an `EnhancedAuthUser` (enriched with Firestore profile data + `emailVerified`).
+5. OTP wrapper: `src/lib/firebasePhoneAuth.ts` centralizes reCAPTCHA, send, confirm, link, verification email, password reset, and Hebrew error mapping.
+
+Full migration spec: `docs/spec/firebase-otp-migration.md`. Phase 2 (Google sign-in + provider linking from profile) is not yet started.
 
 ### Equipment domain
 

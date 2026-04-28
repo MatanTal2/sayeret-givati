@@ -4,25 +4,47 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import RegistrationForm from '../RegistrationForm';
 
-// Mock validation utilities
-jest.mock('@/utils/validationUtils', () => ({
-  validatePersonalNumber: jest.fn(),
-}));
-
 // Mock text constants
 jest.mock('@/constants/text', () => ({
   TEXT_CONSTANTS: {
     AUTH: {
       PERSONAL_NUMBER: 'מספר אישי',
       PERSONAL_NUMBER_PLACEHOLDER: 'הזן מספר אישי',
+      PERSONAL_NUMBER_HELPER: 'הזן מספר אישי בין 5-7 ספרות',
       VERIFY_PERSONAL_NUMBER: 'אמת מספר',
       SWITCH_TO_LOGIN: 'יש לך כבר חשבון? התחבר',
       WELCOME_TO_SYSTEM: 'ברוכים הבאים למערכת',
       SYSTEM_SUBTITLE: 'מסייעת סיירת גבעתי',
       IDENTITY_VERIFICATION: 'אימות זהות',
       ALREADY_HAVE_ACCOUNT: 'כבר יש לך חשבון? התחבר כאן',
+      ALREADY_REGISTERED: 'משתמש זה כבר רשום',
+      OTP_INVALID_PHONE_FORMAT: 'מספר טלפון לא תקין',
+      OTP_INTERNAL_ERROR: 'שגיאה',
+    },
+    REGISTRATION_COMPONENTS: {
+      CONNECTION_ERROR: 'שגיאת חיבור',
+      SENDING_CODE: 'שולח קוד...',
+      VERIFYING: 'מאמת...',
     },
   },
+}));
+
+// Mock validation utilities (keep PhoneUtils real, mock validatePersonalNumber)
+jest.mock('@/utils/validationUtils', () => ({
+  ...jest.requireActual('@/utils/validationUtils'),
+  validatePersonalNumber: jest.fn(),
+}));
+
+// Mock firebasePhoneAuth wrapper
+jest.mock('@/lib/firebasePhoneAuth', () => ({
+  initRecaptcha: jest.fn(() => ({ clear: jest.fn() })),
+  resetRecaptcha: jest.fn(),
+  sendPhoneOtp: jest.fn().mockResolvedValue({ confirm: jest.fn() }),
+  linkEmailPassword: jest.fn(),
+  sendVerificationEmail: jest.fn(),
+  mapFirebaseAuthError: jest.fn((err: unknown) =>
+    err instanceof Error ? err.message : 'unknown'
+  ),
 }));
 
 // Mock child components

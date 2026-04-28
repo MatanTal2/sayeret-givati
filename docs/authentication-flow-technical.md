@@ -1,9 +1,11 @@
 # 🔐 Authentication Flow - Technical Implementation
 
+> **⚠ Outdated.** Twilio-based OTP routes (`/api/auth/send-otp`, `/api/auth/verify-otp`) referenced below were removed during the migration to **Firebase Phone Auth**. The current authoritative spec is `docs/spec/firebase-otp-migration.md`. The architectural diagrams here are kept for historical context.
+
 ## מפרט טכני תהליך אימות - סיירת גבעתי
 
-**תאריך יצירה:** ינואר 2025  
-**סטטוס:** מפרט טכני 🛠️  
+**תאריך יצירה:** ינואר 2025
+**סטטוס:** מפרט טכני 🛠️ (חלק ממנו כבר לא רלוונטי — ראה `docs/spec/firebase-otp-migration.md`)
 **גרסה:** 1.0
 
 ---

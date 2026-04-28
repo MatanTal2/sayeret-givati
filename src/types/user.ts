@@ -38,8 +38,9 @@ export interface EnhancedAuthUser {
   uid: string;
   email?: string;
   displayName?: string;
+  emailVerified?: boolean;
   userType: UserType | null;
-  
+
   // Firestore user profile fields
   firstName?: string;
   lastName?: string;

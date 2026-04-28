@@ -5,6 +5,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import GlobalAuthModal from "@/components/auth/GlobalAuthModal";
+import EmailVerificationBanner from "@/components/auth/EmailVerificationBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({
         <AuthProvider>
           <NotificationProvider>
             <ToastProvider>
+              <EmailVerificationBanner />
               {children}
               <GlobalAuthModal />
             </ToastProvider>

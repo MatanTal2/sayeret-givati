@@ -1,33 +1,30 @@
 # OTPVerificationStep.tsx
 
 **File:** `src/components/registration/OTPVerificationStep.tsx`
-**Lines:** 257
 **Status:** Active
 
 ## Purpose
 
-OTP code entry step in the registration flow. Renders a 6-digit input that auto-submits when all 6 digits are entered. Calls `/api/auth/verify-otp` directly. Shows the masked phone number, validation error, backend error, and a resend button (resend is handled by the parent via `onResendOTP`).
+OTP code entry step in the registration flow. Verifies a Firebase Phone Auth `ConfirmationResult` passed in from the parent. Auto-submits when 6 digits are entered. Resend is delegated to the parent (which owns the reCAPTCHA verifier).
 
 ## Props
 
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
-| `phoneNumber` | `string` | ✅ | Phone number to display (masked) and submit with OTP |
-| `onVerifySuccess` | `() => void` | ❌ | Called after successful OTP verification |
+| `phoneNumber` | `string` | ✅ | Phone number for masked display |
+| `confirmationResult` | `ConfirmationResult \| null` | ✅ | Firebase confirmation handle from `signInWithPhoneNumber` |
+| `onVerifySuccess` | `() => void` | ❌ | Called after `confirmationResult.confirm(code)` succeeds |
+| `onResendOtp` | `() => Promise<void>` | ❌ | Called when user clicks "resend"; parent re-runs reCAPTCHA + send |
 
-## State
+## Flow
 
-| State | Type | Purpose |
-|-------|------|---------|
-| `otpCode` | `string` | 6-digit code input |
-| `validationError` | `string \| null` | Format validation error |
-| `isValid` | `boolean` | Whether code format is valid |
-| `backendError` | `string \| null` | API verification error |
-| `isVerifying` | `boolean` | API call in progress |
-| `hasAutoAttempted` | `boolean` | Prevents double auto-submit |
-| `inputRef` | `RefObject<HTMLInputElement>` | Auto-focus |
+1. User types code (digits only, max 6).
+2. On 6 valid digits, auto-calls `confirmPhoneOtp(confirmationResult, code)` from `src/lib/firebasePhoneAuth.ts`.
+3. On success → `onVerifySuccess()`. The Firebase Auth user is now signed in with the phone credential.
+4. Errors are mapped via `mapFirebaseAuthError` and shown in Hebrew.
+5. Resend → calls `onResendOtp` and clears local state.
 
 ## Notes
 
-- Auto-submits when `otpCode.length === 6` and `isValid`. Uses `hasAutoAttempted` guard to prevent duplicate submissions.
-- `console.log` in verification flow — remove for production.
+- No fetch calls — all auth happens client-side via Firebase SDK.
+- The component is purely presentational over the Firebase confirmation handle. Verifier and SMS send live in the parent `RegistrationForm`.

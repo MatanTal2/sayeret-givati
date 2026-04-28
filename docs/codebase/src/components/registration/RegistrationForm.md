@@ -1,12 +1,11 @@
 # RegistrationForm.tsx
 
 **File:** `src/components/registration/RegistrationForm.tsx`
-**Lines:** 412 ⚠️ LONG — split recommended
 **Status:** Active
 
 ## Purpose
 
-Step orchestrator for the registration flow. Renders the content area of each registration step based on `currentStep`. Owns the inter-step data state (phone number, first/last name, personal/account details) and coordinates the async operations: military ID verification → OTP send → OTP verify → personal details → account details → Firebase Auth creation → API register call → success.
+Step orchestrator for the registration flow. Owns inter-step state (phone number, first/last name, personal/account details, Firebase `ConfirmationResult`, reCAPTCHA verifier lifecycle) and coordinates: military-ID verification → Firebase Phone Auth send → OTP confirm → personal details → account details → `linkWithCredential` (email+password) → `sendEmailVerification` → `/api/auth/register` → success.
 
 ## Props
 
@@ -19,29 +18,20 @@ Step orchestrator for the registration flow. Renders the content area of each re
 | `currentStep` | `RegistrationStep` | ✅ | Controlled step from parent |
 | `onRegistrationSuccess` | `() => void` | ❌ | Called on successful completion |
 
-## State
+## Auth flow
 
-| State | Type | Purpose |
-|-------|------|---------|
-| `validationError` | `string \| null` | Personal number format error |
-| `isValid` | `boolean` | Personal number passes validation |
-| `isVerifying` | `boolean` | ID verification API call in progress |
-| `userPhoneNumber` | `string` | Phone from OTP step (passed to account step) |
-| `userFirstName` / `userLastName` | `string` | Name from authorized_personnel lookup |
-| `isSendingOTP` | `boolean` | OTP send in progress |
-| `otpSendError` | `string \| null` | OTP send failure message |
-| `isSubmittingRegistration` | `boolean` | Final registration API call in progress |
-| `personalDetailsData` | `PersonalDetailsData \| null` | Completed personal step data |
-| `accountDetailsData` | `AccountDetailsData \| null` | Completed account step data |
+1. `verify-military-id` API → resolves authorized_personnel.
+2. `sendOtpToPhone(phone)` → resets cached reCAPTCHA, mounts `RecaptchaContainer`, calls `firebasePhoneAuth.sendPhoneOtp` → stores `ConfirmationResult`.
+3. `OTPVerificationStep` consumes the `ConfirmationResult` and calls `confirmPhoneOtp` on submit. After success, `auth.currentUser` is populated with the phone credential.
+4. Personal + account details collected in subsequent steps.
+5. `handleAccountDetailsSubmit` → `linkEmailPassword(auth.currentUser, email, password)` attaches an email/password credential to the existing phone-authed user → `sendVerificationEmail` (best-effort) → `POST /api/auth/register` with `{ ..., firebaseAuthUid, emailVerified }`.
 
-## Firebase Operations
+## reCAPTCHA
 
-| Collection | Operation | Trigger |
-|------------|-----------|---------|
-| N/A | `createUserWithEmailAndPassword` | Account step completion (Firebase Auth, not Firestore) |
+`RecaptchaContainer` is rendered on the personal-number and OTP steps. Verifier is re-initialized on each send (cached + reset on unmount and on resend) — see `firebasePhoneAuth.initRecaptcha` / `resetRecaptcha`.
 
 ## Notes
 
-- This component makes a direct Firebase Auth call (`createUserWithEmailAndPassword`) — one of very few places that does so outside a service/hook.
-- After Firebase Auth account creation, calls `/api/auth/register` to create the Firestore user profile.
-- At 412 lines, the async step handlers are candidates for extraction into a custom hook.
+- No more `createUserWithEmailAndPassword` — the Firebase Auth user is created by `confirmationResult.confirm`. Email/password is layered via `linkWithCredential`.
+- `sendEmailVerification` failure is non-fatal; user can resend from the post-login banner.
+- All Firebase Phone Auth interactions go through `src/lib/firebasePhoneAuth.ts` so error mapping and verifier lifecycle stay in one place.
