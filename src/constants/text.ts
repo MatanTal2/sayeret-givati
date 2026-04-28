@@ -785,6 +785,8 @@ export const TEXT_CONSTANTS = {
     // System stats
     STATS_TOTAL_PERSONNEL: 'סה״כ כוח אדם מורשה',
     STATS_ADDED_THIS_WEEK: 'נוספו השבוע',
+    STATS_REGISTERED: 'רשומים',
+    STATS_PENDING: 'ממתינים',
     STATS_SYSTEM_STATUS: 'מצב מערכת',
     STATS_ONLINE: 'מחובר',
     STATS_INFO_TITLE: '📊 פרטי מערכת',
@@ -865,7 +867,12 @@ export const TEXT_CONSTANTS = {
     UPDATE_FIELD_LAST_NAME: 'שם משפחה',
     UPDATE_FIELD_RANK: 'דרגה',
     UPDATE_FIELD_PHONE: 'מספר טלפון',
-    UPDATE_FIELD_USER_TYPE: 'סוג משתמש'
+    UPDATE_FIELD_USER_TYPE: 'סוג משתמש',
+    UPDATE_FIELD_STATUS: 'סטטוס שירות',
+    STATUS_ACTIVE: 'פעיל',
+    STATUS_INACTIVE: 'לא פעיל',
+    STATUS_TRANSFERRED: 'הועבר',
+    STATUS_DISCHARGED: 'שוחרר'
   },
 
   // Error Messages

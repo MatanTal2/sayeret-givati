@@ -212,13 +212,14 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
   };
 
   const updatePersonnel = async (
-    personnelId: string, 
+    personnelId: string,
     updateData: {
       firstName?: string;
       lastName?: string;
       rank?: string;
       phoneNumber?: string;
       userType?: string;
+      status?: 'active' | 'inactive' | 'transferred' | 'discharged';
     }
   ): Promise<PersonnelOperationResult> => {
     setIsLoading(true);

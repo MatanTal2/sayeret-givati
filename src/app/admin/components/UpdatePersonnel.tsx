@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePersonnelManagement } from '@/hooks/usePersonnelManagement';
-import { RANK_OPTIONS, USER_TYPE_OPTIONS, FORM_CONSTRAINTS } from '@/constants/admin';
+import { RANK_OPTIONS, USER_TYPE_OPTIONS, FORM_CONSTRAINTS, PERSONNEL_STATUS_OPTIONS, type PersonnelStatus } from '@/constants/admin';
 import { formatPhoneForDisplay, normalizePhoneForSearch } from '@/utils/validationUtils';
 import { AuthorizedPersonnel } from '@/types/admin';
 import { UserType } from '@/types/user';
@@ -26,12 +26,20 @@ export default function UpdatePersonnel() {
   const [isEditing, setIsEditing] = useState(false);
 
   // Form state for editing
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<{
+    firstName: string;
+    lastName: string;
+    rank: string;
+    phoneNumber: string;
+    userType: UserType;
+    status: PersonnelStatus;
+  }>({
     firstName: '',
     lastName: '',
     rank: '',
     phoneNumber: '',
-    userType: UserType.USER
+    userType: UserType.USER,
+    status: 'active'
   });
 
   // Loading and message state for updates
@@ -51,7 +59,8 @@ export default function UpdatePersonnel() {
         lastName: selectedPerson.lastName,
         rank: selectedPerson.rank,
         phoneNumber: selectedPerson.phoneNumber,
-        userType: selectedPerson.userType || UserType.USER
+        userType: selectedPerson.userType || UserType.USER,
+        status: (selectedPerson.status as PersonnelStatus) || 'active'
       });
     }
   }, [selectedPerson]);
@@ -101,7 +110,8 @@ export default function UpdatePersonnel() {
         lastName: selectedPerson.lastName,
         rank: selectedPerson.rank,
         phoneNumber: selectedPerson.phoneNumber,
-        userType: selectedPerson.userType || UserType.USER
+        userType: selectedPerson.userType || UserType.USER,
+        status: (selectedPerson.status as PersonnelStatus) || 'active'
       });
     }
     setUpdateMessage(null);
@@ -144,6 +154,9 @@ export default function UpdatePersonnel() {
       }
       if (editForm.userType !== (selectedPerson.userType || UserType.USER)) {
         updateData.userType = editForm.userType;
+      }
+      if (editForm.status !== ((selectedPerson.status as PersonnelStatus) || 'active')) {
+        updateData.status = editForm.status;
       }
 
       // Only update if there are changes
@@ -259,12 +272,21 @@ export default function UpdatePersonnel() {
                         <div className="font-medium text-neutral-900">
                           {person.firstName} {person.lastName}
                         </div>
-                        <div className="text-sm text-neutral-500 flex items-center gap-4">
+                        <div className="text-sm text-neutral-500 flex items-center gap-4 flex-wrap">
                           <span>🎖️ {person.rank}</span>
                           <span>📱 {formatPhoneForDisplay(person.phoneNumber)}</span>
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-info-100 text-info-800">
                             {(person.userType || UserType.USER).replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                           </span>
+                          {person.registered ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-success-100 text-success-800">
+                              ✅ {TEXT_CONSTANTS.ADMIN.VIEW_REGISTERED_BADGE}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
+                              ⏳ {TEXT_CONSTANTS.ADMIN.VIEW_PENDING_BADGE}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="text-lg">
@@ -400,7 +422,7 @@ export default function UpdatePersonnel() {
                     type="tel"
                     value={editForm.phoneNumber}
                     onChange={(e) => handleFormChange('phoneNumber', e.target.value)}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-md 
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-md
                                bg-white text-neutral-900
                                focus:ring-2 focus:ring-info-500 focus:border-info-500
                                disabled:opacity-50"
@@ -408,6 +430,23 @@ export default function UpdatePersonnel() {
                     maxLength={FORM_CONSTRAINTS.PHONE_MAX_LENGTH}
                     disabled={isUpdating}
                     required
+                  />
+                </div>
+
+                {/* Service Status */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    {TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_STATUS} *
+                  </label>
+                  <Select
+                    value={editForm.status}
+                    onChange={(v) => v && handleFormChange('status', v)}
+                    options={PERSONNEL_STATUS_OPTIONS.map((s) => ({
+                      value: s.value,
+                      label: TEXT_CONSTANTS.ADMIN[s.labelKey],
+                    }))}
+                    disabled={isUpdating}
+                    ariaLabel={TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_STATUS}
                   />
                 </div>
               </div>
@@ -485,6 +524,18 @@ export default function UpdatePersonnel() {
                   </label>
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-info-100 text-info-800">
                     {(selectedPerson.userType || UserType.USER).replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-500">
+                    {TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_STATUS}
+                  </label>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-800">
+                    {(() => {
+                      const opt = PERSONNEL_STATUS_OPTIONS.find((s) => s.value === ((selectedPerson.status as PersonnelStatus) || 'active'));
+                      return opt ? TEXT_CONSTANTS.ADMIN[opt.labelKey] : selectedPerson.status;
+                    })()}
                   </span>
                 </div>
               </div>

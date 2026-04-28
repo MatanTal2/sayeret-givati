@@ -36,3 +36,4 @@ Admin functionality combining security utilities, input validation, session mana
 
 - 881 lines — largest service file. Should be split: SecurityUtils, ValidationUtils, AdminFirestoreService, and SessionUtils are four distinct concerns.
 - Mixes security, validation, Firestore CRUD, and session management.
+- `ValidationUtils.normalizePhoneInput(raw)` strips every non-digit except a leading `+`, so admin AddPersonnel / BulkUpload / UpdatePersonnel tolerate spaces, dashes, dots, parens, and multiple separators in user input. `isValidIsraeliMobile` and `toInternationalFormat` both call it. `updateAuthorizedPersonnel` normalizes phone before the duplicate check and before persisting via the API. Bug #2 fix.

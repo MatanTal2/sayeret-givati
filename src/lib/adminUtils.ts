@@ -134,16 +134,28 @@ export class ValidationUtils {
   }
 
   /**
+   * Normalize raw phone input — keep digits and at most one leading `+`.
+   * Tolerates spaces, dashes, dots, parens, multiple separators, etc.
+   */
+  static normalizePhoneInput(phone: string): string {
+    if (!phone) return '';
+    const trimmed = phone.trim();
+    const hasLeadingPlus = trimmed.startsWith('+');
+    const digits = trimmed.replace(/\D/g, '');
+    return hasLeadingPlus ? '+' + digits : digits;
+  }
+
+  /**
    * Validate Israeli mobile phone number
    */
   static isValidIsraeliMobile(phone: string): boolean {
-    const cleaned = phone.replace(/[\s-]/g, '');
-    
+    const cleaned = this.normalizePhoneInput(phone);
+
     // Handle case where Excel removes leading zero (e.g., 528966085)
     if (/^5[0-9]\d{7}$/.test(cleaned)) {
       return true; // 9-digit number starting with 5 (missing leading 0)
     }
-    
+
     return VALIDATION_PATTERNS.PHONE_NUMBER.test(cleaned);
   }
 
@@ -151,7 +163,7 @@ export class ValidationUtils {
    * Convert phone number to international format
    */
   static toInternationalFormat(phone: string): string {
-    let cleaned = phone.replace(/[\s-]/g, '');
+    let cleaned = this.normalizePhoneInput(phone);
     if (cleaned.startsWith('0')) {
       cleaned = '+972' + cleaned.slice(1);
     } else if (/^5[0-9]\d{7}$/.test(cleaned)) {
@@ -392,13 +404,14 @@ export class AdminFirestoreService {
    * Update authorized personnel information
    */
   static async updateAuthorizedPersonnel(
-    personnelId: string, 
+    personnelId: string,
     updateData: {
       firstName?: string;
       lastName?: string;
       rank?: string;
       phoneNumber?: string;
       userType?: string;
+      status?: 'active' | 'inactive' | 'transferred' | 'discharged';
     }
   ): Promise<PersonnelOperationResult> {
     try {
@@ -433,6 +446,13 @@ export class AdminFirestoreService {
         }
       }
 
+      if (updateData.status !== undefined) {
+        const validStatuses = ['active', 'inactive', 'transferred', 'discharged'];
+        if (!validStatuses.includes(updateData.status)) {
+          validationErrors.status = 'Invalid status';
+        }
+      }
+
       // If there are validation errors, return them
       if (Object.keys(validationErrors).length > 0) {
         return {
@@ -454,11 +474,18 @@ export class AdminFirestoreService {
         };
       }
 
+      // Normalize phone before duplicate check / save so any stored or queried
+      // value uses the canonical international form.
+      const processedUpdates = { ...updateData };
+      if (processedUpdates.phoneNumber !== undefined) {
+        processedUpdates.phoneNumber = ValidationUtils.toInternationalFormat(processedUpdates.phoneNumber);
+      }
+
       // If phone number is being updated, check for duplicates (excluding current personnel)
-      if (updateData.phoneNumber !== undefined) {
+      if (processedUpdates.phoneNumber !== undefined) {
         const allPersonnel = await this.getAllAuthorizedPersonnel();
-        const phoneExists = allPersonnel.some(p => 
-          p.id !== personnelId && p.phoneNumber === updateData.phoneNumber
+        const phoneExists = allPersonnel.some(p =>
+          p.id !== personnelId && p.phoneNumber === processedUpdates.phoneNumber
         );
 
         if (phoneExists) {
@@ -473,7 +500,7 @@ export class AdminFirestoreService {
       // Get current data for sync check and success message
       const currentPersonnel = docSnap.data() as AuthorizedPersonnel;
       const shouldSync = currentPersonnel.registered &&
-        (updateData.firstName || updateData.lastName || updateData.rank || updateData.phoneNumber || updateData.userType);
+        (processedUpdates.firstName || processedUpdates.lastName || processedUpdates.rank || processedUpdates.phoneNumber || processedUpdates.userType || processedUpdates.status);
 
       // Update via server API route (firebase-admin)
       const updateResponse = await fetch('/api/authorized-personnel', {
@@ -481,7 +508,7 @@ export class AdminFirestoreService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           personnelId,
-          updates: updateData,
+          updates: processedUpdates,
           syncToUser: shouldSync,
           militaryIdHash: personnelId,
         }),
@@ -489,7 +516,7 @@ export class AdminFirestoreService {
       const updateResult = await updateResponse.json();
       if (!updateResult.success) throw new Error(updateResult.error || 'Failed to update personnel');
 
-      const updatedPersonnel = { ...currentPersonnel, ...updateData };
+      const updatedPersonnel = { ...currentPersonnel, ...processedUpdates };
 
       const fullName = `${updateData.firstName || currentPersonnel.firstName} ${updateData.lastName || currentPersonnel.lastName}`;
 
