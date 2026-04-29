@@ -83,7 +83,7 @@ Invisible reCAPTCHA v2, auto-provisioned by Firebase Phone Auth. Container div w
 2. Project → upgrade to Blaze plan if not already (Identity Platform requirement).
 3. Authentication → Settings → Authorized domains → add `localhost`, `*.vercel.app`, prod domain.
 4. Authentication → Phone → Phone numbers for testing → add a fixed test phone (e.g. `+972 50 123 4567` → `123456`) for local dev / CI.
-5. Resolve open infra blocker: regenerate `GOOGLE_SERVICE_ACCOUNT_JSON` for `sayeret-givati-1983` (the existing key targets the wrong project). The `/api/auth/check-email-verified` endpoint uses Admin SDK `getUserByEmail`.
+5. Service account key for `sayeret-givati-1983` is already in place; `/api/auth/check-email-verified` uses Admin SDK `getUserByEmail` and is functional.
 
 ## Verification
 
