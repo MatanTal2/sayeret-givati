@@ -12,8 +12,9 @@ Rendered conditionally by `AppShell`. Suppressed on `/admin/*` so admins can pop
 ## Behavior
 
 - Reads available teams from `useSystemConfig()` (`admin_config/system_admin.teams`).
-- Lets the user upload a profile image (optional) and pick a team (required).
-- On save, calls `updateUserProfile(uid, { teamId, profileImage })` then `refreshEnhancedUser()`. Modal auto-unmounts once `teamId` is populated on `enhancedUser`.
+- Single required field: team picker. Profile image upload lives on the profile page, not here.
+- Renders `/public/platon-d-logo.png` at the top of the card via `next/image` (`h-20 w-auto mx-auto`). Native asset is 2944×1440; class scales it to ~80px tall (~163px wide), well inside the `max-w-md` (448px) modal.
+- On save, calls `updateUserProfile(uid, { teamId })` then `refreshEnhancedUser()`. Modal auto-unmounts once `teamId` is populated on `enhancedUser`.
 - Disables the team `<select>` and submit button while teams are loading or the teams list is empty.
 - Locks page scroll via `useScrollLock(true)` while mounted.
 
