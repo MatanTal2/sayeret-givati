@@ -7,7 +7,7 @@
 - [ ] Run `npm install`
 - [ ] Set up environment variables
 - [ ] Configure Firebase project
-- [ ] Set up Twilio account (for OTP)
+- [ ] Enable Firebase Phone Auth in console (for OTP)
 - [ ] Run `npm run dev`
 
 ---
@@ -69,15 +69,13 @@ cp .env.example .env.local
 3. Go to Project Settings > General
 4. Copy configuration values to `.env.local`
 
-#### 📱 **Twilio Setup** (Required for OTP)
+#### 📱 **Firebase Phone Auth Setup** (Required for OTP)
 
-1. Sign up at [Twilio Console](https://console.twilio.com/)
-2. Get Account SID & Auth Token from dashboard
-3. Create Messaging Service:
-   - Go to Messaging > Services
-   - Create new service
-   - Copy Messaging Service SID
-4. Add values to `.env.local`
+1. Firebase Console → Authentication → Sign-in method → **Phone** → Enable
+2. Upgrade project to Blaze plan if not already (Identity Platform requirement; 10K verifications/month are free)
+3. Authentication → Settings → Authorized domains → add `localhost`, `*.vercel.app`, prod domain
+4. Authentication → Phone → Phone numbers for testing → add a fixed test phone (e.g. `+972 50 123 4567` → `123456`) for local dev / CI
+5. No env vars required — uses the existing `NEXT_PUBLIC_FIREBASE_*` values
 
 #### 📊 **Google Sheets** (Optional)
 
@@ -211,12 +209,13 @@ npx tsc --noEmit
 - Check Firestore rules allow read/write
 - Ensure Firebase SDK is latest version
 
-#### **Twilio SMS not sending**
+#### **Firebase Phone Auth not sending SMS**
 
-- Verify account has credits
-- Check phone number format (+972XXXXXXXXX)
-- Ensure Messaging Service is active
-- Check Twilio logs in console
+- Confirm Phone provider is enabled in Firebase Console
+- Confirm project is on Blaze plan
+- Check phone number format (E.164: `+972XXXXXXXXX`)
+- For local dev, use a registered test phone number with its fixed code
+- Watch Authentication → Usage in Firebase Console for quota / errors
 
 ### **Getting Help**
 
@@ -239,8 +238,7 @@ sayeret-givati/
 │   ├── 📁 components/       # React components
 │   │   └── 📁 registration/ # Registration flow
 │   ├── 📁 lib/             # Utilities & services
-│   │   ├── 📄 otpUtils.ts  # OTP management
-│   │   ├── 📄 twilioService.ts # SMS sending
+│   │   ├── 📄 firebasePhoneAuth.ts # OTP wrapper (Firebase Phone Auth)
 │   │   └── 📄 adminUtils.ts # Admin functions
 │   └── 📁 types/           # TypeScript definitions
 ├── 📁 docs/                # Documentation
@@ -289,7 +287,7 @@ npm run test:watch
 npm run test:coverage
 
 # Test specific file
-npm test src/lib/__tests__/otpUtils.test.ts
+npm test src/lib/__tests__/firebasePhoneAuth.test.ts
 ```
 
 **Test Structure:**

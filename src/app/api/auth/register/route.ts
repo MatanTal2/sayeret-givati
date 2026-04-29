@@ -10,23 +10,22 @@ export async function POST(request: NextRequest) {
     
     // Validate required fields
     const requiredFields = [
-      'email', 
-      'password', 
-      'firstName', 
-      'lastName', 
-      'gender', 
-      'birthdate', 
-      'phoneNumber', 
+      'email',
+      'firstName',
+      'lastName',
+      'gender',
+      'birthdate',
+      'phoneNumber',
       'militaryPersonalNumber',
       'firebaseAuthUid'
     ];
-    
+
     const missingFields = requiredFields.filter(field => !body[field]);
     if (missingFields.length > 0) {
       return NextResponse.json(
-        { 
+        {
           success: false,
-          error: `Missing required fields: ${missingFields.join(', ')}` 
+          error: `Missing required fields: ${missingFields.join(', ')}`
         },
         { status: 400 }
       );
@@ -35,14 +34,14 @@ export async function POST(request: NextRequest) {
     // Prepare registration data
     const registrationData: RegistrationData = {
       email: body.email.trim(),
-      password: body.password,
       firstName: body.firstName.trim(),
       lastName: body.lastName.trim(),
       gender: body.gender,
       birthdate: body.birthdate,
       phoneNumber: body.phoneNumber,
       militaryPersonalNumber: body.militaryPersonalNumber,
-      firebaseAuthUid: body.firebaseAuthUid.trim()
+      firebaseAuthUid: body.firebaseAuthUid.trim(),
+      emailVerified: Boolean(body.emailVerified),
     };
 
     console.log('📊 Registration data prepared for:', registrationData.email);

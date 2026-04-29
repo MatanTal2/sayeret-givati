@@ -8,7 +8,9 @@ Registration requires pre-authorization — an admin must add the soldier's mili
 
 Session state is managed by `AuthContext`, which holds both the raw Firebase `User` and an `EnhancedAuthUser` (enriched with Firestore profile data).
 
-OTP is used during registration (phone verification step) and potentially for login. OTP delivery is via Twilio SMS through Next.js API routes.
+> **⚠ Outdated.** This spec describes the original Twilio + email/password design. The implemented flow uses **Firebase Phone Auth** for OTP and `linkWithCredential` to attach email/password to the phone-authed user. See `docs/spec/firebase-otp-migration.md` for the current authoritative spec.
+
+OTP is used during registration (phone verification step). OTP delivery is via **Firebase Phone Auth** (no Twilio).
 
 ---
 
