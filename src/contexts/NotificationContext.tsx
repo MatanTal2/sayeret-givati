@@ -11,6 +11,7 @@ import {
   Timestamp 
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { apiFetch } from '@/lib/apiFetch';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   Notification, 
@@ -89,9 +90,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   // Mark single notification as read (via server API route)
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      await fetch('/api/notifications/read', {
+      await apiFetch('/api/notifications/read', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notificationId }),
       });
       // Real-time listener will update the state automatically
@@ -105,10 +105,9 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     if (!user?.uid) return;
 
     try {
-      await fetch('/api/notifications/read', {
+      await apiFetch('/api/notifications/read', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.uid }),
+        body: JSON.stringify({}),
       });
       // Real-time listener will update the state automatically
     } catch (error) {
@@ -119,9 +118,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   // Delete notification (via server API route)
   const deleteNotification = useCallback(async (notificationId: string) => {
     try {
-      await fetch('/api/notifications', {
+      await apiFetch('/api/notifications', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: notificationId }),
       });
       // Real-time listener will update the state automatically

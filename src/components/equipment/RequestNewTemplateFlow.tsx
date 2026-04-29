@@ -5,7 +5,6 @@ import { AlertCircle, CheckCircle } from 'lucide-react';
 import TemplateForm, { TemplateFormValues } from './TemplateForm';
 import { proposeTemplate } from '@/lib/templateRequestService';
 import { useAuth } from '@/contexts/AuthContext';
-import type { ApiActor } from '@/lib/equipmentService';
 
 export interface RequestNewTemplateFlowProps {
   capturedSerialNumber?: string;
@@ -36,15 +35,10 @@ export default function RequestNewTemplateFlow({
     }
     setError(null);
     setSubmitting(true);
-    const actor: ApiActor = {
-      uid: enhancedUser.uid,
-      userType: enhancedUser.userType,
-      teamId: enhancedUser.teamId,
-      displayName:
-        enhancedUser.displayName ||
-        [enhancedUser.firstName, enhancedUser.lastName].filter(Boolean).join(' ') ||
-        undefined,
-    };
+    const proposerUserName =
+      enhancedUser.displayName ||
+      [enhancedUser.firstName, enhancedUser.lastName].filter(Boolean).join(' ') ||
+      enhancedUser.uid;
 
     try {
       const draftPayload =
@@ -58,8 +52,7 @@ export default function RequestNewTemplateFlow({
           : undefined;
 
       const result = await proposeTemplate({
-        actor,
-        proposerUserName: actor.displayName || enhancedUser.uid,
+        proposerUserName,
         name: values.name,
         category: values.category,
         subcategory: values.subcategory,

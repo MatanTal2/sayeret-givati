@@ -4,15 +4,17 @@ import {
   serverUpdateSystemConfig,
   validateSystemConfigPayload,
 } from '@/lib/db/server/systemConfigService';
-import { validateActor } from '@/lib/db/server/policyHelpers';
+import { getActorOrError } from '@/lib/db/server/auth';
 import { UserType } from '@/types/user';
 
 function isSystemAdmin(userType: UserType): boolean {
   return userType === UserType.ADMIN || userType === UserType.SYSTEM_MANAGER;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const config = await serverGetSystemConfig();
     return NextResponse.json({ success: true, config });
   } catch (error) {
@@ -24,8 +26,10 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const input = await request.json();
-    const actor = validateActor(input.actor);
 
     if (!isSystemAdmin(actor.userType)) {
       return NextResponse.json(

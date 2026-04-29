@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { apiFetch } from '@/lib/apiFetch';
 import type {
   AmmunitionReportRequest,
   AmmunitionReportRequestScope,
 } from '@/types/ammunition';
-import type { ApiActor } from '@/lib/equipmentService';
 
 export interface CreateRequestPayload {
   scope: AmmunitionReportRequestScope;
@@ -26,21 +26,6 @@ export interface UseAmmunitionReportRequestsReturn {
   cancel: (requestId: string) => Promise<boolean>;
 }
 
-function buildActor(
-  user: ReturnType<typeof useAuth>['enhancedUser']
-): ApiActor | null {
-  if (!user || !user.userType) return null;
-  return {
-    uid: user.uid,
-    userType: user.userType,
-    teamId: user.teamId,
-    displayName:
-      user.displayName ||
-      [user.firstName, user.lastName].filter(Boolean).join(' ') ||
-      undefined,
-  };
-}
-
 export function useAmmunitionReportRequests(): UseAmmunitionReportRequestsReturn {
   const { enhancedUser } = useAuth();
   const [requests, setRequests] = useState<AmmunitionReportRequest[]>([]);
@@ -51,7 +36,7 @@ export function useAmmunitionReportRequests(): UseAmmunitionReportRequestsReturn
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/ammunition-report-requests');
+      const res = await apiFetch('/api/ammunition-report-requests');
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || 'שגיאה בטעינת בקשות');
       setRequests(json.requests || []);
@@ -68,15 +53,16 @@ export function useAmmunitionReportRequests(): UseAmmunitionReportRequestsReturn
 
   const create = useCallback(
     async (payload: CreateRequestPayload) => {
-      const actor = buildActor(enhancedUser);
-      if (!actor) return { ok: false };
       try {
-        const res = await fetch('/api/ammunition-report-requests', {
+        const displayName =
+          enhancedUser?.displayName ||
+          [enhancedUser?.firstName, enhancedUser?.lastName].filter(Boolean).join(' ') ||
+          enhancedUser?.uid ||
+          '';
+        const res = await apiFetch('/api/ammunition-report-requests', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            actor,
-            actorUserName: actor.displayName || actor.uid,
+            actorUserName: displayName,
             payload,
           }),
         });
@@ -94,13 +80,10 @@ export function useAmmunitionReportRequests(): UseAmmunitionReportRequestsReturn
 
   const cancel = useCallback(
     async (requestId: string) => {
-      const actor = buildActor(enhancedUser);
-      if (!actor) return false;
       try {
-        const res = await fetch('/api/ammunition-report-requests', {
+        const res = await apiFetch('/api/ammunition-report-requests', {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ actor, action: 'cancel', requestId }),
+          body: JSON.stringify({ action: 'cancel', requestId }),
         });
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json.error || 'ביטול נכשל');
@@ -111,7 +94,7 @@ export function useAmmunitionReportRequests(): UseAmmunitionReportRequestsReturn
         return false;
       }
     },
-    [enhancedUser, refresh]
+    [refresh]
   );
 
   return { requests, isLoading, error, refresh, create, cancel };

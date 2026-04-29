@@ -4,9 +4,12 @@ import {
   serverUpdateSubcategory,
   serverDeactivateSubcategory,
 } from '@/lib/db/server/categoriesService';
+import { getActorOrError } from '@/lib/db/server/auth';
 
 export async function POST(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const data = await request.json();
     if (!data.name || !data.parentCategoryId) {
       return NextResponse.json(
@@ -25,6 +28,8 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const { id, ...updates } = await request.json();
     if (!id) {
       return NextResponse.json({ success: false, error: 'Subcategory id is required' }, { status: 400 });
@@ -40,6 +45,8 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const { id } = await request.json();
     if (!id) {
       return NextResponse.json({ success: false, error: 'Subcategory id is required' }, { status: 400 });

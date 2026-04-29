@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server';
 import { serverForceOps } from '@/lib/db/server/forceOpsService';
 import {
-  validateActor,
   actorToAuthUser,
   fetchEquipmentForPolicy,
 } from '@/lib/db/server/policyHelpers';
+import { getActorOrError } from '@/lib/db/server/auth';
 import { canForceTransfer } from '@/lib/equipmentPolicy';
 
 export async function POST(request: Request) {
   try {
-    const input = await request.json();
-    const actor = validateActor(input.actor);
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const authUser = actorToAuthUser(actor);
+    const input = await request.json();
 
     if (!Array.isArray(input.equipmentDocIds) || input.equipmentDocIds.length === 0) {
       return NextResponse.json(

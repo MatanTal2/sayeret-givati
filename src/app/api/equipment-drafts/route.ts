@@ -4,14 +4,16 @@ import {
   serverUpdateEquipmentDraft,
   serverDeleteEquipmentDraft,
 } from '@/lib/db/server/equipmentDraftService';
+import { getActorOrError } from '@/lib/db/server/auth';
 
 export async function POST(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const input = await request.json();
-    if (!input.userId) {
-      return NextResponse.json({ success: false, error: 'userId is required' }, { status: 400 });
-    }
-    const result = await serverCreateEquipmentDraft(input);
+    // userId always taken from the verified actor — drafts are owned by the caller.
+    const result = await serverCreateEquipmentDraft({ ...input, userId: actor.uid });
     return NextResponse.json({ success: true, id: result.id });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -22,6 +24,8 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const input = await request.json();
     if (!input.draftId) {
       return NextResponse.json({ success: false, error: 'draftId is required' }, { status: 400 });
@@ -37,6 +41,8 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const input = await request.json();
     if (!input.draftId) {
       return NextResponse.json({ success: false, error: 'draftId is required' }, { status: 400 });

@@ -1,13 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { apiFetch } from '@/lib/apiFetch';
 import {
   listAmmunitionReports,
   type ListReportsFilter,
 } from '@/lib/ammunition/reportsService';
 import type { AmmunitionReport, BruceState } from '@/types/ammunition';
-import type { ApiActor } from '@/lib/equipmentService';
 
 export interface SubmitReportPayload {
   templateId: string;
@@ -30,23 +29,7 @@ export interface UseAmmunitionReportsReturn {
   submit: (payload: SubmitReportPayload) => Promise<{ ok: boolean; reportId?: string }>;
 }
 
-function buildActor(
-  user: ReturnType<typeof useAuth>['enhancedUser']
-): ApiActor | null {
-  if (!user || !user.userType) return null;
-  return {
-    uid: user.uid,
-    userType: user.userType,
-    teamId: user.teamId,
-    displayName:
-      user.displayName ||
-      [user.firstName, user.lastName].filter(Boolean).join(' ') ||
-      undefined,
-  };
-}
-
 export function useAmmunitionReports(initialFilter: ListReportsFilter = {}): UseAmmunitionReportsReturn {
-  const { enhancedUser } = useAuth();
   const [reports, setReports] = useState<AmmunitionReport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,13 +53,10 @@ export function useAmmunitionReports(initialFilter: ListReportsFilter = {}): Use
 
   const submit = useCallback(
     async (payload: SubmitReportPayload) => {
-      const actor = buildActor(enhancedUser);
-      if (!actor) return { ok: false };
       try {
-        const res = await fetch('/api/ammunition-reports', {
+        const res = await apiFetch('/api/ammunition-reports', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ actor, payload }),
+          body: JSON.stringify({ payload }),
         });
         const json = await res.json();
         if (!res.ok || !json.success) {
@@ -89,7 +69,7 @@ export function useAmmunitionReports(initialFilter: ListReportsFilter = {}): Use
         return { ok: false };
       }
     },
-    [enhancedUser, refresh]
+    [refresh]
   );
 
   return { reports, isLoading, error, refresh, submit };

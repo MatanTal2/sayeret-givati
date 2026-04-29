@@ -14,6 +14,7 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { apiFetch } from '@/lib/apiFetch';
 import { ActionsLog, ActionType } from '@/types/equipment';
 import { COLLECTIONS } from '@/lib/db/collections';
 
@@ -22,9 +23,8 @@ import { COLLECTIONS } from '@/lib/db/collections';
  * Delegates to API route (firebase-admin) for the write.
  */
 export async function createActionLog(actionData: Omit<ActionsLog, 'id' | 'timestamp'>): Promise<string> {
-  const response = await fetch('/api/actions-log', {
+  const response = await apiFetch('/api/actions-log', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(actionData),
   });
 

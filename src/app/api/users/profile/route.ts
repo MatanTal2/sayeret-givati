@@ -1,23 +1,34 @@
 import { NextResponse } from 'next/server';
 import { serverUpdateUserProfile } from '@/lib/db/server/userService';
+import { getActorOrError } from '@/lib/db/server/auth';
+import { UserType } from '@/types/user';
 
 /**
  * PATCH /api/users/profile
  * Body: { uid: string, updates: { teamId?, profileImage?, phoneNumber? } }
  *
- * Only whitelisted keys are accepted server-side; the caller's uid must match
- * the authenticated user (caller-side responsibility — we rely on the client
- * sending its own uid for now, matching the pattern of other API routes until
- * auth-bearer middleware lands).
+ * Caller must be authenticated (bearer token). Only the user themselves, or
+ * an ADMIN / SYSTEM_MANAGER, may update a profile.
  */
 export async function PATCH(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const body = await request.json();
     if (!body?.uid || typeof body.uid !== 'string') {
       return NextResponse.json({ success: false, error: 'uid is required' }, { status: 400 });
     }
     if (!body?.updates || typeof body.updates !== 'object') {
       return NextResponse.json({ success: false, error: 'updates object is required' }, { status: 400 });
+    }
+    const isElevated =
+      actor.userType === UserType.ADMIN || actor.userType === UserType.SYSTEM_MANAGER;
+    if (body.uid !== actor.uid && !isElevated) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: cannot edit another user\'s profile' },
+        { status: 403 }
+      );
     }
     await serverUpdateUserProfile(body.uid, body.updates);
     return NextResponse.json({ success: true });

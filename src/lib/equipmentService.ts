@@ -5,6 +5,7 @@
  */
 
 import { db, auth } from '@/lib/firebase';
+import { apiFetch } from '@/lib/apiFetch';
 import {
   collection,
   doc,
@@ -28,15 +29,6 @@ import {
   ApprovalDetails,
   TemplateStatus,
 } from '@/types/equipment';
-import { UserType } from '@/types/user';
-
-// Actor context passed to API routes so the server can run equipmentPolicy checks.
-export interface ApiActor {
-  uid: string;
-  userType: UserType;
-  teamId?: string;
-  displayName?: string;
-}
 import { EquipmentTemplate } from '@/data/equipmentTemplates';
 import { 
   addTrackingHistoryEntry, 
@@ -91,9 +83,8 @@ export class EquipmentTypesService {
     equipmentTypeData: Omit<EquipmentType, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<EquipmentServiceResult> {
     try {
-      const response = await fetch('/api/equipment-templates', {
+      const response = await apiFetch('/api/equipment-templates', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(equipmentTypeData),
       });
       const result = await response.json();
@@ -243,9 +234,8 @@ export class EquipmentTypesService {
     updates: Partial<Omit<EquipmentType, 'id' | 'createdAt' | 'updatedAt'>>
   ): Promise<EquipmentServiceResult> {
     try {
-      const response = await fetch('/api/equipment-templates', {
+      const response = await apiFetch('/api/equipment-templates', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: typeId, ...updates }),
       });
       const result = await response.json();
@@ -319,9 +309,8 @@ export class EquipmentItemsService {
       };
 
       // Create equipment + action log via server API route (firebase-admin transaction)
-      const createResponse = await fetch('/api/equipment', {
+      const createResponse = await apiFetch('/api/equipment', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           equipmentData,
           initialHolderName,
@@ -501,9 +490,8 @@ export class EquipmentItemsService {
       };
 
       // Update via server API route (firebase-admin)
-      const updateResponse = await fetch('/api/equipment', {
+      const updateResponse = await apiFetch('/api/equipment', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           equipmentId,
           updates,
@@ -541,7 +529,6 @@ export class EquipmentItemsService {
     initialHolderId: string,
     signedBy: string,
     signedById: string,
-    actor: ApiActor,
     notes?: string
   ): Promise<EquipmentServiceResult> {
     try {
@@ -573,11 +560,9 @@ export class EquipmentItemsService {
         };
       });
 
-      const response = await fetch('/api/equipment/batch', {
+      const response = await apiFetch('/api/equipment/batch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          actor,
           items: payloadItems,
           batchId,
           initialHolderName,
@@ -613,16 +598,13 @@ export class EquipmentItemsService {
   static async reportEquipment(
     equipmentId: string,
     photoUrl: string | null,
-    actor: ApiActor,
     actorName: string,
     note?: string
   ): Promise<EquipmentServiceResult> {
     try {
-      const response = await fetch('/api/equipment/report', {
+      const response = await apiFetch('/api/equipment/report', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          actor,
           equipmentId,
           photoUrl,
           actorName,
@@ -651,15 +633,13 @@ export class EquipmentItemsService {
    */
   static async retireEquipment(
     equipmentId: string,
-    actor: ApiActor,
     actorName: string,
     reason: string
   ): Promise<EquipmentServiceResult> {
     try {
-      const response = await fetch('/api/equipment/retire', {
+      const response = await apiFetch('/api/equipment/retire', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ actor, equipmentId, actorName, reason }),
+        body: JSON.stringify({ equipmentId, actorName, reason }),
       });
       const result = await response.json();
       if (!result.success) {
@@ -726,9 +706,8 @@ export class EquipmentItemsService {
       };
 
       // Transfer via server API route (firebase-admin)
-      const transferResponse = await fetch('/api/equipment/transfer', {
+      const transferResponse = await apiFetch('/api/equipment/transfer', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           equipmentId,
           newHolder,

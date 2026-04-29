@@ -12,6 +12,7 @@ import {
   getDocs,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { apiFetch } from '@/lib/apiFetch';
 import { COLLECTIONS } from '@/lib/db/collections';
 import {
   RetirementRequestDoc,
@@ -20,16 +21,13 @@ import {
 
 export async function approveRetirementRequest(
   requestId: string,
-  approverUserId: string,
   approverUserName: string,
   note?: string
 ): Promise<void> {
-  const response = await fetch('/api/retirement-requests/approve', {
+  const response = await apiFetch('/api/retirement-requests/approve', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       requestId,
-      approverUserId,
       approverUserName,
       ...(note ? { note } : {}),
     }),
@@ -42,16 +40,13 @@ export async function approveRetirementRequest(
 
 export async function rejectRetirementRequest(
   requestId: string,
-  rejectorUserId: string,
   rejectorUserName: string,
   reason?: string
 ): Promise<void> {
-  const response = await fetch('/api/retirement-requests/reject', {
+  const response = await apiFetch('/api/retirement-requests/reject', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       requestId,
-      rejectorUserId,
       rejectorUserName,
       ...(reason ? { reason } : {}),
     }),

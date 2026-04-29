@@ -5,9 +5,21 @@ import {
   serverSyncPersonnelToUser,
   serverDeletePersonnel,
 } from '@/lib/db/server/authorizedPersonnelService';
+import { getActorOrError } from '@/lib/db/server/auth';
+import { UserType } from '@/types/user';
+
+function isPersonnelAdmin(userType: UserType): boolean {
+  return userType === UserType.ADMIN || userType === UserType.SYSTEM_MANAGER;
+}
 
 export async function POST(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
+    if (!isPersonnelAdmin(actor.userType)) {
+      return NextResponse.json({ success: false, error: 'Forbidden: admin/system_manager only' }, { status: 403 });
+    }
     const { docId, data } = await request.json();
     if (!docId || !data) {
       return NextResponse.json({ success: false, error: 'docId and data are required' }, { status: 400 });
@@ -23,6 +35,12 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
+    if (!isPersonnelAdmin(actor.userType)) {
+      return NextResponse.json({ success: false, error: 'Forbidden: admin/system_manager only' }, { status: 403 });
+    }
     const { personnelId, updates, syncToUser, militaryIdHash } = await request.json();
     if (!personnelId || !updates) {
       return NextResponse.json({ success: false, error: 'personnelId and updates are required' }, { status: 400 });
@@ -44,6 +62,12 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
+    if (!isPersonnelAdmin(actor.userType)) {
+      return NextResponse.json({ success: false, error: 'Forbidden: admin/system_manager only' }, { status: 403 });
+    }
     const { id } = await request.json();
     if (!id) {
       return NextResponse.json({ success: false, error: 'Personnel id is required' }, { status: 400 });

@@ -3,6 +3,8 @@
  * route so rules stay locked and writes remain transactional/audit-friendly.
  */
 
+import { apiFetch } from '@/lib/apiFetch';
+
 export interface ProfileUpdates {
   teamId?: string;
   profileImage?: string;
@@ -10,9 +12,8 @@ export interface ProfileUpdates {
 }
 
 export async function updateUserProfile(uid: string, updates: ProfileUpdates): Promise<void> {
-  const response = await fetch('/api/users/profile', {
+  const response = await apiFetch('/api/users/profile', {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ uid, updates }),
   });
   const result = await response.json();

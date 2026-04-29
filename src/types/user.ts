@@ -4,6 +4,7 @@
 
 import { Timestamp } from 'firebase/firestore';
 import { UserRole } from '@/types/equipment';
+import type { ActiveGrant } from '@/types/permissionGrant';
 
 /**
  * User type enum for high-level categorization
@@ -58,6 +59,10 @@ export interface EnhancedAuthUser {
 
   // Team assignment (used by equipment scope queries)
   teamId?: string;
+
+  // Active permission grants (temporary role bumps). Server-loaded only;
+  // client-side EnhancedAuthUser instances leave this undefined.
+  grants?: ActiveGrant[];
 
   // Communication preferences
   communicationPreferences?: CommunicationPreferences;

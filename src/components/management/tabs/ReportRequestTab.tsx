@@ -16,7 +16,6 @@ import {
 } from '@/lib/reportRequestService';
 import UserSearchInput from '@/components/users/UserSearchInput';
 import type { UserSearchResult } from '@/lib/userService';
-import type { ApiActor } from '@/lib/equipmentService';
 
 export default function ReportRequestTab() {
   const labels = TEXT_CONSTANTS.FEATURES.EQUIPMENT.REPORT_REQUEST;
@@ -70,22 +69,15 @@ export default function ReportRequestTab() {
     if (!enhancedUser) return;
     setSubmitting(true);
     try {
-      const actor: ApiActor = {
-        uid: enhancedUser.uid,
-        userType: enhancedUser.userType!,
-        teamId: enhancedUser.teamId,
-        displayName:
-          enhancedUser.displayName ||
-          [enhancedUser.firstName, enhancedUser.lastName].filter(Boolean).join(' ') ||
-          undefined,
-      };
-      const requestedByUserName = actor.displayName || actor.uid;
+      const requestedByUserName =
+        enhancedUser.displayName ||
+        [enhancedUser.firstName, enhancedUser.lastName].filter(Boolean).join(' ') ||
+        enhancedUser.uid;
 
       const targetUserIds = computeTargetUserIds(scope, target, itemTargets?.holderIds ?? []);
       if (targetUserIds.length === 0) throw new Error(labels.TARGET_REQUIRED);
 
       await createReportRequest({
-        actor,
         scope,
         targetUserIds,
         targetEquipmentDocIds: scope === ReportRequestScope.ITEMS ? itemTargets!.ids : undefined,

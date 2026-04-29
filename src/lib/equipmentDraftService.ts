@@ -13,6 +13,7 @@ import {
   getDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { apiFetch } from '@/lib/apiFetch';
 import { COLLECTIONS } from '@/lib/db/collections';
 import {
   EquipmentDraft,
@@ -20,7 +21,6 @@ import {
 } from '@/types/equipment';
 
 interface CreateDraftArgs {
-  userId: string;
   templateRequestId?: string;
   serialNumber?: string;
   photoUrl?: string;
@@ -30,9 +30,8 @@ interface CreateDraftArgs {
 }
 
 export async function createEquipmentDraft(args: CreateDraftArgs): Promise<string> {
-  const response = await fetch('/api/equipment-drafts', {
+  const response = await apiFetch('/api/equipment-drafts', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(args),
   });
   const result = await response.json();
@@ -53,9 +52,8 @@ interface UpdateDraftArgs {
 }
 
 export async function updateEquipmentDraft(args: UpdateDraftArgs): Promise<void> {
-  const response = await fetch('/api/equipment-drafts', {
+  const response = await apiFetch('/api/equipment-drafts', {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(args),
   });
   const result = await response.json();
@@ -63,9 +61,8 @@ export async function updateEquipmentDraft(args: UpdateDraftArgs): Promise<void>
 }
 
 export async function deleteEquipmentDraft(draftId: string): Promise<void> {
-  const response = await fetch('/api/equipment-drafts', {
+  const response = await apiFetch('/api/equipment-drafts', {
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ draftId }),
   });
   const result = await response.json();

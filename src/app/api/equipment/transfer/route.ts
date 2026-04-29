@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { serverTransferEquipment } from '@/lib/db/server/equipmentService';
+import { getActorOrError } from '@/lib/db/server/auth';
 
 export async function POST(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const input = await request.json();
     if (!input.equipmentId || !input.newHolder || !input.newHolderId) {
       return NextResponse.json(

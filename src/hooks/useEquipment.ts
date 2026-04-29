@@ -9,7 +9,7 @@ import {
   EquipmentAction,
   ApprovalType
 } from '@/types/equipment';
-import { EquipmentService, type ApiActor } from '@/lib/equipmentService';
+import { EquipmentService } from '@/lib/equipmentService';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { Timestamp, serverTimestamp } from 'firebase/firestore';
 import { auth } from '@/lib/firebase';
@@ -72,16 +72,14 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
   const [typesLoading, setTypesLoading] = useState(false);
   const [typesError, setTypesError] = useState<string | null>(null);
 
-  const buildActor = useCallback((): ApiActor | null => {
+  const buildActorIdentity = useCallback((): { uid: string; displayName: string } | null => {
     if (!enhancedUser?.uid || !enhancedUser.userType) return null;
     return {
       uid: enhancedUser.uid,
-      userType: enhancedUser.userType,
-      teamId: enhancedUser.teamId,
       displayName:
         enhancedUser.displayName ||
         [enhancedUser.firstName, enhancedUser.lastName].filter(Boolean).join(' ') ||
-        undefined,
+        enhancedUser.uid,
     };
   }, [enhancedUser]);
 
@@ -255,11 +253,11 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
   const reportEquipment = useCallback(async (
     equipmentId: string, photoUrl: string | null, note?: string
   ): Promise<boolean> => {
-    const actor = buildActor();
-    if (!actor) { setError(TEXT_CONSTANTS.ERRORS.CONNECTION_ERROR); return false; }
+    const identity = buildActorIdentity();
+    if (!identity) { setError(TEXT_CONSTANTS.ERRORS.CONNECTION_ERROR); return false; }
     try {
       const result = await EquipmentService.Items.reportEquipment(
-        equipmentId, photoUrl, actor, actor.displayName || actor.uid, note
+        equipmentId, photoUrl, identity.displayName, note
       );
       if (result.success) { await refreshEquipment(); return true; }
       setError(result.message);
@@ -269,16 +267,16 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       setError(TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR);
       return false;
     }
-  }, [refreshEquipment, buildActor]);
+  }, [refreshEquipment, buildActorIdentity]);
 
   const retireEquipment = useCallback(async (
     equipmentId: string, reason: string
   ): Promise<{ success: boolean; kind?: 'immediate' | 'request'; error?: string }> => {
-    const actor = buildActor();
-    if (!actor) return { success: false, error: TEXT_CONSTANTS.ERRORS.CONNECTION_ERROR };
+    const identity = buildActorIdentity();
+    if (!identity) return { success: false, error: TEXT_CONSTANTS.ERRORS.CONNECTION_ERROR };
     try {
       const result = await EquipmentService.Items.retireEquipment(
-        equipmentId, actor, actor.displayName || actor.uid, reason
+        equipmentId, identity.displayName, reason
       );
       if (result.success) {
         await refreshEquipment();
@@ -290,18 +288,17 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       console.error('Error retiring equipment:', err);
       return { success: false, error: TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR };
     }
-  }, [refreshEquipment, buildActor]);
+  }, [refreshEquipment, buildActorIdentity]);
 
   const createEquipmentBatch = useCallback(async (
     items: Array<Omit<Equipment, 'createdAt' | 'updatedAt' | 'trackingHistory'>>,
     notes?: string
   ): Promise<boolean> => {
-    const actor = buildActor();
-    if (!actor) { setError(TEXT_CONSTANTS.ERRORS.CONNECTION_ERROR); return false; }
-    const signerName = actor.displayName || actor.uid;
+    const identity = buildActorIdentity();
+    if (!identity) { setError(TEXT_CONSTANTS.ERRORS.CONNECTION_ERROR); return false; }
     try {
       const result = await EquipmentService.Items.createEquipmentBatch(
-        items, signerName, actor.uid, signerName, actor.uid, actor, notes
+        items, identity.displayName, identity.uid, identity.displayName, identity.uid, notes
       );
       if (result.success) { await refreshEquipment(); return true; }
       setError(result.message);
@@ -311,7 +308,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       setError(TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR);
       return false;
     }
-  }, [refreshEquipment, buildActor]);
+  }, [refreshEquipment, buildActorIdentity]);
 
   const addEquipmentType = useCallback(async (
     equipmentTypeData: Omit<EquipmentType, 'createdAt' | 'updatedAt'>

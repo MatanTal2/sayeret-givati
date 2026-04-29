@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { apiFetch } from '@/lib/apiFetch';
 import {
   listAmmunitionStock,
   listSerialAmmunitionItems,
@@ -13,7 +13,6 @@ import type {
   BruceState,
   HolderType,
 } from '@/types/ammunition';
-import type { ApiActor } from '@/lib/equipmentService';
 
 export interface UpsertStockPayload {
   templateId: string;
@@ -50,23 +49,7 @@ export interface UseAmmunitionInventoryReturn {
   deleteSerialItem: (serial: string) => Promise<boolean>;
 }
 
-function buildActor(
-  user: ReturnType<typeof useAuth>['enhancedUser']
-): ApiActor | null {
-  if (!user || !user.userType) return null;
-  return {
-    uid: user.uid,
-    userType: user.userType,
-    teamId: user.teamId,
-    displayName:
-      user.displayName ||
-      [user.firstName, user.lastName].filter(Boolean).join(' ') ||
-      undefined,
-  };
-}
-
 export function useAmmunitionInventory(): UseAmmunitionInventoryReturn {
-  const { enhancedUser } = useAuth();
   const [stock, setStock] = useState<AmmunitionStock[]>([]);
   const [items, setItems] = useState<AmmunitionItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,13 +78,10 @@ export function useAmmunitionInventory(): UseAmmunitionInventoryReturn {
 
   const upsertStock = useCallback(
     async (payload: UpsertStockPayload) => {
-      const actor = buildActor(enhancedUser);
-      if (!actor) return false;
       try {
-        const res = await fetch('/api/ammunition-inventory', {
+        const res = await apiFetch('/api/ammunition-inventory', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ actor, kind: 'stock', payload }),
+          body: JSON.stringify({ kind: 'stock', payload }),
         });
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json.error || 'עדכון מלאי נכשל');
@@ -112,18 +92,15 @@ export function useAmmunitionInventory(): UseAmmunitionInventoryReturn {
         return false;
       }
     },
-    [enhancedUser, refresh]
+    [refresh]
   );
 
   const deleteStock = useCallback(
     async (id: string) => {
-      const actor = buildActor(enhancedUser);
-      if (!actor) return false;
       try {
-        const res = await fetch(`/api/ammunition-inventory/${encodeURIComponent(id)}`, {
+        const res = await apiFetch(`/api/ammunition-inventory/${encodeURIComponent(id)}`, {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ actor, kind: 'stock' }),
+          body: JSON.stringify({ kind: 'stock' }),
         });
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json.error || 'מחיקת מלאי נכשלה');
@@ -134,18 +111,15 @@ export function useAmmunitionInventory(): UseAmmunitionInventoryReturn {
         return false;
       }
     },
-    [enhancedUser, refresh]
+    [refresh]
   );
 
   const createSerialItem = useCallback(
     async (payload: CreateSerialItemPayload) => {
-      const actor = buildActor(enhancedUser);
-      if (!actor) return false;
       try {
-        const res = await fetch('/api/ammunition-inventory', {
+        const res = await apiFetch('/api/ammunition-inventory', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ actor, kind: 'item', payload }),
+          body: JSON.stringify({ kind: 'item', payload }),
         });
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json.error || 'יצירת פריט נכשלה');
@@ -156,18 +130,15 @@ export function useAmmunitionInventory(): UseAmmunitionInventoryReturn {
         return false;
       }
     },
-    [enhancedUser, refresh]
+    [refresh]
   );
 
   const updateSerialItem = useCallback(
     async (serial: string, payload: UpdateSerialItemPayload) => {
-      const actor = buildActor(enhancedUser);
-      if (!actor) return false;
       try {
-        const res = await fetch(`/api/ammunition-inventory/${encodeURIComponent(serial)}`, {
+        const res = await apiFetch(`/api/ammunition-inventory/${encodeURIComponent(serial)}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ actor, kind: 'item', payload }),
+          body: JSON.stringify({ kind: 'item', payload }),
         });
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json.error || 'עדכון פריט נכשל');
@@ -178,18 +149,15 @@ export function useAmmunitionInventory(): UseAmmunitionInventoryReturn {
         return false;
       }
     },
-    [enhancedUser, refresh]
+    [refresh]
   );
 
   const deleteSerialItem = useCallback(
     async (serial: string) => {
-      const actor = buildActor(enhancedUser);
-      if (!actor) return false;
       try {
-        const res = await fetch(`/api/ammunition-inventory/${encodeURIComponent(serial)}`, {
+        const res = await apiFetch(`/api/ammunition-inventory/${encodeURIComponent(serial)}`, {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ actor, kind: 'item' }),
+          body: JSON.stringify({ kind: 'item' }),
         });
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json.error || 'מחיקת פריט נכשלה');
@@ -200,7 +168,7 @@ export function useAmmunitionInventory(): UseAmmunitionInventoryReturn {
         return false;
       }
     },
-    [enhancedUser, refresh]
+    [refresh]
   );
 
   return {

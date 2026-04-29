@@ -1,19 +1,23 @@
 import { NextResponse } from 'next/server';
 import { serverFulfillReportRequest } from '@/lib/db/server/reportRequestService';
+import { getActorOrError } from '@/lib/db/server/auth';
 
 export async function POST(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const input = await request.json();
-    if (!input.requestId || !input.userId) {
+    if (!input.requestId) {
       return NextResponse.json(
-        { success: false, error: 'requestId and userId are required' },
+        { success: false, error: 'requestId is required' },
         { status: 400 }
       );
     }
-    // Server verifies userId is a target of the request.
+    // userId always taken from the verified actor — server verifies actor is a target of the request.
     await serverFulfillReportRequest({
       requestId: input.requestId,
-      userId: input.userId,
+      userId: actor.uid,
     });
     return NextResponse.json({ success: true });
   } catch (error) {

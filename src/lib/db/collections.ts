@@ -25,6 +25,7 @@ export const COLLECTIONS = {
   AMMUNITION_REPORTS: 'ammunitionReports',
   AMMUNITION_REPORT_REQUESTS: 'ammunitionReportRequests',
   SYSTEM_CONFIG: 'systemConfig',
+  PERMISSION_GRANTS: 'permissionGrants',
 } as const;
 
 export type CollectionName = typeof COLLECTIONS[keyof typeof COLLECTIONS];

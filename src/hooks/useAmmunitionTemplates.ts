@@ -1,9 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { apiFetch } from '@/lib/apiFetch';
 import type { AmmunitionType } from '@/types/ammunition';
-import type { ApiActor } from '@/lib/equipmentService';
 
 export interface CreateAmmunitionTemplatePayload {
   name: string;
@@ -28,23 +27,7 @@ export interface UseAmmunitionTemplatesReturn {
   seedCanonical: () => Promise<{ created: number; skipped: number } | null>;
 }
 
-function buildActor(
-  user: ReturnType<typeof useAuth>['enhancedUser']
-): ApiActor | null {
-  if (!user || !user.userType) return null;
-  return {
-    uid: user.uid,
-    userType: user.userType,
-    teamId: user.teamId,
-    displayName:
-      user.displayName ||
-      [user.firstName, user.lastName].filter(Boolean).join(' ') ||
-      undefined,
-  };
-}
-
 export function useAmmunitionTemplates(): UseAmmunitionTemplatesReturn {
-  const { enhancedUser } = useAuth();
   const [templates, setTemplates] = useState<AmmunitionType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +36,7 @@ export function useAmmunitionTemplates(): UseAmmunitionTemplatesReturn {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/ammunition-templates');
+      const res = await apiFetch('/api/ammunition-templates');
       const json = await res.json();
       if (!res.ok || !json.success) {
         throw new Error(json.error || 'שגיאה בטעינת תבניות תחמושת');
@@ -72,13 +55,10 @@ export function useAmmunitionTemplates(): UseAmmunitionTemplatesReturn {
 
   const create = useCallback(
     async (payload: CreateAmmunitionTemplatePayload) => {
-      const actor = buildActor(enhancedUser);
-      if (!actor) return false;
       try {
-        const res = await fetch('/api/ammunition-templates', {
+        const res = await apiFetch('/api/ammunition-templates', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ actor, payload }),
+          body: JSON.stringify({ payload }),
         });
         const json = await res.json();
         if (!res.ok || !json.success) {
@@ -91,18 +71,15 @@ export function useAmmunitionTemplates(): UseAmmunitionTemplatesReturn {
         return false;
       }
     },
-    [enhancedUser, refresh]
+    [refresh]
   );
 
   const update = useCallback(
     async (id: string, payload: CreateAmmunitionTemplatePayload) => {
-      const actor = buildActor(enhancedUser);
-      if (!actor) return false;
       try {
-        const res = await fetch(`/api/ammunition-templates/${id}`, {
+        const res = await apiFetch(`/api/ammunition-templates/${id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ actor, payload }),
+          body: JSON.stringify({ payload }),
         });
         const json = await res.json();
         if (!res.ok || !json.success) {
@@ -115,18 +92,15 @@ export function useAmmunitionTemplates(): UseAmmunitionTemplatesReturn {
         return false;
       }
     },
-    [enhancedUser, refresh]
+    [refresh]
   );
 
   const remove = useCallback(
     async (id: string) => {
-      const actor = buildActor(enhancedUser);
-      if (!actor) return false;
       try {
-        const res = await fetch(`/api/ammunition-templates/${id}`, {
+        const res = await apiFetch(`/api/ammunition-templates/${id}`, {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ actor }),
+          body: JSON.stringify({}),
         });
         const json = await res.json();
         if (!res.ok || !json.success) {
@@ -139,17 +113,14 @@ export function useAmmunitionTemplates(): UseAmmunitionTemplatesReturn {
         return false;
       }
     },
-    [enhancedUser, refresh]
+    [refresh]
   );
 
   const seedCanonical = useCallback(async () => {
-    const actor = buildActor(enhancedUser);
-    if (!actor) return null;
     try {
-      const res = await fetch('/api/ammunition-templates', {
+      const res = await apiFetch('/api/ammunition-templates', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ actor, action: 'seed_canonical' }),
+        body: JSON.stringify({ action: 'seed_canonical' }),
       });
       const json = await res.json();
       if (!res.ok || !json.success) {
@@ -161,7 +132,7 @@ export function useAmmunitionTemplates(): UseAmmunitionTemplatesReturn {
       setError(e instanceof Error ? e.message : 'שגיאה לא צפויה');
       return null;
     }
-  }, [enhancedUser, refresh]);
+  }, [refresh]);
 
   return { templates, isLoading, error, refresh, create, update, remove, seedCanonical };
 }

@@ -1,15 +1,18 @@
 import { NextResponse } from 'next/server';
 import { serverRejectTemplateRequest } from '@/lib/db/server/templateRequestService';
-import { validateActor, actorToAuthUser } from '@/lib/db/server/policyHelpers';
+import { actorToAuthUser } from '@/lib/db/server/policyHelpers';
+import { getActorOrError } from '@/lib/db/server/auth';
 import { canReviewTemplate } from '@/lib/equipmentPolicy';
 
 export async function POST(request: Request) {
   try {
-    const input = await request.json();
-    const actor = validateActor(input.actor);
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     if (!canReviewTemplate(actorToAuthUser(actor))) {
       return NextResponse.json({ success: false, error: 'Forbidden — manager+ only' }, { status: 403 });
     }
+    const input = await request.json();
     if (!input.templateId) {
       return NextResponse.json({ success: false, error: 'templateId is required' }, { status: 400 });
     }

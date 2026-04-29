@@ -11,7 +11,7 @@ import { getActionLogsByType } from '@/lib/actionsLogService';
 import { ActionType, type ActionsLog, type Equipment } from '@/types/equipment';
 import UserSearchInput from '@/components/users/UserSearchInput';
 import type { UserSearchResult } from '@/lib/userService';
-import type { ApiActor } from '@/lib/equipmentService';
+import { apiFetch } from '@/lib/apiFetch';
 
 type Kind = 'holder' | 'signer' | 'both';
 
@@ -83,21 +83,13 @@ export default function ForceOperationsTab() {
     if (err) { setFeedback({ ok: false, msg: err }); return; }
     setSubmitting(true);
     try {
-      const actor: ApiActor = {
-        uid: enhancedUser.uid,
-        userType: enhancedUser.userType!,
-        teamId: enhancedUser.teamId,
-        displayName:
-          enhancedUser.displayName ||
-          [enhancedUser.firstName, enhancedUser.lastName].filter(Boolean).join(' ') ||
-          undefined,
-      };
-      const actorUserName = actor.displayName || actor.uid;
-      const res = await fetch('/api/force-ops', {
+      const actorUserName =
+        enhancedUser.displayName ||
+        [enhancedUser.firstName, enhancedUser.lastName].filter(Boolean).join(' ') ||
+        enhancedUser.uid;
+      const res = await apiFetch('/api/force-ops', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          actor,
           actorUserName,
           equipmentDocIds: Array.from(selectedIds),
           kind,

@@ -11,15 +11,14 @@ import {
   getDocs,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { apiFetch } from '@/lib/apiFetch';
 import { COLLECTIONS } from '@/lib/db/collections';
 import {
   EquipmentType,
   TemplateStatus,
 } from '@/types/equipment';
-import type { ApiActor } from '@/lib/equipmentService';
 
 interface ProposeTemplateArgs {
-  actor: ApiActor;
   proposerUserName: string;
   name: string;
   category: string;
@@ -40,9 +39,8 @@ interface ProposeTemplateArgs {
 export async function proposeTemplate(
   args: ProposeTemplateArgs
 ): Promise<{ templateId: string; draftId?: string }> {
-  const response = await fetch('/api/equipment-templates/propose', {
+  const response = await apiFetch('/api/equipment-templates/propose', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(args),
   });
   const result = await response.json();
@@ -51,7 +49,6 @@ export async function proposeTemplate(
 }
 
 interface ApproveTemplateArgs {
-  actor: ApiActor;
   templateId: string;
   approverUserName: string;
   edits?: Partial<{
@@ -67,9 +64,8 @@ interface ApproveTemplateArgs {
 }
 
 export async function approveTemplateRequest(args: ApproveTemplateArgs): Promise<void> {
-  const response = await fetch('/api/equipment-templates/approve', {
+  const response = await apiFetch('/api/equipment-templates/approve', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(args),
   });
   const result = await response.json();
@@ -77,16 +73,14 @@ export async function approveTemplateRequest(args: ApproveTemplateArgs): Promise
 }
 
 interface RejectTemplateArgs {
-  actor: ApiActor;
   templateId: string;
   rejectorUserName: string;
   reason?: string;
 }
 
 export async function rejectTemplateRequest(args: RejectTemplateArgs): Promise<void> {
-  const response = await fetch('/api/equipment-templates/reject', {
+  const response = await apiFetch('/api/equipment-templates/reject', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(args),
   });
   const result = await response.json();

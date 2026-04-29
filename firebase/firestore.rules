@@ -167,6 +167,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Permission grants — users see their own grants only; writes locked.
+    match /permissionGrants/{grantId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
     // Deny everything else
     match /{document=**} {
       allow read, write: if false;
