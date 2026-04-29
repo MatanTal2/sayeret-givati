@@ -22,7 +22,7 @@ Registration (one-time):
   5. Account details (email + password)
   6. linkWithCredential(EmailAuthProvider.credential(email, password))  ← adds 2nd credential to SAME user
   7. sendEmailVerification()                           ← soft (non-blocking)
-  8. POST /api/auth/register → write Firestore profile via UserService
+  8. POST /api/auth/register → writes Firestore profile via firebase-admin directly
 
 Login (every time):
   - Email + password via signInWithEmailAndPassword

@@ -17,6 +17,7 @@ Registration step 4. Collects email, password, and privacy policy consent. Valid
 | `consent` | `boolean` | ❌ | Initial consent value |
 | `onSubmit` | `(data: AccountDetailsData) => void` | ✅ | Step completion callback |
 | `isSubmitting` | `boolean` | ❌ | Loading state while Firebase creates account |
+| `submitError` | `string \| null` | ❌ | Error from `linkEmailPassword` / `/api/auth/register`; rendered above the submit button when not submitting |
 
 ## State
 

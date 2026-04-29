@@ -4,12 +4,13 @@ import { validateEmail, validatePassword, validateConsent } from '@/utils/valida
 import { AccountDetailsStepProps, AccountDetailsData, AccountDetailsValidationErrors } from '@/types/registration';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 
-export default function AccountDetailsStep({ 
+export default function AccountDetailsStep({
   email = '',
   password = '',
   consent = false,
   onSubmit,
-  isSubmitting = false
+  isSubmitting = false,
+  submitError = null
 }: AccountDetailsStepProps) {
   const [formData, setFormData] = useState<AccountDetailsData>({
     email,
@@ -231,6 +232,17 @@ export default function AccountDetailsStep({
               </label>
             </div>
           </div>
+
+          {/* Submission error from parent (linkEmailPassword / register API) */}
+          {submitError && !isSubmitting && (
+            <p
+              className="text-xs text-danger-600 text-right px-1"
+              data-testid="account-submit-error"
+              role="alert"
+            >
+              {submitError}
+            </p>
+          )}
 
           {/* Create Account Button */}
           <button
