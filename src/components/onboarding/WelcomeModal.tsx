@@ -59,8 +59,8 @@ export default function WelcomeModal() {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 sm:p-8">
+    <div className="modal-overlay flex items-center justify-center p-4" role="dialog" aria-modal="true">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8">
         <div className="flex justify-center mb-4">
           <ProfileImageUpload
             userId={enhancedUser.uid}
