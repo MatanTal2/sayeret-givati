@@ -6,6 +6,7 @@ import EmailTab from './EmailTab';
 import UsersTab from './UsersTab';
 import SystemConfigTab from './SystemConfigTab';
 import PermissionsTab from './PermissionsTab';
+import PermissionGrantsTab from './PermissionGrantsTab';
 import AuditLogsTab from './AuditLogsTab';
 import DataManagementTab from './DataManagementTab';
 import TemplatesTab from './TemplatesTab';
@@ -35,6 +36,9 @@ export default function TabContentRenderer({ activeTab, activeTabData }: TabCont
     
     case 'permissions':
       return <PermissionsTab />;
+
+    case 'permission-grants':
+      return <PermissionGrantsTab />;
     
     case 'template-management':
       return <TemplatesTab />;

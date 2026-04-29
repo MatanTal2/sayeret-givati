@@ -1000,7 +1000,8 @@ export const TEXT_CONSTANTS = {
       DATA_MANAGEMENT: 'ניהול נתונים',
       AUDIT_LOGS: 'יומני ביקורת',
       SEND_EMAIL: 'שליחת אימייל',
-      AMMUNITION: 'תחמושת'
+      AMMUNITION: 'תחמושת',
+      PERMISSION_GRANTS: 'הענקות תפקיד זמניות'
     },
 
     // Tab Descriptions
@@ -1017,7 +1018,8 @@ export const TEXT_CONSTANTS = {
       DATA_MANAGEMENT: 'גיבוי, שחזור ואחזקת נתונים',
       AUDIT_LOGS: 'מעקב פעילות ויומני מערכת',
       SEND_EMAIL: 'שליחת הודעות אימייל לקבוצות משתמשים או משתמשים ספציפיים',
-      AMMUNITION: 'ניהול תבניות, מלאי, דיווחים ובקשות תחמושת'
+      AMMUNITION: 'ניהול תבניות, מלאי, דיווחים ובקשות תחמושת',
+      PERMISSION_GRANTS: 'הענקה זמנית של תפקיד למשתמש לתקופה של עד 7 ימים'
     },
     
     // Access Denied
