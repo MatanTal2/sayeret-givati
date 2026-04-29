@@ -5,7 +5,7 @@ import OTPVerificationStep from './OTPVerificationStep';
 import PersonalDetailsStep from './PersonalDetailsStep';
 import AccountDetailsStep from './AccountDetailsStep';
 import RegistrationSuccessStep from './RegistrationSuccessStep';
-import RecaptchaContainer, { RECAPTCHA_CONTAINER_ID } from './RecaptchaContainer';
+import { RECAPTCHA_CONTAINER_ID } from './RecaptchaContainer';
 import RecaptchaAttribution from './RecaptchaAttribution';
 import { PersonalDetailsData, AccountDetailsData } from '@/types/registration';
 import { auth } from '@/lib/firebase';
@@ -216,7 +216,6 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
   if (currentStep === 'otp') {
     return (
       <>
-        <RecaptchaContainer />
         <OTPVerificationStep
           phoneNumber={userPhoneNumber}
           confirmationResult={confirmationResult}
@@ -261,7 +260,6 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
   }
   return (
     <>
-      <RecaptchaContainer />
       <div className="text-center px-6 pb-4">
         <div className="w-12 h-12 bg-gradient-to-br from-warning-400 to-warning-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -3,13 +3,18 @@ import RegistrationHeader from './RegistrationHeader';
 import RegistrationForm from './RegistrationForm';
 import RegistrationFooter from './RegistrationFooter';
 import RegistrationStepDots, { RegistrationStep } from './RegistrationStepDots';
+import RecaptchaContainer from './RecaptchaContainer';
 import { auth } from '@/lib/firebase';
 import {
   deleteCurrentUser,
   signOutCurrentUser,
   RequiresRecentLoginError,
 } from '@/lib/firebasePhoneAuth';
-import { clearRegistrationInProgress } from '@/lib/registrationFlowFlag';
+import {
+  clearRegistrationInProgress,
+  isRegistrationInProgress,
+} from '@/lib/registrationFlowFlag';
+import { UserDataService } from '@/lib/userDataService';
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -24,13 +29,37 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch, onRegistr
   const registrationCompleteRef = useRef(false);
 
   // Cleanup orphan Firebase Auth user when the user abandons the flow.
-  // Same-session abandon (immediate close after OTP) deletes the user. If
-  // Firebase rejects delete with requires-recent-login (>5 min after OTP),
-  // we fall back to signOut — AuthContext will refuse to mark the orphan
-  // as authenticated on the next page load.
+  // Guarded so we never delete a fully-registered user that happened to
+  // reopen the modal and re-confirm OTP onto their existing account:
+  //   1. registrationCompleteRef — set on the success step.
+  //   2. registrationInProgress flag — only set during a fresh OTP confirm.
+  //   3. Firestore profile lookup — if a profile exists, the user is real,
+  //      skip delete and only clear the in-progress flag.
+  // If Firebase rejects delete with requires-recent-login (>5 min after OTP),
+  // fall back to signOut — AuthContext will refuse to mark the orphan as
+  // authenticated on the next page load.
   const cleanupOrphanAuthUser = async () => {
     if (registrationCompleteRef.current) return;
-    if (!auth.currentUser) return;
+    const user = auth.currentUser;
+    if (!user) return;
+    if (!isRegistrationInProgress()) return;
+
+    try {
+      const result = await UserDataService.fetchUserDataByUid(user.uid);
+      if (result.success && result.userData) {
+        // Real user — never delete. Just clear the flag.
+        clearRegistrationInProgress();
+        return;
+      }
+    } catch (err) {
+      console.error('[RegistrationModal] profile lookup failed', err);
+      // Conservative: if lookup fails, do not delete; signOut so AuthContext
+      // re-evaluates next load.
+      try { await signOutCurrentUser(); } catch { /* swallow */ }
+      clearRegistrationInProgress();
+      return;
+    }
+
     try {
       await deleteCurrentUser();
     } catch (err) {
@@ -109,12 +138,18 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch, onRegistr
         onClick={handleClose}
       />
       
+      {/* reCAPTCHA host — kept at modal level so the DOM node persists across
+          step transitions; Firebase RecaptchaVerifier caches a reference to
+          this node and re-mounting it (when the form re-renders for a new
+          step) would orphan the verifier and break OTP resend. */}
+      <RecaptchaContainer />
+
       {/* Modal Container - Centered for all screen sizes */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-none">
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm h-[600px] modal-enter pointer-events-auto 
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm h-[600px] modal-enter pointer-events-auto
                 my-4 sm:my-8 flex flex-col">
-          
-          <RegistrationHeader 
+
+          <RegistrationHeader
             onBack={handleBackNavigation}
             onClose={handleClose}
           />

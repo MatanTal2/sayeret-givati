@@ -13,6 +13,14 @@ After phone OTP succeeds the Firebase Auth user already exists, but the Firestor
 
 A `registrationCompleteRef` is set on the success step to skip cleanup. The modal also sets/clears the `registrationInProgress` sessionStorage flag (via `@/lib/registrationFlowFlag`) so `AuthContext.onAuthStateChanged` does not race the in-flight registration and sign the user out prematurely.
 
+Cleanup is gated by three checks before issuing `deleteCurrentUser()`:
+
+1. `registrationCompleteRef.current` — never delete after a successful registration.
+2. `isRegistrationInProgress()` — only act on auth users created by the current flow; protects users who reopened the modal while already logged in.
+3. `UserDataService.fetchUserDataByUid(uid)` — if a Firestore profile exists, the user is real and we never delete; this protects previously-registered users who happen to re-confirm OTP onto their existing account.
+
+The reCAPTCHA host (`<RecaptchaContainer />`) is rendered at the modal level, not inside step branches. If it lived inside a step branch, the DOM node would unmount/remount on every step transition and the cached `RecaptchaVerifier` would be left holding a detached node — which is what was breaking OTP resend.
+
 ## Props
 
 | Prop | Type | Required | Description |
