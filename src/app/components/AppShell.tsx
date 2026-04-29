@@ -9,6 +9,7 @@ import QuickActionFab from './QuickActionFab';
 import WelcomeModal from '@/components/onboarding/WelcomeModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { trackRouteVisit } from '@/utils/recentRoutesStorage';
+import { isRegistrationInProgress } from '@/lib/registrationFlowFlag';
 
 interface AppShellProps {
   title: string;
@@ -36,11 +37,12 @@ export default function AppShell({
 
   // Onboarding gate: block UI when authenticated user hasn't filled team yet.
   // Equipment scope queries depend on this field, so we surface a mandatory modal.
-  // Require core profile fields too — guards against the welcome modal appearing
-  // for an orphan auth user that has no Firestore profile (AuthContext will sign
-  // them out, but this prevents a flash on slow listeners).
+  // Require core profile fields AND no in-flight registration — prevents the
+  // welcome modal flashing for an orphan auth user mid-registration, or for a
+  // previously-registered user re-confirming OTP through the registration flow.
   const hasProfile = !!enhancedUser?.firstName && !!enhancedUser?.lastName;
-  const needsOnboarding = !!enhancedUser && hasProfile && !enhancedUser.teamId;
+  const needsOnboarding =
+    !!enhancedUser && hasProfile && !enhancedUser.teamId && !isRegistrationInProgress();
 
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col overflow-x-hidden">
