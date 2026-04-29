@@ -269,6 +269,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
         consent={accountDetailsData?.consent || false}
         onSubmit={handleAccountDetailsSubmit}
         isSubmitting={isSubmittingRegistration}
+        submitError={validationError}
       />
     );
   }

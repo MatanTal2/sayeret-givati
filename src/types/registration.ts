@@ -65,4 +65,5 @@ export interface AccountDetailsStepProps {
   consent?: boolean;
   onSubmit?: (data: AccountDetailsData) => void;
   isSubmitting?: boolean;
+  submitError?: string | null;
 }

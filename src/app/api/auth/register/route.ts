@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { UserService, RegistrationData } from '@/lib/userService';
+import { SecurityUtils } from '@/lib/adminUtils';
+import { getAdminDb } from '@/lib/db/admin';
+import { COLLECTIONS } from '@/lib/db/collections';
+import { FieldValue } from 'firebase-admin/firestore';
+import { UserType } from '@/types/user';
+import { UserRole } from '@/types/equipment';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('📝 Processing user registration request');
-    
-    // Parse request body
     const body = await request.json();
-    
-    // Validate required fields
+
     const requiredFields = [
       'email',
       'firstName',
@@ -17,64 +18,86 @@ export async function POST(request: NextRequest) {
       'birthdate',
       'phoneNumber',
       'militaryPersonalNumber',
-      'firebaseAuthUid'
+      'firebaseAuthUid',
     ];
-
-    const missingFields = requiredFields.filter(field => !body[field]);
+    const missingFields = requiredFields.filter((f) => !body[f]);
     if (missingFields.length > 0) {
       return NextResponse.json(
-        {
-          success: false,
-          error: `Missing required fields: ${missingFields.join(', ')}`
-        },
+        { success: false, error: `Missing required fields: ${missingFields.join(', ')}` },
         { status: 400 }
       );
     }
 
-    // Prepare registration data
-    const registrationData: RegistrationData = {
-      email: body.email.trim(),
-      firstName: body.firstName.trim(),
-      lastName: body.lastName.trim(),
+    const uid: string = String(body.firebaseAuthUid).trim();
+    const militaryIdHash = await SecurityUtils.hashMilitaryId(body.militaryPersonalNumber);
+
+    const db = getAdminDb();
+
+    const personnelRef = db.collection(COLLECTIONS.AUTHORIZED_PERSONNEL).doc(militaryIdHash);
+    const personnelSnap = await personnelRef.get();
+    if (!personnelSnap.exists) {
+      return NextResponse.json(
+        { success: false, error: 'Military ID not found in authorized personnel. Registration not allowed.' },
+        { status: 400 }
+      );
+    }
+    const personnel = personnelSnap.data() ?? {};
+
+    const userRef = db.collection(COLLECTIONS.USERS).doc(uid);
+    const existing = await userRef.get();
+    if (existing.exists) {
+      // Idempotent: already created. Still ensure personnel marked registered.
+      await personnelRef.update({
+        registered: true,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      return NextResponse.json({ success: true, uid, message: 'User profile already exists' });
+    }
+
+    const profile = {
+      uid,
+      email: String(body.email).trim(),
+      firstName: String(body.firstName).trim(),
+      lastName: String(body.lastName).trim(),
       gender: body.gender,
-      birthdate: body.birthdate,
+      birthday: new Date(body.birthdate),
       phoneNumber: body.phoneNumber,
-      militaryPersonalNumber: body.militaryPersonalNumber,
-      firebaseAuthUid: body.firebaseAuthUid.trim(),
+      rank: personnel.rank ?? '',
+      userType: personnel.userType ?? UserType.USER,
+      role: UserRole.SOLDIER,
+      status: 'active',
+      militaryPersonalNumberHash: militaryIdHash,
+      permissions: ['equipment:view'],
       emailVerified: Boolean(body.emailVerified),
+      communicationPreferences: {
+        emailNotifications: true,
+        equipmentTransferAlerts: true,
+        systemUpdates: false,
+        schedulingAlerts: true,
+        emergencyNotifications: true,
+        lastUpdated: FieldValue.serverTimestamp(),
+        updatedBy: uid,
+      },
+      joinDate: FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     };
 
-    console.log('📊 Registration data prepared for:', registrationData.email);
+    await userRef.set(profile);
+    await personnelRef.update({
+      registered: true,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
 
-    // Register the user
-    const result = await UserService.registerUser(registrationData);
-
-    if (result.success) {
-      console.log('✅ User registration successful');
-      return NextResponse.json({
-        success: true,
-        uid: result.uid,
-        message: result.message
-      });
-    } else {
-      console.log('❌ User registration failed:', result.error);
-      return NextResponse.json(
-        { 
-          success: false,
-          error: result.error 
-        },
-        { status: 400 }
-      );
-    }
-
+    return NextResponse.json({ success: true, uid, message: 'User profile created successfully' });
   } catch (error) {
-    console.error('❌ Error in registration API:', error);
-    
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[API] /auth/register failed:', message);
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: 'Internal server error occurred during registration',
-        details: process.env.NODE_ENV === 'development' ? error : undefined
+        error: 'Registration failed. Please try again or contact support.',
+        details: process.env.NODE_ENV === 'development' ? message : undefined,
       },
       { status: 500 }
     );
@@ -86,4 +109,4 @@ export async function GET() {
     { message: 'User registration endpoint. Use POST method.' },
     { status: 405 }
   );
-} 
+}

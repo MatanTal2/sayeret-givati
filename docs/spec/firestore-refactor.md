@@ -75,10 +75,9 @@ Current client-side real-time listeners:
 - Status: ✅ Done
 
 ### Step 5: `users` — Registration + profile updates
-- Server service: `src/lib/db/server/userService.ts`
-- API route: `src/app/api/auth/create-profile/route.ts`
-- Updated: `src/lib/userService.ts` — `registerUser` writes via API route, `markAsRegistered` moved to server
-- `CommunicationService` — no callers, left as-is (will delete when confirmed)
+- API route: `src/app/api/auth/register/route.ts` — uses firebase-admin directly, no inner fetch.
+- `src/lib/userService.ts` — registration logic removed; only `searchUsers` / `getUserProfile` remain.
+- `src/lib/db/server/userService.ts` — `serverUpdateUserProfile` for profile edits via `/api/profile`.
 - Status: ✅ Done
 
 ### Step 6: `equipment` — CRUD + transactions

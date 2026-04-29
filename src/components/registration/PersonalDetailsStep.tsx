@@ -135,12 +135,13 @@ export default function PersonalDetailsStep({
           </div>
 
           {/* Gender + Birthdate side by side to keep the modal compact.
-              min-w-0 on each cell prevents <input type="date"> intrinsic
-              min-content from pushing past 1fr on narrow viewports.
-              Select uses `!` modifiers to defeat the components-layer
-              `input-base` px-4/rounded-xl so it matches the name inputs'
-              px-3/rounded-lg footprint exactly (project's cn() has no
-              tailwind-merge). */}
+              min-w-0 prevents <input type="date">'s intrinsic min-content
+              from overflowing the 1fr column on narrow viewports. Both
+              controls share `h-10 border-2 rounded-lg px-3 text-sm` so the
+              Listbox button and the native date input render identical
+              boxes — the Select's `!` modifiers override `input-base`'s
+              border-1 / rounded-xl / px-4 (project's cn() lacks
+              tailwind-merge, so plain classes lose to @layer rules). */}
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1 min-w-0">
               <Select
@@ -154,7 +155,7 @@ export default function PersonalDetailsStep({
                 placeholder="בחר מין"
                 clearable
                 ariaLabel={TEXT_CONSTANTS.AUTH.GENDER}
-                className="!px-3 !py-2 !rounded-lg !text-sm"
+                className="!h-10 !px-3 !py-0 !rounded-lg !text-sm !border-2 !border-neutral-200"
               />
               {validationErrors.gender && formData.gender && (
                 <p className="text-xs text-danger-600 text-right px-1" data-testid="gender-error">
@@ -168,8 +169,8 @@ export default function PersonalDetailsStep({
                 type="date"
                 value={formData.birthdate}
                 onChange={(e) => handleInputChange('birthdate', e.target.value)}
-                className={`w-full px-3 py-2 border-2 rounded-lg focus:ring-2 outline-none transition-all
-                         text-right text-neutral-800 bg-white text-sm ${
+                className={`block w-full h-10 px-3 py-0 border-2 rounded-lg focus:ring-2 outline-none transition-all
+                         text-right text-neutral-800 bg-white text-sm leading-none ${
                   validationErrors.birthdate && formData.birthdate
                     ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
                     : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
