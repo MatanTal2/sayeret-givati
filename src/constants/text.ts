@@ -83,6 +83,8 @@ export const TEXT_CONSTANTS = {
     PROVIDER_ALREADY_LINKED: 'שיטת ההתחברות כבר משויכת לחשבון.',
     WEAK_PASSWORD: 'הסיסמה חלשה מדי. בחר סיסמה חזקה יותר.',
     INVALID_EMAIL: 'כתובת אימייל לא תקינה.',
+    REQUIRES_RECENT_LOGIN: 'הפעולה דורשת התחברות מחדש. אנא התחבר ונסה שוב.',
+    REGISTRATION_ABANDONED_FALLBACK: 'הרישום בוטל. ייתכן שיהיה צורך לפנות למנהל כדי להסיר את החשבון.',
 
     // Email verification (soft)
     EMAIL_VERIFICATION_BANNER: 'אנא אמת את כתובת האימייל שלך כדי לאפשר איפוס סיסמה.',
@@ -1619,6 +1621,10 @@ export const TEXT_CONSTANTS = {
     SAVING: 'שומר...',
     VALIDATION_TEAM_REQUIRED: 'חובה למלא צוות',
     SAVE_ERROR: 'שמירה נכשלה. נסה שוב.',
+    TEAM_SELECT_PLACEHOLDER: 'בחר צוות',
+    TEAMS_LOADING: 'טוען רשימת צוותים...',
+    TEAMS_EMPTY: 'אין צוותים מוגדרים — פנה למנהל המערכת.',
+    TEAMS_LOAD_ERROR: 'שגיאה בטעינת רשימת צוותים. נסה לרענן.',
     ASSIGNMENT_TITLE: 'הצוות שלי',
     SAVE: 'שמור',
     SAVED: 'נשמר בהצלחה'

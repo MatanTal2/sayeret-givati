@@ -120,6 +120,7 @@ export interface AmmunitionReportRequest {
 export interface SystemConfig {
   id: string;
   ammoNotificationRecipientUserId?: string;
+  teams?: string[];
   updatedAt: Timestamp;
   updatedBy: string;
 }

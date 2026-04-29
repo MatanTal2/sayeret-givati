@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import AppShell from '@/app/components/AppShell';
+import AuthGuard from '@/components/auth/AuthGuard';
 import { downloadTool } from '@/utils/downloadUtils';
 
 const tools = [
@@ -27,6 +28,7 @@ const tools = [
 
 export default function ToolsPage() {
   return (
+    <AuthGuard>
     <AppShell title="🔧 כלים נוספים" subtitle="כלי עזר לשטח — עובדים גם אופליין">
       <div className="max-w-4xl mx-auto w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -66,5 +68,6 @@ export default function ToolsPage() {
         </div>
       </div>
     </AppShell>
+    </AuthGuard>
   );
 }

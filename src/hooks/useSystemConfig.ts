@@ -5,11 +5,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { SystemConfig } from '@/types/ammunition';
 import type { ApiActor } from '@/lib/equipmentService';
 
+export interface SystemConfigSavePayload {
+  ammoNotificationRecipientUserId?: string;
+  teams?: string[];
+}
+
 export interface UseSystemConfigReturn {
   config: SystemConfig | null;
   isLoading: boolean;
   error: string | null;
-  save: (payload: { ammoNotificationRecipientUserId?: string }) => Promise<boolean>;
+  save: (payload: SystemConfigSavePayload) => Promise<boolean>;
   refresh: () => Promise<void>;
 }
 
@@ -56,7 +61,7 @@ export function useSystemConfig(): UseSystemConfigReturn {
   }, [refresh]);
 
   const save = useCallback(
-    async (payload: { ammoNotificationRecipientUserId?: string }) => {
+    async (payload: SystemConfigSavePayload) => {
       const actor = buildActor(enhancedUser);
       if (!actor) {
         setError('דרושה התחברות');

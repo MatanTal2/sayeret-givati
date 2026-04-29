@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import AuthGuard from '@/components/auth/AuthGuard';
 import { useAuth } from '@/contexts/AuthContext';
 import { trackRouteVisit } from '@/utils/recentRoutesStorage';
 
@@ -14,7 +15,7 @@ function handleDownload() {
   document.body.removeChild(link);
 }
 
-export default function ConvoyToolPage() {
+function ConvoyToolContent() {
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
@@ -52,5 +53,13 @@ export default function ConvoyToolPage() {
         title="מארגן שיירות"
       />
     </div>
+  );
+}
+
+export default function ConvoyToolPage() {
+  return (
+    <AuthGuard>
+      <ConvoyToolContent />
+    </AuthGuard>
   );
 }

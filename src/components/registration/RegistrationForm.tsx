@@ -17,6 +17,10 @@ import {
   sendVerificationEmail,
   mapFirebaseAuthError,
 } from '@/lib/firebasePhoneAuth';
+import {
+  setRegistrationInProgress,
+  clearRegistrationInProgress,
+} from '@/lib/registrationFlowFlag';
 import type { ConfirmationResult } from 'firebase/auth';
 
 interface RegistrationFormProps {
@@ -117,6 +121,9 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
         setConfirmationResult(confirmation);
         updateCurrentStep('otp');
       } catch (error) {
+        // Per Firebase docs, reset reCAPTCHA after a failed send so the next
+        // attempt issues a fresh token instead of replaying a consumed one.
+        resetRecaptcha();
         setOtpSendError(mapFirebaseAuthError(error));
       } finally {
         setIsSendingOTP(false);
@@ -129,6 +136,10 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
   };
 
   const handleOTPVerifySuccess = () => {
+    // Auth user now exists; mark registration in progress so AuthContext
+    // does not sign the user out for missing Firestore profile while the
+    // remaining steps run.
+    setRegistrationInProgress();
     updateCurrentStep('personal');
   };
 
@@ -186,6 +197,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       const result = await response.json();
 
       if (response.ok && result.success) {
+        clearRegistrationInProgress();
         updateCurrentStep('success');
       } else {
         setValidationError(result.error || 'Profile creation failed. Please contact support.');

@@ -1,12 +1,13 @@
 /**
  * Management sidebar container component
  */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
 import SidebarHeader from './SidebarHeader';
 import SidebarNavigation from './SidebarNavigation';
 import SidebarFooter from './SidebarFooter';
 import type { ManagementTab } from '@/types/management';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 export interface ManagementSidebarProps {
   isOpen: boolean;
@@ -25,6 +26,15 @@ export default function ManagementSidebar({
   onClose,
   userName,
 }: ManagementSidebarProps) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 1023px)');
+    const update = () => setIsMobile(mql.matches);
+    update();
+    mql.addEventListener('change', update);
+    return () => mql.removeEventListener('change', update);
+  }, []);
+  useScrollLock(isOpen && isMobile);
   return (
     <div className={cn(
       'fixed inset-y-0 right-0 z-50 w-80 bg-white shadow-2xl transform transition-all duration-500 ease-out',
