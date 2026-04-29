@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import AuthGuard from '@/components/auth/AuthGuard';
 import { useAuth } from '@/contexts/AuthContext';
 import { trackRouteVisit } from '@/utils/recentRoutesStorage';
 
@@ -14,7 +15,7 @@ function handleDownload() {
   document.body.removeChild(link);
 }
 
-export default function LogisticsToolPage() {
+function LogisticsToolContent() {
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
@@ -52,5 +53,13 @@ export default function LogisticsToolPage() {
         title="דרישות מל״מ"
       />
     </div>
+  );
+}
+
+export default function LogisticsToolPage() {
+  return (
+    <AuthGuard>
+      <LogisticsToolContent />
+    </AuthGuard>
   );
 }

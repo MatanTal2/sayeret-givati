@@ -11,6 +11,7 @@ import BulkUpload from './BulkUpload';
 import ViewPersonnel from './ViewPersonnel';
 import UpdatePersonnel from './UpdatePersonnel';
 import SystemStats from './SystemStats';
+import SystemConfigPanel from './SystemConfigPanel';
 import { cn } from '@/lib/cn';
 
 interface AdminDashboardProps {
@@ -71,6 +72,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 {tab.id === 'view-personnel' && <ViewPersonnel />}
                 {tab.id === 'update-personnel' && <UpdatePersonnel />}
                 {tab.id === 'system-stats' && <SystemStats />}
+                {tab.id === 'system-config' && <SystemConfigPanel />}
               </div>
             );
           })}

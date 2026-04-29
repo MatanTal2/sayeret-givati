@@ -1,8 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import RegistrationHeader from './RegistrationHeader';
 import RegistrationForm from './RegistrationForm';
 import RegistrationFooter from './RegistrationFooter';
 import RegistrationStepDots, { RegistrationStep } from './RegistrationStepDots';
+import { auth } from '@/lib/firebase';
+import {
+  deleteCurrentUser,
+  signOutCurrentUser,
+  RequiresRecentLoginError,
+} from '@/lib/firebasePhoneAuth';
+import { clearRegistrationInProgress } from '@/lib/registrationFlowFlag';
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -14,21 +21,59 @@ interface RegistrationModalProps {
 export default function RegistrationModal({ isOpen, onClose, onSwitch, onRegistrationSuccess }: RegistrationModalProps) {
   const [personalNumber, setPersonalNumber] = useState('');
   const [currentStep, setCurrentStep] = useState<RegistrationStep>('personal-number');
+  const registrationCompleteRef = useRef(false);
+
+  // Cleanup orphan Firebase Auth user when the user abandons the flow.
+  // Same-session abandon (immediate close after OTP) deletes the user. If
+  // Firebase rejects delete with requires-recent-login (>5 min after OTP),
+  // we fall back to signOut — AuthContext will refuse to mark the orphan
+  // as authenticated on the next page load.
+  const cleanupOrphanAuthUser = async () => {
+    if (registrationCompleteRef.current) return;
+    if (!auth.currentUser) return;
+    try {
+      await deleteCurrentUser();
+    } catch (err) {
+      if (err instanceof RequiresRecentLoginError) {
+        try { await signOutCurrentUser(); } catch { /* swallow */ }
+      } else {
+        console.error('[RegistrationModal] cleanup failed', err);
+        try { await signOutCurrentUser(); } catch { /* swallow */ }
+      }
+    } finally {
+      clearRegistrationInProgress();
+    }
+  };
+
+  // Unmount cleanup — covers route-change abandon. Intentional empty deps:
+  // we only want this to run on unmount; the helper closure is defined inline
+  // and the cleanup logic is idempotent.
+  useEffect(() => {
+    return () => {
+      void cleanupOrphanAuthUser();
+    };
+  }, []);
 
   if (!isOpen) return null;
 
   const handleClose = () => {
-    // Reset form state when closing
+    void cleanupOrphanAuthUser();
     setPersonalNumber('');
     setCurrentStep('personal-number');
     onClose();
   };
 
   const handleSwitchToLogin = () => {
-    // Reset form state when switching
+    void cleanupOrphanAuthUser();
     setPersonalNumber('');
     setCurrentStep('personal-number');
     onSwitch();
+  };
+
+  const handleRegistrationComplete = () => {
+    registrationCompleteRef.current = true;
+    clearRegistrationInProgress();
+    onRegistrationSuccess?.();
   };
 
   const handleStepChange = (step: RegistrationStep) => {
@@ -79,13 +124,13 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch, onRegistr
             <RegistrationStepDots currentStep={currentStep} />
           </div>
           
-          <RegistrationForm 
+          <RegistrationForm
             personalNumber={personalNumber}
             setPersonalNumber={setPersonalNumber}
             onSwitchToLogin={handleSwitchToLogin}
             onStepChange={handleStepChange}
             currentStep={currentStep}
-            onRegistrationSuccess={onRegistrationSuccess}
+            onRegistrationSuccess={handleRegistrationComplete}
           />
           
           <RegistrationFooter showRegistrationNote={currentStep === 'personal-number'} />

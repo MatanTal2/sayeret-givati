@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { updateUserProfile } from '@/lib/userProfileService';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
+import { useScrollLock } from '@/hooks/useScrollLock';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 
 /**
  * Mandatory onboarding modal. Surfaces whenever an authenticated user is missing
@@ -14,8 +16,12 @@ import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
  * Rendered by AppShell conditionally on `enhancedUser && !teamId`.
  */
 export default function WelcomeModal() {
+  useScrollLock(true);
   const { enhancedUser, refreshEnhancedUser } = useAuth();
+  const { config, isLoading: teamsLoading, error: teamsError } = useSystemConfig();
   const [teamId, setTeamId] = useState(enhancedUser?.teamId ?? '');
+  const teams = config?.teams ?? [];
+  const teamsAvailable = teams.length > 0;
   // Drop legacy blob: URLs from the old mock — they error on render and would re-persist on save.
   const initialProfileImage =
     enhancedUser?.profileImage && /^https?:\/\//i.test(enhancedUser.profileImage)
@@ -76,18 +82,31 @@ export default function WelcomeModal() {
             <label htmlFor="welcome-team" className="block text-sm font-medium text-neutral-700 mb-1">
               {TEXT_CONSTANTS.ONBOARDING.TEAM_LABEL}
             </label>
-            <input
+            <select
               id="welcome-team"
-              type="text"
               value={teamId}
               onChange={(e) => setTeamId(e.target.value)}
-              placeholder={TEXT_CONSTANTS.ONBOARDING.TEAM_PLACEHOLDER}
               className={`input-base ${errors.teamId ? 'border-danger-500' : ''}`}
-              autoComplete="off"
+              disabled={teamsLoading || !teamsAvailable}
               autoFocus
-            />
+            >
+              <option value="">
+                {teamsLoading
+                  ? TEXT_CONSTANTS.ONBOARDING.TEAMS_LOADING
+                  : TEXT_CONSTANTS.ONBOARDING.TEAM_SELECT_PLACEHOLDER}
+              </option>
+              {teams.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
             <p className="text-xs text-neutral-500 mt-1">{TEXT_CONSTANTS.ONBOARDING.TEAM_HELP}</p>
             {errors.teamId && <p className="text-danger-600 text-xs mt-1">{errors.teamId}</p>}
+            {!teamsLoading && !teamsAvailable && !teamsError && (
+              <p className="text-warning-700 text-xs mt-1">{TEXT_CONSTANTS.ONBOARDING.TEAMS_EMPTY}</p>
+            )}
+            {teamsError && (
+              <p className="text-danger-600 text-xs mt-1">{TEXT_CONSTANTS.ONBOARDING.TEAMS_LOAD_ERROR}</p>
+            )}
           </div>
 
           {errors.submit && (
@@ -96,7 +115,11 @@ export default function WelcomeModal() {
             </div>
           )}
 
-          <button type="submit" disabled={saving} className="btn-primary w-full">
+          <button
+            type="submit"
+            disabled={saving || teamsLoading || !teamsAvailable || !teamId}
+            className="btn-primary w-full"
+          >
             {saving ? TEXT_CONSTANTS.ONBOARDING.SAVING : TEXT_CONSTANTS.ONBOARDING.SUBMIT}
           </button>
         </form>

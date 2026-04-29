@@ -105,6 +105,11 @@ export const ADMIN_TABS = [
     id: 'system-stats' as const,
     name: '📊 סטטיסטיקות מערכת',
     description: 'סקירה של נתוני המערכת ומצבה.'
+  },
+  {
+    id: 'system-config' as const,
+    name: '⚙️ הגדרות מערכת',
+    description: 'נהל ערכים גלובליים — רשימת צוותים, נמען התראות תחמושת ועוד.'
   }
 ] as const;
 

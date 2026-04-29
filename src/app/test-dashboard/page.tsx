@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Play, CheckCircle, XCircle, Clock, RotateCcw } from 'lucide-react';
+import AuthGuard from '@/components/auth/AuthGuard';
 import Button from '@/components/ui/Button';
 import { initializeEquipmentTypes, checkEquipmentTypesInitialized, getEquipmentTypeStats } from '@/lib/equipmentInitializer';
 import { EquipmentService } from '@/lib/equipmentService';
@@ -48,7 +49,7 @@ interface TestSubCategory {
   tests: TestItem[];
 }
 
-export default function TestDashboardPage() {
+function TestDashboardContent() {
   const [testResults, setTestResults] = useState<Record<string, TestResult>>({});
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['database', 'equipment']));
   const [expandedSubCategories, setExpandedSubCategories] = useState<Set<string>>(new Set());
@@ -775,5 +776,13 @@ export default function TestDashboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function TestDashboardPage() {
+  return (
+    <AuthGuard>
+      <TestDashboardContent />
+    </AuthGuard>
   );
 }

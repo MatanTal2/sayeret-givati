@@ -36,7 +36,11 @@ export default function AppShell({
 
   // Onboarding gate: block UI when authenticated user hasn't filled team yet.
   // Equipment scope queries depend on this field, so we surface a mandatory modal.
-  const needsOnboarding = !!enhancedUser && !enhancedUser.teamId;
+  // Require core profile fields too — guards against the welcome modal appearing
+  // for an orphan auth user that has no Firestore profile (AuthContext will sign
+  // them out, but this prevents a flash on slow listeners).
+  const hasProfile = !!enhancedUser?.firstName && !!enhancedUser?.lastName;
+  const needsOnboarding = !!enhancedUser && hasProfile && !enhancedUser.teamId;
 
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col overflow-x-hidden">

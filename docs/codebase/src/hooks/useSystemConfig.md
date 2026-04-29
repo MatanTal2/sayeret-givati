@@ -15,8 +15,13 @@ helper for admin updates. Single source for the System Config tab.
   config: SystemConfig | null;
   isLoading: boolean;
   error: string | null;
-  save: (payload: { ammoNotificationRecipientUserId?: string }) => Promise<boolean>;
+  save: (payload: SystemConfigSavePayload) => Promise<boolean>;
   refresh: () => Promise<void>;
+}
+
+interface SystemConfigSavePayload {
+  ammoNotificationRecipientUserId?: string;
+  teams?: string[];
 }
 ```
 
@@ -36,6 +41,13 @@ helper for admin updates. Single source for the System Config tab.
 
 ## Consumers
 
-- `SystemConfigTab.tsx` (only consumer for now).
+- `SystemConfigPanel.tsx` (admin tab) — manages `teams[]`.
+- `WelcomeModal.tsx` — reads `teams[]` to populate the onboarding dropdown.
 - Phase 4 ammunition report submit will read the recipient on the server, not
   via this hook.
+
+## Fields on `systemConfig/main`
+
+- `ammoNotificationRecipientUserId: string` — recipient for ammunition alerts.
+- `teams: string[]` — predefined team names. Source of the dropdown shown to
+  users during onboarding (WelcomeModal). Edited in admin → System Config tab.

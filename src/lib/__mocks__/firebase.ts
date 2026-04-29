@@ -1,5 +1,12 @@
 export const db = {};
-export const auth = { currentUser: null };
+// Per Firebase phone-auth docs, set appVerificationDisabledForTesting on the
+// auth settings object so component tests can simulate OTP without invoking
+// real reCAPTCHA. Fictional test phone numbers configured in Firebase Console
+// will resolve without sending an SMS.
+export const auth = {
+  currentUser: null,
+  settings: { appVerificationDisabledForTesting: true },
+};
 export const app = {};
 
 // firebase/app

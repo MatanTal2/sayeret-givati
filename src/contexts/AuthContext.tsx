@@ -7,6 +7,7 @@ import { sendVerificationEmail as sendVerificationEmailHelper } from '@/lib/fire
 import { ADMIN_CONFIG, ADMIN_MESSAGES } from '@/constants/admin';
 import { UserDataService } from '@/lib/userDataService';
 import { EnhancedAuthUser, UserType } from '@/types/user';
+import { isRegistrationInProgress } from '@/lib/registrationFlowFlag';
 
 // Types
 export interface AuthUser {
@@ -84,6 +85,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.log('🔍 Fetching user data from Firestore...');
           const userDataResult = await UserDataService.fetchUserDataByUid(firebaseUser.uid);
           
+          if (!userDataResult.success || !userDataResult.userData) {
+            // No Firestore profile: this user is either an admin without a
+            // profile yet, or an orphan from an abandoned registration. We
+            // do NOT trust Firebase Auth alone — sign them out unless they
+            // are actively progressing through the registration flow.
+            if (!isRegistrationInProgress()) {
+              console.warn('[AuthContext] No Firestore profile; signing out orphan auth user');
+              try { await signOut(auth); } catch (signOutErr) { console.error(signOutErr); }
+              setUser(null);
+              setEnhancedUser(null);
+              setIsLoading(false);
+              return;
+            }
+          }
+
           if (userDataResult.success && userDataResult.userData) {
             const firestoreData = userDataResult.userData;
             userType = firestoreData.userType;

@@ -1,6 +1,15 @@
 
 # bugs need to be fix UI/UX
 
+> **Note (2026-04-29):** Incomplete-registration leak fixed on `fix/incomplete-registration-leak`. Bugs addressed in one branch:
+> - **Orphan Firebase Auth user on abandon** — `RegistrationModal` now calls `deleteCurrentUser()` on close/back/unmount; falls back to `signOutCurrentUser()` if `auth/requires-recent-login`. New helpers in `src/lib/firebasePhoneAuth.ts`, sessionStorage flag in `src/lib/registrationFlowFlag.ts`.
+> - **AuthContext authenticated orphans** — listener now signs out a Firebase user that has no Firestore profile unless `registrationInProgress` is set.
+> - **Welcome popup on partial profile** — `AppShell.needsOnboarding` now also requires `firstName` + `lastName`.
+> - **Unprotected routes** — `/tools`, `/tools/convoy`, `/tools/logistics`, `/test-dashboard` now wrapped in `AuthGuard`.
+> - **Team text input** — replaced with dropdown sourced from `systemConfig/main.teams`. Admin can manage the list under admin → System Config tab. Empty list shows Hebrew "no teams configured" error.
+> - **Background scrolls behind overlays** — new `useScrollLock` hook applied to `WelcomeModal` and (mobile only) `ManagementSidebar`.
+> - **Firebase phone-auth alignment** — reCAPTCHA now reset on send-failure path; `appVerificationDisabledForTesting` enabled in the Jest mock.
+
 > **Note (2026-04-28):** `usePersonnelManagement` mutations (`addPersonnel`, `updatePersonnel`, `deletePersonnel`) used to update the localStorage `PersonnelCache` only — the React `personnel` state stayed stale, so admin UI rows did not appear/update/disappear until a full re-fetch. Now each success branch also calls `setPersonnel(...)` so the change is reflected in-place without a DB round-trip.
 >
 > The 44s first-call DELETE seen in `next dev` is dev-only cold start (Next.js compiling the API route + firebase-admin gRPC handshake on first invocation). Subsequent calls are 100–200ms once the singleton in `src/lib/db/admin.ts` is warm. Production (Vercel) reuses the SDK instance across requests; not an action item.

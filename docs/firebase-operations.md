@@ -33,7 +33,7 @@ All Firestore operations in the codebase, organized by collection.
 | `ammunitionInventory` | `COLLECTIONS.AMMUNITION_INVENTORY = 'ammunitionInventory'` | `src/lib/db/collections.ts` (Phase 3) |
 | `ammunitionReports` | `COLLECTIONS.AMMUNITION_REPORTS = 'ammunitionReports'` | `src/lib/db/collections.ts` (Phase 4 — server: `src/lib/db/server/ammunitionReportsService.ts`; client: `src/lib/ammunition/reportsService.ts`) |
 | `ammunitionReportRequests` | `COLLECTIONS.AMMUNITION_REPORT_REQUESTS = 'ammunitionReportRequests'` | `src/lib/db/collections.ts` (Phase 6 — server: `src/lib/db/server/ammunitionReportRequestService.ts`) |
-| `systemConfig` | `COLLECTIONS.SYSTEM_CONFIG = 'systemConfig'` | `src/lib/db/collections.ts` (Phase 1 — `ammoNotificationRecipientUserId`) |
+| `systemConfig` | `COLLECTIONS.SYSTEM_CONFIG = 'systemConfig'` | `src/lib/db/collections.ts` — single doc `main`. Fields: `ammoNotificationRecipientUserId` (Phase 1 ammunition), `teams: string[]` (registration team dropdown source — admin tab editable). |
 
 ---
 

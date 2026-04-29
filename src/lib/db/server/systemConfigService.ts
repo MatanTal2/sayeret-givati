@@ -13,11 +13,12 @@ const MAIN_DOC_ID = 'main';
 
 export type SystemConfigUpdatableFields = Pick<
   SystemConfig,
-  'ammoNotificationRecipientUserId'
+  'ammoNotificationRecipientUserId' | 'teams'
 >;
 
 export interface SystemConfigPayload {
   ammoNotificationRecipientUserId?: string;
+  teams?: string[];
 }
 
 export async function serverGetSystemConfig(): Promise<SystemConfig | null> {
@@ -49,6 +50,24 @@ export function validateSystemConfigPayload(payload: unknown): SystemConfigPaylo
       throw new Error('ammoNotificationRecipientUserId must be a string');
     }
   }
+
+  if ('teams' in p) {
+    const v = p.teams;
+    if (!Array.isArray(v)) {
+      throw new Error('teams must be an array of strings');
+    }
+    const normalized: string[] = [];
+    for (const item of v) {
+      if (typeof item !== 'string') {
+        throw new Error('teams entries must be strings');
+      }
+      const trimmed = item.trim();
+      if (!trimmed) continue;
+      if (!normalized.includes(trimmed)) normalized.push(trimmed);
+    }
+    out.teams = normalized;
+  }
+
   return out;
 }
 
