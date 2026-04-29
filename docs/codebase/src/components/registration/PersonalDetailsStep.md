@@ -1,7 +1,7 @@
 # PersonalDetailsStep.tsx
 
 **File:** `src/components/registration/PersonalDetailsStep.tsx`
-**Lines:** 212
+**Lines:** 215
 **Status:** Active
 
 ## Purpose
@@ -10,7 +10,11 @@ Registration step 3 (after OTP). Collects first name, last name, gender, and bir
 
 ## Layout notes
 
-Gender (Headless UI Listbox) and birthdate (`<input type="date">`) sit side-by-side in a 2-col grid. Both controls are pinned to `h-10 border-2 rounded-lg px-3 text-sm` so the Listbox button and the native date input render identical boxes — the Select uses `!`-prefixed Tailwind classes to override the `input-base` `@layer components` defaults (border-1, rounded-xl, px-4) since `cn()` is not tailwind-merge.
+All four inputs (first name, last name, gender, birthdate) share `h-10 border-2 rounded-lg px-3 text-sm` for a uniform row height across the form.
+
+Gender (Headless UI Listbox) and birthdate (`<input type="date">`) sit side-by-side in a 2-col grid (`gap-3`). The Select uses `!`-prefixed Tailwind classes to override the `input-base` `@layer components` defaults (border-1, rounded-xl, px-4) since `cn()` is not tailwind-merge.
+
+The date input has `dir="ltr"` + `text-left` to opt out of the page-wide RTL inheritance — Chrome's native date widget reverses segment order under RTL and wraps "DD MMM YYYY" into a broken multi-line layout. LTR keeps the segments in the user's locale order while the rest of the form remains RTL.
 
 ## Props
 

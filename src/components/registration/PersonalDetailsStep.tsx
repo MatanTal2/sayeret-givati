@@ -92,7 +92,7 @@ export default function PersonalDetailsStep({
               type="text"
               value={formData.firstName}
               onChange={(e) => handleInputChange('firstName', e.target.value)}
-              className={`w-full px-3 py-2 border-2 rounded-lg focus:ring-2 outline-none transition-all
+              className={`w-full h-10 px-3 py-0 border-2 rounded-lg focus:ring-2 outline-none transition-all
                        text-right text-neutral-800 bg-white text-sm ${
                 validationErrors.firstName && formData.firstName
                   ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
@@ -116,7 +116,7 @@ export default function PersonalDetailsStep({
               type="text"
               value={formData.lastName}
               onChange={(e) => handleInputChange('lastName', e.target.value)}
-              className={`w-full px-3 py-2 border-2 rounded-lg focus:ring-2 outline-none transition-all
+              className={`w-full h-10 px-3 py-0 border-2 rounded-lg focus:ring-2 outline-none transition-all
                        text-right text-neutral-800 bg-white text-sm ${
                 validationErrors.lastName && formData.lastName
                   ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
@@ -141,8 +141,11 @@ export default function PersonalDetailsStep({
               Listbox button and the native date input render identical
               boxes — the Select's `!` modifiers override `input-base`'s
               border-1 / rounded-xl / px-4 (project's cn() lacks
-              tailwind-merge, so plain classes lose to @layer rules). */}
-          <div className="grid grid-cols-2 gap-2">
+              tailwind-merge, so plain classes lose to @layer rules).
+              dir="ltr" on the date input forces segment order — without it
+              the inherited RTL flips MM/DD/YYYY into a wrapped, broken
+              layout in Chrome. */}
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1 min-w-0">
               <Select
                 value={formData.gender || null}
@@ -167,10 +170,11 @@ export default function PersonalDetailsStep({
             <div className="space-y-1 min-w-0">
               <input
                 type="date"
+                dir="ltr"
                 value={formData.birthdate}
                 onChange={(e) => handleInputChange('birthdate', e.target.value)}
                 className={`block w-full h-10 px-3 py-0 border-2 rounded-lg focus:ring-2 outline-none transition-all
-                         text-right text-neutral-800 bg-white text-sm leading-none ${
+                         text-left text-neutral-800 bg-white text-sm leading-none ${
                   validationErrors.birthdate && formData.birthdate
                     ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
                     : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { updateUserProfile } from '@/lib/userProfileService';
 import { TEXT_CONSTANTS } from '@/constants/text';
-import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 
@@ -22,12 +22,6 @@ export default function WelcomeModal() {
   const [teamId, setTeamId] = useState(enhancedUser?.teamId ?? '');
   const teams = config?.teams ?? [];
   const teamsAvailable = teams.length > 0;
-  // Drop legacy blob: URLs from the old mock — they error on render and would re-persist on save.
-  const initialProfileImage =
-    enhancedUser?.profileImage && /^https?:\/\//i.test(enhancedUser.profileImage)
-      ? enhancedUser.profileImage
-      : undefined;
-  const [profileImage, setProfileImage] = useState<string | undefined>(initialProfileImage);
   const [errors, setErrors] = useState<{ teamId?: string; submit?: string }>({});
   const [saving, setSaving] = useState(false);
 
@@ -46,7 +40,6 @@ export default function WelcomeModal() {
     try {
       await updateUserProfile(enhancedUser.uid, {
         teamId: teamId.trim(),
-        profileImage,
       });
       await refreshEnhancedUser();
       // refreshEnhancedUser populates teamId on enhancedUser; modal auto-unmounts
@@ -61,14 +54,14 @@ export default function WelcomeModal() {
   return (
     <div className="modal-overlay flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8">
-        <div className="flex justify-center mb-4">
-          <ProfileImageUpload
-            userId={enhancedUser.uid}
-            currentImageUrl={profileImage}
-            onImageUpdate={setProfileImage}
-            size="medium"
-          />
-        </div>
+        <Image
+          src="/platon-d-logo.png"
+          alt="Platon D"
+          width={2944}
+          height={1440}
+          priority
+          className="h-20 w-auto mx-auto mb-4"
+        />
         <h1 className="text-2xl font-bold text-neutral-900 text-center mb-2">
           {TEXT_CONSTANTS.ONBOARDING.WELCOME_TITLE}
           {enhancedUser.firstName ? ` ${enhancedUser.firstName}` : ''}
