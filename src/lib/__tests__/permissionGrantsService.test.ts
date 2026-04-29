@@ -31,6 +31,7 @@ const mockUpdate = jest.fn(async (id: string, patch: Record<string, unknown>) =>
   if (!cur) throw new Error('Not found');
   store.set(id, { id, data: { ...cur.data, ...patch } });
 });
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockNotify = jest.fn(async (_data?: unknown) => 'notif-id');
 
 jest.mock('@/lib/db/server/notificationService', () => ({
