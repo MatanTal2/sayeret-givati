@@ -38,9 +38,9 @@ Military equipment management system for Sayeret Givati. Hebrew RTL throughout (
 
 **Target (in progress on `feature/refactor_firestorereadAndWrite`):** Hybrid architecture — writes via `firebase-admin` Server Actions, reads via client SDK. Migration plan and step-by-step order in `docs/spec/firestore-refactor.md`.
 
-**Infra blocker:** Service account key points to wrong project (`sayeret-givati` vs `sayeret-givati-1983`). Admin SDK is non-functional until a new key is generated from Firebase console.
+Service account key targets `sayeret-givati-1983` (matches `NEXT_PUBLIC_FIREBASE_PROJECT_ID`). Admin SDK is functional.
 
-Firestore security rules are tightened locally but **not yet deployed** — run `firebase deploy --only firestore:rules` to activate them in production.
+Firestore security rules in `firebase/firestore.rules` are deployed and in sync with the production project — verify with `firebase deploy --only firestore:rules` (no-op if already in sync).
 
 ### Directory layout
 

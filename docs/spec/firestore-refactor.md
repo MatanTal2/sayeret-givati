@@ -42,7 +42,7 @@ Current client-side real-time listeners:
 ## Migration Order (step-by-step, no regressions)
 
 ### Step 0: Infrastructure — Wire up `firebase-admin`
-- **Blocker:** Service account key points to wrong project (`sayeret-givati` vs `sayeret-givati-1983`). Generate new key from Firebase console.
+- Service account key in `GOOGLE_SERVICE_ACCOUNT_JSON` targets `sayeret-givati-1983`, matches client config. Admin SDK functional.
 - Create `src/lib/db/admin.ts` — initialize admin app, export `adminDb`, `adminAuth`
 - Create `src/lib/db/core.ts` — generic typed helpers (`getDocById<T>`, `createDoc<T>`, `updateDoc<T>`) for both admin and client
 - Create `src/lib/db/collections.ts` — central collection name constants (consolidates scattered constants flagged in `docs/duplications.md`)
