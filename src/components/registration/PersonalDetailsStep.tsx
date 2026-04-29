@@ -134,53 +134,50 @@ export default function PersonalDetailsStep({
             )}
           </div>
 
-          {/* Gender and Birthdate - Same Row */}
-          <div className="flex gap-4">
-            {/* Gender Dropdown - No Label */}
-            <div className="flex-1 space-y-1">
-              <Select
-                value={formData.gender || null}
-                onChange={(v) => handleInputChange('gender', v ?? '')}
-                options={[
-                  { value: 'male', label: TEXT_CONSTANTS.AUTH.GENDER_MALE },
-                  { value: 'female', label: TEXT_CONSTANTS.AUTH.GENDER_FEMALE },
-                  { value: 'other', label: TEXT_CONSTANTS.AUTH.GENDER_OTHER },
-                ]}
-                placeholder="בחר מין"
-                clearable
-                ariaLabel={TEXT_CONSTANTS.AUTH.GENDER}
-              />
-              
-              {/* Gender Error Message */}
-              {validationErrors.gender && formData.gender && (
-                <p className="text-xs text-danger-600 text-right px-1" data-testid="gender-error">
-                  {validationErrors.gender}
-                </p>
-              )}
-            </div>
+          {/* Gender Dropdown - full width */}
+          <div className="space-y-1">
+            <Select
+              value={formData.gender || null}
+              onChange={(v) => handleInputChange('gender', v ?? '')}
+              options={[
+                { value: 'male', label: TEXT_CONSTANTS.AUTH.GENDER_MALE },
+                { value: 'female', label: TEXT_CONSTANTS.AUTH.GENDER_FEMALE },
+                { value: 'other', label: TEXT_CONSTANTS.AUTH.GENDER_OTHER },
+              ]}
+              placeholder="בחר מין"
+              clearable
+              ariaLabel={TEXT_CONSTANTS.AUTH.GENDER}
+            />
 
-            {/* Birthdate Picker - No Label */}
-            <div className="flex-1 space-y-1">
-              <input
-                type="date"
-                value={formData.birthdate}
-                onChange={(e) => handleInputChange('birthdate', e.target.value)}
-                className={`w-full px-3 py-2 border-2 rounded-lg focus:ring-2 outline-none transition-all
-                         text-right text-neutral-800 bg-white text-sm ${
-                  validationErrors.birthdate && formData.birthdate
-                    ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
-                    : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
-                }`}
-                data-testid="birthdate-input"
-              />
-              
-              {/* Birthdate Error Message */}
-              {validationErrors.birthdate && formData.birthdate && (
-                <p className="text-xs text-danger-600 text-right px-1" data-testid="birthdate-error">
-                  {validationErrors.birthdate}
-                </p>
-              )}
-            </div>
+            {/* Gender Error Message */}
+            {validationErrors.gender && formData.gender && (
+              <p className="text-xs text-danger-600 text-right px-1" data-testid="gender-error">
+                {validationErrors.gender}
+              </p>
+            )}
+          </div>
+
+          {/* Birthdate Picker - full width */}
+          <div className="space-y-1">
+            <input
+              type="date"
+              value={formData.birthdate}
+              onChange={(e) => handleInputChange('birthdate', e.target.value)}
+              className={`w-full px-3 py-2 border-2 rounded-lg focus:ring-2 outline-none transition-all
+                       text-right text-neutral-800 bg-white text-sm ${
+                validationErrors.birthdate && formData.birthdate
+                  ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
+                  : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
+              }`}
+              data-testid="birthdate-input"
+            />
+
+            {/* Birthdate Error Message */}
+            {validationErrors.birthdate && formData.birthdate && (
+              <p className="text-xs text-danger-600 text-right px-1" data-testid="birthdate-error">
+                {validationErrors.birthdate}
+              </p>
+            )}
           </div>
 
           {/* Continue Button */}
