@@ -30,9 +30,10 @@ interface RegistrationFormProps {
   onStepChange?: (step: 'personal-number' | 'otp' | 'personal' | 'account' | 'success') => void;
   currentStep: 'personal-number' | 'otp' | 'personal' | 'account' | 'success';
   onRegistrationSuccess?: () => void;
+  onSubmittingChange?: (submitting: boolean) => void;
 }
 
-export default function RegistrationForm({ personalNumber, setPersonalNumber, onSwitchToLogin, onStepChange, currentStep, onRegistrationSuccess }: RegistrationFormProps) {
+export default function RegistrationForm({ personalNumber, setPersonalNumber, onSwitchToLogin, onStepChange, currentStep, onRegistrationSuccess, onSubmittingChange }: RegistrationFormProps) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -82,8 +83,19 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
   };
 
   const handleResendOtp = async () => {
-    const result = await sendOtpToPhone(userPhoneNumber);
-    setConfirmationResult(result);
+    setOtpSendError(null);
+    setConfirmationResult(null);
+    setIsSendingOTP(true);
+    try {
+      const result = await sendOtpToPhone(userPhoneNumber);
+      setConfirmationResult(result);
+    } catch (error) {
+      resetRecaptcha();
+      setOtpSendError(mapFirebaseAuthError(error));
+      throw error;
+    } finally {
+      setIsSendingOTP(false);
+    }
   };
 
   const handleVerifyPersonalNumber = async () => {
@@ -115,11 +127,17 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       setUserFirstName(data.personnel.firstName);
       setUserLastName(data.personnel.lastName);
 
+      // Transition to the OTP screen IMMEDIATELY so the user sees the
+      // code-entry UI with a "sending..." indicator instead of waiting on
+      // the personal-number screen until the SMS request resolves.
+      setConfirmationResult(null);
+      setOtpSendError(null);
       setIsSendingOTP(true);
+      updateCurrentStep('otp');
+
       try {
         const confirmation = await sendOtpToPhone(data.personnel.phoneNumber);
         setConfirmationResult(confirmation);
-        updateCurrentStep('otp');
       } catch (error) {
         // Per Firebase docs, reset reCAPTCHA after a failed send so the next
         // attempt issues a fresh token instead of replaying a consumed one.
@@ -152,6 +170,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
     if (isSubmittingRegistration) return;
 
     setIsSubmittingRegistration(true);
+    onSubmittingChange?.(true);
     setAccountDetailsData(data);
     setValidationError(null);
 
@@ -165,7 +184,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
     try {
       const phoneAuthUser = auth.currentUser;
       if (!phoneAuthUser) {
-        setValidationError(TEXT_CONSTANTS.AUTH.OTP_INTERNAL_ERROR);
+        setValidationError(TEXT_CONSTANTS.AUTH.OTP_SESSION_EXPIRED);
         return;
       }
 
@@ -206,6 +225,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
       setValidationError(TEXT_CONSTANTS.REGISTRATION_COMPONENTS.CONNECTION_ERROR);
     } finally {
       setIsSubmittingRegistration(false);
+      onSubmittingChange?.(false);
     }
   };
 
@@ -221,6 +241,8 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
           confirmationResult={confirmationResult}
           onVerifySuccess={handleOTPVerifySuccess}
           onResendOtp={handleResendOtp}
+          isSending={isSendingOTP}
+          sendError={otpSendError}
         />
         <RecaptchaAttribution />
       </>

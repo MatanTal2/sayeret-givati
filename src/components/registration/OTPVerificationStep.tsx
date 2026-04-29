@@ -3,12 +3,15 @@ import type { ConfirmationResult } from 'firebase/auth';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { validateOTP, maskPhoneNumber } from '@/utils/validationUtils';
 import { confirmPhoneOtp, mapFirebaseAuthError } from '@/lib/firebasePhoneAuth';
+import { setRegistrationInProgress } from '@/lib/registrationFlowFlag';
 
 interface OTPVerificationStepProps {
   phoneNumber: string;
   confirmationResult: ConfirmationResult | null;
   onVerifySuccess?: () => void;
   onResendOtp?: () => Promise<void>;
+  isSending?: boolean;
+  sendError?: string | null;
 }
 
 export default function OTPVerificationStep({
@@ -16,7 +19,17 @@ export default function OTPVerificationStep({
   confirmationResult,
   onVerifySuccess,
   onResendOtp,
+  isSending = false,
+  sendError = null,
 }: OTPVerificationStepProps) {
+  // Mark registration as in-flight the moment the OTP step mounts. This must
+  // happen BEFORE confirmation.confirm() can fire, because Firebase triggers
+  // onAuthStateChanged synchronously around its resolve. Without the flag set,
+  // AuthContext would see "no Firestore profile" and sign the user out before
+  // the flow reaches the personal/account steps.
+  useEffect(() => {
+    setRegistrationInProgress();
+  }, []);
   const [otpCode, setOtpCode] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(false);
@@ -28,6 +41,7 @@ export default function OTPVerificationStep({
 
   const handleVerifyOTP = useCallback(async () => {
     if (!isValid || isVerifying || !otpCode || otpCode.length !== 6) return;
+    if (isSending) return;
     if (!confirmationResult) {
       setBackendError(TEXT_CONSTANTS.AUTH.OTP_INTERNAL_ERROR);
       return;
@@ -46,7 +60,7 @@ export default function OTPVerificationStep({
     } finally {
       setIsVerifying(false);
     }
-  }, [confirmationResult, otpCode, isValid, isVerifying, onVerifySuccess]);
+  }, [confirmationResult, otpCode, isValid, isVerifying, isSending, onVerifySuccess]);
 
   useEffect(() => {
     const validation = validateOTP(otpCode);
@@ -55,10 +69,10 @@ export default function OTPVerificationStep({
   }, [otpCode]);
 
   useEffect(() => {
-    if (isValid && otpCode.length === 6 && !hasAutoAttempted && !isVerifying) {
+    if (isValid && otpCode.length === 6 && !hasAutoAttempted && !isVerifying && !isSending) {
       handleVerifyOTP();
     }
-  }, [otpCode, isValid, hasAutoAttempted, isVerifying, handleVerifyOTP]);
+  }, [otpCode, isValid, hasAutoAttempted, isVerifying, isSending, handleVerifyOTP]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -108,6 +122,28 @@ export default function OTPVerificationStep({
 
       <div className="px-6 pb-5">
         <div className="space-y-4">
+          {isSending && (
+            <div
+              className="flex items-center justify-center gap-2 text-sm text-neutral-600"
+              data-testid="otp-sending-indicator"
+            >
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              {TEXT_CONSTANTS.REGISTRATION_COMPONENTS.SENDING_CODE}
+            </div>
+          )}
+
+          {sendError && !isSending && (
+            <p
+              className="text-sm text-danger-600 text-center px-1"
+              data-testid="otp-send-error-inline"
+            >
+              {sendError}
+            </p>
+          )}
+
           <div className="space-y-2">
             <div className="relative">
               <input
@@ -115,8 +151,10 @@ export default function OTPVerificationStep({
                 type="text"
                 value={otpCode}
                 onChange={handleInputChange}
+                disabled={isSending}
                 className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                         text-center tracking-widest text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 ${
+                         text-center tracking-widest text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500
+                         disabled:bg-neutral-100 disabled:cursor-not-allowed ${
                   (validationError && otpCode) || backendError
                     ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
                     : 'border-neutral-200 focus:border-success-500 focus:ring-success-500'
@@ -157,11 +195,11 @@ export default function OTPVerificationStep({
           <button
             type="button"
             onClick={handleVerifyOTP}
-            disabled={!isValid || isVerifying}
+            disabled={!isValid || isVerifying || isSending}
             className={`w-full py-3 px-4 font-semibold rounded-xl btn-press focus-ring
                      flex items-center justify-center gap-2
                      transition-all duration-200 ${
-              isValid && !isVerifying
+              isValid && !isVerifying && !isSending
                 ? 'bg-gradient-to-r from-success-600 to-success-700 hover:from-success-700 hover:to-success-800 text-white hover:shadow-lg'
                 : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
             }`}
@@ -189,7 +227,7 @@ export default function OTPVerificationStep({
             <button
               type="button"
               onClick={handleResendCode}
-              disabled={isResending}
+              disabled={isResending || isSending}
               className="text-sm text-success-600 hover:text-success-800 disabled:text-neutral-400 disabled:cursor-not-allowed
                        transition-all duration-200 underline-offset-2 hover:underline focus-ring rounded-md"
             >

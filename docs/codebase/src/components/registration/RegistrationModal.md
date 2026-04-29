@@ -21,6 +21,14 @@ Cleanup is gated by three checks before issuing `deleteCurrentUser()`:
 
 The reCAPTCHA host (`<RecaptchaContainer />`) is rendered at the modal level, not inside step branches. If it lived inside a step branch, the DOM node would unmount/remount on every step transition and the cached `RecaptchaVerifier` would be left holding a detached node — which is what was breaking OTP resend.
 
+## Race-proofing: registrationInProgress flag is set on OTP step mount
+
+`OTPVerificationStep` calls `setRegistrationInProgress()` from a mount-time `useEffect`. Firebase fires `onAuthStateChanged` synchronously around the resolution of `confirmation.confirm(code)`, which runs faster than the post-resolve callback chain that previously set the flag. Setting the flag at OTP-step mount guarantees the listener in `AuthContext` always sees it before the first confirm could fire, so it never signs the user out for "no Firestore profile" while registration is in flight.
+
+## Header lock during account creation
+
+When the user clicks "Create Account" on the account step, `RegistrationForm.handleAccountDetailsSubmit` runs `linkEmailPassword` → `sendEmailVerification` → `POST /api/auth/register`. While that chain is in flight, the modal locks both the X (close) and back buttons via `RegistrationHeader`'s new `disabled` prop, the backdrop `onClick` is suppressed, and `handleClose` / `handleBackNavigation` short-circuit defensively. This prevents abandonment in the half-linked window, which would leave a Firebase auth user with email credential attached but no Firestore profile.
+
 ## Props
 
 | Prop | Type | Required | Description |
