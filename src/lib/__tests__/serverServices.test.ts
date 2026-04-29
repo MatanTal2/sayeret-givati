@@ -59,6 +59,9 @@ jest.mock('@/lib/db/server/notificationService', () => ({
   serverCreateNotification: jest.fn(async () => 'notif-id'),
   serverCreateBatchNotifications: jest.fn(async () => undefined),
 }));
+jest.mock('@/lib/db/server/permissionGrantsService', () => ({
+  getActiveGrants: jest.fn(async () => []),
+}));
 
 import { actorToAuthUser, type ApiActor } from '@/lib/db/server/policyHelpers';
 import { getActorFromRequest, AuthError } from '@/lib/db/server/auth';

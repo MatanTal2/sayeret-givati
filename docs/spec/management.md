@@ -54,6 +54,14 @@ A role-gated management dashboard at `/management` with a sidebar navigation and
 - View and edit user role assignments
 **Status:** 🔄 Partial — UI exists, write operations may be incomplete
 
+### Permission Grants Tab (`PermissionGrantsTab.tsx`)
+- ADMIN + SYSTEM_MANAGER only.
+- List active grants and full history (active / expired / revoked) with `isExpired` and effective-status badges.
+- Issue a time-limited role bump (TEAM_LEADER / MANAGER / SYSTEM_MANAGER), scoped to a single team or to all teams. Duration capped at 7 days.
+- Revoke an active grant with optional reason.
+- Backed by `usePermissionGrants` → `/api/permission-grants` (GET / POST + `/{id}/revoke`). Server logic in `src/lib/db/server/permissionGrantsService.ts`. The grantee is notified on issue.
+**Status:** ✅ Implemented
+
 ### Data Management Tab (`DataManagementTab.tsx`, 138 lines)
 - Import / export data
 - Sync operations
