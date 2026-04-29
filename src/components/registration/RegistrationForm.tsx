@@ -6,6 +6,7 @@ import PersonalDetailsStep from './PersonalDetailsStep';
 import AccountDetailsStep from './AccountDetailsStep';
 import RegistrationSuccessStep from './RegistrationSuccessStep';
 import RecaptchaContainer, { RECAPTCHA_CONTAINER_ID } from './RecaptchaContainer';
+import RecaptchaAttribution from './RecaptchaAttribution';
 import { PersonalDetailsData, AccountDetailsData } from '@/types/registration';
 import { auth } from '@/lib/firebase';
 import {
@@ -210,6 +211,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
           onVerifySuccess={handleOTPVerifySuccess}
           onResendOtp={handleResendOtp}
         />
+        <RecaptchaAttribution />
       </>
     );
   }
@@ -270,6 +272,9 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
             <div className="relative">
               <input
                 type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
                 value={personalNumber}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
@@ -359,6 +364,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
             </div>
           )}
         </form>
+        <RecaptchaAttribution />
       </div>
     </>
   );

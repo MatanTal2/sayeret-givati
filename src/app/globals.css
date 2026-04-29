@@ -73,6 +73,13 @@
   }
 }
 
+/* ─── Hide reCAPTCHA badge (Google ToS requires showing attribution text instead).
+   Applied because the floating badge is cut off on RTL layouts.
+   The required attribution text is rendered by RecaptchaAttribution.tsx. ───── */
+.grecaptcha-badge {
+  visibility: hidden !important;
+}
+
 /* ─── Scrollbar utilities ─────────────────────────────────────────────────── */
 @layer utilities {
   .scrollbar-none {
