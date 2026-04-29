@@ -252,6 +252,8 @@ export default function PhoneNumberUpdate({
             <div className="flex gap-3">
               <input
                 type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 value={newPhoneNumber}
                 onChange={(e) => setNewPhoneNumber(e.target.value)}
                 placeholder={TEXT_CONSTANTS.PROFILE_COMPONENTS.PHONE_PLACEHOLDER}
@@ -293,6 +295,9 @@ export default function PhoneNumberUpdate({
             <div className="flex gap-3">
               <input
                 type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="one-time-code"
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder={TEXT_CONSTANTS.PROFILE_COMPONENTS.OTP_PLACEHOLDER}

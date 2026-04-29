@@ -108,11 +108,15 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
                 <div className="relative">
                   <input
                     type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    spellCheck={false}
                     id="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3.5 border-2 border-neutral-200 rounded-xl focus:ring-2 
+                    className="w-full px-4 py-3.5 border-2 border-neutral-200 rounded-xl focus:ring-2
                              focus:ring-primary-500 focus:border-primary-500 outline-none transition-all
                              text-right text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500"
                     placeholder={TEXT_CONSTANTS.AUTH.EMAIL_PLACEHOLDER}
@@ -136,11 +140,14 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    autoCapitalize="none"
+                    spellCheck={false}
                     id="password"
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3.5 border-2 border-neutral-200 rounded-xl focus:ring-2 
+                    className="w-full px-4 py-3.5 border-2 border-neutral-200 rounded-xl focus:ring-2
                              focus:ring-primary-500 focus:border-primary-500 outline-none transition-all
                              text-right text-neutral-800 bg-neutral-50 focus:bg-white pr-12 placeholder-neutral-500"
                     placeholder={TEXT_CONSTANTS.AUTH.PASSWORD_PLACEHOLDER}

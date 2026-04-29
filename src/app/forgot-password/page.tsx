@@ -91,6 +91,10 @@ export default function ForgotPasswordPage() {
         <form className="space-y-4" onSubmit={handleSubmit}>
           <input
             type="email"
+            inputMode="email"
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={TEXT_CONSTANTS.AUTH.EMAIL_PLACEHOLDER_REGISTRATION}

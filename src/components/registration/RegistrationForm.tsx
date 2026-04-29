@@ -270,6 +270,9 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
             <div className="relative">
               <input
                 type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
                 value={personalNumber}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all

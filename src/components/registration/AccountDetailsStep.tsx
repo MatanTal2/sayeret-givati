@@ -90,6 +90,10 @@ export default function AccountDetailsStep({
             <div className="relative">
               <input
                 type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 className={`w-full px-4 py-2.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
@@ -122,6 +126,9 @@ export default function AccountDetailsStep({
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                autoCapitalize="none"
+                spellCheck={false}
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
                 className={`w-full px-4 py-2.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
