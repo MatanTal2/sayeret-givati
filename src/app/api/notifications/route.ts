@@ -3,9 +3,12 @@ import {
   serverCreateNotification,
   serverDeleteNotification,
 } from '@/lib/db/server/notificationService';
+import { getActorOrError } from '@/lib/db/server/auth';
 
 export async function POST(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const data = await request.json();
     if (!data.userId || !data.type || !data.title || !data.message) {
       return NextResponse.json(
@@ -24,6 +27,8 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const { id } = await request.json();
     if (!id) {
       return NextResponse.json({ success: false, error: 'Notification id is required' }, { status: 400 });

@@ -1,4 +1,5 @@
 import { db } from '@/lib/firebase';
+import { apiFetch } from '@/lib/apiFetch';
 import { doc, getDoc, collection, query, getDocs, Timestamp } from 'firebase/firestore';
 import {
   AdminConfig,
@@ -350,9 +351,8 @@ export class AdminFirestoreService {
       };
 
       // Add to Firestore via server API route (firebase-admin)
-      const addResponse = await fetch('/api/authorized-personnel', {
+      const addResponse = await apiFetch('/api/authorized-personnel', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ docId: hash, data: personnelDoc }),
       });
       const addResult = await addResponse.json();
@@ -503,9 +503,8 @@ export class AdminFirestoreService {
         (processedUpdates.firstName || processedUpdates.lastName || processedUpdates.rank || processedUpdates.phoneNumber || processedUpdates.userType || processedUpdates.status);
 
       // Update via server API route (firebase-admin)
-      const updateResponse = await fetch('/api/authorized-personnel', {
+      const updateResponse = await apiFetch('/api/authorized-personnel', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           personnelId,
           updates: processedUpdates,
@@ -624,9 +623,8 @@ export class AdminFirestoreService {
     }
 
     try {
-      const bulkResponse = await fetch('/api/authorized-personnel/bulk', {
+      const bulkResponse = await apiFetch('/api/authorized-personnel/bulk', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ entries }),
       });
       const bulkResult = await bulkResponse.json();
@@ -683,9 +681,8 @@ export class AdminFirestoreService {
    */
   static async deleteAuthorizedPersonnel(id: string): Promise<PersonnelOperationResult> {
     try {
-      const deleteResponse = await fetch('/api/authorized-personnel', {
+      const deleteResponse = await apiFetch('/api/authorized-personnel', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
       const deleteResult = await deleteResponse.json();
@@ -761,9 +758,8 @@ export class AdminFirestoreService {
         };
       }
 
-      const updateResponse = await fetch('/api/authorized-personnel', {
+      const updateResponse = await apiFetch('/api/authorized-personnel', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ personnelId: militaryIdHash, updates: { registered } }),
       });
       const updateResult = await updateResponse.json();

@@ -1,15 +1,18 @@
 import { NextResponse } from 'next/server';
 import { serverCreateEquipmentBatch } from '@/lib/db/server/equipmentService';
-import { validateActor, actorToAuthUser } from '@/lib/db/server/policyHelpers';
+import { actorToAuthUser } from '@/lib/db/server/policyHelpers';
+import { getActorOrError } from '@/lib/db/server/auth';
 import { canAddEquipment } from '@/lib/equipmentPolicy';
 
 export async function POST(request: Request) {
   try {
-    const input = await request.json();
-    const actor = validateActor(input.actor);
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     if (!canAddEquipment(actorToAuthUser(actor))) {
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
+    const input = await request.json();
 
     if (!Array.isArray(input.items) || input.items.length === 0) {
       return NextResponse.json(

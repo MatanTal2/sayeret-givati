@@ -196,7 +196,7 @@ Notification routing lives in `NotificationItem.tsx`'s `resolveNotificationTarge
 | File | Status | Coverage |
 |------|--------|----------|
 | `src/lib/__tests__/equipmentPolicy.test.ts` | Phase 3 | 30 tests, full role × scope matrix |
-| `src/lib/__tests__/serverServices.test.ts` | Phase 8 | 9 tests — `validateActor`, `actorToAuthUser`, `serverForceOps` input validation |
+| `src/lib/__tests__/serverServices.test.ts` | Active | Tests — `getActorFromRequest` (bearer token verification), `actorToAuthUser`, `serverForceOps` input validation |
 | Server txn invariants (denormalized field sync, action-log writes, batch atomicity) | Deferred | Requires a true firebase-admin SDK fake. Tracked as a follow-up. |
 
 ---

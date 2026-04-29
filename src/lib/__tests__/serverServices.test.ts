@@ -1,5 +1,5 @@
 /**
- * Phase 8 — light contract tests for the server-side services and helpers.
+ * Light contract tests for the server-side services and helpers.
  *
  * The Firebase Admin SDK is heavy to fake for full transactional behavior, so
  * these tests focus on **input validation** + **pure helpers**. Deeper
@@ -8,7 +8,6 @@
  */
 
 // ─── Mocks for firebase-admin chain ────────────────────────────────────────
-// firebase-admin/firestore — stub Timestamp + FieldValue so imports resolve.
 jest.mock('firebase-admin/firestore', () => ({
   Timestamp: {
     now: () => ({ toDate: () => new Date(), seconds: 0, nanoseconds: 0 }),
@@ -27,16 +26,32 @@ jest.mock('firebase-admin/app', () => ({
   applicationDefault: () => ({}),
 }));
 
-// admin DB factory — server services call getAdminDb(). Validation paths
-// throw before reaching it; deeper tests would replace this with an
-// in-memory fake.
-jest.mock('@/lib/db/admin', () => ({
-  getAdminDb: jest.fn(() => {
-    throw new Error('Test reached admin DB without setting up a fake');
-  }),
+// next/server uses native Request which isn't available in jsdom.
+jest.mock('next/server', () => ({
+  NextResponse: {
+    json: (body: unknown, init?: { status?: number }) => ({
+      status: init?.status ?? 200,
+      body,
+    }),
+  },
 }));
 
-// Side-effect helpers — make them no-ops so happy-path tests don't fan out.
+const mockVerifyIdToken = jest.fn();
+const mockGetUserDoc = jest.fn();
+
+jest.mock('@/lib/db/admin', () => ({
+  getAdminDb: jest.fn(() => ({
+    collection: () => ({
+      doc: () => ({
+        get: mockGetUserDoc,
+      }),
+    }),
+  })),
+  getAdminAuth: jest.fn(() => ({
+    verifyIdToken: mockVerifyIdToken,
+  })),
+}));
+
 jest.mock('@/lib/db/server/actionsLogService', () => ({
   serverCreateActionLog: jest.fn(async () => 'log-id'),
 }));
@@ -45,47 +60,90 @@ jest.mock('@/lib/db/server/notificationService', () => ({
   serverCreateBatchNotifications: jest.fn(async () => undefined),
 }));
 
-import { validateActor, actorToAuthUser, type ApiActor } from '@/lib/db/server/policyHelpers';
+import { actorToAuthUser, type ApiActor } from '@/lib/db/server/policyHelpers';
+import { getActorFromRequest, AuthError } from '@/lib/db/server/auth';
 import { serverForceOps } from '@/lib/db/server/forceOpsService';
 import { UserType } from '@/types/user';
 
-describe('policyHelpers.validateActor', () => {
-  it('accepts a well-formed actor', () => {
-    const actor = validateActor({
-      uid: 'u1',
-      userType: UserType.MANAGER,
-      teamId: 'team-a',
-      displayName: 'Alice',
+// Minimal Request stub that exposes the headers API used by getActorFromRequest.
+function buildRequest(headers: Record<string, string> = {}): Request {
+  const headerMap = new Map(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v]));
+  return {
+    headers: {
+      get: (name: string) => headerMap.get(name.toLowerCase()) ?? null,
+    },
+  } as unknown as Request;
+}
+
+describe('auth.getActorFromRequest', () => {
+  beforeEach(() => {
+    mockVerifyIdToken.mockReset();
+    mockGetUserDoc.mockReset();
+  });
+
+  it('throws AuthError 401 when Authorization header is missing', async () => {
+    await expect(getActorFromRequest(buildRequest())).rejects.toMatchObject({
+      status: 401,
     });
+  });
+
+  it('throws AuthError 401 when header lacks Bearer prefix', async () => {
+    await expect(
+      getActorFromRequest(buildRequest({ Authorization: 'token-only' }))
+    ).rejects.toMatchObject({ status: 401 });
+  });
+
+  it('throws AuthError 401 when verifyIdToken rejects', async () => {
+    mockVerifyIdToken.mockRejectedValue(new Error('expired'));
+    await expect(
+      getActorFromRequest(buildRequest({ Authorization: 'Bearer xxx' }))
+    ).rejects.toMatchObject({ status: 401 });
+  });
+
+  it('throws AuthError 403 when user profile not found', async () => {
+    mockVerifyIdToken.mockResolvedValue({ uid: 'u1' });
+    mockGetUserDoc.mockResolvedValue({ exists: false, data: () => undefined });
+    await expect(
+      getActorFromRequest(buildRequest({ Authorization: 'Bearer xxx' }))
+    ).rejects.toMatchObject({ status: 403 });
+  });
+
+  it('throws AuthError 403 when userType is missing on profile', async () => {
+    mockVerifyIdToken.mockResolvedValue({ uid: 'u1' });
+    mockGetUserDoc.mockResolvedValue({
+      exists: true,
+      data: () => ({ teamId: 'team-a' }),
+    });
+    await expect(
+      getActorFromRequest(buildRequest({ Authorization: 'Bearer xxx' }))
+    ).rejects.toMatchObject({ status: 403 });
+  });
+
+  it('returns ApiActor with verified userType + teamId', async () => {
+    mockVerifyIdToken.mockResolvedValue({ uid: 'u1' });
+    mockGetUserDoc.mockResolvedValue({
+      exists: true,
+      data: () => ({ userType: UserType.MANAGER, teamId: 'team-a', displayName: 'Alice' }),
+    });
+    const actor = await getActorFromRequest(
+      buildRequest({ Authorization: 'Bearer good-token' })
+    );
     expect(actor.uid).toBe('u1');
     expect(actor.userType).toBe(UserType.MANAGER);
     expect(actor.teamId).toBe('team-a');
     expect(actor.displayName).toBe('Alice');
+    expect(actor.grants).toEqual([]);
   });
 
-  it('throws when actor is missing entirely', () => {
-    expect(() => validateActor(undefined)).toThrow(/actor is required/);
-    expect(() => validateActor(null)).toThrow(/actor is required/);
-    expect(() => validateActor('not-an-object')).toThrow(/actor is required/);
-  });
-
-  it('throws when uid is missing', () => {
-    expect(() => validateActor({ userType: UserType.USER })).toThrow(/actor\.uid/);
-  });
-
-  it('throws when userType is missing', () => {
-    expect(() => validateActor({ uid: 'u1' })).toThrow(/actor\.userType/);
-  });
-
-  it('strips optional fields when undefined', () => {
-    const actor = validateActor({ uid: 'u1', userType: UserType.USER });
-    expect(actor.teamId).toBeUndefined();
-    expect(actor.displayName).toBeUndefined();
+  it('AuthError exposes status property', () => {
+    const err = new AuthError('x', 401);
+    expect(err.status).toBe(401);
+    expect(err).toBeInstanceOf(Error);
   });
 });
 
 describe('policyHelpers.actorToAuthUser', () => {
-  it('preserves identity fields', () => {
+  it('forwards identity + grants (defaulting empty)', () => {
     const actor: ApiActor = {
       uid: 'u1',
       userType: UserType.TEAM_LEADER,
@@ -97,6 +155,26 @@ describe('policyHelpers.actorToAuthUser', () => {
     expect(user.userType).toBe(UserType.TEAM_LEADER);
     expect(user.teamId).toBe('team-b');
     expect(user.displayName).toBe('Bob');
+    expect(user.grants).toEqual([]);
+  });
+
+  it('preserves explicit grants', () => {
+    const actor: ApiActor = {
+      uid: 'u1',
+      userType: UserType.USER,
+      grants: [
+        {
+          id: 'g1',
+          grantedRole: UserType.TEAM_LEADER,
+          scope: 'team',
+          scopeTeamId: 'team-x',
+          expiresAtMs: Date.now() + 1000,
+        },
+      ],
+    };
+    const user = actorToAuthUser(actor);
+    expect(user.grants).toHaveLength(1);
+    expect(user.grants?.[0].grantedRole).toBe(UserType.TEAM_LEADER);
   });
 });
 
@@ -120,10 +198,5 @@ describe('serverForceOps — input validation', () => {
     await expect(
       serverForceOps({ ...baseInput, reason: '' })
     ).rejects.toThrow(/reason is required/);
-  });
-
-  it('reaches the admin DB when input is well-formed (proves validation passed)', async () => {
-    // The mocked getAdminDb throws a sentinel error. Reaching it means validation passed.
-    await expect(serverForceOps(baseInput)).rejects.toThrow(/Test reached admin DB/);
   });
 });

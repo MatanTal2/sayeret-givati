@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { serverProposeTemplate } from '@/lib/db/server/templateRequestService';
-import { validateActor, actorToAuthUser } from '@/lib/db/server/policyHelpers';
+import { actorToAuthUser } from '@/lib/db/server/policyHelpers';
+import { getActorOrError } from '@/lib/db/server/auth';
 import {
   canProposeTemplate,
   canRequestTemplate,
@@ -9,9 +10,11 @@ import { UserType } from '@/types/user';
 
 export async function POST(request: Request) {
   try {
-    const input = await request.json();
-    const actor = validateActor(input.actor);
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const authUser = actorToAuthUser(actor);
+    const input = await request.json();
 
     // Regular users go through request flow; TL+ go through proposal flow.
     const allowed =

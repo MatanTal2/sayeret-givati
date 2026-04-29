@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server';
 import { serverRetireEquipment } from '@/lib/db/server/equipmentService';
 import {
-  validateActor,
   actorToAuthUser,
   fetchEquipmentForPolicy,
 } from '@/lib/db/server/policyHelpers';
+import { getActorOrError } from '@/lib/db/server/auth';
 import { canRetire } from '@/lib/equipmentPolicy';
 
 export async function POST(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const input = await request.json();
-    const actor = validateActor(input.actor);
 
     if (!input.equipmentId) {
       return NextResponse.json({ success: false, error: 'equipmentId is required' }, { status: 400 });

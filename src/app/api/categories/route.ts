@@ -4,9 +4,12 @@ import {
   serverUpdateCategory,
   serverDeactivateCategory,
 } from '@/lib/db/server/categoriesService';
+import { getActorOrError } from '@/lib/db/server/auth';
 
 export async function POST(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const data = await request.json();
     if (!data.name) {
       return NextResponse.json({ success: false, error: 'Category name is required' }, { status: 400 });
@@ -22,6 +25,8 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const { id, ...updates } = await request.json();
     if (!id) {
       return NextResponse.json({ success: false, error: 'Category id is required' }, { status: 400 });
@@ -37,6 +42,8 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const { id } = await request.json();
     if (!id) {
       return NextResponse.json({ success: false, error: 'Category id is required' }, { status: 400 });

@@ -4,7 +4,7 @@ import {
   serverDeleteSerialItem,
   serverUpdateSerialItem,
 } from '@/lib/db/server/ammunitionInventoryService';
-import { validateActor } from '@/lib/db/server/policyHelpers';
+import { getActorOrError } from '@/lib/db/server/auth';
 import type { AmmunitionItemStatus, HolderType } from '@/types/ammunition';
 
 export async function PUT(
@@ -16,8 +16,10 @@ export async function PUT(
     if (!id) {
       return NextResponse.json({ success: false, error: 'id is required' }, { status: 400 });
     }
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const input = await request.json();
-    const actor = validateActor(input.actor);
 
     if (input.kind !== 'item') {
       return NextResponse.json(
@@ -57,8 +59,10 @@ export async function DELETE(
     if (!id) {
       return NextResponse.json({ success: false, error: 'id is required' }, { status: 400 });
     }
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const input = await request.json().catch(() => ({}));
-    const actor = validateActor(input.actor);
 
     if (input.kind === 'stock') {
       await serverDeleteAmmunitionStock({ actor, inventoryDocId: id });

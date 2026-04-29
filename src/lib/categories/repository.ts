@@ -11,11 +11,12 @@ import {
   where
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { 
-  Category, 
-  Subcategory, 
-  CategoriesQueryOptions, 
-  SubcategoriesQueryOptions 
+import { apiFetch } from '../apiFetch';
+import {
+  Category,
+  Subcategory,
+  CategoriesQueryOptions,
+  SubcategoriesQueryOptions
 } from './types';
 import { COLLECTIONS } from './constants';
 
@@ -219,9 +220,8 @@ export class CategoriesRepository {
   static async createCategory(
     categoryData: Omit<Category, 'id' | 'subcategories' | 'createdAt' | 'updatedAt'>
   ): Promise<string> {
-    const response = await fetch('/api/categories', {
+    const response = await apiFetch('/api/categories', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(categoryData),
     });
     const result = await response.json();
@@ -236,9 +236,8 @@ export class CategoriesRepository {
   static async createSubcategory(
     subcategoryData: Omit<Subcategory, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<string> {
-    const response = await fetch('/api/categories/subcategories', {
+    const response = await apiFetch('/api/categories/subcategories', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(subcategoryData),
     });
     const result = await response.json();
@@ -254,9 +253,8 @@ export class CategoriesRepository {
     categoryId: string,
     updates: Partial<Pick<Category, 'name' | 'order' | 'isActive'>>
   ): Promise<void> {
-    const response = await fetch('/api/categories', {
+    const response = await apiFetch('/api/categories', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: categoryId, ...updates }),
     });
     const result = await response.json();
@@ -271,9 +269,8 @@ export class CategoriesRepository {
     subcategoryId: string,
     updates: Partial<Pick<Subcategory, 'name' | 'order' | 'isActive'>>
   ): Promise<void> {
-    const response = await fetch('/api/categories/subcategories', {
+    const response = await apiFetch('/api/categories/subcategories', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: subcategoryId, ...updates }),
     });
     const result = await response.json();
@@ -315,9 +312,8 @@ export class CategoriesRepository {
    * Delegates to server API route (firebase-admin) for the write.
    */
   static async deactivateCategory(categoryId: string): Promise<void> {
-    const response = await fetch('/api/categories', {
+    const response = await apiFetch('/api/categories', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: categoryId }),
     });
     const result = await response.json();
@@ -329,9 +325,8 @@ export class CategoriesRepository {
    * Delegates to server API route (firebase-admin) for the write.
    */
   static async deactivateSubcategory(subcategoryId: string): Promise<void> {
-    const response = await fetch('/api/categories/subcategories', {
+    const response = await apiFetch('/api/categories/subcategories', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: subcategoryId }),
     });
     const result = await response.json();

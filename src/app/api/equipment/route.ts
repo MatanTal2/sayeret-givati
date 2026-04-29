@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { serverCreateEquipment, serverUpdateEquipment } from '@/lib/db/server/equipmentService';
+import { getActorOrError } from '@/lib/db/server/auth';
 
 export async function POST(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const input = await request.json();
     if (!input.equipmentData?.id) {
       return NextResponse.json({ success: false, error: 'equipmentData.id is required' }, { status: 400 });
@@ -18,6 +21,8 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const input = await request.json();
     if (!input.equipmentId) {
       return NextResponse.json({ success: false, error: 'equipmentId is required' }, { status: 400 });

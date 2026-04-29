@@ -170,21 +170,16 @@ export default function AddEquipmentWizard({
         });
       }
 
-      const actor = {
-        uid: user.uid,
-        userType: user.userType!,
-        teamId: user.teamId,
-        displayName:
-          user.displayName || [user.firstName, user.lastName].filter(Boolean).join(' ') || undefined,
-      };
-      const signerName = actor.displayName || actor.uid;
+      const signerName =
+        user.displayName ||
+        [user.firstName, user.lastName].filter(Boolean).join(' ') ||
+        user.uid;
       const result = await EquipmentService.Items.createEquipmentBatch(
         items,
         signerName,
-        actor.uid,
+        user.uid,
         signerName,
-        actor.uid,
-        actor,
+        user.uid,
       );
       if (!result.success) throw new Error(result.message);
 

@@ -5,12 +5,14 @@ import {
   validateUpsertStockInput,
   validateCreateSerialItemInput,
 } from '@/lib/db/server/ammunitionInventoryService';
-import { validateActor } from '@/lib/db/server/policyHelpers';
+import { getActorOrError } from '@/lib/db/server/auth';
 
 export async function POST(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const input = await request.json();
-    const actor = validateActor(input.actor);
 
     if (input.kind === 'stock') {
       const payload = validateUpsertStockInput({ ...(input.payload || {}), actor });

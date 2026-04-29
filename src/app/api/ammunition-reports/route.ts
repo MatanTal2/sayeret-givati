@@ -4,10 +4,12 @@ import {
   serverListAmmunitionReports,
   validateSubmitReportInput,
 } from '@/lib/db/server/ammunitionReportsService';
-import { validateActor } from '@/lib/db/server/policyHelpers';
+import { getActorOrError } from '@/lib/db/server/auth';
 
 export async function GET(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const url = new URL(request.url);
     const fromMs = url.searchParams.get('fromMs');
     const toMs = url.searchParams.get('toMs');
@@ -34,8 +36,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const input = await request.json();
-    const actor = validateActor(input.actor);
     const payload = validateSubmitReportInput({ ...(input.payload || {}), actor });
     const result = await serverSubmitAmmunitionReport(payload);
     return NextResponse.json({

@@ -4,7 +4,7 @@ import {
   serverUpdateAmmunitionTemplate,
   validateAmmunitionTemplateInput,
 } from '@/lib/db/server/ammunitionTemplatesService';
-import { validateActor } from '@/lib/db/server/policyHelpers';
+import { getActorOrError } from '@/lib/db/server/auth';
 import { UserType } from '@/types/user';
 
 function isAdminOrManager(userType: UserType): boolean {
@@ -24,8 +24,10 @@ export async function PUT(
     if (!id) {
       return NextResponse.json({ success: false, error: 'id is required' }, { status: 400 });
     }
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const input = await request.json();
-    const actor = validateActor(input.actor);
 
     if (!isAdminOrManager(actor.userType)) {
       return NextResponse.json(
@@ -57,8 +59,9 @@ export async function DELETE(
     if (!id) {
       return NextResponse.json({ success: false, error: 'id is required' }, { status: 400 });
     }
-    const input = await request.json().catch(() => ({}));
-    const actor = validateActor(input.actor);
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
 
     if (!isAdminOrManager(actor.userType)) {
       return NextResponse.json(

@@ -5,7 +5,7 @@ import {
   serverSeedCanonicalAmmunitionTemplates,
   validateAmmunitionTemplateInput,
 } from '@/lib/db/server/ammunitionTemplatesService';
-import { validateActor } from '@/lib/db/server/policyHelpers';
+import { getActorOrError } from '@/lib/db/server/auth';
 import { UserType } from '@/types/user';
 
 function isAdminOrManager(userType: UserType): boolean {
@@ -16,8 +16,10 @@ function isAdminOrManager(userType: UserType): boolean {
   );
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const templates = await serverListAmmunitionTemplates();
     return NextResponse.json({ success: true, templates });
   } catch (error) {
@@ -29,8 +31,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const input = await request.json();
-    const actor = validateActor(input.actor);
 
     if (input.action === 'seed_canonical') {
       if (!isAdminOrManager(actor.userType)) {

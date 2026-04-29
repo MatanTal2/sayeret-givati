@@ -5,7 +5,7 @@ import {
   serverListAmmunitionReportRequests,
   validateCreateReportRequestInput,
 } from '@/lib/db/server/ammunitionReportRequestService';
-import { validateActor } from '@/lib/db/server/policyHelpers';
+import { getActorOrError } from '@/lib/db/server/auth';
 import { UserType } from '@/types/user';
 
 function isManagerOrTL(userType: UserType): boolean {
@@ -17,8 +17,10 @@ function isManagerOrTL(userType: UserType): boolean {
   );
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const requests = await serverListAmmunitionReportRequests();
     return NextResponse.json({ success: true, requests });
   } catch (error) {
@@ -30,8 +32,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const input = await request.json();
-    const actor = validateActor(input.actor);
     if (!isManagerOrTL(actor.userType)) {
       return NextResponse.json(
         { success: false, error: 'Forbidden: only manager+ or team_leader may create requests' },
@@ -55,8 +59,10 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const input = await request.json();
-    const actor = validateActor(input.actor);
     if (!isManagerOrTL(actor.userType)) {
       return NextResponse.json(
         { success: false, error: 'Forbidden: only manager+ or team_leader may cancel requests' },

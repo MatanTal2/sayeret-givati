@@ -14,6 +14,7 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { apiFetch } from '@/lib/apiFetch';
 import {
   TransferRequest,
   TransferStatus,
@@ -55,9 +56,8 @@ export async function createTransferRequest(
     );
 
     // Create transfer request via server API route (firebase-admin transaction)
-    const response = await fetch('/api/transfer-requests', {
+    const response = await apiFetch('/api/transfer-requests', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         equipmentDocId, toUserId, toUserName, reason, fromUserId, fromUserName,
         ...(note ? { note } : {}),
@@ -90,11 +90,10 @@ export async function approveTransferRequest(
 ): Promise<void> {
   try {
     // Approve via server API route (firebase-admin transaction)
-    const response = await fetch('/api/transfer-requests/approve', {
+    const response = await apiFetch('/api/transfer-requests/approve', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        transferRequestId, approverUserId, approverUserName,
+        transferRequestId, approverUserName,
         ...(approvalNote ? { approvalNote } : {}),
       }),
     });
@@ -119,11 +118,10 @@ export async function rejectTransferRequest(
 ): Promise<void> {
   try {
     // Reject via server API route (firebase-admin transaction)
-    const response = await fetch('/api/transfer-requests/reject', {
+    const response = await apiFetch('/api/transfer-requests/reject', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        transferRequestId, rejectorUserId, rejectorUserName,
+        transferRequestId, rejectorUserName,
         ...(rejectionReason ? { rejectionReason } : {}),
       }),
     });

@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { serverCreateReportRequest } from '@/lib/db/server/reportRequestService';
-import { validateActor, actorToAuthUser } from '@/lib/db/server/policyHelpers';
+import { actorToAuthUser } from '@/lib/db/server/policyHelpers';
+import { getActorOrError } from '@/lib/db/server/auth';
 import { isManagerOrAbove } from '@/lib/equipmentPolicy';
 
 export async function POST(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const input = await request.json();
-    const actor = validateActor(input.actor);
 
     // Only managers/admins can create report requests.
     if (!isManagerOrAbove(actorToAuthUser(actor))) {

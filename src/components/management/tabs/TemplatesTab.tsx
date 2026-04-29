@@ -12,7 +12,6 @@ import {
   proposeTemplate,
   rejectTemplateRequest,
 } from '@/lib/templateRequestService';
-import type { ApiActor } from '@/lib/equipmentService';
 import TemplateForm, { TemplateFormValues } from '@/components/equipment/TemplateForm';
 
 type DialogState =
@@ -21,21 +20,6 @@ type DialogState =
   | { kind: 'propose' }
   | { kind: 'review'; template: EquipmentType }
   | { kind: 'reject'; template: EquipmentType };
-
-function buildActor(
-  user: ReturnType<typeof useAuth>['enhancedUser']
-): ApiActor | null {
-  if (!user || !user.userType) return null;
-  return {
-    uid: user.uid,
-    userType: user.userType,
-    teamId: user.teamId,
-    displayName:
-      user.displayName ||
-      [user.firstName, user.lastName].filter(Boolean).join(' ') ||
-      undefined,
-  };
-}
 
 export default function TemplatesTab() {
   const { enhancedUser } = useAuth();
@@ -130,12 +114,10 @@ export default function TemplatesTab() {
   };
 
   const handlePropose = async (values: TemplateFormValues) => {
-    const actor = buildActor(enhancedUser);
-    if (!actor || !enhancedUser) return;
+    if (!enhancedUser) return;
     setSubmitting(true);
     try {
       await proposeTemplate({
-        actor,
         proposerUserName:
           [enhancedUser.firstName, enhancedUser.lastName].filter(Boolean).join(' ') ||
           enhancedUser.uid,
@@ -159,12 +141,10 @@ export default function TemplatesTab() {
   };
 
   const handleReview = async (template: EquipmentType, values: TemplateFormValues) => {
-    const actor = buildActor(enhancedUser);
-    if (!actor || !enhancedUser) return;
+    if (!enhancedUser) return;
     setSubmitting(true);
     try {
       await approveTemplateRequest({
-        actor,
         templateId: template.id,
         approverUserName:
           [enhancedUser.firstName, enhancedUser.lastName].filter(Boolean).join(' ') ||
@@ -191,12 +171,10 @@ export default function TemplatesTab() {
   };
 
   const handleReject = async () => {
-    const actor = buildActor(enhancedUser);
-    if (!actor || dialog.kind !== 'reject' || !enhancedUser) return;
+    if (dialog.kind !== 'reject' || !enhancedUser) return;
     setSubmitting(true);
     try {
       await rejectTemplateRequest({
-        actor,
         templateId: dialog.template.id,
         rejectorUserName:
           [enhancedUser.firstName, enhancedUser.lastName].filter(Boolean).join(' ') ||

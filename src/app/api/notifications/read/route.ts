@@ -3,12 +3,15 @@ import {
   serverMarkAsRead,
   serverMarkAllAsRead,
 } from '@/lib/db/server/notificationService';
+import { getActorOrError } from '@/lib/db/server/auth';
 
 /**
  * PUT — Mark single notification as read
  */
 export async function PUT(request: Request) {
   try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
     const { notificationId } = await request.json();
     if (!notificationId) {
       return NextResponse.json({ success: false, error: 'notificationId is required' }, { status: 400 });
@@ -23,15 +26,14 @@ export async function PUT(request: Request) {
 }
 
 /**
- * POST — Mark all notifications as read for a user
+ * POST — Mark all notifications as read for the authenticated user.
  */
 export async function POST(request: Request) {
   try {
-    const { userId } = await request.json();
-    if (!userId) {
-      return NextResponse.json({ success: false, error: 'userId is required' }, { status: 400 });
-    }
-    await serverMarkAllAsRead(userId);
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
+    await serverMarkAllAsRead(actor.uid);
     return NextResponse.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

@@ -11,16 +11,15 @@ import {
   getDocs,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { apiFetch } from '@/lib/apiFetch';
 import { COLLECTIONS } from '@/lib/db/collections';
 import {
   ReportRequestDoc,
   ReportRequestScope,
   ReportRequestStatus,
 } from '@/types/equipment';
-import type { ApiActor } from '@/lib/equipmentService';
 
 interface CreateReportRequestArgs {
-  actor: ApiActor;
   scope: ReportRequestScope;
   targetUserIds: string[];
   targetEquipmentDocIds?: string[];
@@ -32,9 +31,8 @@ interface CreateReportRequestArgs {
 export async function createReportRequest(
   args: CreateReportRequestArgs
 ): Promise<string> {
-  const response = await fetch('/api/report-requests', {
+  const response = await apiFetch('/api/report-requests', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(args),
   });
   const result = await response.json();
@@ -42,14 +40,10 @@ export async function createReportRequest(
   return result.id;
 }
 
-export async function fulfillReportRequest(
-  requestId: string,
-  userId: string
-): Promise<void> {
-  const response = await fetch('/api/report-requests/fulfill', {
+export async function fulfillReportRequest(requestId: string): Promise<void> {
+  const response = await apiFetch('/api/report-requests/fulfill', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ requestId, userId }),
+    body: JSON.stringify({ requestId }),
   });
   const result = await response.json();
   if (!result.success) throw new Error(result.error || 'Failed to fulfill report request');
