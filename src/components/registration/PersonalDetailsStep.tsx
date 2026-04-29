@@ -134,9 +134,15 @@ export default function PersonalDetailsStep({
             )}
           </div>
 
-          {/* Gender + Birthdate side by side to keep the modal compact */}
+          {/* Gender + Birthdate side by side to keep the modal compact.
+              min-w-0 on each cell prevents <input type="date"> intrinsic
+              min-content from pushing past 1fr on narrow viewports.
+              Select uses `!` modifiers to defeat the components-layer
+              `input-base` px-4/rounded-xl so it matches the name inputs'
+              px-3/rounded-lg footprint exactly (project's cn() has no
+              tailwind-merge). */}
           <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
+            <div className="space-y-1 min-w-0">
               <Select
                 value={formData.gender || null}
                 onChange={(v) => handleInputChange('gender', v ?? '')}
@@ -148,7 +154,7 @@ export default function PersonalDetailsStep({
                 placeholder="בחר מין"
                 clearable
                 ariaLabel={TEXT_CONSTANTS.AUTH.GENDER}
-                className="px-3 py-2 rounded-lg text-sm"
+                className="!px-3 !py-2 !rounded-lg !text-sm"
               />
               {validationErrors.gender && formData.gender && (
                 <p className="text-xs text-danger-600 text-right px-1" data-testid="gender-error">
@@ -157,7 +163,7 @@ export default function PersonalDetailsStep({
               )}
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1 min-w-0">
               <input
                 type="date"
                 value={formData.birthdate}

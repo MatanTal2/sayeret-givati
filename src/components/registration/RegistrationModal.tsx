@@ -26,6 +26,7 @@ interface RegistrationModalProps {
 export default function RegistrationModal({ isOpen, onClose, onSwitch, onRegistrationSuccess }: RegistrationModalProps) {
   const [personalNumber, setPersonalNumber] = useState('');
   const [currentStep, setCurrentStep] = useState<RegistrationStep>('personal-number');
+  const [isSubmittingRegistration, setIsSubmittingRegistration] = useState(false);
   const registrationCompleteRef = useRef(false);
 
   // Cleanup orphan Firebase Auth user when the user abandons the flow.
@@ -86,6 +87,9 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch, onRegistr
   if (!isOpen) return null;
 
   const handleClose = () => {
+    // Block close while account creation (linkEmailPassword + register API)
+    // is in flight — closing mid-link would leave a half-linked auth user.
+    if (isSubmittingRegistration) return;
     void cleanupOrphanAuthUser();
     setPersonalNumber('');
     setCurrentStep('personal-number');
@@ -93,6 +97,7 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch, onRegistr
   };
 
   const handleSwitchToLogin = () => {
+    if (isSubmittingRegistration) return;
     void cleanupOrphanAuthUser();
     setPersonalNumber('');
     setCurrentStep('personal-number');
@@ -111,6 +116,7 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch, onRegistr
 
   // Dynamic back navigation based on current step
   const handleBackNavigation = () => {
+    if (isSubmittingRegistration) return;
     switch (currentStep) {
       case 'personal-number':
         handleSwitchToLogin(); // Go to login
@@ -132,10 +138,12 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch, onRegistr
 
   return (
     <>
-      {/* Backdrop - Blur Only */}
-      <div 
+      {/* Backdrop - Blur Only. Disable click-to-close while account is being
+          created so the user cannot abandon the linkEmailPassword + register
+          API call mid-flight. */}
+      <div
         className="fixed inset-0 z-50 backdrop-enter backdrop-blur-sm bg-black/20"
-        onClick={handleClose}
+        onClick={isSubmittingRegistration ? undefined : handleClose}
       />
       
       {/* reCAPTCHA host — kept at modal level so the DOM node persists across
@@ -152,6 +160,7 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch, onRegistr
           <RegistrationHeader
             onBack={handleBackNavigation}
             onClose={handleClose}
+            disabled={isSubmittingRegistration}
           />
           
           {/* Progress Stepper */}
@@ -166,6 +175,7 @@ export default function RegistrationModal({ isOpen, onClose, onSwitch, onRegistr
             onStepChange={handleStepChange}
             currentStep={currentStep}
             onRegistrationSuccess={handleRegistrationComplete}
+            onSubmittingChange={setIsSubmittingRegistration}
           />
           
           <RegistrationFooter showRegistrationNote={currentStep === 'personal-number'} />

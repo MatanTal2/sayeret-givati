@@ -85,6 +85,7 @@ export const TEXT_CONSTANTS = {
     INVALID_EMAIL: 'כתובת אימייל לא תקינה.',
     REQUIRES_RECENT_LOGIN: 'הפעולה דורשת התחברות מחדש. אנא התחבר ונסה שוב.',
     REGISTRATION_ABANDONED_FALLBACK: 'הרישום בוטל. ייתכן שיהיה צורך לפנות למנהל כדי להסיר את החשבון.',
+    OTP_SESSION_EXPIRED: 'תוקף אימות הטלפון פג. חזור לתחילת הרישום ונסה שוב.',
 
     // Email verification (soft)
     EMAIL_VERIFICATION_BANNER: 'אנא אמת את כתובת האימייל שלך כדי לאפשר איפוס סיסמה.',
