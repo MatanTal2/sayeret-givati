@@ -6,6 +6,7 @@ import PersonalDetailsStep from './PersonalDetailsStep';
 import AccountDetailsStep from './AccountDetailsStep';
 import RegistrationSuccessStep from './RegistrationSuccessStep';
 import RecaptchaContainer, { RECAPTCHA_CONTAINER_ID } from './RecaptchaContainer';
+import RecaptchaAttribution from './RecaptchaAttribution';
 import { PersonalDetailsData, AccountDetailsData } from '@/types/registration';
 import { auth } from '@/lib/firebase';
 import {
@@ -210,6 +211,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
           onVerifySuccess={handleOTPVerifySuccess}
           onResendOtp={handleResendOtp}
         />
+        <RecaptchaAttribution />
       </>
     );
   }
@@ -362,6 +364,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
             </div>
           )}
         </form>
+        <RecaptchaAttribution />
       </div>
     </>
   );
