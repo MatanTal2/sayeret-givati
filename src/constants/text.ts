@@ -72,6 +72,11 @@ export const TEXT_CONSTANTS = {
     OTP_INTERNAL_ERROR: 'שגיאה פנימית במערכת. אנא נסה שוב מאוחר יותר.',
     OTP_METHOD_NOT_ALLOWED: 'Method not allowed. Use POST to send OTP.',
     OTP_CAPTCHA_FAILED: 'אימות reCAPTCHA נכשל. רענן את הדף ונסה שוב.',
+    RECAPTCHA_ATTRIBUTION_PREFIX: 'אתר זה מוגן על ידי reCAPTCHA, וחלות עליו ',
+    RECAPTCHA_PRIVACY_LINK: 'מדיניות הפרטיות',
+    RECAPTCHA_AND: ' ו-',
+    RECAPTCHA_TERMS_LINK: 'תנאי השימוש',
+    RECAPTCHA_ATTRIBUTION_SUFFIX: ' של Google.',
 
     // Account linking errors (linkWithCredential)
     EMAIL_ALREADY_LINKED: 'כתובת האימייל כבר משויכת לחשבון אחר. אנא השתמש באימייל אחר.',
