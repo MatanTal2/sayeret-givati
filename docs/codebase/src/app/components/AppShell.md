@@ -25,3 +25,7 @@ Replaces the per-page `Header` component that was removed. Pages opt in by wrapp
 - Content row: sidebar rail (lg+) on the start side + main content column.
 - Main column: `PageHeader` + scrollable `<main>` with `children`.
 - FAB is fixed bottom-end, visible only on `<lg`.
+
+## Onboarding gate
+
+Renders `WelcomeModal` when `enhancedUser` exists, has `firstName`+`lastName`, lacks `teamId`, and no registration flow is in flight. Suppressed on `/admin/*` so admins can reach System Config and populate the teams list — otherwise the bootstrap admin (no `teamId` yet) is locked out of the only place that defines teams.

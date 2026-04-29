@@ -40,9 +40,12 @@ export default function AppShell({
   // Require core profile fields AND no in-flight registration — prevents the
   // welcome modal flashing for an orphan auth user mid-registration, or for a
   // previously-registered user re-confirming OTP through the registration flow.
+  // Skip on /admin so admins (incl. the bootstrap admin who has no teamId yet)
+  // can reach System Config and populate the teams list.
   const hasProfile = !!enhancedUser?.firstName && !!enhancedUser?.lastName;
+  const isAdminRoute = pathname?.startsWith('/admin') ?? false;
   const needsOnboarding =
-    !!enhancedUser && hasProfile && !enhancedUser.teamId && !isRegistrationInProgress();
+    !!enhancedUser && hasProfile && !enhancedUser.teamId && !isRegistrationInProgress() && !isAdminRoute;
 
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col overflow-x-hidden">
