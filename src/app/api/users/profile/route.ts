@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { serverUpdateUserProfile } from '@/lib/db/server/userService';
 import { getActorOrError } from '@/lib/db/server/auth';
+import { getAdminDb } from '@/lib/db/admin';
+import { COLLECTIONS } from '@/lib/db/collections';
 import { UserType } from '@/types/user';
+import { serverUpsertPhoneBookFromUser } from '@/lib/db/server/phoneBookService';
 
 /**
  * PATCH /api/users/profile
@@ -31,6 +34,30 @@ export async function PATCH(request: Request) {
       );
     }
     await serverUpdateUserProfile(body.uid, body.updates);
+
+    // Write-through to phone book when phone-relevant fields change.
+    const touchesPhoneBook =
+      body.updates.phoneNumber !== undefined ||
+      body.updates.teamId !== undefined ||
+      body.updates.profileImage !== undefined;
+    if (touchesPhoneBook) {
+      const snap = await getAdminDb().collection(COLLECTIONS.USERS).doc(body.uid).get();
+      if (snap.exists) {
+        const u = snap.data() ?? {};
+        await serverUpsertPhoneBookFromUser({
+          uid: body.uid,
+          militaryPersonalNumberHash: u.militaryPersonalNumberHash as string,
+          firstName: u.firstName as string | undefined,
+          lastName: u.lastName as string | undefined,
+          phoneNumber: u.phoneNumber as string | undefined,
+          email: u.email as string | undefined,
+          teamId: u.teamId as string | undefined,
+          userType: u.userType as UserType | undefined,
+          photoURL: (u.profileImage as string | undefined) || (u.photoURL as string | undefined),
+        });
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

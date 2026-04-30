@@ -5,6 +5,7 @@ import { COLLECTIONS } from '@/lib/db/collections';
 import { FieldValue } from 'firebase-admin/firestore';
 import { UserType } from '@/types/user';
 import { UserRole } from '@/types/equipment';
+import { serverUpsertPhoneBookFromUser } from '@/lib/db/server/phoneBookService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -87,6 +88,16 @@ export async function POST(request: NextRequest) {
     await personnelRef.update({
       registered: true,
       updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    await serverUpsertPhoneBookFromUser({
+      uid,
+      militaryPersonalNumberHash: militaryIdHash,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      phoneNumber: profile.phoneNumber,
+      email: profile.email,
+      userType: profile.userType as UserType,
     });
 
     return NextResponse.json({ success: true, uid, message: 'User profile created successfully' });

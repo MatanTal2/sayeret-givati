@@ -185,6 +185,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Phone book — authenticated read; writes server-only via the
+    // write-through pipeline in /api/auth/register, /api/users/profile,
+    // and /api/authorized-personnel.
+    match /phoneBook/{entryId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // Deny everything else
     match /{document=**} {
       allow read, write: if false;
