@@ -4,7 +4,6 @@ import React, { useMemo, useState } from 'react';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import {
   Plus,
-  Sparkles,
   AlertCircle,
   Check,
   X,
@@ -83,7 +82,7 @@ export default function AmmunitionTemplatesSection() {
     enhancedUser?.userType === UserType.SYSTEM_MANAGER ||
     enhancedUser?.userType === UserType.MANAGER;
 
-  const { templates, isLoading, error, create, update, remove, seedCanonical } =
+  const { templates, isLoading, error, create, update, remove } =
     useAmmunitionTemplates();
   const [dialog, setDialog] = useState<Dialog>({ kind: 'closed' });
   const [pendingDelete, setPendingDelete] = useState<AmmunitionType | null>(null);
@@ -154,20 +153,6 @@ export default function AmmunitionTemplatesSection() {
     }
   };
 
-  const handleSeed = async () => {
-    setSubmitting(true);
-    const result = await seedCanonical();
-    setSubmitting(false);
-    if (result) {
-      showToast(
-        'success',
-        `נזרעו ${result.created} תבניות (${result.skipped} כבר קיימות)`
-      );
-    } else {
-      showToast('error', 'זריעה נכשלה');
-    }
-  };
-
   return (
     <div className="space-y-6">
       {error && (
@@ -198,9 +183,6 @@ export default function AmmunitionTemplatesSection() {
         <div className="flex items-center gap-2 flex-wrap">
           <Button onClick={() => setDialog({ kind: 'create' })}>
             <Plus className="w-4 h-4 ms-1" /> תבנית חדשה
-          </Button>
-          <Button variant="secondary" onClick={handleSeed} disabled={submitting}>
-            <Sparkles className="w-4 h-4 ms-1" /> זרע תבניות קנוניות
           </Button>
         </div>
       )}

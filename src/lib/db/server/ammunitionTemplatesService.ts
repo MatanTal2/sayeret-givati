@@ -20,7 +20,6 @@ import type {
   TrackingMode,
 } from '@/types/ammunition';
 import { isAmmunitionSubcategory } from '@/lib/ammunition/subcategories';
-import { CANONICAL_AMMUNITION_TEMPLATES } from '@/data/ammunitionTemplates';
 
 const ALLOCATIONS: AmmunitionAllocation[] = ['USER', 'TEAM', 'BOTH'];
 const TRACKING_MODES: TrackingMode[] = ['BRUCE', 'BELT', 'SERIAL', 'LOOSE_COUNT'];
@@ -233,70 +232,3 @@ export async function serverListAmmunitionTemplates(): Promise<AmmunitionType[]>
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as AmmunitionType);
 }
 
-export async function serverSeedCanonicalAmmunitionTemplates(
-  createdBy: string
-): Promise<{ created: number; skipped: number }> {
-  const db = getAdminDb();
-  const col = db.collection(COLLECTIONS.AMMUNITION_TEMPLATES);
-
-  // Match by stable seedKey, NOT name. Renaming a template in the UI must
-  // not cause a duplicate on the next re-seed.
-  const existingSnap = await col.where('status', '==', 'CANONICAL').get();
-  const existingSeedKeys = new Set(
-    existingSnap.docs
-      .map((d) => d.data().seedKey as string | undefined)
-      .filter((k): k is string => typeof k === 'string')
-  );
-
-  let created = 0;
-  let skipped = 0;
-  const batch = db.batch();
-  for (const seed of CANONICAL_AMMUNITION_TEMPLATES) {
-    if (existingSeedKeys.has(seed.seedKey)) {
-      skipped += 1;
-      continue;
-    }
-    const ref = col.doc();
-    const bruceTotal =
-      seed.trackingMode === 'BRUCE' &&
-      seed.bulletsPerCardboard &&
-      seed.cardboardsPerBruce
-        ? seed.bulletsPerCardboard * seed.cardboardsPerBruce
-        : undefined;
-    const beltTotal =
-      seed.trackingMode === 'BELT' &&
-      seed.bulletsPerString &&
-      seed.stringsPerBruce
-        ? seed.bulletsPerString * seed.stringsPerBruce
-        : undefined;
-    const data: Record<string, unknown> = {
-      id: ref.id,
-      seedKey: seed.seedKey,
-      name: seed.name,
-      subcategory: seed.subcategory,
-      allocation: seed.allocation,
-      trackingMode: seed.trackingMode,
-      securityLevel: seed.securityLevel,
-      status: 'CANONICAL',
-      createdBy,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    };
-    if (seed.description) data.description = seed.description;
-    if (seed.trackingMode === 'BRUCE') {
-      data.bulletsPerCardboard = seed.bulletsPerCardboard;
-      data.cardboardsPerBruce = seed.cardboardsPerBruce;
-      if (bruceTotal) data.totalBulletsPerBruce = bruceTotal;
-    }
-    if (seed.trackingMode === 'BELT') {
-      data.bulletsPerString = seed.bulletsPerString;
-      data.stringsPerBruce = seed.stringsPerBruce;
-      if (beltTotal) data.totalBulletsPerStringBruce = beltTotal;
-    }
-    batch.set(ref, data);
-    created += 1;
-  }
-
-  if (created > 0) await batch.commit();
-  return { created, skipped };
-}

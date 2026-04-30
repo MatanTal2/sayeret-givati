@@ -45,15 +45,6 @@ export type AmmunitionReportRequestScope = 'INDIVIDUAL' | 'TEAM' | 'ALL';
 
 export interface AmmunitionType {
   id: string;
-  /**
-   * Stable identifier for canonical templates seeded from
-   * `src/data/ammunitionTemplates.ts`. Set only on CANONICAL docs created
-   * by the seed. Used to make re-seeding idempotent across renames — the
-   * server skips seeds whose seedKey already exists on a doc, so renaming
-   * a template in the UI never causes a duplicate on the next seed run.
-   * Absent on user-created (PROPOSED / PENDING_REQUEST) templates.
-   */
-  seedKey?: string;
   name: string;
   description?: string;
   subcategory: AmmunitionSubcategory;
