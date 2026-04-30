@@ -14,7 +14,9 @@ in `templateRequestService`.
 | Export | Purpose |
 |---|---|
 | `serverCreateEquipmentType` | Creates a new template doc. Caller decides `status` and `isActive`; the management UI writes `status: CANONICAL`, `isActive: true`. Doc shape mirrors what `serverProposeTemplate` writes (sans the propose-specific `proposedAt` / `proposedByUserId`) so list filters see both creation paths the same way. |
-| `serverUpdateEquipmentType` | Patches a template. Whitelisted fields only. |
+| `serverUpdateEquipmentType` | Patches a template. Whitelisted fields only. Low-level — no audit, no permission gate. Prefer `serverUpdateCanonicalTemplate` from API routes. |
+| `serverUpdateCanonicalTemplate` | Edit a canonical template via the management UI. Wraps `serverUpdateEquipmentType` and writes a `TEMPLATE_UPDATED` actionsLog entry. Strips any `status` from the edits — lifecycle transitions still go through the propose / approve / reject flow. |
+| `serverRetireCanonicalTemplate` | Soft-delete: flips `isActive: false`, leaves `status: CANONICAL` so existing `Equipment` items still resolve their template fields. The wizard's `activeOnly: true` filter then hides the template from new equipment creation. Writes a `TEMPLATE_RETIRED` actionsLog entry. Physical delete is intentionally not supported — `Equipment.equipmentTypeId` references would orphan. |
 
 ## Doc shape
 

@@ -29,6 +29,8 @@ disclosure trigger so clicking them does not toggle the panel.
 | Manager+ | Create canonical | `EquipmentTypesService.createEquipmentType` |
 | Manager+ | Edit + approve a proposed/pending row | `approveTemplateRequest` (edits merged on the server) |
 | Manager+ | Reject (with optional reason) | `rejectTemplateRequest` |
+| Admin / system_manager | Edit canonical template | `updateCanonicalTemplate` (PATCH `/api/equipment-templates/[id]`) |
+| Admin / system_manager | Retire (soft-delete) canonical template | `retireCanonicalTemplate` (DELETE `/api/equipment-templates/[id]`) |
 | Team Leader | Propose new template | `proposeTemplate` (server sets `PROPOSED`) |
 
 The TL "Propose" button is rendered but is only reachable once TL gains `hasManagementAccess`. Phase 5 ships the button without expanding TL access; the primary TL entry point in Phase 6 is the `/equipment` AddWizard "didn't find?" link.

@@ -13,6 +13,8 @@ import {
   approveTemplateRequest,
   proposeTemplate,
   rejectTemplateRequest,
+  retireCanonicalTemplate,
+  updateCanonicalTemplate,
 } from '@/lib/templateRequestService';
 import TemplateForm, { TemplateFormValues } from '@/components/equipment/TemplateForm';
 import { useCategoryLookup } from '@/hooks/useCategoryLookup';
@@ -22,7 +24,9 @@ type DialogState =
   | { kind: 'create_canonical' }
   | { kind: 'propose' }
   | { kind: 'review'; template: EquipmentType }
-  | { kind: 'reject'; template: EquipmentType };
+  | { kind: 'reject'; template: EquipmentType }
+  | { kind: 'edit_canonical'; template: EquipmentType }
+  | { kind: 'retire'; template: EquipmentType };
 
 export default function TemplatesTab() {
   const { enhancedUser } = useAuth();
@@ -30,6 +34,9 @@ export default function TemplatesTab() {
     enhancedUser?.userType === UserType.ADMIN ||
     enhancedUser?.userType === UserType.SYSTEM_MANAGER ||
     enhancedUser?.userType === UserType.MANAGER;
+  const isAdminOrSystem =
+    enhancedUser?.userType === UserType.ADMIN ||
+    enhancedUser?.userType === UserType.SYSTEM_MANAGER;
   const isTeamLeader = enhancedUser?.userType === UserType.TEAM_LEADER;
 
   const { categoryName, subcategoryName } = useCategoryLookup();
@@ -39,6 +46,7 @@ export default function TemplatesTab() {
   const [dialog, setDialog] = useState<DialogState>({ kind: 'closed' });
   const [submitting, setSubmitting] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [retireReason, setRetireReason] = useState('');
   const [toast, setToast] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
 
   const refresh = useCallback(async () => {
@@ -174,6 +182,61 @@ export default function TemplatesTab() {
     }
   };
 
+  const handleEditCanonical = async (
+    template: EquipmentType,
+    values: TemplateFormValues
+  ) => {
+    if (!enhancedUser) return;
+    setSubmitting(true);
+    try {
+      await updateCanonicalTemplate({
+        templateId: template.id,
+        actorName:
+          [enhancedUser.firstName, enhancedUser.lastName].filter(Boolean).join(' ') ||
+          enhancedUser.uid,
+        edits: {
+          name: values.name,
+          category: values.category,
+          subcategory: values.subcategory,
+          requiresSerialNumber: values.requiresSerialNumber,
+          requiresDailyStatusCheck: values.requiresDailyStatusCheck,
+          defaultCatalogNumber: values.defaultCatalogNumber || '',
+          description: values.description || '',
+          notes: values.notes || '',
+        },
+      });
+      showToast('success', 'התבנית עודכנה');
+      setDialog({ kind: 'closed' });
+      await refresh();
+    } catch (e) {
+      showToast('error', e instanceof Error ? e.message : 'עדכון נכשל');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRetire = async () => {
+    if (dialog.kind !== 'retire' || !enhancedUser) return;
+    setSubmitting(true);
+    try {
+      await retireCanonicalTemplate({
+        templateId: dialog.template.id,
+        actorName:
+          [enhancedUser.firstName, enhancedUser.lastName].filter(Boolean).join(' ') ||
+          enhancedUser.uid,
+        reason: retireReason.trim() || undefined,
+      });
+      showToast('success', 'התבנית הושבתה');
+      setDialog({ kind: 'closed' });
+      setRetireReason('');
+      await refresh();
+    } catch (e) {
+      showToast('error', e instanceof Error ? e.message : 'השבתה נכשלה');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleReject = async () => {
     if (dialog.kind !== 'reject' || !enhancedUser) return;
     setSubmitting(true);
@@ -290,6 +353,45 @@ export default function TemplatesTab() {
       <span className="text-xs text-neutral-500">ממתין</span>
     );
 
+  const canonicalActions = (t: EquipmentType) => {
+    if (!isAdminOrSystem) {
+      return (
+        <span
+          className={cn(
+            'text-xs',
+            t.isActive ? 'text-neutral-500' : 'text-warning-700'
+          )}
+        >
+          {t.isActive ? 'פעיל' : 'מושבת'}
+        </span>
+      );
+    }
+    return (
+      <div className="flex items-center gap-2">
+        {!t.isActive && (
+          <span className="text-xs text-warning-700">מושבת</span>
+        )}
+        <button
+          onClick={() => setDialog({ kind: 'edit_canonical', template: t })}
+          className="text-primary-600 hover:text-primary-800 text-xs"
+        >
+          ערוך
+        </button>
+        {t.isActive && (
+          <button
+            onClick={() => {
+              setDialog({ kind: 'retire', template: t });
+              setRetireReason('');
+            }}
+            className="text-danger-600 hover:text-danger-800 text-xs"
+          >
+            השבת
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const section = (
     title: string,
     items: EquipmentType[],
@@ -370,7 +472,7 @@ export default function TemplatesTab() {
           {section(
             'תבניות קנוניות',
             canonical,
-            () => <span className="text-xs text-neutral-500">פעיל</span>,
+            canonicalActions,
             'אין תבניות קנוניות'
           )}
           {section(
@@ -430,6 +532,59 @@ export default function TemplatesTab() {
             isSubmitting={submitting}
             submitLabel="אשר תבנית"
           />
+        )}
+
+      {dialog.kind === 'edit_canonical' &&
+        modal(
+          'עריכת תבנית קנונית',
+          <TemplateForm
+            mode="edit_and_approve"
+            initialValues={{
+              name: dialog.template.name,
+              description: dialog.template.description || '',
+              category: dialog.template.category,
+              subcategory: dialog.template.subcategory,
+              notes: dialog.template.notes || '',
+              requiresSerialNumber: !!dialog.template.requiresSerialNumber,
+              requiresDailyStatusCheck: !!dialog.template.requiresDailyStatusCheck,
+              defaultCatalogNumber: dialog.template.defaultCatalogNumber || '',
+            }}
+            onSubmit={(v) => handleEditCanonical(dialog.template, v)}
+            onCancel={() => setDialog({ kind: 'closed' })}
+            isSubmitting={submitting}
+            submitLabel="שמור שינויים"
+          />
+        )}
+
+      {dialog.kind === 'retire' &&
+        modal(
+          'השבתת תבנית',
+          <div className="space-y-4">
+            <p className="text-sm text-neutral-700">
+              האם להשבית את התבנית &quot;{dialog.template.name}&quot;? התבנית לא תופיע יותר באשף הוספת ציוד אך פריטי ציוד קיימים שמפנים אליה לא יושפעו.
+            </p>
+            <div>
+              <label htmlFor="retire-reason" className="block text-sm font-medium text-neutral-700 mb-1">
+                סיבה (אופציונלי)
+              </label>
+              <textarea
+                id="retire-reason"
+                value={retireReason}
+                onChange={(e) => setRetireReason(e.target.value)}
+                rows={3}
+                disabled={submitting}
+                className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setDialog({ kind: 'closed' })} disabled={submitting}>
+                ביטול
+              </Button>
+              <Button variant="danger" onClick={handleRetire} isLoading={submitting} disabled={submitting}>
+                השבת
+              </Button>
+            </div>
+          </div>
         )}
 
       {dialog.kind === 'reject' &&

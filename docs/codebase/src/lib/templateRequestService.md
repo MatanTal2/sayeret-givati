@@ -16,6 +16,8 @@ Client facade for non-canonical template lifecycle: propose (TL) / request (regu
 | `rejectTemplateRequest` | `({ actor, templateId, rejectorUserName, reason? }) => Promise<void>` | Sets status=`rejected` + optional reason. |
 | `getTemplatesByStatus` | `(status) => Promise<EquipmentType[]>` | |
 | `getMyPendingTemplateRequests` | `(userId) => Promise<EquipmentType[]>` | User's in-flight proposals. |
+| `updateCanonicalTemplate` | `({ templateId, actorName, edits }) => Promise<void>` | Edit a canonical template. Hits `PATCH /api/equipment-templates/[id]`. ADMIN / SYSTEM_MANAGER only (server-enforced). |
+| `retireCanonicalTemplate` | `({ templateId, actorName, reason? }) => Promise<void>` | Soft-retire a canonical template. Hits `DELETE /api/equipment-templates/[id]`. ADMIN / SYSTEM_MANAGER only. |
 
 ## Firebase Operations
 

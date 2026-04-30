@@ -11,7 +11,8 @@
 import { getAdminDb } from '../admin';
 import { COLLECTIONS } from '../collections';
 import { FieldValue } from 'firebase-admin/firestore';
-import { TemplateStatus } from '@/types/equipment';
+import { ActionType, TemplateStatus } from '@/types/equipment';
+import { serverCreateActionLog } from './actionsLogService';
 
 interface EquipmentTypeInput {
   name: string;
@@ -78,4 +79,80 @@ export async function serverUpdateEquipmentType(
   if (updates.status !== undefined) updateData.status = updates.status;
 
   await db.collection(COLLECTIONS.EQUIPMENT_TEMPLATES).doc(typeId).update(updateData);
+}
+
+interface CanonicalEditInput {
+  templateId: string;
+  actorId: string;
+  actorName: string;
+  edits: Partial<EquipmentTypeInput>;
+}
+
+/**
+ * Edit a canonical template. Writes to Firestore + actionsLog. Used by the
+ * Manage Templates "edit" action. Status is intentionally not mutable here —
+ * lifecycle transitions go through templateRequestService.
+ */
+export async function serverUpdateCanonicalTemplate(input: CanonicalEditInput): Promise<void> {
+  if (!input.templateId) throw new Error('templateId is required');
+  const { status: _ignored, ...safeEdits } = input.edits;
+  void _ignored;
+  await serverUpdateEquipmentType(input.templateId, safeEdits);
+
+  const db = getAdminDb();
+  const snap = await db.collection(COLLECTIONS.EQUIPMENT_TEMPLATES).doc(input.templateId).get();
+  const name = (snap.data()?.name as string) ?? input.edits.name ?? '';
+
+  await serverCreateActionLog({
+    actionType: ActionType.TEMPLATE_UPDATED,
+    equipmentId: '',
+    equipmentDocId: input.templateId,
+    equipmentName: name,
+    actorId: input.actorId,
+    actorName: input.actorName,
+  });
+}
+
+interface CanonicalRetireInput {
+  templateId: string;
+  actorId: string;
+  actorName: string;
+  reason?: string;
+}
+
+/**
+ * Soft-retire a canonical template by flipping isActive:false. Status is left
+ * as CANONICAL so existing Equipment items that reference this template still
+ * resolve their template fields, but the wizard's `activeOnly: true` filter
+ * hides it from new equipment creation.
+ *
+ * Physical delete is NOT supported — Equipment items reference template IDs
+ * directly and would be orphaned.
+ */
+export async function serverRetireCanonicalTemplate(input: CanonicalRetireInput): Promise<void> {
+  if (!input.templateId) throw new Error('templateId is required');
+  const db = getAdminDb();
+  const ref = db.collection(COLLECTIONS.EQUIPMENT_TEMPLATES).doc(input.templateId);
+
+  const snap = await ref.get();
+  if (!snap.exists) throw new Error('Template not found');
+  const template = snap.data()!;
+  if (template.status !== TemplateStatus.CANONICAL) {
+    throw new Error('Only canonical templates can be retired');
+  }
+
+  await ref.update({
+    isActive: false,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+
+  await serverCreateActionLog({
+    actionType: ActionType.TEMPLATE_RETIRED,
+    equipmentId: '',
+    equipmentDocId: input.templateId,
+    equipmentName: (template.name as string) ?? '',
+    actorId: input.actorId,
+    actorName: input.actorName,
+    ...(input.reason ? { note: input.reason } : {}),
+  });
 }

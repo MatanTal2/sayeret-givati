@@ -425,6 +425,8 @@ export enum ActionType {
   TEMPLATE_REQUESTED = 'template_requested',
   TEMPLATE_APPROVED = 'template_approved',
   TEMPLATE_REJECTED = 'template_rejected',
+  TEMPLATE_UPDATED = 'template_updated',
+  TEMPLATE_RETIRED = 'template_retired',
 
   // Sign in/out actions
   SIGN_IN = 'sign_in',
