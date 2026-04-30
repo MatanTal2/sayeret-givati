@@ -13,13 +13,18 @@ import { useAmmunitionTemplates } from '@/hooks/useAmmunitionTemplates';
 import { useAmmunitionInventory } from '@/hooks/useAmmunitionInventory';
 import { useAmmunitionReports } from '@/hooks/useAmmunitionReports';
 import { useAmmunitionReportRequests } from '@/hooks/useAmmunitionReportRequests';
-import AmmunitionInventoryView from '@/components/ammunition/AmmunitionInventoryView';
+import AmmunitionInventoryView, {
+  type InventoryFilter,
+} from '@/components/ammunition/AmmunitionInventoryView';
 import AddInventoryModal from '@/components/ammunition/AddInventoryModal';
 import ReportUsageForm from '@/components/ammunition/ReportUsageForm';
+import TransferAmmoItemModal from '@/components/ammunition/TransferAmmoItemModal';
 import { UserType } from '@/types/user';
-import type { HolderType } from '@/types/ammunition';
+import type { AmmunitionItem, HolderType } from '@/types/ammunition';
 
 const T = FEATURES.AMMUNITION;
+
+type Scope = 'personal' | 'team' | 'all';
 
 export default function AmmunitionPage() {
   return (
@@ -43,6 +48,8 @@ function AmmunitionPageContent() {
     deleteStock,
     createSerialItem,
     deleteSerialItem,
+    updateSerialItem,
+    returnSerialItemToMgr,
     refresh: refreshInventory,
   } = useAmmunitionInventory();
   const { submit: submitReport } = useAmmunitionReports();
@@ -52,6 +59,8 @@ function AmmunitionPageContent() {
   const [showAdd, setShowAdd] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
+  const [transferTarget, setTransferTarget] = useState<AmmunitionItem | null>(null);
+  const [scope, setScope] = useState<Scope>('personal');
 
   useEffect(() => {
     if (requestIdParam) {
@@ -65,42 +74,60 @@ function AmmunitionPageContent() {
     [requests, activeRequestId]
   );
 
-  const isManagerOrTL =
+  const isAdminOrSysMgrOrMgr =
     enhancedUser?.userType === UserType.ADMIN ||
     enhancedUser?.userType === UserType.SYSTEM_MANAGER ||
-    enhancedUser?.userType === UserType.MANAGER ||
-    enhancedUser?.userType === UserType.TEAM_LEADER;
+    enhancedUser?.userType === UserType.MANAGER;
 
-  const filterSelf = useMemo(
-    () =>
-      enhancedUser
-        ? { holderType: 'USER' as HolderType, holderId: enhancedUser.uid }
-        : undefined,
+  const isManagerOrTL =
+    isAdminOrSysMgrOrMgr || enhancedUser?.userType === UserType.TEAM_LEADER;
+
+  const isAdminOrSysMgr =
+    enhancedUser?.userType === UserType.ADMIN ||
+    enhancedUser?.userType === UserType.SYSTEM_MANAGER;
+
+  const filterPersonal = useMemo<InventoryFilter | undefined>(
+    () => (enhancedUser ? { holderType: 'USER', holderId: enhancedUser.uid } : undefined),
     [enhancedUser]
   );
-  const filterTeam = useMemo(
-    () =>
-      enhancedUser?.teamId
-        ? { holderType: 'TEAM' as HolderType, holderId: enhancedUser.teamId }
-        : undefined,
+  const filterTeam = useMemo<InventoryFilter | undefined>(
+    () => (enhancedUser?.teamId ? { holderType: 'TEAM', holderId: enhancedUser.teamId } : undefined),
     [enhancedUser]
   );
+
+  const filterByScope = useMemo<InventoryFilter | undefined>(() => {
+    if (scope === 'personal') return filterPersonal;
+    if (scope === 'team') return filterTeam;
+    return undefined;
+  }, [scope, filterPersonal, filterTeam]);
+
+  const showHolder = scope !== 'personal';
 
   const canMutate = (entry: { templateId: string; holderType: HolderType; holderId: string }) => {
     if (!enhancedUser) return false;
-    if (isManagerOrTL) {
-      if (enhancedUser.userType === UserType.TEAM_LEADER) {
-        if (entry.holderType === 'TEAM') return entry.holderId === enhancedUser.teamId;
-        return true;
-      }
-      return true;
+    if (isAdminOrSysMgrOrMgr) return true;
+    if (enhancedUser.userType === UserType.TEAM_LEADER) {
+      if (entry.holderType === 'TEAM') return entry.holderId === enhancedUser.teamId;
+      // For USER-held entries, fall back to self/team. The server resolves the holder's team.
+      return entry.holderId === enhancedUser.uid;
     }
     return entry.holderType === 'USER' && entry.holderId === enhancedUser.uid;
+  };
+
+  const canDeleteRow = (entry: { templateId: string; holderType: HolderType; holderId: string }) => {
+    void entry;
+    return isAdminOrSysMgr;
   };
 
   if (!enhancedUser) return null;
 
   const isLoading = templatesLoading || inventoryLoading;
+
+  const tabs: { id: Scope; label: string; visible: boolean }[] = [
+    { id: 'personal', label: T.SCOPE_PERSONAL, visible: true },
+    { id: 'team', label: T.SCOPE_TEAM, visible: !!filterTeam },
+    { id: 'all', label: T.SCOPE_ALL, visible: isAdminOrSysMgrOrMgr },
+  ];
 
   return (
     <div className="space-y-6">
@@ -134,43 +161,39 @@ function AmmunitionPageContent() {
         </Link>
       </div>
 
+      <div className="flex items-center gap-1 border-b border-neutral-200">
+        {tabs.filter((t) => t.visible).map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setScope(tab.id)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              scope === tab.id
+                ? 'border-primary-500 text-primary-700'
+                : 'border-transparent text-neutral-600 hover:text-neutral-900'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {isLoading ? (
         <div className="text-sm text-neutral-500 text-center py-12">טוען...</div>
       ) : (
-        <>
-          <section>
-            <h3 className="text-base font-semibold text-neutral-900 mb-2">
-              {T.SECTION_PERSONAL}
-            </h3>
-            <AmmunitionInventoryView
-              templates={templates}
-              stock={stock}
-              items={items}
-              filter={filterSelf}
-              canMutate={canMutate}
-              onDeleteStock={(id) => deleteStock(id)}
-              onDeleteItem={(serial) => deleteSerialItem(serial)}
-            />
-          </section>
-
-          {filterTeam && (
-            <section>
-              <h3 className="text-base font-semibold text-neutral-900 mb-2">
-                {T.SECTION_TEAM}
-              </h3>
-              <AmmunitionInventoryView
-                templates={templates}
-                stock={stock}
-                items={items}
-                filter={filterTeam}
-                showHolder={false}
-                canMutate={canMutate}
-                onDeleteStock={(id) => deleteStock(id)}
-                onDeleteItem={(serial) => deleteSerialItem(serial)}
-              />
-            </section>
-          )}
-        </>
+        <AmmunitionInventoryView
+          templates={templates}
+          stock={stock}
+          items={items}
+          filter={filterByScope}
+          showHolder={showHolder}
+          canMutate={canMutate}
+          canDeleteRow={canDeleteRow}
+          onDeleteStock={(id) => deleteStock(id)}
+          onDeleteItem={(serial) => deleteSerialItem(serial)}
+          onTransferItem={(item) => setTransferTarget(item)}
+          onReturnItemToMgr={(item) => returnSerialItemToMgr(item.id)}
+        />
       )}
 
       {showAdd && (
@@ -203,6 +226,14 @@ function AmmunitionPageContent() {
             if (result.ok) await refreshInventory();
             return result;
           }}
+        />
+      )}
+
+      {transferTarget && (
+        <TransferAmmoItemModal
+          item={transferTarget}
+          onClose={() => setTransferTarget(null)}
+          onSubmit={async (serial, payload) => updateSerialItem(serial, payload)}
         />
       )}
     </div>
