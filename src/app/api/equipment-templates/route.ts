@@ -10,9 +10,15 @@ export async function POST(request: Request) {
     const actorOrError = await getActorOrError(request);
     if (actorOrError instanceof NextResponse) return actorOrError;
     const data = await request.json();
-    if (!data.name || !data.category || !data.subcategory) {
+    if (!data.name || !data.category || !data.subcategory || !data.status) {
       return NextResponse.json(
-        { success: false, error: 'name, category, and subcategory are required' },
+        { success: false, error: 'name, category, subcategory, and status are required' },
+        { status: 400 }
+      );
+    }
+    if (typeof data.requiresSerialNumber !== 'boolean' || typeof data.requiresDailyStatusCheck !== 'boolean') {
+      return NextResponse.json(
+        { success: false, error: 'requiresSerialNumber and requiresDailyStatusCheck must be booleans' },
         { status: 400 }
       );
     }
