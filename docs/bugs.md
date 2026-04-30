@@ -82,16 +82,9 @@
       - **Edit:** open the existing `TemplateForm` (currently only used for create) prefilled with the template; submit hits a new `PATCH /api/equipment-templates/:id` (or reuse the existing canonical write endpoint with merge semantics). Audit entry to `actionsLog`.
       - **Delete:** soft-delete by flipping `isActive: false` and `status` to a tombstone value, **not** physical delete — equipment items reference template IDs and would orphan. Confirm via Headless UI `Dialog`. Audit entry.
       - Permission: ADMIN + SYSTEM_MANAGER only.
-12. Canonical template `status` field is dead UI — wire it up or remove
-    - **Repro:** Canonical row shows hardcoded "פעיל" string regardless of the template's `isActive` or `status` value in Firestore.
-    - **Why this matters:** Either there is a real lifecycle (active / archived / deprecated) that needs surfacing, or the field is dead weight that should be removed from the schema. Today it is misleading because the label looks like state.
-    - **File paths:**
-      - Render: `src/components/management/tabs/TemplatesTab.tsx:327–332`.
-      - Schema: `EquipmentType.status` and `EquipmentType.isActive` in `src/types/equipment.ts`.
-    - **Decision needed (open question):**
-      - **Option A — wire it up:** active toggle that flips `isActive`. Inactive templates hidden from the equipment-page selection list. Audit log on every flip.
-      - **Option B — remove:** drop `status` from canonical templates entirely (keep on the request/propose lifecycle), since `PROPOSED → CANONICAL` already encodes the meaningful state.
-    - **Suggested fix:** ask user which during the fix session; default to A if unspecified.
+12. ~~Canonical template `status` field is dead UI~~
+    - **RESOLVED by bug #11 (2026-04-30):** the hardcoded "פעיל" label is gone. The canonical action cell now renders edit + retire buttons for ADMIN / SYSTEM_MANAGER, and a "מושבת" warning badge once a template has been retired (`isActive: false`). Retire/edit each write an `actionsLog` entry (`TEMPLATE_RETIRED`, `TEMPLATE_UPDATED`).
+    - **Why we did NOT remove `EquipmentType.status`:** the field is load-bearing for the propose/approve lifecycle (`PROPOSED → CANONICAL → REJECTED`). The canonical UI uses `isActive` for the active/retired distinction; `status` stays where it belongs.
 13. Management page tab resets to "Manage Users" on refresh
     - **Repro:** Management → any tab other than Users (e.g. Equipment Templates). Browser refresh. Lands on Users tab instead of the previous tab.
     - **Why this matters:** Loses context, especially when iterating on template edits between bug fixes.
