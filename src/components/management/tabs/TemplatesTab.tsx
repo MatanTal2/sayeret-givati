@@ -13,6 +13,7 @@ import {
   rejectTemplateRequest,
 } from '@/lib/templateRequestService';
 import TemplateForm, { TemplateFormValues } from '@/components/equipment/TemplateForm';
+import { useCategoryLookup } from '@/hooks/useCategoryLookup';
 
 type DialogState =
   | { kind: 'closed' }
@@ -29,6 +30,7 @@ export default function TemplatesTab() {
     enhancedUser?.userType === UserType.MANAGER;
   const isTeamLeader = enhancedUser?.userType === UserType.TEAM_LEADER;
 
+  const { categoryName, subcategoryName } = useCategoryLookup();
   const [templates, setTemplates] = useState<EquipmentType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -193,6 +195,29 @@ export default function TemplatesTab() {
   };
 
   // Render helpers
+  const renderCategoryCell = (t: EquipmentType) => {
+    const cat = categoryName(t.category);
+    const sub = t.subcategory ? subcategoryName(t.subcategory) : null;
+    const catDisplay = cat ?? (
+      <span className="text-warning-700" title="קטגוריה לא נמצאה">{t.category}</span>
+    );
+    const subDisplay =
+      t.subcategory && (
+        <>
+          {' / '}
+          {sub ?? (
+            <span className="text-warning-700" title="תת-קטגוריה לא נמצאה">{t.subcategory}</span>
+          )}
+        </>
+      );
+    return (
+      <>
+        {catDisplay}
+        {subDisplay}
+      </>
+    );
+  };
+
   const renderRow = (t: EquipmentType, actions: React.ReactNode) => (
     <tr key={t.id} className="hover:bg-neutral-50">
       <td className="px-4 py-3">
@@ -202,8 +227,7 @@ export default function TemplatesTab() {
         )}
       </td>
       <td className="px-4 py-3 text-sm text-neutral-700">
-        {t.category}
-        {t.subcategory ? ` / ${t.subcategory}` : ''}
+        {renderCategoryCell(t)}
       </td>
       <td className="px-4 py-3 text-sm text-neutral-600">
         {t.requiresSerialNumber ? 'צ' : '—'}

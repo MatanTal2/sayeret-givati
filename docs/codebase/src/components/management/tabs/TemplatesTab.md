@@ -29,6 +29,13 @@ The TL "Propose" button is rendered but is only reachable once TL gains `hasMana
 - Tab visibility: `useManagementTabs` allows tab when `canManageTemplates || isTeamLeader`.
 - Action buttons: gated inline by `userType === ADMIN | SYSTEM_MANAGER | MANAGER` (review/reject/canonical-create) or `userType === TEAM_LEADER` (propose).
 
+## Category / subcategory rendering
+
+`EquipmentType.category` and `EquipmentType.subcategory` are doc IDs.
+The component uses `useCategoryLookup` to resolve them to Hebrew names
+for display. Unresolved IDs are rendered raw with `text-warning-700`
+styling so orphan refs are visible rather than silent.
+
 ## UI primitives
 
 Custom modal wrapper (no shared `Modal` component yet). Toast is local to the component (auto-dismiss after 4s) — replace with the shared toast system once it lands.
