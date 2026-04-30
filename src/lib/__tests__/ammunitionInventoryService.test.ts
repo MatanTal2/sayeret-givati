@@ -86,7 +86,7 @@ describe('validateUpsertStockInput', () => {
 
   it('rejects bad holderType', () => {
     expect(() => validateUpsertStockInput({ ...base, holderType: 'NOPE' })).toThrow(
-      /holderType must be USER or TEAM/
+      /holderType must be USER, TEAM, or UNIT/
     );
   });
 

@@ -54,6 +54,7 @@ function AmmunitionPageContent() {
     updateSerialItem,
     returnSerialItemToMgr,
     refresh: refreshInventory,
+    returnToCentral,
   } = useAmmunitionInventory();
   const { reports, submit: submitReport } = useAmmunitionReports();
   const { requests } = useAmmunitionReportRequests();
@@ -160,9 +161,11 @@ function AmmunitionPageContent() {
       )}
 
       <div className="flex items-center gap-2 flex-wrap">
-        <Button onClick={() => setShowAdd(true)} disabled={templates.length === 0}>
-          <Plus className="w-4 h-4 ms-1" /> {T.ADD_NEW}
-        </Button>
+        {isAdminOrSysMgrOrMgr && (
+          <Button onClick={() => setShowAdd(true)} disabled={templates.length === 0}>
+            <Plus className="w-4 h-4 ms-1" /> {T.ADD_NEW}
+          </Button>
+        )}
         <Button
           variant="secondary"
           onClick={() => setShowReport(true)}
@@ -235,6 +238,17 @@ function AmmunitionPageContent() {
             onDeleteItem={(serial) => deleteSerialItem(serial)}
             onTransferItem={(item) => setTransferTarget(item)}
             onReturnItemToMgr={(item) => returnSerialItemToMgr(item.id)}
+            canReturnToUnit={isAdminOrSysMgrOrMgr}
+            onReturnItemToUnit={(item) =>
+              returnToCentral({
+                templateId: item.templateId,
+                source: {
+                  holderType: item.currentHolderType === 'TEAM' ? 'TEAM' : 'USER',
+                  holderId: item.currentHolderId,
+                },
+                serials: [item.id],
+              })
+            }
           />
           {viewMode === 'used' && (
             <div className="space-y-2">

@@ -733,10 +733,12 @@ export const TEXT_CONSTANTS = {
       INVENTORY_ACTIONS: {
         TRANSFER: 'העבר',
         RETURN_TO_MGR: 'החזר לאחראי',
+        RETURN_TO_UNIT: 'החזר למלאי מרכזי',
         DELETE: 'מחק',
         MORE: 'עוד פעולות',
         DELETE_CONFIRM: 'למחוק את הרשומה?',
-        RETURN_CONFIRM: 'להחזיר את הפריט לאחראי תחמושת?'
+        RETURN_CONFIRM: 'להחזיר את הפריט לאחראי תחמושת?',
+        RETURN_TO_UNIT_CONFIRM: 'להחזיר את הפריט למלאי המרכזי?'
       },
       USED_SECTION: 'תחמושת ששומשה',
       USED_SECTION_EMPTY: 'אין פריטים שנוצלו',

@@ -1,16 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Layers, Boxes, FileBarChart, BellRing } from 'lucide-react';
+import { Layers, Boxes, Warehouse, FileBarChart, BellRing } from 'lucide-react';
 import AmmunitionTemplatesSection from './ammunition/AmmunitionTemplatesSection';
 import AmmunitionInventorySection from './ammunition/AmmunitionInventorySection';
+import CentralStockSection from './ammunition/CentralStockSection';
 import AmmunitionReportsSection from './ammunition/AmmunitionReportsSection';
 import AmmunitionRequestsSection from './ammunition/AmmunitionRequestsSection';
 
-type SectionId = 'templates' | 'inventory' | 'reports' | 'requests';
+type SectionId = 'templates' | 'central' | 'inventory' | 'reports' | 'requests';
 
 const SECTIONS: { id: SectionId; label: string; icon: typeof Layers }[] = [
   { id: 'templates', label: 'תבניות', icon: Layers },
+  { id: 'central', label: 'מלאי מרכזי', icon: Warehouse },
   { id: 'inventory', label: 'מלאי', icon: Boxes },
   { id: 'reports', label: 'דיווחים', icon: FileBarChart },
   { id: 'requests', label: 'בקשות', icon: BellRing },
@@ -45,6 +47,7 @@ export default function AmmunitionTab() {
 
       <div>
         {active === 'templates' && <AmmunitionTemplatesSection />}
+        {active === 'central' && <CentralStockSection />}
         {active === 'inventory' && <AmmunitionInventorySection />}
         {active === 'reports' && <AmmunitionReportsSection />}
         {active === 'requests' && <AmmunitionRequestsSection />}

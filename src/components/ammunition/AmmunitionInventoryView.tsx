@@ -61,6 +61,10 @@ export interface AmmunitionInventoryViewProps {
   onDeleteItem?: (serial: string) => void;
   onTransferItem?: (item: AmmunitionItem) => void;
   onReturnItemToMgr?: (item: AmmunitionItem) => void;
+  /** Optional. When provided, shows a "החזר למלאי מרכזי" kebab item on SERIAL rows. */
+  onReturnItemToUnit?: (item: AmmunitionItem) => void;
+  /** Whether the kebab "החזר למלאי מרכזי" entry should be visible. Page-level admin gate. */
+  canReturnToUnit?: boolean;
 }
 
 function holderLabelFor(
@@ -89,7 +93,8 @@ function quantityCell(stock: AmmunitionStock, template: AmmunitionType): string 
 type PendingConfirm =
   | { kind: 'delete-stock'; stockId: string }
   | { kind: 'delete-item'; serial: string }
-  | { kind: 'return-item'; serial: string };
+  | { kind: 'return-item'; serial: string }
+  | { kind: 'return-item-to-unit'; serial: string };
 
 export default function AmmunitionInventoryView({
   templates,
@@ -106,6 +111,8 @@ export default function AmmunitionInventoryView({
   onDeleteItem,
   onTransferItem,
   onReturnItemToMgr,
+  onReturnItemToUnit,
+  canReturnToUnit = false,
 }: AmmunitionInventoryViewProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingConfirm | null>(null);
@@ -173,6 +180,8 @@ export default function AmmunitionInventoryView({
       onTransferItem(it);
     } else if (action === 'return-to-mgr' && onReturnItemToMgr) {
       setPending({ kind: 'return-item', serial: it.id });
+    } else if (action === 'return-to-unit' && onReturnItemToUnit) {
+      setPending({ kind: 'return-item-to-unit', serial: it.id });
     } else if (action === 'delete' && onDeleteItem) {
       setPending({ kind: 'delete-item', serial: it.id });
     }
@@ -185,6 +194,9 @@ export default function AmmunitionInventoryView({
     else if (pending.kind === 'return-item' && onReturnItemToMgr) {
       const it = items.find((i) => i.id === pending.serial);
       if (it) onReturnItemToMgr(it);
+    } else if (pending.kind === 'return-item-to-unit' && onReturnItemToUnit) {
+      const it = items.find((i) => i.id === pending.serial);
+      if (it) onReturnItemToUnit(it);
     }
     setPending(null);
   };
@@ -197,12 +209,19 @@ export default function AmmunitionInventoryView({
           confirmText: T.INVENTORY_ACTIONS.RETURN_TO_MGR,
           variant: 'info' as const,
         }
-      : {
-          title: T.INVENTORY_ACTIONS.DELETE,
-          message: T.INVENTORY_ACTIONS.DELETE_CONFIRM,
-          confirmText: T.INVENTORY_ACTIONS.DELETE,
-          variant: 'danger' as const,
-        }
+      : pending.kind === 'return-item-to-unit'
+        ? {
+            title: T.INVENTORY_ACTIONS.RETURN_TO_UNIT,
+            message: T.INVENTORY_ACTIONS.RETURN_TO_UNIT_CONFIRM,
+            confirmText: T.INVENTORY_ACTIONS.RETURN_TO_UNIT,
+            variant: 'info' as const,
+          }
+        : {
+            title: T.INVENTORY_ACTIONS.DELETE,
+            message: T.INVENTORY_ACTIONS.DELETE_CONFIRM,
+            confirmText: T.INVENTORY_ACTIONS.DELETE,
+            variant: 'danger' as const,
+          }
     : null;
 
   const colCount = 4 + (showHolder ? 1 : 0) + 1; // chevron + name + qty + status + (holder?) + actions
@@ -335,6 +354,12 @@ export default function AmmunitionInventoryView({
                     <AmmunitionRowActions
                       showTransfer={isAvailable && !!allowMutate && !!onTransferItem}
                       showReturn={isConsumed && !!allowMutate && !!onReturnItemToMgr}
+                      showReturnToUnit={
+                        isAvailable &&
+                        canReturnToUnit &&
+                        !!onReturnItemToUnit &&
+                        it.currentHolderType !== 'UNIT'
+                      }
                       showDelete={isAvailable && !!allowDelete && !!onDeleteItem}
                       onAction={(a) => handleAction(row, a)}
                     />
