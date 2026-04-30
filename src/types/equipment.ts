@@ -429,6 +429,11 @@ export enum ActionType {
   TEMPLATE_UPDATED = 'template_updated',
   TEMPLATE_RETIRED = 'template_retired',
 
+  // Ammunition central stock (Phase 9)
+  AMMO_ASSIGNED_FROM_CENTRAL = 'ammo_assigned_from_central',
+  AMMO_RETURNED_TO_CENTRAL = 'ammo_returned_to_central',
+  AMMO_CENTRAL_BULK_LOAD = 'ammo_central_bulk_load',
+
   // Sign in/out actions
   SIGN_IN = 'sign_in',
   SIGN_OUT = 'sign_out',
