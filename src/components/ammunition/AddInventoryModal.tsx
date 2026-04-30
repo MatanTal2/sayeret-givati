@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import { Button, Select } from '@/components/ui';
 import { FEATURES } from '@/constants/text';
@@ -8,7 +8,10 @@ import UserSearchInput from '@/components/users/UserSearchInput';
 import type { UserSearchResult } from '@/lib/userService';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserType } from '@/types/user';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
+import { AMMUNITION_SUBCATEGORIES } from '@/lib/ammunition/subcategories';
 import type {
+  AmmunitionSubcategory,
   AmmunitionType,
   BruceState,
   HolderType,
@@ -44,6 +47,8 @@ export default function AddInventoryModal({
   allowHolderPicker = true,
 }: AddInventoryModalProps) {
   const { enhancedUser } = useAuth();
+  const { config: systemConfig } = useSystemConfig();
+  const [subcategory, setSubcategory] = useState<AmmunitionSubcategory | null>(null);
   const [templateId, setTemplateId] = useState<string>('');
   const [holderChoice, setHolderChoice] = useState<HolderChoice>({ kind: 'self' });
   const [bruceCount, setBruceCount] = useState('0');
@@ -66,22 +71,45 @@ export default function AddInventoryModal({
     return templates.filter((t) => t.allocation === 'USER' || t.allocation === 'BOTH');
   }, [templates, enhancedUser]);
 
+  const filteredTemplates = useMemo(() => {
+    if (!subcategory) return [];
+    return selectableTemplates.filter((t) => t.subcategory === subcategory);
+  }, [selectableTemplates, subcategory]);
+
   const selectedTemplate = useMemo(
-    () => selectableTemplates.find((t) => t.id === templateId) || null,
-    [selectableTemplates, templateId]
+    () => filteredTemplates.find((t) => t.id === templateId) || null,
+    [filteredTemplates, templateId]
   );
 
-  useEffect(() => {
-    if (!templateId && selectableTemplates.length > 0) {
-      setTemplateId(selectableTemplates[0].id);
-    }
-  }, [selectableTemplates, templateId]);
+  const handleSubcategoryChange = (next: AmmunitionSubcategory | null) => {
+    setSubcategory(next);
+    setTemplateId('');
+  };
 
   const isManagerOrTL =
     enhancedUser?.userType === UserType.ADMIN ||
     enhancedUser?.userType === UserType.SYSTEM_MANAGER ||
     enhancedUser?.userType === UserType.MANAGER ||
     enhancedUser?.userType === UserType.TEAM_LEADER;
+
+  const isAdminOrSysMgr =
+    enhancedUser?.userType === UserType.ADMIN ||
+    enhancedUser?.userType === UserType.SYSTEM_MANAGER;
+
+  const teamOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const out: { value: string; label: string }[] = [];
+    for (const t of systemConfig?.teams ?? []) {
+      if (!seen.has(t)) {
+        seen.add(t);
+        out.push({ value: t, label: t });
+      }
+    }
+    if (enhancedUser?.teamId && !seen.has(enhancedUser.teamId)) {
+      out.push({ value: enhancedUser.teamId, label: enhancedUser.teamId });
+    }
+    return out;
+  }, [systemConfig?.teams, enhancedUser?.teamId]);
 
   const resolveHolder = (): { holderType: HolderType; holderId: string } | null => {
     if (!enhancedUser) return null;
@@ -178,14 +206,32 @@ export default function AddInventoryModal({
           )}
 
           <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">תת-קטגוריה</label>
+            <Select<AmmunitionSubcategory>
+              value={subcategory}
+              onChange={handleSubcategoryChange}
+              options={AMMUNITION_SUBCATEGORIES.map((s) => ({
+                value: s,
+                label: T.SUBCATEGORIES[s],
+              }))}
+              placeholder="בחר תת-קטגוריה"
+              clearable
+              ariaLabel="תת-קטגוריה"
+            />
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">פריט</label>
             <Select
-              value={templateId}
-              onChange={(v) => v && setTemplateId(v)}
-              options={selectableTemplates.map((t) => ({
+              value={templateId || null}
+              onChange={(v) => setTemplateId(v ?? '')}
+              options={filteredTemplates.map((t) => ({
                 value: t.id,
                 label: `${t.name} · ${T.TRACKING_MODE[t.trackingMode]}`,
               }))}
+              placeholder={subcategory ? 'בחר פריט' : 'בחר תת-קטגוריה תחילה'}
+              disabled={!subcategory || filteredTemplates.length === 0}
+              clearable
               ariaLabel="פריט"
             />
           </div>
@@ -218,15 +264,27 @@ export default function AddInventoryModal({
                 ))}
               </div>
               {holderChoice.kind === 'team' && (
-                <input
-                  type="text"
-                  value={holderChoice.teamId}
-                  onChange={(e) =>
-                    setHolderChoice({ kind: 'team', teamId: e.target.value.trim() })
-                  }
-                  placeholder="מזהה צוות"
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
+                <>
+                  <Select
+                    value={holderChoice.teamId || null}
+                    onChange={(v) =>
+                      setHolderChoice({ kind: 'team', teamId: v ?? '' })
+                    }
+                    options={teamOptions}
+                    placeholder={
+                      teamOptions.length === 0
+                        ? 'לא הוגדרו צוותים'
+                        : 'בחר צוות'
+                    }
+                    disabled={!isAdminOrSysMgr || teamOptions.length === 0}
+                    ariaLabel="צוות"
+                  />
+                  {!isAdminOrSysMgr && (
+                    <p className="mt-1 text-xs text-neutral-500">
+                      רק מנהל מערכת יכול להחליף צוות
+                    </p>
+                  )}
+                </>
               )}
               {holderChoice.kind === 'user' && (
                 <UserSearchInput
