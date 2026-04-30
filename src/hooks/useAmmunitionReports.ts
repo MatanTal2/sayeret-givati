@@ -29,12 +29,12 @@ export interface UseAmmunitionReportsReturn {
   submit: (payload: SubmitReportPayload) => Promise<{ ok: boolean; reportId?: string }>;
 }
 
-export function useAmmunitionReports(initialFilter: ListReportsFilter = {}): UseAmmunitionReportsReturn {
+export function useAmmunitionReports(): UseAmmunitionReportsReturn {
   const [reports, setReports] = useState<AmmunitionReport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refresh = useCallback(async (filter: ListReportsFilter = initialFilter) => {
+  const refresh = useCallback(async (filter: ListReportsFilter = {}) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -45,7 +45,7 @@ export function useAmmunitionReports(initialFilter: ListReportsFilter = {}): Use
     } finally {
       setIsLoading(false);
     }
-  }, [initialFilter]);
+  }, []);
 
   useEffect(() => {
     refresh();
