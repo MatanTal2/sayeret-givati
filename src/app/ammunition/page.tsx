@@ -60,6 +60,7 @@ function AmmunitionPageContent() {
   const { users } = useUsers();
   const searchParams = useSearchParams();
   const requestIdParam = searchParams.get('requestId');
+  const actionParam = searchParams.get('action');
   const [showAdd, setShowAdd] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
@@ -71,8 +72,10 @@ function AmmunitionPageContent() {
     if (requestIdParam) {
       setActiveRequestId(requestIdParam);
       setShowReport(true);
+    } else if (actionParam === 'report') {
+      setShowReport(true);
     }
-  }, [requestIdParam]);
+  }, [requestIdParam, actionParam]);
 
   const activeRequest = useMemo(
     () => (activeRequestId ? requests.find((r) => r.id === activeRequestId) : null),
