@@ -36,6 +36,24 @@ export interface UpdateSerialItemPayload {
   newStatus?: AmmunitionItemStatus;
 }
 
+export interface AssignFromCentralPayload {
+  templateId: string;
+  target: { holderType: 'USER' | 'TEAM'; holderId: string };
+  bruceCount?: number;
+  quantity?: number;
+  serials?: string[];
+  note?: string;
+}
+
+export interface ReturnToCentralPayload {
+  templateId: string;
+  source: { holderType: 'USER' | 'TEAM'; holderId: string };
+  bruceCount?: number;
+  quantity?: number;
+  serials?: string[];
+  note?: string;
+}
+
 export interface UseAmmunitionInventoryReturn {
   stock: AmmunitionStock[];
   items: AmmunitionItem[];
@@ -48,6 +66,8 @@ export interface UseAmmunitionInventoryReturn {
   updateSerialItem: (serial: string, payload: UpdateSerialItemPayload) => Promise<boolean>;
   deleteSerialItem: (serial: string) => Promise<boolean>;
   returnSerialItemToMgr: (serial: string) => Promise<boolean>;
+  assignFromCentral: (payload: AssignFromCentralPayload) => Promise<boolean>;
+  returnToCentral: (payload: ReturnToCentralPayload) => Promise<boolean>;
 }
 
 // Module-level cache so navigating between pages does not refetch the entire
@@ -200,6 +220,44 @@ export function useAmmunitionInventory(): UseAmmunitionInventoryReturn {
     [refresh]
   );
 
+  const assignFromCentral = useCallback(
+    async (payload: AssignFromCentralPayload) => {
+      try {
+        const res = await apiFetch('/api/ammunition-inventory', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'assign_from_central', payload }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.error || 'הקצאה ממלאי מרכזי נכשלה');
+        await refresh();
+        return true;
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'שגיאה לא צפויה');
+        return false;
+      }
+    },
+    [refresh]
+  );
+
+  const returnToCentral = useCallback(
+    async (payload: ReturnToCentralPayload) => {
+      try {
+        const res = await apiFetch('/api/ammunition-inventory', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'return_to_central', payload }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.error || 'החזרה למלאי מרכזי נכשלה');
+        await refresh();
+        return true;
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'שגיאה לא צפויה');
+        return false;
+      }
+    },
+    [refresh]
+  );
+
   return {
     stock,
     items,
@@ -212,5 +270,7 @@ export function useAmmunitionInventory(): UseAmmunitionInventoryReturn {
     updateSerialItem,
     deleteSerialItem,
     returnSerialItemToMgr,
+    assignFromCentral,
+    returnToCentral,
   };
 }

@@ -6,6 +6,7 @@ import { X } from 'lucide-react';
 import type { Equipment, EquipmentHistoryEntry, ActionsLog } from '@/types/equipment';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { getEquipmentActionLogs } from '@/lib/actionsLogService';
+import { equipmentSerialDisplay } from '@/utils/equipmentDisplay';
 
 interface ActionHistoryPanelProps {
   equipment: Equipment | null;
@@ -64,7 +65,11 @@ export default function ActionHistoryPanel({ equipment, onClose }: ActionHistory
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">{labels.TITLE}</h2>
             <p className="text-sm text-neutral-500 mt-0.5">
-              {equipment.productName} · צ: {equipment.id}
+              {equipment.productName}
+              {(() => {
+                const serial = equipmentSerialDisplay(equipment);
+                return serial ? ` · צ: ${serial}` : '';
+              })()}
             </p>
           </div>
           <button

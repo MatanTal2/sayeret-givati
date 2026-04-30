@@ -13,6 +13,7 @@
 - **Phase 7 status:** COMPLETE. `src/app/ammunition/training/page.tsx` — "בקרוב" stub describing future scope. `/ammunition` page got an "אימונים" nav link to the stub. Future scope: per-event ammunition budget, soldier allocation, tracking actuals against plan.
 - **Phase 8 status:** COMPLETE. `firebase/firestore.rules` — added `read: if request.auth != null` rules for all six ammunition collections (`ammunitionTemplates`, `ammunition`, `ammunitionInventory`, `ammunitionReports`, `ammunitionReportRequests`) and `systemConfig`. All client-SDK writes are denied; the firebase-admin API routes are the gate (matching every other domain). Also patched up missing rules from earlier phases: `equipmentDrafts`, `retirementRequests`, `reportRequests`. The rules file is **not yet deployed** — run `firebase deploy --only firestore:rules` to activate. `docs/duplications.md` updated with an Equipment↔Ammunition parallel-structures section.
 - **Status:** ALL PHASES SHIPPED.
+- **Phase 9 status:** SHIPPED (central stock). Spec + impl on branch `fix/ammo-defects-and-central-stock`. Canonical reference: `docs/spec/ammunition-central-stock.md`. Adds `HolderType='UNIT'`, single-pool keyed `UNIT_main_${templateId}`, server-side assign-from-central + return-to-central transactions, admin-only "מלאי מרכזי" management sub-tab, CSV bulk import for the pool, recipient notification on assign, new "החזר למלאי מרכזי" kebab action on SERIAL items.
 
 ## Context
 

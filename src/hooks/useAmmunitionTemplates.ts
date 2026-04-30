@@ -13,6 +13,8 @@ export interface CreateAmmunitionTemplatePayload {
   securityLevel: AmmunitionType['securityLevel'];
   bulletsPerCardboard?: number;
   cardboardsPerBruce?: number;
+  bulletsPerString?: number;
+  stringsPerBruce?: number;
   status: AmmunitionType['status'];
 }
 
@@ -24,7 +26,6 @@ export interface UseAmmunitionTemplatesReturn {
   create: (payload: CreateAmmunitionTemplatePayload) => Promise<boolean>;
   update: (id: string, payload: CreateAmmunitionTemplatePayload) => Promise<boolean>;
   remove: (id: string) => Promise<boolean>;
-  seedCanonical: () => Promise<{ created: number; skipped: number } | null>;
 }
 
 export function useAmmunitionTemplates(): UseAmmunitionTemplatesReturn {
@@ -116,23 +117,5 @@ export function useAmmunitionTemplates(): UseAmmunitionTemplatesReturn {
     [refresh]
   );
 
-  const seedCanonical = useCallback(async () => {
-    try {
-      const res = await apiFetch('/api/ammunition-templates', {
-        method: 'POST',
-        body: JSON.stringify({ action: 'seed_canonical' }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || 'זריעת תבניות קנוניות נכשלה');
-      }
-      await refresh();
-      return { created: json.created ?? 0, skipped: json.skipped ?? 0 };
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'שגיאה לא צפויה');
-      return null;
-    }
-  }, [refresh]);
-
-  return { templates, isLoading, error, refresh, create, update, remove, seedCanonical };
+  return { templates, isLoading, error, refresh, create, update, remove };
 }

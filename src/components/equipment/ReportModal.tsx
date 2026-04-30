@@ -8,6 +8,7 @@ import { TEXT_CONSTANTS } from '@/constants/text';
 import { canReportWithoutPhoto } from '@/lib/equipmentPolicy';
 import { uploadEquipmentPhoto } from '@/lib/storageService';
 import CameraCapture from '@/components/camera/CameraCapture';
+import { equipmentSerialDisplay } from '@/utils/equipmentDisplay';
 
 interface ReportModalProps {
   equipment: Equipment;
@@ -69,7 +70,13 @@ export default function ReportModal({ equipment, user, onClose, onSubmit }: Repo
         <header className="flex items-start justify-between p-5 border-b border-neutral-200">
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">{labels.TITLE}</h2>
-            <p className="text-sm text-neutral-500 mt-0.5">{equipment.productName} · צ: {equipment.id}</p>
+            <p className="text-sm text-neutral-500 mt-0.5">
+              {equipment.productName}
+              {(() => {
+                const s = equipmentSerialDisplay(equipment);
+                return s ? ` · צ: ${s}` : '';
+              })()}
+            </p>
             <p className="text-xs text-neutral-500 mt-2">{labels.SUBTITLE}</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-md text-neutral-500 hover:bg-neutral-100" aria-label="close">

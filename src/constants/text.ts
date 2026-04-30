@@ -4,10 +4,10 @@
 export const TEXT_CONSTANTS = {
   // App Branding
   APP_NAME: 'מערכת ניהול - מסייעת סיירת גבעתי',
-  APP_SUBTITLE: 'פלטפורמה מרכזית לניהול פעילויות הסיירת - מעקב חיילים, ציוד ותכנון משימות',
+  APP_SUBTITLE: 'פלטפורמה מרכזית לניהול פעילויות הסיירת',
   COMPANY_NAME: 'מערכת ניהול סיירת גבעתי',
-  VERSION: 'גרסה 0.2.0-alpha',
-  LAST_UPDATED: 'עודכן לאחרונה: דצמבר 2024',
+  VERSION: 'גרסה 1.0.0-alpha',
+  LAST_UPDATED: 'עודכן לאחרונה: מאי 2026',
 
   // Navigation & Buttons
   BUTTONS: {
@@ -704,17 +704,19 @@ export const TEXT_CONSTANTS = {
       SECTION_PERSONAL: 'תחמושת אישית',
       SECTION_TEAM: 'תחמושת צוות',
       SUBCATEGORIES: {
-        BULLETS: 'כדורים',
+        BULLETS: 'קליעית',
         GRENADES: 'רימונים',
-        LAUNCHER_GRENADES: 'רימוני משגר',
+        LAUNCHER_GRENADES: 'מטול רימונים',
         SHOULDER_MISSILES: 'טילי כתף',
+        MORTAR: "מרגמה",
         MINES: 'מוקשים',
         OTHER: 'אחר'
       },
       TRACKING_MODE: {
         BRUCE: 'ברוס',
         SERIAL: 'צ׳',
-        LOOSE_COUNT: 'תפזורת'
+        LOOSE_COUNT: 'תפזורת',
+        BELT: 'שרשיר'
       },
       ALLOCATION: {
         USER: 'אישי',
@@ -731,13 +733,24 @@ export const TEXT_CONSTANTS = {
       INVENTORY_ACTIONS: {
         TRANSFER: 'העבר',
         RETURN_TO_MGR: 'החזר לאחראי',
+        RETURN_TO_UNIT: 'החזר למלאי מרכזי',
         DELETE: 'מחק',
         MORE: 'עוד פעולות',
         DELETE_CONFIRM: 'למחוק את הרשומה?',
-        RETURN_CONFIRM: 'להחזיר את הפריט לאחראי תחמושת?'
+        RETURN_CONFIRM: 'להחזיר את הפריט לאחראי תחמושת?',
+        RETURN_TO_UNIT_CONFIRM: 'להחזיר את הפריט למלאי המרכזי?'
       },
       USED_SECTION: 'תחמושת ששומשה',
       USED_SECTION_EMPTY: 'אין פריטים שנוצלו',
+      VIEW_ACTIVE: 'פעיל',
+      VIEW_HISTORY: 'היסטוריה',
+      HISTORY_REPORTS_TITLE: 'דיווחי שימוש',
+      HISTORY_REPORTS_EMPTY: 'אין דיווחים בטווח זה',
+      HISTORY_COL_DATE: 'תאריך',
+      HISTORY_COL_TEMPLATE: 'סוג',
+      HISTORY_COL_REPORTER: 'מדווח',
+      HISTORY_COL_AMOUNT: 'כמות',
+      HISTORY_COL_REASON: 'סיבה',
       COL_NAME: 'שם הפריט',
       COL_TYPE: 'סוג',
       COL_QTY: 'כמות / מספר',
@@ -775,6 +788,8 @@ export const TEXT_CONSTANTS = {
         SECURITY_LEVEL: 'רמת אבטחה',
         BULLETS_PER_CARDBOARD: 'כדורים בקרטג\'',
         CARDBOARDS_PER_BRUCE: 'קרטג\'ים בברוס',
+        BULLETS_PER_STRING: 'כדורים בשרשיר',
+        STRINGS_PER_BRUCE: 'שרשירים בברוס',
         DESCRIPTION: 'תיאור'
       },
       REPORT_FORM: {

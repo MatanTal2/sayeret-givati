@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import {
   serverCreateAmmunitionTemplate,
   serverListAmmunitionTemplates,
-  serverSeedCanonicalAmmunitionTemplates,
+  serverBulkCreateAmmunitionTemplates,
   validateAmmunitionTemplateInput,
 } from '@/lib/db/server/ammunitionTemplatesService';
 import { getActorOrError } from '@/lib/db/server/auth';
@@ -36,14 +36,20 @@ export async function POST(request: Request) {
     const actor = actorOrError;
     const input = await request.json();
 
-    if (input.action === 'seed_canonical') {
+    if (input.action === 'bulk_import') {
       if (!isAdminOrManager(actor.userType)) {
         return NextResponse.json(
-          { success: false, error: 'Forbidden: only admin/manager may seed canonical templates' },
+          { success: false, error: 'Forbidden: only admin/manager may bulk import templates' },
           { status: 403 }
         );
       }
-      const result = await serverSeedCanonicalAmmunitionTemplates(actor.uid);
+      if (!Array.isArray(input.rows)) {
+        return NextResponse.json(
+          { success: false, error: 'rows must be an array' },
+          { status: 400 }
+        );
+      }
+      const result = await serverBulkCreateAmmunitionTemplates(input.rows, actor.uid);
       return NextResponse.json({ success: true, ...result });
     }
 

@@ -1,13 +1,31 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, Sparkles, AlertCircle, Check, X } from 'lucide-react';
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import {
+  Plus,
+  Upload,
+  AlertCircle,
+  Check,
+  X,
+  ChevronDown,
+  MoreVertical,
+} from 'lucide-react';
 import { Button, Card } from '@/components/ui';
-import { FEATURES } from '@/constants/text';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
+import { FEATURES, TEXT_CONSTANTS } from '@/constants/text';
+import { cn } from '@/lib/cn';
+import { apiFetch } from '@/lib/apiFetch';
 import {
   useAmmunitionTemplates,
   type CreateAmmunitionTemplatePayload,
 } from '@/hooks/useAmmunitionTemplates';
+import BulkTemplateImportModal from '@/components/management/BulkTemplateImportModal';
+import {
+  AMMO_TEMPLATE_CSV_HEADERS,
+  AMMO_TEMPLATE_CSV_SAMPLE_ROW,
+  csvRowToAmmoTemplatePayload,
+} from '@/lib/ammunition/templatesCsv';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserType } from '@/types/user';
 import AmmunitionTemplateForm, {
@@ -23,8 +41,7 @@ const T = FEATURES.AMMUNITION;
 type Dialog =
   | { kind: 'closed' }
   | { kind: 'create' }
-  | { kind: 'edit'; template: AmmunitionType }
-  | { kind: 'delete'; template: AmmunitionType };
+  | { kind: 'edit'; template: AmmunitionType };
 
 function valuesToPayload(
   values: AmmunitionTemplateFormValues,
@@ -43,7 +60,27 @@ function valuesToPayload(
     out.bulletsPerCardboard = Number(values.bulletsPerCardboard);
     out.cardboardsPerBruce = Number(values.cardboardsPerBruce);
   }
+  if (values.trackingMode === 'BELT') {
+    out.bulletsPerString = Number(values.bulletsPerString);
+    out.stringsPerBruce = Number(values.stringsPerBruce);
+  }
   return out;
+}
+
+function totalBullets(t: AmmunitionType): number | null {
+  if (t.trackingMode === 'BRUCE') {
+    if (t.totalBulletsPerBruce) return t.totalBulletsPerBruce;
+    if (t.bulletsPerCardboard && t.cardboardsPerBruce) {
+      return t.bulletsPerCardboard * t.cardboardsPerBruce;
+    }
+  }
+  if (t.trackingMode === 'BELT') {
+    if (t.totalBulletsPerStringBruce) return t.totalBulletsPerStringBruce;
+    if (t.bulletsPerString && t.stringsPerBruce) {
+      return t.bulletsPerString * t.stringsPerBruce;
+    }
+  }
+  return null;
 }
 
 export default function AmmunitionTemplatesSection() {
@@ -53,9 +90,11 @@ export default function AmmunitionTemplatesSection() {
     enhancedUser?.userType === UserType.SYSTEM_MANAGER ||
     enhancedUser?.userType === UserType.MANAGER;
 
-  const { templates, isLoading, error, create, update, remove, seedCanonical } =
+  const { templates, isLoading, error, create, update, remove, refresh } =
     useAmmunitionTemplates();
   const [dialog, setDialog] = useState<Dialog>({ kind: 'closed' });
+  const [pendingDelete, setPendingDelete] = useState<AmmunitionType | null>(null);
+  const [showBulkImport, setShowBulkImport] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
 
@@ -110,116 +149,18 @@ export default function AmmunitionTemplatesSection() {
     }
   };
 
-  const handleDelete = async (template: AmmunitionType) => {
+  const handleDelete = async () => {
+    if (!pendingDelete) return;
     setSubmitting(true);
-    const ok = await remove(template.id);
+    const ok = await remove(pendingDelete.id);
     setSubmitting(false);
     if (ok) {
-      setDialog({ kind: 'closed' });
+      setPendingDelete(null);
       showToast('success', 'תבנית נמחקה');
     } else {
       showToast('error', 'מחיקת תבנית נכשלה');
     }
   };
-
-  const handleSeed = async () => {
-    setSubmitting(true);
-    const result = await seedCanonical();
-    setSubmitting(false);
-    if (result) {
-      showToast(
-        'success',
-        `נזרעו ${result.created} תבניות (${result.skipped} כבר קיימות)`
-      );
-    } else {
-      showToast('error', 'זריעה נכשלה');
-    }
-  };
-
-  const renderRow = (t: AmmunitionType) => (
-    <tr key={t.id} className="hover:bg-neutral-50">
-      <td className="px-4 py-2 text-sm text-neutral-900">{t.name}</td>
-      <td className="px-4 py-2 text-sm text-neutral-700">
-        {T.SUBCATEGORIES[t.subcategory]}
-      </td>
-      <td className="px-4 py-2 text-sm text-neutral-700">
-        {T.TRACKING_MODE[t.trackingMode]}
-      </td>
-      <td className="px-4 py-2 text-sm text-neutral-700">
-        {T.ALLOCATION[t.allocation]}
-      </td>
-      <td className="px-4 py-2 text-sm">
-        <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-            t.securityLevel === 'EXPLOSIVE'
-              ? 'bg-danger-100 text-danger-800'
-              : 'bg-warning-100 text-warning-800'
-          }`}
-        >
-          {T.SECURITY_LEVEL[t.securityLevel]}
-        </span>
-      </td>
-      <td className="px-4 py-2 text-sm text-neutral-600">
-        {t.trackingMode === 'BRUCE' && t.totalBulletsPerBruce
-          ? `${t.bulletsPerCardboard}×${t.cardboardsPerBruce} = ${t.totalBulletsPerBruce}`
-          : '—'}
-      </td>
-      <td className="px-4 py-2 text-sm">
-        {isAdminOrManager && (
-          <div className="flex items-center gap-1 justify-end">
-            <button
-              type="button"
-              onClick={() => setDialog({ kind: 'edit', template: t })}
-              className="p-1 rounded-md text-neutral-500 hover:bg-neutral-100"
-              aria-label="ערוך"
-            >
-              <Pencil className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setDialog({ kind: 'delete', template: t })}
-              className="p-1 rounded-md text-danger-500 hover:bg-danger-50"
-              aria-label="מחק"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-      </td>
-    </tr>
-  );
-
-  const renderTable = (title: string, list: AmmunitionType[]) => (
-    <Card padding="md">
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-base font-medium text-neutral-900">
-          {title} ({list.length})
-        </h4>
-      </div>
-      {list.length === 0 ? (
-        <div className="text-sm text-neutral-500 text-center py-6">
-          אין תבניות
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-right">
-            <thead className="bg-neutral-50">
-              <tr>
-                <th className="px-4 py-2 text-xs font-medium text-neutral-600">שם</th>
-                <th className="px-4 py-2 text-xs font-medium text-neutral-600">תת-קטגוריה</th>
-                <th className="px-4 py-2 text-xs font-medium text-neutral-600">מעקב</th>
-                <th className="px-4 py-2 text-xs font-medium text-neutral-600">הקצאה</th>
-                <th className="px-4 py-2 text-xs font-medium text-neutral-600">אבטחה</th>
-                <th className="px-4 py-2 text-xs font-medium text-neutral-600">ברוס</th>
-                <th className="px-4 py-2"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">{list.map(renderRow)}</tbody>
-          </table>
-        </div>
-      )}
-    </Card>
-  );
 
   return (
     <div className="space-y-6">
@@ -248,12 +189,12 @@ export default function AmmunitionTemplatesSection() {
       )}
 
       {isAdminOrManager && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button onClick={() => setDialog({ kind: 'create' })}>
             <Plus className="w-4 h-4 ms-1" /> תבנית חדשה
           </Button>
-          <Button variant="secondary" onClick={handleSeed} disabled={submitting}>
-            <Sparkles className="w-4 h-4 ms-1" /> זרע תבניות קנוניות
+          <Button variant="secondary" onClick={() => setShowBulkImport(true)}>
+            <Upload className="w-4 h-4 ms-1" /> ייבא CSV
           </Button>
         </div>
       )}
@@ -262,20 +203,37 @@ export default function AmmunitionTemplatesSection() {
         <div className="text-sm text-neutral-500 text-center py-12">טוען...</div>
       ) : (
         <>
-          {renderTable('תבניות קנוניות', grouped.canonical)}
+          <TemplatesTable
+            title="תבניות קנוניות"
+            list={grouped.canonical}
+            isAdminOrManager={isAdminOrManager}
+            onEdit={(t) => setDialog({ kind: 'edit', template: t })}
+            onDelete={(t) => setPendingDelete(t)}
+          />
           {(grouped.proposed.length > 0 || grouped.pending.length > 0) && (
             <>
-              {renderTable('הצעות (TL)', grouped.proposed)}
-              {renderTable('בקשות משתמשים', grouped.pending)}
+              <TemplatesTable
+                title="הצעות (TL)"
+                list={grouped.proposed}
+                isAdminOrManager={isAdminOrManager}
+                onEdit={(t) => setDialog({ kind: 'edit', template: t })}
+                onDelete={(t) => setPendingDelete(t)}
+              />
+              <TemplatesTable
+                title="בקשות משתמשים"
+                list={grouped.pending}
+                isAdminOrManager={isAdminOrManager}
+                onEdit={(t) => setDialog({ kind: 'edit', template: t })}
+                onDelete={(t) => setPendingDelete(t)}
+              />
             </>
           )}
         </>
       )}
 
-      {/* Create / edit dialog */}
       {(dialog.kind === 'create' || dialog.kind === 'edit') && (
         <div className="fixed inset-0 z-40 bg-neutral-900/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-neutral-900">
                 {dialog.kind === 'create' ? 'תבנית חדשה' : 'עריכת תבנית'}
@@ -304,31 +262,257 @@ export default function AmmunitionTemplatesSection() {
         </div>
       )}
 
-      {/* Delete confirmation */}
-      {dialog.kind === 'delete' && (
-        <div className="fixed inset-0 z-40 bg-neutral-900/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold text-neutral-900 mb-2">
-              מחיקת תבנית
-            </h3>
-            <p className="text-sm text-neutral-700 mb-4">
-              למחוק את התבנית &quot;{dialog.template.name}&quot;? פעולה זו לא ניתנת לביטול.
-            </p>
-            <div className="flex items-center justify-end gap-2">
-              <Button variant="secondary" onClick={() => setDialog({ kind: 'closed' })} disabled={submitting}>
-                ביטול
-              </Button>
-              <Button
-                variant="danger"
-                onClick={() => handleDelete(dialog.template)}
-                disabled={submitting}
-              >
-                {submitting ? 'מוחק...' : 'מחק'}
-              </Button>
-            </div>
-          </div>
+      {showBulkImport && (
+        <BulkTemplateImportModal<CreateAmmunitionTemplatePayload>
+          title="ייבוא תבניות תחמושת מ-CSV"
+          csvHeaders={AMMO_TEMPLATE_CSV_HEADERS}
+          csvSampleRow={AMMO_TEMPLATE_CSV_SAMPLE_ROW}
+          csvFileName="ammunition-templates-template.csv"
+          mapRow={csvRowToAmmoTemplatePayload}
+          onClose={() => {
+            setShowBulkImport(false);
+            refresh();
+          }}
+          onSubmit={async (rows) => {
+            const res = await apiFetch('/api/ammunition-templates', {
+              method: 'POST',
+              body: JSON.stringify({ action: 'bulk_import', rows }),
+            });
+            const json = await res.json();
+            if (!res.ok || !json.success) {
+              throw new Error(json.error || 'ייבוא נכשל');
+            }
+            await refresh();
+            return {
+              created: json.created ?? 0,
+              errors: json.errors ?? [],
+            };
+          }}
+        />
+      )}
+
+      <ConfirmationModal
+        isOpen={!!pendingDelete}
+        title="מחיקת תבנית"
+        message={
+          pendingDelete
+            ? `למחוק את התבנית "${pendingDelete.name}"? פעולה זו לא ניתנת לביטול.`
+            : ''
+        }
+        confirmText={TEXT_CONSTANTS.BUTTONS.DELETE}
+        cancelText={TEXT_CONSTANTS.BUTTONS.CANCEL}
+        onConfirm={handleDelete}
+        onCancel={() => setPendingDelete(null)}
+        isLoading={submitting}
+        variant="danger"
+        useHomePageStyle
+      />
+    </div>
+  );
+}
+
+interface TemplatesTableProps {
+  title: string;
+  list: AmmunitionType[];
+  isAdminOrManager: boolean;
+  onEdit: (t: AmmunitionType) => void;
+  onDelete: (t: AmmunitionType) => void;
+}
+
+function TemplatesTable({
+  title,
+  list,
+  isAdminOrManager,
+  onEdit,
+  onDelete,
+}: TemplatesTableProps) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+  return (
+    <Card padding="md">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-base font-medium text-neutral-900">
+          {title} ({list.length})
+        </h4>
+      </div>
+      {list.length === 0 ? (
+        <div className="text-sm text-neutral-500 text-center py-6">אין תבניות</div>
+      ) : (
+        <div className="overflow-hidden border border-neutral-200 rounded-lg">
+          <table className="min-w-full text-right text-sm">
+            <thead className="bg-neutral-50">
+              <tr>
+                <th className="w-8" />
+                <th className="px-3 py-2 text-xs font-medium text-neutral-600">שם</th>
+                <th className="px-3 py-2 text-xs font-medium text-neutral-600">תת-קטגוריה</th>
+                <th className="px-3 py-2 text-xs font-medium text-neutral-600">אבטחה</th>
+                <th className="px-3 py-2 text-xs font-medium text-neutral-600 w-[1%]"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100">
+              {list.map((t) => {
+                const isOpen = expanded === t.id;
+                return (
+                  <React.Fragment key={t.id}>
+                    <tr
+                      className="hover:bg-neutral-50 cursor-pointer"
+                      onClick={() => setExpanded(isOpen ? null : t.id)}
+                    >
+                      <td className="px-2">
+                        <ChevronDown
+                          className={`w-4 h-4 text-neutral-400 transition-transform ${
+                            isOpen ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-neutral-900">{t.name}</td>
+                      <td className="px-3 py-2 text-neutral-700">
+                        {T.SUBCATEGORIES[t.subcategory]}
+                      </td>
+                      <td className="px-3 py-2">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                            t.securityLevel === 'EXPLOSIVE'
+                              ? 'bg-danger-100 text-danger-800'
+                              : 'bg-warning-100 text-warning-800'
+                          }`}
+                        >
+                          {T.SECURITY_LEVEL[t.securityLevel]}
+                        </span>
+                      </td>
+                      <td
+                        className="px-3 py-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {isAdminOrManager && (
+                          <TemplateRowActions
+                            onEdit={() => onEdit(t)}
+                            onDelete={() => onDelete(t)}
+                          />
+                        )}
+                      </td>
+                    </tr>
+                    {isOpen && (
+                      <tr className="bg-neutral-50/60">
+                        <td colSpan={5} className="px-6 py-3">
+                          <TemplateMeta template={t} />
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
-    </div>
+    </Card>
+  );
+}
+
+function TemplateMeta({ template: t }: { template: AmmunitionType }) {
+  const total = totalBullets(t);
+  const rows: Array<{ label: string; value: React.ReactNode }> = [
+    { label: T.TEMPLATE_FORM.TRACKING_MODE, value: T.TRACKING_MODE[t.trackingMode] },
+    { label: T.TEMPLATE_FORM.ALLOCATION, value: T.ALLOCATION[t.allocation] },
+  ];
+  if (t.trackingMode === 'BRUCE') {
+    rows.push(
+      {
+        label: T.TEMPLATE_FORM.BULLETS_PER_CARDBOARD,
+        value: t.bulletsPerCardboard ?? '—',
+      },
+      {
+        label: T.TEMPLATE_FORM.CARDBOARDS_PER_BRUCE,
+        value: t.cardboardsPerBruce ?? '—',
+      },
+      {
+        label: 'סה"כ כדורים בברוס',
+        value: total !== null ? total : '—',
+      }
+    );
+  }
+  if (t.trackingMode === 'BELT') {
+    rows.push(
+      {
+        label: T.TEMPLATE_FORM.BULLETS_PER_STRING,
+        value: t.bulletsPerString ?? '—',
+      },
+      {
+        label: T.TEMPLATE_FORM.STRINGS_PER_BRUCE,
+        value: t.stringsPerBruce ?? '—',
+      },
+      {
+        label: 'סה"כ כדורים בברוס',
+        value: total !== null ? total : '—',
+      }
+    );
+  }
+  if (t.description) {
+    rows.push({ label: T.TEMPLATE_FORM.DESCRIPTION, value: t.description });
+  }
+  return (
+    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-xs">
+      {rows.map((r, i) => (
+        <div key={i} className="flex gap-2">
+          <dt className="text-neutral-500 min-w-32">{r.label}:</dt>
+          <dd className="text-neutral-800">{r.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+interface TemplateRowActionsProps {
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function TemplateRowActions({ onEdit, onDelete }: TemplateRowActionsProps) {
+  return (
+    <Menu as="div" className="relative inline-block">
+      <MenuButton
+        aria-label="עוד פעולות"
+        onClick={(e) => e.stopPropagation()}
+        className="p-1.5 rounded-md text-neutral-600 hover:bg-neutral-100 transition-colors"
+      >
+        <MoreVertical className="w-4 h-4" />
+      </MenuButton>
+      <MenuItems
+        anchor="bottom end"
+        className="w-40 mt-1 bg-white border border-neutral-200 rounded-lg shadow-lg py-1 z-50 focus:outline-none"
+      >
+        <MenuItem>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            className={cn(
+              'w-full text-start px-3 py-2 text-sm text-neutral-700',
+              'data-[focus]:bg-neutral-50'
+            )}
+          >
+            ערוך
+          </button>
+        </MenuItem>
+        <div className="my-1 border-t border-neutral-200" role="separator" />
+        <MenuItem>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className={cn(
+              'w-full text-start px-3 py-2 text-sm text-danger-600',
+              'data-[focus]:bg-danger-50'
+            )}
+          >
+            מחק
+          </button>
+        </MenuItem>
+      </MenuItems>
+    </Menu>
   );
 }

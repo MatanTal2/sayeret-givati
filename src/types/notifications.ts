@@ -36,7 +36,8 @@ export enum NotificationType {
   TRAINING_PLAN_SUBMITTED = 'training_plan_submitted',
   TRAINING_PLAN_APPROVED = 'training_plan_approved',
   TRAINING_PLAN_REJECTED = 'training_plan_rejected',
-  AMMO_RESTOCK_REQUEST = 'ammo_restock_request'
+  AMMO_RESTOCK_REQUEST = 'ammo_restock_request',
+  AMMO_ASSIGNED_FROM_CENTRAL = 'ammo_assigned_from_central'
 }
 
 export interface CreateNotificationData {

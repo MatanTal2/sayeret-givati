@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, AlertCircle } from 'lucide-react';
 import type { Equipment } from '@/types/equipment';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import { equipmentSerialDisplay } from '@/utils/equipmentDisplay';
 
 interface ReturnModalProps {
   equipment: Equipment;
@@ -56,7 +57,13 @@ export default function ReturnModal({ equipment, isHolder, onClose, onSubmit }: 
         <header className="flex items-start justify-between p-5 border-b border-neutral-200">
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">{labels.TITLE}</h2>
-            <p className="text-sm text-neutral-500 mt-0.5">{equipment.productName} · צ: {equipment.id}</p>
+            <p className="text-sm text-neutral-500 mt-0.5">
+              {equipment.productName}
+              {(() => {
+                const s = equipmentSerialDisplay(equipment);
+                return s ? ` · צ: ${s}` : '';
+              })()}
+            </p>
           </div>
           <button onClick={onClose} className="p-2 rounded-md text-neutral-500 hover:bg-neutral-100" aria-label="close">
             <X className="w-5 h-5" />

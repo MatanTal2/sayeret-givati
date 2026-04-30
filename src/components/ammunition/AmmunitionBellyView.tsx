@@ -35,6 +35,13 @@ function totalForTemplate(
       .filter((s) => s.templateId === template.id)
       .reduce((acc, s) => acc + (s.bruceCount ?? 0) * cpb * bpc, 0);
   }
+  if (template.trackingMode === 'BELT') {
+    const spb = template.stringsPerBruce ?? 0;
+    const bps = template.bulletsPerString ?? 0;
+    return stock
+      .filter((s) => s.templateId === template.id)
+      .reduce((acc, s) => acc + (s.bruceCount ?? 0) * spb * bps, 0);
+  }
   if (template.trackingMode === 'LOOSE_COUNT') {
     return stock
       .filter((s) => s.templateId === template.id)

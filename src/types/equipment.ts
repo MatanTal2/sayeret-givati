@@ -84,6 +84,7 @@ export interface Equipment {
   maintenanceNotes?: string; // Maintenance history and notes
   qrCode?: string; // QR code for quick scanning
   requiresDailyStatusCheck?: boolean; // Whether this equipment requires daily status checks (inherited from template)
+  hasSerialNumber?: boolean; // True iff template.requiresSerialNumber. When false, `id` is auto-generated and must NOT be displayed as a צ. Optional for back-compat with pre-flag docs (use !== false to treat unknown as serialized).
   
   // Audit Trail
   trackingHistory: EquipmentHistoryEntry[]; // Array of transfer/action records
@@ -427,6 +428,11 @@ export enum ActionType {
   TEMPLATE_REJECTED = 'template_rejected',
   TEMPLATE_UPDATED = 'template_updated',
   TEMPLATE_RETIRED = 'template_retired',
+
+  // Ammunition central stock (Phase 9)
+  AMMO_ASSIGNED_FROM_CENTRAL = 'ammo_assigned_from_central',
+  AMMO_RETURNED_TO_CENTRAL = 'ammo_returned_to_central',
+  AMMO_CENTRAL_BULK_LOAD = 'ammo_central_bulk_load',
 
   // Sign in/out actions
   SIGN_IN = 'sign_in',

@@ -56,10 +56,11 @@ function isoDate(ts: unknown): string {
 }
 
 function consumedFor(report: AmmunitionReport): string {
-  if (report.trackingMode === 'BRUCE') {
+  if (report.trackingMode === 'BRUCE' || report.trackingMode === 'BELT') {
+    const innerLabel = report.trackingMode === 'BELT' ? 'שרשירים' : 'קרטג׳ים';
     const parts: string[] = [];
     if (report.brucesConsumed) parts.push(`${report.brucesConsumed} ברוסים`);
-    if (report.cardboardsConsumed) parts.push(`${report.cardboardsConsumed} קרטג׳ים`);
+    if (report.cardboardsConsumed) parts.push(`${report.cardboardsConsumed} ${innerLabel}`);
     if (report.bulletsConsumed) parts.push(`${report.bulletsConsumed} כדורים`);
     if (report.finalOpenBruceState && report.finalOpenBruceState !== 'EMPTY') {
       parts.push(`פתוח: ${T.BRUCE_STATE[report.finalOpenBruceState]}`);

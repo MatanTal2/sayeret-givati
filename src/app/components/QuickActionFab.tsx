@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Plus, Wrench, Target, FileText } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -22,6 +23,7 @@ const actions: QuickAction[] = [
 export default function QuickActionFab() {
   const [open, setOpen] = useState(false);
   const { showToast } = useToast();
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,9 +45,13 @@ export default function QuickActionFab() {
     };
   }, [open]);
 
-  const handleAction = (label: string) => {
+  const handleAction = (action: QuickAction) => {
     setOpen(false);
-    showToast(`${label} — ${TEXT_CONSTANTS.QUICK_ACTIONS.COMING_SOON}`, 'info');
+    if (action.key === 'ammo') {
+      router.push('/ammunition?action=report');
+      return;
+    }
+    showToast(`${action.label} — ${TEXT_CONSTANTS.QUICK_ACTIONS.COMING_SOON}`, 'info');
   };
 
   return (
@@ -77,18 +83,18 @@ export default function QuickActionFab() {
               transition={{ duration: 0.15 }}
               className="flex flex-col items-start gap-2"
             >
-              {actions.map(({ key, label, Icon }) => (
-                <li key={key} className="flex items-center gap-2">
+              {actions.map((action) => (
+                <li key={action.key} className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => handleAction(label)}
+                    onClick={() => handleAction(action)}
                     className="w-11 h-11 rounded-full bg-primary-600 text-white shadow-primary-lg hover:bg-primary-700 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                    aria-label={label}
+                    aria-label={action.label}
                   >
-                    <Icon className="w-5 h-5" aria-hidden="true" />
+                    <action.Icon className="w-5 h-5" aria-hidden="true" />
                   </button>
                   <span className="bg-white/80 backdrop-blur-md text-neutral-900 text-sm font-medium rounded-lg px-3 py-1.5 shadow-medium border border-white/60">
-                    {label}
+                    {action.label}
                   </span>
                 </li>
               ))}

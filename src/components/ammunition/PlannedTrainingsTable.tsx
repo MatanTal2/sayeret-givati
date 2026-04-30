@@ -4,7 +4,8 @@ import React, { useMemo, useState } from 'react';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui';
-import { FEATURES } from '@/constants/text';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
+import { FEATURES, TEXT_CONSTANTS } from '@/constants/text';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { UserType } from '@/types/user';
@@ -159,6 +160,7 @@ function PlanTable({
   onComplete,
 }: PlanTableProps) {
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingCancelId, setPendingCancelId] = useState<string | null>(null);
 
   const handleAction = async (planId: string, fn: () => Promise<boolean>) => {
     setBusyId(planId);
@@ -179,8 +181,14 @@ function PlanTable({
     await handleAction(planId, () => onReject(planId, reason.trim()));
   };
 
-  const handleCancel = async (planId: string) => {
-    if (!window.confirm(TT.CANCEL_CONFIRM)) return;
+  const handleCancel = (planId: string) => {
+    setPendingCancelId(planId);
+  };
+
+  const confirmCancel = async () => {
+    if (!pendingCancelId) return;
+    const planId = pendingCancelId;
+    setPendingCancelId(null);
     await handleAction(planId, () => onCancel(planId));
   };
 
@@ -296,6 +304,17 @@ function PlanTable({
           </table>
         </div>
       )}
+      <ConfirmationModal
+        isOpen={!!pendingCancelId}
+        title={TT.CANCEL}
+        message={TT.CANCEL_CONFIRM}
+        confirmText={TT.CANCEL}
+        cancelText={TEXT_CONSTANTS.BUTTONS.CLOSE}
+        onConfirm={confirmCancel}
+        onCancel={() => setPendingCancelId(null)}
+        variant="warning"
+        useHomePageStyle
+      />
     </div>
   );
 }

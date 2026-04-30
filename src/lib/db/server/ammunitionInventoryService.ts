@@ -71,6 +71,14 @@ export interface MutationContext {
 export async function canMutateAmmunitionInventory(ctx: MutationContext): Promise<boolean> {
   const { actor, template, holderType, holderId } = ctx;
 
+  // UNIT (central pool) is admin/manager + responsible-mgr only. TL and USER
+  // never write to the warehouse — they receive via assignFromCentral.
+  if (holderType === 'UNIT') {
+    if (isManagerOrAbove(actor.userType)) return true;
+    const responsibleId = await getResponsibleManagerId();
+    return !!responsibleId && responsibleId === actor.uid;
+  }
+
   if (isManagerOrAbove(actor.userType)) return true;
 
   const responsibleId = await getResponsibleManagerId();
@@ -112,10 +120,13 @@ export function validateUpsertStockInput(input: unknown): UpsertStockInput {
   if (!input || typeof input !== 'object') throw new Error('input is required');
   const i = input as Record<string, unknown>;
   if (typeof i.templateId !== 'string' || !i.templateId) throw new Error('templateId is required');
-  if (i.holderType !== 'USER' && i.holderType !== 'TEAM') {
-    throw new Error('holderType must be USER or TEAM');
+  if (i.holderType !== 'USER' && i.holderType !== 'TEAM' && i.holderType !== 'UNIT') {
+    throw new Error('holderType must be USER, TEAM, or UNIT');
   }
   if (typeof i.holderId !== 'string' || !i.holderId) throw new Error('holderId is required');
+  if (i.holderType === 'UNIT' && i.holderId !== 'main') {
+    throw new Error('UNIT holderId must be "main"');
+  }
 
   const out: UpsertStockInput = {
     actor: i.actor as ApiActor,
@@ -174,7 +185,7 @@ export async function serverUpsertAmmunitionStock(
     updatedAt: FieldValue.serverTimestamp(),
   };
 
-  if (template.trackingMode === 'BRUCE') {
+  if (template.trackingMode === 'BRUCE' || template.trackingMode === 'BELT') {
     if (input.bruceCount !== undefined) data.bruceCount = input.bruceCount;
     if (input.openBruceState !== undefined) data.openBruceState = input.openBruceState;
   } else {

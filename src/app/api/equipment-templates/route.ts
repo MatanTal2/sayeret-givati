@@ -2,14 +2,39 @@ import { NextResponse } from 'next/server';
 import {
   serverCreateEquipmentType,
   serverUpdateEquipmentType,
+  serverBulkCreateEquipmentTemplates,
 } from '@/lib/db/server/equipmentTemplatesService';
 import { getActorOrError } from '@/lib/db/server/auth';
+import { UserType } from '@/types/user';
 
 export async function POST(request: Request) {
   try {
     const actorOrError = await getActorOrError(request);
     if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
     const data = await request.json();
+
+    if (data.action === 'bulk_import') {
+      const isAdmin =
+        actor.userType === UserType.ADMIN ||
+        actor.userType === UserType.SYSTEM_MANAGER ||
+        actor.userType === UserType.MANAGER;
+      if (!isAdmin) {
+        return NextResponse.json(
+          { success: false, error: 'Forbidden: only admin/manager may bulk import templates' },
+          { status: 403 }
+        );
+      }
+      if (!Array.isArray(data.rows)) {
+        return NextResponse.json(
+          { success: false, error: 'rows must be an array' },
+          { status: 400 }
+        );
+      }
+      const result = await serverBulkCreateEquipmentTemplates(data.rows, actor.uid);
+      return NextResponse.json({ success: true, ...result });
+    }
+
     if (!data.name || !data.category || !data.subcategory || !data.status) {
       return NextResponse.json(
         { success: false, error: 'name, category, subcategory, and status are required' },

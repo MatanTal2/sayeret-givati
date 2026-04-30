@@ -8,7 +8,7 @@ import { cn } from '@/lib/cn';
 
 const T = FEATURES.AMMUNITION;
 
-export type AmmunitionRowAction = 'transfer' | 'return-to-mgr' | 'delete';
+export type AmmunitionRowAction = 'transfer' | 'return-to-mgr' | 'return-to-unit' | 'delete';
 
 interface ActionItem {
   id: AmmunitionRowAction;
@@ -20,6 +20,7 @@ interface ActionItem {
 interface AmmunitionRowActionsProps {
   showTransfer: boolean;
   showReturn: boolean;
+  showReturnToUnit?: boolean;
   showDelete: boolean;
   onAction: (action: AmmunitionRowAction) => void;
 }
@@ -27,6 +28,7 @@ interface AmmunitionRowActionsProps {
 export default function AmmunitionRowActions({
   showTransfer,
   showReturn,
+  showReturnToUnit = false,
   showDelete,
   onAction,
 }: AmmunitionRowActionsProps) {
@@ -35,6 +37,7 @@ export default function AmmunitionRowActions({
   const safeItems: ActionItem[] = ([
     { id: 'transfer', label: labels.TRANSFER, show: showTransfer },
     { id: 'return-to-mgr', label: labels.RETURN_TO_MGR, show: showReturn },
+    { id: 'return-to-unit', label: labels.RETURN_TO_UNIT, show: showReturnToUnit },
   ] as ActionItem[]).filter((i) => i.show);
 
   const dangerItems: ActionItem[] = ([

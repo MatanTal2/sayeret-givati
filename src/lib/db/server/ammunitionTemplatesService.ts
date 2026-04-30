@@ -20,10 +20,9 @@ import type {
   TrackingMode,
 } from '@/types/ammunition';
 import { isAmmunitionSubcategory } from '@/lib/ammunition/subcategories';
-import { CANONICAL_AMMUNITION_TEMPLATES } from '@/data/ammunitionTemplates';
 
 const ALLOCATIONS: AmmunitionAllocation[] = ['USER', 'TEAM', 'BOTH'];
-const TRACKING_MODES: TrackingMode[] = ['BRUCE', 'SERIAL', 'LOOSE_COUNT'];
+const TRACKING_MODES: TrackingMode[] = ['BRUCE', 'BELT', 'SERIAL', 'LOOSE_COUNT'];
 const SECURITY_LEVELS: SecurityLevel[] = ['EXPLOSIVE', 'GRABBABLE'];
 const STATUSES: AmmunitionTemplateStatus[] = ['CANONICAL', 'PROPOSED', 'PENDING_REQUEST'];
 
@@ -36,6 +35,8 @@ export interface AmmunitionTemplateInput {
   securityLevel: SecurityLevel;
   bulletsPerCardboard?: number;
   cardboardsPerBruce?: number;
+  bulletsPerString?: number;
+  stringsPerBruce?: number;
   status: AmmunitionTemplateStatus;
   createdBy: string;
 }
@@ -58,7 +59,7 @@ export function validateAmmunitionTemplateInput(
     throw new Error('allocation must be one of: USER, TEAM, BOTH');
   }
   if (typeof i.trackingMode !== 'string' || !TRACKING_MODES.includes(i.trackingMode as TrackingMode)) {
-    throw new Error('trackingMode must be one of: BRUCE, SERIAL, LOOSE_COUNT');
+    throw new Error('trackingMode must be one of: BRUCE, BELT, SERIAL, LOOSE_COUNT');
   }
   if (typeof i.securityLevel !== 'string' || !SECURITY_LEVELS.includes(i.securityLevel as SecurityLevel)) {
     throw new Error('securityLevel must be one of: EXPLOSIVE, GRABBABLE');
@@ -78,6 +79,14 @@ export function validateAmmunitionTemplateInput(
       throw new Error('cardboardsPerBruce must be a positive number for BRUCE templates');
     }
   }
+  if (i.trackingMode === 'BELT') {
+    if (typeof i.bulletsPerString !== 'number' || i.bulletsPerString <= 0) {
+      throw new Error('bulletsPerString must be a positive number for BELT templates');
+    }
+    if (typeof i.stringsPerBruce !== 'number' || i.stringsPerBruce <= 0) {
+      throw new Error('stringsPerBruce must be a positive number for BELT templates');
+    }
+  }
 
   return {
     name: i.name.trim(),
@@ -94,15 +103,27 @@ export function validateAmmunitionTemplateInput(
           cardboardsPerBruce: i.cardboardsPerBruce as number,
         }
       : {}),
+    ...(i.trackingMode === 'BELT'
+      ? {
+          bulletsPerString: i.bulletsPerString as number,
+          stringsPerBruce: i.stringsPerBruce as number,
+        }
+      : {}),
     status: i.status as AmmunitionTemplateStatus,
     createdBy: i.createdBy,
   };
 }
 
 function totalBulletsFor(input: AmmunitionTemplateInput): number | undefined {
-  if (input.trackingMode !== 'BRUCE') return undefined;
-  if (!input.bulletsPerCardboard || !input.cardboardsPerBruce) return undefined;
-  return input.bulletsPerCardboard * input.cardboardsPerBruce;
+  if (input.trackingMode === 'BRUCE') {
+    if (!input.bulletsPerCardboard || !input.cardboardsPerBruce) return undefined;
+    return input.bulletsPerCardboard * input.cardboardsPerBruce;
+  }
+  if (input.trackingMode === 'BELT') {
+    if (!input.bulletsPerString || !input.stringsPerBruce) return undefined;
+    return input.bulletsPerString * input.stringsPerBruce;
+  }
+  return undefined;
 }
 
 export async function serverCreateAmmunitionTemplate(
@@ -130,6 +151,11 @@ export async function serverCreateAmmunitionTemplate(
     data.bulletsPerCardboard = input.bulletsPerCardboard;
     data.cardboardsPerBruce = input.cardboardsPerBruce;
     if (total) data.totalBulletsPerBruce = total;
+  }
+  if (input.trackingMode === 'BELT') {
+    data.bulletsPerString = input.bulletsPerString;
+    data.stringsPerBruce = input.stringsPerBruce;
+    if (total) data.totalBulletsPerStringBruce = total;
   }
 
   await ref.set(data);
@@ -172,6 +198,25 @@ export async function serverUpdateAmmunitionTemplate(
         updates.bulletsPerCardboard * updates.cardboardsPerBruce;
     }
   }
+  if (
+    updates.bulletsPerString !== undefined ||
+    updates.stringsPerBruce !== undefined ||
+    updates.trackingMode === 'BELT'
+  ) {
+    if (updates.bulletsPerString !== undefined) {
+      update.bulletsPerString = updates.bulletsPerString;
+    }
+    if (updates.stringsPerBruce !== undefined) {
+      update.stringsPerBruce = updates.stringsPerBruce;
+    }
+    if (
+      typeof updates.bulletsPerString === 'number' &&
+      typeof updates.stringsPerBruce === 'number'
+    ) {
+      update.totalBulletsPerStringBruce =
+        updates.bulletsPerString * updates.stringsPerBruce;
+    }
+  }
 
   await db.collection(COLLECTIONS.AMMUNITION_TEMPLATES).doc(templateId).update(update);
 }
@@ -187,52 +232,68 @@ export async function serverListAmmunitionTemplates(): Promise<AmmunitionType[]>
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as AmmunitionType);
 }
 
-export async function serverSeedCanonicalAmmunitionTemplates(
+export interface BulkImportResult {
+  created: number;
+  errors: Array<{ index: number; error: string }>;
+}
+
+/**
+ * Validate + write many ammunition templates in one batched commit. Each
+ * payload runs through the same validator used by the single-create path.
+ * Returns per-row errors instead of throwing on the first invalid row, so
+ * the UI can show the user exactly which CSV lines failed.
+ *
+ * The batch is committed atomically only if every row validates. Partial
+ * imports are intentionally avoided — the user fixes the CSV and re-uploads.
+ */
+export async function serverBulkCreateAmmunitionTemplates(
+  rawPayloads: unknown[],
   createdBy: string
-): Promise<{ created: number; skipped: number }> {
+): Promise<BulkImportResult> {
+  const errors: Array<{ index: number; error: string }> = [];
+  const validated: AmmunitionTemplateInput[] = [];
+  for (let i = 0; i < rawPayloads.length; i++) {
+    try {
+      const v = validateAmmunitionTemplateInput({ ...(rawPayloads[i] as object), createdBy });
+      validated.push(v);
+    } catch (e) {
+      errors.push({ index: i, error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+  if (errors.length > 0) return { created: 0, errors };
+
   const db = getAdminDb();
   const col = db.collection(COLLECTIONS.AMMUNITION_TEMPLATES);
-
-  const existingSnap = await col.where('status', '==', 'CANONICAL').get();
-  const existingNames = new Set(existingSnap.docs.map((d) => d.data().name as string));
-
-  let created = 0;
-  let skipped = 0;
   const batch = db.batch();
-  for (const seed of CANONICAL_AMMUNITION_TEMPLATES) {
-    if (existingNames.has(seed.name)) {
-      skipped += 1;
-      continue;
-    }
+  for (const input of validated) {
     const ref = col.doc();
-    const total =
-      seed.trackingMode === 'BRUCE' &&
-      seed.bulletsPerCardboard &&
-      seed.cardboardsPerBruce
-        ? seed.bulletsPerCardboard * seed.cardboardsPerBruce
-        : undefined;
     const data: Record<string, unknown> = {
       id: ref.id,
-      name: seed.name,
-      subcategory: seed.subcategory,
-      allocation: seed.allocation,
-      trackingMode: seed.trackingMode,
-      securityLevel: seed.securityLevel,
-      status: 'CANONICAL',
-      createdBy,
+      name: input.name,
+      subcategory: input.subcategory,
+      allocation: input.allocation,
+      trackingMode: input.trackingMode,
+      securityLevel: input.securityLevel,
+      status: input.status,
+      createdBy: input.createdBy,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     };
-    if (seed.description) data.description = seed.description;
-    if (seed.trackingMode === 'BRUCE') {
-      data.bulletsPerCardboard = seed.bulletsPerCardboard;
-      data.cardboardsPerBruce = seed.cardboardsPerBruce;
+    if (input.description) data.description = input.description;
+    const total = totalBulletsFor(input);
+    if (input.trackingMode === 'BRUCE') {
+      data.bulletsPerCardboard = input.bulletsPerCardboard;
+      data.cardboardsPerBruce = input.cardboardsPerBruce;
       if (total) data.totalBulletsPerBruce = total;
     }
+    if (input.trackingMode === 'BELT') {
+      data.bulletsPerString = input.bulletsPerString;
+      data.stringsPerBruce = input.stringsPerBruce;
+      if (total) data.totalBulletsPerStringBruce = total;
+    }
     batch.set(ref, data);
-    created += 1;
   }
-
-  if (created > 0) await batch.commit();
-  return { created, skipped };
+  await batch.commit();
+  return { created: validated.length, errors: [] };
 }
+

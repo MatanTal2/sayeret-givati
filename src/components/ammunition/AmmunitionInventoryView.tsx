@@ -2,7 +2,9 @@
 
 import React, { useMemo, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { FEATURES } from '@/constants/text';
+import { FEATURES, TEXT_CONSTANTS } from '@/constants/text';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
+import { isBruceLike } from '@/lib/ammunition/subcategories';
 import AmmunitionRowActions, {
   type AmmunitionRowAction,
 } from './AmmunitionRowActions';
@@ -39,6 +41,8 @@ type Row =
       sortBucket: 0 | 1;
     };
 
+export type AmmunitionViewMode = 'active' | 'used';
+
 export interface AmmunitionInventoryViewProps {
   templates: AmmunitionType[];
   stock: AmmunitionStock[];
@@ -46,6 +50,8 @@ export interface AmmunitionInventoryViewProps {
   filter?: InventoryFilter;
   emptyMessage?: string;
   showHolder?: boolean;
+  /** 'active' (default) hides used SERIAL items; 'used' shows only used items, no BRUCE/LOOSE_COUNT stock rows. */
+  viewMode?: AmmunitionViewMode;
   resolveHolderName?: (holderType: HolderType, holderId: string) => string;
   /** UI-side gate: which rows the actor can act on at all. Server re-validates. */
   canMutate?: (entry: { templateId: string; holderType: HolderType; holderId: string }) => boolean;
@@ -55,6 +61,10 @@ export interface AmmunitionInventoryViewProps {
   onDeleteItem?: (serial: string) => void;
   onTransferItem?: (item: AmmunitionItem) => void;
   onReturnItemToMgr?: (item: AmmunitionItem) => void;
+  /** Optional. When provided, shows a "החזר למלאי מרכזי" kebab item on SERIAL rows. */
+  onReturnItemToUnit?: (item: AmmunitionItem) => void;
+  /** Whether the kebab "החזר למלאי מרכזי" entry should be visible. Page-level admin gate. */
+  canReturnToUnit?: boolean;
 }
 
 function holderLabelFor(
@@ -70,7 +80,7 @@ function holderLabelFor(
 }
 
 function quantityCell(stock: AmmunitionStock, template: AmmunitionType): string {
-  if (template.trackingMode === 'BRUCE') {
+  if (isBruceLike(template.trackingMode)) {
     const open =
       stock.openBruceState && stock.openBruceState !== 'EMPTY'
         ? ` + פתוח: ${T.BRUCE_STATE[stock.openBruceState]}`
@@ -80,6 +90,12 @@ function quantityCell(stock: AmmunitionStock, template: AmmunitionType): string 
   return `${stock.quantity ?? 0} יח׳`;
 }
 
+type PendingConfirm =
+  | { kind: 'delete-stock'; stockId: string }
+  | { kind: 'delete-item'; serial: string }
+  | { kind: 'return-item'; serial: string }
+  | { kind: 'return-item-to-unit'; serial: string };
+
 export default function AmmunitionInventoryView({
   templates,
   stock,
@@ -87,6 +103,7 @@ export default function AmmunitionInventoryView({
   filter,
   emptyMessage,
   showHolder = false,
+  viewMode = 'active',
   resolveHolderName,
   canMutate,
   canDeleteRow,
@@ -94,8 +111,11 @@ export default function AmmunitionInventoryView({
   onDeleteItem,
   onTransferItem,
   onReturnItemToMgr,
+  onReturnItemToUnit,
+  canReturnToUnit = false,
 }: AmmunitionInventoryViewProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [pending, setPending] = useState<PendingConfirm | null>(null);
   const toggleExpanded = (key: string) =>
     setExpanded((prev) => (prev === key ? null : key));
 
@@ -107,12 +127,14 @@ export default function AmmunitionInventoryView({
 
   const rows = useMemo<Row[]>(() => {
     const out: Row[] = [];
-    for (const s of stock) {
-      if (filter?.holderType && s.holderType !== filter.holderType) continue;
-      if (filter?.holderId && s.holderId !== filter.holderId) continue;
-      const tpl = templatesById.get(s.templateId);
-      if (!tpl) continue;
-      out.push({ kind: 'stock', key: `s:${s.id}`, template: tpl, stock: s, sortBucket: 0 });
+    if (viewMode === 'active') {
+      for (const s of stock) {
+        if (filter?.holderType && s.holderType !== filter.holderType) continue;
+        if (filter?.holderId && s.holderId !== filter.holderId) continue;
+        const tpl = templatesById.get(s.templateId);
+        if (!tpl) continue;
+        out.push({ kind: 'stock', key: `s:${s.id}`, template: tpl, stock: s, sortBucket: 0 });
+      }
     }
     for (const it of items) {
       if (filter?.holderType && it.currentHolderType !== filter.holderType) continue;
@@ -120,22 +142,23 @@ export default function AmmunitionInventoryView({
       const tpl = templatesById.get(it.templateId);
       if (!tpl) continue;
       const used = USED_STATUSES.includes(it.status);
+      if (viewMode === 'active' && used) continue;
+      if (viewMode === 'used' && !used) continue;
       out.push({
         kind: 'item',
         key: `i:${it.id}`,
         template: tpl,
         item: it,
-        sortBucket: used ? 1 : 0,
+        sortBucket: 0,
       });
     }
     out.sort((a, b) => {
-      if (a.sortBucket !== b.sortBucket) return a.sortBucket - b.sortBucket;
       const c = a.template.name.localeCompare(b.template.name, 'he');
       if (c !== 0) return c;
       return a.key.localeCompare(b.key);
     });
     return out;
-  }, [stock, items, filter, templatesById]);
+  }, [stock, items, filter, templatesById, viewMode]);
 
   if (rows.length === 0) {
     return (
@@ -148,7 +171,7 @@ export default function AmmunitionInventoryView({
   const handleAction = (row: Row, action: AmmunitionRowAction) => {
     if (row.kind === 'stock') {
       if (action === 'delete' && onDeleteStock) {
-        if (window.confirm(T.INVENTORY_ACTIONS.DELETE_CONFIRM)) onDeleteStock(row.stock.id);
+        setPending({ kind: 'delete-stock', stockId: row.stock.id });
       }
       return;
     }
@@ -156,15 +179,55 @@ export default function AmmunitionInventoryView({
     if (action === 'transfer' && onTransferItem) {
       onTransferItem(it);
     } else if (action === 'return-to-mgr' && onReturnItemToMgr) {
-      if (window.confirm(T.INVENTORY_ACTIONS.RETURN_CONFIRM)) onReturnItemToMgr(it);
+      setPending({ kind: 'return-item', serial: it.id });
+    } else if (action === 'return-to-unit' && onReturnItemToUnit) {
+      setPending({ kind: 'return-item-to-unit', serial: it.id });
     } else if (action === 'delete' && onDeleteItem) {
-      if (window.confirm(T.INVENTORY_ACTIONS.DELETE_CONFIRM)) onDeleteItem(it.id);
+      setPending({ kind: 'delete-item', serial: it.id });
     }
   };
+
+  const confirmPending = () => {
+    if (!pending) return;
+    if (pending.kind === 'delete-stock' && onDeleteStock) onDeleteStock(pending.stockId);
+    else if (pending.kind === 'delete-item' && onDeleteItem) onDeleteItem(pending.serial);
+    else if (pending.kind === 'return-item' && onReturnItemToMgr) {
+      const it = items.find((i) => i.id === pending.serial);
+      if (it) onReturnItemToMgr(it);
+    } else if (pending.kind === 'return-item-to-unit' && onReturnItemToUnit) {
+      const it = items.find((i) => i.id === pending.serial);
+      if (it) onReturnItemToUnit(it);
+    }
+    setPending(null);
+  };
+
+  const confirmCopy = pending
+    ? pending.kind === 'return-item'
+      ? {
+          title: T.INVENTORY_ACTIONS.RETURN_TO_MGR,
+          message: T.INVENTORY_ACTIONS.RETURN_CONFIRM,
+          confirmText: T.INVENTORY_ACTIONS.RETURN_TO_MGR,
+          variant: 'info' as const,
+        }
+      : pending.kind === 'return-item-to-unit'
+        ? {
+            title: T.INVENTORY_ACTIONS.RETURN_TO_UNIT,
+            message: T.INVENTORY_ACTIONS.RETURN_TO_UNIT_CONFIRM,
+            confirmText: T.INVENTORY_ACTIONS.RETURN_TO_UNIT,
+            variant: 'info' as const,
+          }
+        : {
+            title: T.INVENTORY_ACTIONS.DELETE,
+            message: T.INVENTORY_ACTIONS.DELETE_CONFIRM,
+            confirmText: T.INVENTORY_ACTIONS.DELETE,
+            variant: 'danger' as const,
+          }
+    : null;
 
   const colCount = 4 + (showHolder ? 1 : 0) + 1; // chevron + name + qty + status + (holder?) + actions
 
   return (
+    <>
     <div className="overflow-x-auto border border-neutral-200 rounded-lg">
       <table className="min-w-full text-right text-sm">
         <thead className="bg-neutral-50">
@@ -291,6 +354,12 @@ export default function AmmunitionInventoryView({
                     <AmmunitionRowActions
                       showTransfer={isAvailable && !!allowMutate && !!onTransferItem}
                       showReturn={isConsumed && !!allowMutate && !!onReturnItemToMgr}
+                      showReturnToUnit={
+                        isAvailable &&
+                        canReturnToUnit &&
+                        !!onReturnItemToUnit &&
+                        it.currentHolderType !== 'UNIT'
+                      }
                       showDelete={isAvailable && !!allowDelete && !!onDeleteItem}
                       onAction={(a) => handleAction(row, a)}
                     />
@@ -314,6 +383,20 @@ export default function AmmunitionInventoryView({
         </tbody>
       </table>
     </div>
+    {confirmCopy && (
+      <ConfirmationModal
+        isOpen={!!pending}
+        title={confirmCopy.title}
+        message={confirmCopy.message}
+        confirmText={confirmCopy.confirmText}
+        cancelText={TEXT_CONSTANTS.BUTTONS.CANCEL}
+        onConfirm={confirmPending}
+        onCancel={() => setPending(null)}
+        variant={confirmCopy.variant}
+        useHomePageStyle
+      />
+    )}
+    </>
   );
 }
 
@@ -354,12 +437,20 @@ function StockExpanded({
   if (template.trackingMode === 'BRUCE') {
     meta.push(
       { label: T.TEMPLATE_FORM.CARDBOARDS_PER_BRUCE, value: template.cardboardsPerBruce ?? '—' },
-      { label: T.TEMPLATE_FORM.BULLETS_PER_CARDBOARD, value: template.bulletsPerCardboard ?? '—' },
-      {
-        label: 'מצב ברוס פתוח',
-        value: stock.openBruceState ? T.BRUCE_STATE[stock.openBruceState] : '—',
-      }
+      { label: T.TEMPLATE_FORM.BULLETS_PER_CARDBOARD, value: template.bulletsPerCardboard ?? '—' }
     );
+  }
+  if (template.trackingMode === 'BELT') {
+    meta.push(
+      { label: T.TEMPLATE_FORM.STRINGS_PER_BRUCE, value: template.stringsPerBruce ?? '—' },
+      { label: T.TEMPLATE_FORM.BULLETS_PER_STRING, value: template.bulletsPerString ?? '—' }
+    );
+  }
+  if (isBruceLike(template.trackingMode)) {
+    meta.push({
+      label: 'מצב ברוס פתוח',
+      value: stock.openBruceState ? T.BRUCE_STATE[stock.openBruceState] : '—',
+    });
   }
   if (showHolder) {
     meta.push({

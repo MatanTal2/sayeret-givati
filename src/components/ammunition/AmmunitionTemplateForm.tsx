@@ -24,6 +24,8 @@ export interface AmmunitionTemplateFormValues {
   securityLevel: SecurityLevel;
   bulletsPerCardboard: string;
   cardboardsPerBruce: string;
+  bulletsPerString: string;
+  stringsPerBruce: string;
 }
 
 const EMPTY: AmmunitionTemplateFormValues = {
@@ -35,6 +37,8 @@ const EMPTY: AmmunitionTemplateFormValues = {
   securityLevel: 'EXPLOSIVE',
   bulletsPerCardboard: '30',
   cardboardsPerBruce: '33',
+  bulletsPerString: '50',
+  stringsPerBruce: '4',
 };
 
 export type AmmunitionTemplateFormMode = 'create' | 'edit';
@@ -61,6 +65,8 @@ function fromTemplate(t: AmmunitionType): AmmunitionTemplateFormValues {
     securityLevel: t.securityLevel,
     bulletsPerCardboard: t.bulletsPerCardboard?.toString() || '',
     cardboardsPerBruce: t.cardboardsPerBruce?.toString() || '',
+    bulletsPerString: t.bulletsPerString?.toString() || '',
+    stringsPerBruce: t.stringsPerBruce?.toString() || '',
   };
 }
 
@@ -104,7 +110,7 @@ export default function AmmunitionTemplateForm({
   );
   const trackingOptions = useMemo(
     () =>
-      (['BRUCE', 'SERIAL', 'LOOSE_COUNT'] as TrackingMode[]).map((m) => ({
+      (['BRUCE', 'BELT', 'SERIAL', 'LOOSE_COUNT'] as TrackingMode[]).map((m) => ({
         value: m,
         label: T.TRACKING_MODE[m],
       })),
@@ -134,6 +140,18 @@ export default function AmmunitionTemplateForm({
       }
       if (!Number.isFinite(cpb) || cpb <= 0) {
         setError('יש להזין מספר חיובי של קרטג\'ים בברוס');
+        return;
+      }
+    }
+    if (values.trackingMode === 'BELT') {
+      const bps = Number(values.bulletsPerString);
+      const spb = Number(values.stringsPerBruce);
+      if (!Number.isFinite(bps) || bps <= 0) {
+        setError('יש להזין מספר חיובי של כדורים בשרשיר');
+        return;
+      }
+      if (!Number.isFinite(spb) || spb <= 0) {
+        setError('יש להזין מספר חיובי של שרשירים בברוס');
         return;
       }
     }
@@ -235,6 +253,35 @@ export default function AmmunitionTemplateForm({
               min={1}
               value={values.cardboardsPerBruce}
               onChange={(e) => set('cardboardsPerBruce', e.target.value)}
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+        </div>
+      )}
+
+      {values.trackingMode === 'BELT' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg bg-neutral-50 border border-neutral-200">
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              {T.TEMPLATE_FORM.BULLETS_PER_STRING}
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={values.bulletsPerString}
+              onChange={(e) => set('bulletsPerString', e.target.value)}
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              {T.TEMPLATE_FORM.STRINGS_PER_BRUCE}
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={values.stringsPerBruce}
+              onChange={(e) => set('stringsPerBruce', e.target.value)}
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Layers, Plus, X, Check, AlertCircle, ChevronDown } from 'lucide-react';
+import { Layers, Plus, Upload, X, Check, AlertCircle, ChevronDown } from 'lucide-react';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { Button, Card } from '@/components/ui';
 import { cn } from '@/lib/cn';
@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { UserType } from '@/types/user';
 import { EquipmentType, TemplateStatus } from '@/types/equipment';
 import { EquipmentTypesService } from '@/lib/equipmentService';
+import { apiFetch } from '@/lib/apiFetch';
 import {
   approveTemplateRequest,
   proposeTemplate,
@@ -18,6 +19,13 @@ import {
 } from '@/lib/templateRequestService';
 import TemplateForm, { TemplateFormValues } from '@/components/equipment/TemplateForm';
 import { useCategoryLookup } from '@/hooks/useCategoryLookup';
+import BulkTemplateImportModal from '@/components/management/BulkTemplateImportModal';
+import {
+  EQUIPMENT_TEMPLATE_CSV_HEADERS,
+  EQUIPMENT_TEMPLATE_CSV_SAMPLE_ROW,
+  csvRowToEquipmentTemplatePayload,
+  type EquipmentTemplateBulkPayload,
+} from '@/lib/equipment/templatesCsv';
 
 type DialogState =
   | { kind: 'closed' }
@@ -47,6 +55,7 @@ export default function TemplatesTab() {
   const [submitting, setSubmitting] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [retireReason, setRetireReason] = useState('');
+  const [showBulkImport, setShowBulkImport] = useState(false);
   const [toast, setToast] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
 
   const refresh = useCallback(async () => {
@@ -448,6 +457,16 @@ export default function TemplatesTab() {
             צור תבנית קנונית
           </Button>
         )}
+        {isManagerOrAbove && (
+          <Button
+            variant="secondary"
+            onClick={() => setShowBulkImport(true)}
+            className="flex items-center gap-2"
+          >
+            <Upload className="w-4 h-4" />
+            ייבא CSV
+          </Button>
+        )}
         {isTeamLeader && (
           <Button onClick={() => setDialog({ kind: 'propose' })} variant="secondary" className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
@@ -629,6 +648,35 @@ export default function TemplatesTab() {
           {toast.kind === 'success' ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           <span className="text-sm">{toast.message}</span>
         </div>
+      )}
+
+      {showBulkImport && (
+        <BulkTemplateImportModal<EquipmentTemplateBulkPayload>
+          title="ייבוא תבניות ציוד מ-CSV"
+          csvHeaders={EQUIPMENT_TEMPLATE_CSV_HEADERS}
+          csvSampleRow={EQUIPMENT_TEMPLATE_CSV_SAMPLE_ROW}
+          csvFileName="equipment-templates-template.csv"
+          mapRow={csvRowToEquipmentTemplatePayload}
+          onClose={() => {
+            setShowBulkImport(false);
+            refresh();
+          }}
+          onSubmit={async (rows) => {
+            const res = await apiFetch('/api/equipment-templates', {
+              method: 'POST',
+              body: JSON.stringify({ action: 'bulk_import', rows }),
+            });
+            const json = await res.json();
+            if (!res.ok || !json.success) {
+              throw new Error(json.error || 'ייבוא נכשל');
+            }
+            await refresh();
+            return {
+              created: json.created ?? 0,
+              errors: json.errors ?? [],
+            };
+          }}
+        />
       )}
 
       {!isManagerOrAbove && !isTeamLeader && (

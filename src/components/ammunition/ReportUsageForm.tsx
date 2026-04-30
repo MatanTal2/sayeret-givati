@@ -10,6 +10,7 @@ import type {
   AmmunitionType,
   BruceState,
 } from '@/types/ammunition';
+import { isBruceLike } from '@/lib/ammunition/subcategories';
 import type { SubmitReportPayload } from '@/hooks/useAmmunitionReports';
 
 const T = FEATURES.AMMUNITION;
@@ -139,7 +140,7 @@ export default function ReportUsageForm({
     };
     if (reportRequestId) payload.reportRequestId = reportRequestId;
 
-    if (template.trackingMode === 'BRUCE') {
+    if (isBruceLike(template.trackingMode)) {
       const b = bruces ? Number(bruces) : 0;
       const c = cardboards ? Number(cardboards) : undefined;
       const bl = bullets ? Number(bullets) : undefined;
@@ -215,7 +216,7 @@ export default function ReportUsageForm({
                 />
               </div>
 
-              {template?.trackingMode === 'BRUCE' && (
+              {template && isBruceLike(template.trackingMode) && (
                 <div className="space-y-3">
                   <div className="grid grid-cols-3 gap-2">
                     <div>

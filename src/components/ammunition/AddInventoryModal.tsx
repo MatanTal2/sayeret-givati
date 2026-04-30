@@ -9,7 +9,7 @@ import type { UserSearchResult } from '@/lib/userService';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserType } from '@/types/user';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
-import { AMMUNITION_SUBCATEGORIES } from '@/lib/ammunition/subcategories';
+import { AMMUNITION_SUBCATEGORIES, isBruceLike } from '@/lib/ammunition/subcategories';
 import type {
   AmmunitionSubcategory,
   AmmunitionType,
@@ -138,7 +138,7 @@ export default function AddInventoryModal({
 
     setSubmitting(true);
     try {
-      if (selectedTemplate.trackingMode === 'BRUCE') {
+      if (isBruceLike(selectedTemplate.trackingMode)) {
         const bc = Number(bruceCount);
         if (!Number.isFinite(bc) || bc < 0) {
           setError('כמות ברוסים לא תקינה');
@@ -300,7 +300,7 @@ export default function AddInventoryModal({
             </div>
           )}
 
-          {selectedTemplate?.trackingMode === 'BRUCE' && (
+          {selectedTemplate && isBruceLike(selectedTemplate.trackingMode) && (
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-1">

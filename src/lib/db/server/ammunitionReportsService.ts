@@ -180,13 +180,13 @@ export async function serverSubmitAmmunitionReport(
   const stockRef = db.collection(COLLECTIONS.AMMUNITION_INVENTORY).doc(stockDocId);
 
   await db.runTransaction(async (tx) => {
-    if (trackingMode === 'BRUCE' || trackingMode === 'LOOSE_COUNT') {
+    if (trackingMode === 'BRUCE' || trackingMode === 'BELT' || trackingMode === 'LOOSE_COUNT') {
       const stockSnap = await tx.get(stockRef);
       if (!stockSnap.exists) {
         throw new Error('No inventory entry found for the reporter on this template');
       }
       const stock = stockSnap.data()!;
-      if (trackingMode === 'BRUCE') {
+      if (trackingMode === 'BRUCE' || trackingMode === 'BELT') {
         const cur = (stock.bruceCount as number | undefined) ?? 0;
         const consumed = input.brucesConsumed ?? 0;
         if (consumed > cur) throw new Error('brucesConsumed exceeds current bruceCount');
@@ -241,7 +241,7 @@ export async function serverSubmitAmmunitionReport(
       usedAt: Timestamp.fromDate(new Date(input.usedAtMs)),
       createdAt: FieldValue.serverTimestamp(),
     };
-    if (trackingMode === 'BRUCE') {
+    if (trackingMode === 'BRUCE' || trackingMode === 'BELT') {
       if (input.brucesConsumed !== undefined) reportData.brucesConsumed = input.brucesConsumed;
       if (input.cardboardsConsumed !== undefined)
         reportData.cardboardsConsumed = input.cardboardsConsumed;
