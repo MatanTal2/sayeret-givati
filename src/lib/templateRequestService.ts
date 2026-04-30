@@ -38,14 +38,14 @@ interface ProposeTemplateArgs {
 
 export async function proposeTemplate(
   args: ProposeTemplateArgs
-): Promise<{ templateId: string; draftId?: string }> {
+): Promise<{ templateId: string; draftId?: string; status: TemplateStatus }> {
   const response = await apiFetch('/api/equipment-templates/propose', {
     method: 'POST',
     body: JSON.stringify(args),
   });
   const result = await response.json();
   if (!result.success) throw new Error(result.error || 'Failed to propose template');
-  return { templateId: result.templateId, draftId: result.draftId };
+  return { templateId: result.templateId, draftId: result.draftId, status: result.status };
 }
 
 interface ApproveTemplateArgs {

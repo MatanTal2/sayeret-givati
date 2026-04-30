@@ -5,6 +5,8 @@ import { AlertCircle, CheckCircle } from 'lucide-react';
 import TemplateForm, { TemplateFormValues } from './TemplateForm';
 import { proposeTemplate } from '@/lib/templateRequestService';
 import { useAuth } from '@/contexts/AuthContext';
+import { TemplateStatus } from '@/types/equipment';
+import { UserType } from '@/types/user';
 
 export interface RequestNewTemplateFlowProps {
   capturedSerialNumber?: string;
@@ -12,7 +14,7 @@ export interface RequestNewTemplateFlowProps {
   capturedCatalogNumber?: string;
   capturedNotes?: string;
   onCancel?: () => void;
-  onSubmitted?: (result: { templateId: string; draftId?: string }) => void;
+  onSubmitted?: (result: { templateId: string; draftId?: string; status: TemplateStatus }) => void;
 }
 
 export default function RequestNewTemplateFlow({
@@ -26,7 +28,7 @@ export default function RequestNewTemplateFlow({
   const { enhancedUser } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [submittedTemplateId, setSubmittedTemplateId] = useState<string | null>(null);
+  const [submittedStatus, setSubmittedStatus] = useState<TemplateStatus | null>(null);
 
   const handleSubmit = async (values: TemplateFormValues) => {
     if (!enhancedUser || !enhancedUser.userType) {
@@ -63,7 +65,7 @@ export default function RequestNewTemplateFlow({
         notes: values.notes || undefined,
         draftPayload,
       });
-      setSubmittedTemplateId(result.templateId);
+      setSubmittedStatus(result.status);
       onSubmitted?.(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'שליחת הבקשה נכשלה');
@@ -72,26 +74,36 @@ export default function RequestNewTemplateFlow({
     }
   };
 
-  if (submittedTemplateId) {
+  if (submittedStatus) {
+    const isCanonical = submittedStatus === TemplateStatus.CANONICAL;
     return (
       <div className="space-y-4 text-center">
         <div className="w-16 h-16 mx-auto bg-success-100 rounded-full flex items-center justify-center">
           <CheckCircle className="w-8 h-8 text-success-600" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-neutral-900">הבקשה נשלחה</h3>
+          <h3 className="text-lg font-semibold text-neutral-900">
+            {isCanonical ? 'התבנית נוצרה' : 'הבקשה נשלחה'}
+          </h3>
           <p className="text-sm text-neutral-600 mt-1">
-            ההצעה נשלחה לבדיקה. תקבל התראה כאשר היא תאושר ותוכל להשלים את ההרשמה לציוד.
+            {isCanonical
+              ? 'התבנית זמינה לשימוש מיידי. ניתן להמשיך בהוספת הציוד.'
+              : 'ההצעה נשלחה לבדיקה. תקבל התראה כאשר היא תאושר ותוכל להשלים את ההרשמה לציוד.'}
           </p>
         </div>
       </div>
     );
   }
 
+  const isReviewer =
+    enhancedUser?.userType === UserType.ADMIN ||
+    enhancedUser?.userType === UserType.SYSTEM_MANAGER;
   return (
     <div className="space-y-4">
       <div className="bg-info-50 border border-info-200 rounded-lg p-3 text-sm text-info-800">
-        מילוי הטופס יוצר בקשה לתבנית חדשה. לאחר אישור על ידי המנהל תוכל להשלים את הוספת הציוד.
+        {isReviewer
+          ? 'מילוי הטופס יוצר תבנית חדשה זמינה מיידית.'
+          : 'מילוי הטופס יוצר בקשה לתבנית חדשה. לאחר אישור על ידי המנהל תוכל להשלים את הוספת הציוד.'}
       </div>
 
       {error && (
