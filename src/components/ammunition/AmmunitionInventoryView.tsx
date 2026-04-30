@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { FEATURES, TEXT_CONSTANTS } from '@/constants/text';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
+import { isBruceLike } from '@/lib/ammunition/subcategories';
 import AmmunitionRowActions, {
   type AmmunitionRowAction,
 } from './AmmunitionRowActions';
@@ -75,7 +76,7 @@ function holderLabelFor(
 }
 
 function quantityCell(stock: AmmunitionStock, template: AmmunitionType): string {
-  if (template.trackingMode === 'BRUCE') {
+  if (isBruceLike(template.trackingMode)) {
     const open =
       stock.openBruceState && stock.openBruceState !== 'EMPTY'
         ? ` + פתוח: ${T.BRUCE_STATE[stock.openBruceState]}`
@@ -411,12 +412,20 @@ function StockExpanded({
   if (template.trackingMode === 'BRUCE') {
     meta.push(
       { label: T.TEMPLATE_FORM.CARDBOARDS_PER_BRUCE, value: template.cardboardsPerBruce ?? '—' },
-      { label: T.TEMPLATE_FORM.BULLETS_PER_CARDBOARD, value: template.bulletsPerCardboard ?? '—' },
-      {
-        label: 'מצב ברוס פתוח',
-        value: stock.openBruceState ? T.BRUCE_STATE[stock.openBruceState] : '—',
-      }
+      { label: T.TEMPLATE_FORM.BULLETS_PER_CARDBOARD, value: template.bulletsPerCardboard ?? '—' }
     );
+  }
+  if (template.trackingMode === 'BELT') {
+    meta.push(
+      { label: T.TEMPLATE_FORM.STRINGS_PER_BRUCE, value: template.stringsPerBruce ?? '—' },
+      { label: T.TEMPLATE_FORM.BULLETS_PER_STRING, value: template.bulletsPerString ?? '—' }
+    );
+  }
+  if (isBruceLike(template.trackingMode)) {
+    meta.push({
+      label: 'מצב ברוס פתוח',
+      value: stock.openBruceState ? T.BRUCE_STATE[stock.openBruceState] : '—',
+    });
   }
   if (showHolder) {
     meta.push({

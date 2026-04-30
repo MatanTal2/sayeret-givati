@@ -786,6 +786,8 @@ export const TEXT_CONSTANTS = {
         SECURITY_LEVEL: 'רמת אבטחה',
         BULLETS_PER_CARDBOARD: 'כדורים בקרטג\'',
         CARDBOARDS_PER_BRUCE: 'קרטג\'ים בברוס',
+        BULLETS_PER_STRING: 'כדורים בשרשיר',
+        STRINGS_PER_BRUCE: 'שרשירים בברוס',
         DESCRIPTION: 'תיאור'
       },
       REPORT_FORM: {

@@ -16,7 +16,12 @@ import { Timestamp } from 'firebase/firestore';
  */
 
 export type AmmunitionAllocation = 'USER' | 'TEAM' | 'BOTH';
-export type TrackingMode = 'BRUCE' | 'SERIAL' | 'LOOSE_COUNT';
+/**
+ * BELT — belt-fed bullets. Same stock shape as BRUCE (bruceCount + openBruceState),
+ * but the inner unit is a "שרשיר" (string) instead of a "קרטון" (cardboard).
+ * Templates in BELT mode use bulletsPerString + stringsPerBruce.
+ */
+export type TrackingMode = 'BRUCE' | 'BELT' | 'SERIAL' | 'LOOSE_COUNT';
 export type BruceState = 'FULL' | 'MORE_THAN_HALF' | 'LESS_THAN_HALF' | 'EMPTY';
 export type SecurityLevel = 'EXPLOSIVE' | 'GRABBABLE';
 export type HolderType = 'USER' | 'TEAM';
@@ -26,6 +31,7 @@ export type AmmunitionSubcategory =
   | 'GRENADES'
   | 'LAUNCHER_GRENADES'
   | 'SHOULDER_MISSILES'
+  | 'MORTAR'
   | 'MINES'
   | 'OTHER';
 
@@ -45,9 +51,14 @@ export interface AmmunitionType {
   allocation: AmmunitionAllocation;
   trackingMode: TrackingMode;
   securityLevel: SecurityLevel;
+  // BRUCE mode:
   bulletsPerCardboard?: number;
   cardboardsPerBruce?: number;
   totalBulletsPerBruce?: number;
+  // BELT mode (parallel to BRUCE; inner unit is "שרשיר"):
+  bulletsPerString?: number;
+  stringsPerBruce?: number;
+  totalBulletsPerStringBruce?: number;
   status: AmmunitionTemplateStatus;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -57,7 +68,8 @@ export interface AmmunitionType {
 export interface AmmunitionStock {
   id: string;
   templateId: string;
-  trackingMode: 'BRUCE' | 'LOOSE_COUNT';
+  /** BRUCE + BELT share the same stock shape (bruceCount + openBruceState). */
+  trackingMode: 'BRUCE' | 'BELT' | 'LOOSE_COUNT';
   holderType: HolderType;
   holderId: string;
   bruceCount?: number;

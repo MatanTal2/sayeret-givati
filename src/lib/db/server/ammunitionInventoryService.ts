@@ -174,7 +174,7 @@ export async function serverUpsertAmmunitionStock(
     updatedAt: FieldValue.serverTimestamp(),
   };
 
-  if (template.trackingMode === 'BRUCE') {
+  if (template.trackingMode === 'BRUCE' || template.trackingMode === 'BELT') {
     if (input.bruceCount !== undefined) data.bruceCount = input.bruceCount;
     if (input.openBruceState !== undefined) data.openBruceState = input.openBruceState;
   } else {

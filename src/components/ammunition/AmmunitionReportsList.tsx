@@ -28,10 +28,11 @@ function fmtDate(ms: number): string {
 }
 
 function amountLabel(r: AmmunitionReport, mode: TrackingMode): string {
-  if (mode === 'BRUCE') {
+  if (mode === 'BRUCE' || mode === 'BELT') {
+    const innerLabel = mode === 'BELT' ? 'שרשירים' : 'קרטונים';
     const parts: string[] = [];
     if (r.brucesConsumed) parts.push(`${r.brucesConsumed} ברוסים`);
-    if (r.cardboardsConsumed) parts.push(`${r.cardboardsConsumed} קרטונים`);
+    if (r.cardboardsConsumed) parts.push(`${r.cardboardsConsumed} ${innerLabel}`);
     if (r.bulletsConsumed) parts.push(`${r.bulletsConsumed} כדורים`);
     return parts.join(' + ') || '—';
   }

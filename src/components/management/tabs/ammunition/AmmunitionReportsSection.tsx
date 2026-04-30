@@ -42,10 +42,11 @@ function fmtDate(ts: unknown): string {
 }
 
 function consumedLabel(r: AmmunitionReport): string {
-  if (r.trackingMode === 'BRUCE') {
+  if (r.trackingMode === 'BRUCE' || r.trackingMode === 'BELT') {
+    const innerLabel = r.trackingMode === 'BELT' ? 'שרשירים' : 'קרטג׳ים';
     const parts: string[] = [];
     if (r.brucesConsumed) parts.push(`${r.brucesConsumed} ברוסים`);
-    if (r.cardboardsConsumed) parts.push(`${r.cardboardsConsumed} קרטג׳ים`);
+    if (r.cardboardsConsumed) parts.push(`${r.cardboardsConsumed} ${innerLabel}`);
     if (r.bulletsConsumed) parts.push(`${r.bulletsConsumed} כדורים`);
     if (parts.length === 0) parts.push('—');
     return parts.join(' · ');

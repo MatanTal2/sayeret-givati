@@ -13,6 +13,8 @@ export interface CreateAmmunitionTemplatePayload {
   securityLevel: AmmunitionType['securityLevel'];
   bulletsPerCardboard?: number;
   cardboardsPerBruce?: number;
+  bulletsPerString?: number;
+  stringsPerBruce?: number;
   status: AmmunitionType['status'];
 }
 

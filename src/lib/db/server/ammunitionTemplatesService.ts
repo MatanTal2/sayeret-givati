@@ -23,7 +23,7 @@ import { isAmmunitionSubcategory } from '@/lib/ammunition/subcategories';
 import { CANONICAL_AMMUNITION_TEMPLATES } from '@/data/ammunitionTemplates';
 
 const ALLOCATIONS: AmmunitionAllocation[] = ['USER', 'TEAM', 'BOTH'];
-const TRACKING_MODES: TrackingMode[] = ['BRUCE', 'SERIAL', 'LOOSE_COUNT'];
+const TRACKING_MODES: TrackingMode[] = ['BRUCE', 'BELT', 'SERIAL', 'LOOSE_COUNT'];
 const SECURITY_LEVELS: SecurityLevel[] = ['EXPLOSIVE', 'GRABBABLE'];
 const STATUSES: AmmunitionTemplateStatus[] = ['CANONICAL', 'PROPOSED', 'PENDING_REQUEST'];
 
@@ -36,6 +36,8 @@ export interface AmmunitionTemplateInput {
   securityLevel: SecurityLevel;
   bulletsPerCardboard?: number;
   cardboardsPerBruce?: number;
+  bulletsPerString?: number;
+  stringsPerBruce?: number;
   status: AmmunitionTemplateStatus;
   createdBy: string;
 }
@@ -58,7 +60,7 @@ export function validateAmmunitionTemplateInput(
     throw new Error('allocation must be one of: USER, TEAM, BOTH');
   }
   if (typeof i.trackingMode !== 'string' || !TRACKING_MODES.includes(i.trackingMode as TrackingMode)) {
-    throw new Error('trackingMode must be one of: BRUCE, SERIAL, LOOSE_COUNT');
+    throw new Error('trackingMode must be one of: BRUCE, BELT, SERIAL, LOOSE_COUNT');
   }
   if (typeof i.securityLevel !== 'string' || !SECURITY_LEVELS.includes(i.securityLevel as SecurityLevel)) {
     throw new Error('securityLevel must be one of: EXPLOSIVE, GRABBABLE');
@@ -78,6 +80,14 @@ export function validateAmmunitionTemplateInput(
       throw new Error('cardboardsPerBruce must be a positive number for BRUCE templates');
     }
   }
+  if (i.trackingMode === 'BELT') {
+    if (typeof i.bulletsPerString !== 'number' || i.bulletsPerString <= 0) {
+      throw new Error('bulletsPerString must be a positive number for BELT templates');
+    }
+    if (typeof i.stringsPerBruce !== 'number' || i.stringsPerBruce <= 0) {
+      throw new Error('stringsPerBruce must be a positive number for BELT templates');
+    }
+  }
 
   return {
     name: i.name.trim(),
@@ -94,15 +104,27 @@ export function validateAmmunitionTemplateInput(
           cardboardsPerBruce: i.cardboardsPerBruce as number,
         }
       : {}),
+    ...(i.trackingMode === 'BELT'
+      ? {
+          bulletsPerString: i.bulletsPerString as number,
+          stringsPerBruce: i.stringsPerBruce as number,
+        }
+      : {}),
     status: i.status as AmmunitionTemplateStatus,
     createdBy: i.createdBy,
   };
 }
 
 function totalBulletsFor(input: AmmunitionTemplateInput): number | undefined {
-  if (input.trackingMode !== 'BRUCE') return undefined;
-  if (!input.bulletsPerCardboard || !input.cardboardsPerBruce) return undefined;
-  return input.bulletsPerCardboard * input.cardboardsPerBruce;
+  if (input.trackingMode === 'BRUCE') {
+    if (!input.bulletsPerCardboard || !input.cardboardsPerBruce) return undefined;
+    return input.bulletsPerCardboard * input.cardboardsPerBruce;
+  }
+  if (input.trackingMode === 'BELT') {
+    if (!input.bulletsPerString || !input.stringsPerBruce) return undefined;
+    return input.bulletsPerString * input.stringsPerBruce;
+  }
+  return undefined;
 }
 
 export async function serverCreateAmmunitionTemplate(
@@ -130,6 +152,11 @@ export async function serverCreateAmmunitionTemplate(
     data.bulletsPerCardboard = input.bulletsPerCardboard;
     data.cardboardsPerBruce = input.cardboardsPerBruce;
     if (total) data.totalBulletsPerBruce = total;
+  }
+  if (input.trackingMode === 'BELT') {
+    data.bulletsPerString = input.bulletsPerString;
+    data.stringsPerBruce = input.stringsPerBruce;
+    if (total) data.totalBulletsPerStringBruce = total;
   }
 
   await ref.set(data);
@@ -170,6 +197,25 @@ export async function serverUpdateAmmunitionTemplate(
     ) {
       update.totalBulletsPerBruce =
         updates.bulletsPerCardboard * updates.cardboardsPerBruce;
+    }
+  }
+  if (
+    updates.bulletsPerString !== undefined ||
+    updates.stringsPerBruce !== undefined ||
+    updates.trackingMode === 'BELT'
+  ) {
+    if (updates.bulletsPerString !== undefined) {
+      update.bulletsPerString = updates.bulletsPerString;
+    }
+    if (updates.stringsPerBruce !== undefined) {
+      update.stringsPerBruce = updates.stringsPerBruce;
+    }
+    if (
+      typeof updates.bulletsPerString === 'number' &&
+      typeof updates.stringsPerBruce === 'number'
+    ) {
+      update.totalBulletsPerStringBruce =
+        updates.bulletsPerString * updates.stringsPerBruce;
     }
   }
 
