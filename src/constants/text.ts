@@ -1358,18 +1358,15 @@ export const TEXT_CONSTANTS = {
     // Buttons and Actions
     REFRESH_SHORT: 'רענן...',
     REFRESH_DATA: '↻ רענן נתונים',
-    UPDATE_SHORT: 'עדכן...',
     UPDATE_DATA: 'עדכן נתונים',
     ADD_NEW: 'הוסף חדש',
-    ADD_NEW_SOLDIER: 'הוסף חייל חדש',
-    
+
     // Form Labels and Placeholders
     SEARCH_BY_NAME: 'חיפוש לפי שם...',
     FULL_NAME: 'שם מלא',
     PERSONAL_NUMBER: 'מספר אישי',
     CUSTOM_STATUS_PLACEHOLDER: 'הכנס סטטוס מותאם',
     ADDITIONAL_NOTES: 'הערות נוספות (אופציונלי)',
-    PASSWORD_PLACEHOLDER: 'סיסמה',
     NOTES_PLACEHOLDER: 'הערות...',
     CUSTOM_STATUS_INPUT: 'סטטוס מותאם...',
     
@@ -1397,22 +1394,17 @@ export const TEXT_CONSTANTS = {
     DOWNLOAD_REPORT: 'הורד דוח',
     
     // Alert Messages
-    NO_NEW_SOLDIERS_SERVER: 'אין חיילים חדשים לעדכון בשרת',
-    DATA_UPDATED_SUCCESS: 'הנתונים עודכנו בהצלחה בשרת!',
     NO_CHANGES_TO_UPDATE: 'אין שינויים לעדכון',
     NO_SOLDIERS_SELECTED: 'לא נבחרו חיילים לדוח',
     REPORT_CREATION_ERROR: 'שגיאה ביצירת הדוח. אנא נסה שוב.',
     REPORT_COPIED: 'הדוח הועתק ללוח',
     COPY_ERROR: 'שגיאה בהעתקה. אנא העתק ידנית.',
     WHATSAPP_NOT_SUPPORTED: 'פונקציית הודעת WhatsApp עדיין לא תמיכה בדפדפן זה. אנא נסה בדפדפן אחר.',
-    WRONG_PASSWORD: 'סיסמה שגויה',
-    
+
     // Update Messages
-    UPDATE_SERVER_BUTTON: (count: number) => count > 0 ? `עדכן בשרת (${count})` : 'עדכן בשרת',
     UPDATE_DATA_BUTTON: (count: number) => count > 0 ? `עדכן נתונים (${count})` : 'עדכן נתונים',
     NO_CHANGES_TOOLTIP: 'אין שינויים לעדכון',
     UPDATE_CHANGES_TOOLTIP: (count: number) => `עדכן ${count} שינויים`,
-    UPDATE_NEW_SOLDIERS_TOOLTIP: (count: number) => count > 0 ? `עדכן ${count} חיילים חדשים בשרת` : 'אין חיילים חדשים לעדכון'
   },
 
   // Test Dashboard
