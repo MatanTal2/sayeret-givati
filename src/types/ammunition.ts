@@ -31,7 +31,7 @@ export type AmmunitionSubcategory =
 
 export type AmmunitionTemplateStatus = 'CANONICAL' | 'PROPOSED' | 'PENDING_REQUEST';
 
-export type AmmunitionItemStatus = 'AVAILABLE' | 'CONSUMED' | 'LOST' | 'DAMAGED';
+export type AmmunitionItemStatus = 'AVAILABLE' | 'CONSUMED' | 'LOST' | 'DAMAGED' | 'RETURNED';
 
 export type AmmunitionReportRequestStatus = 'OPEN' | 'CLOSED' | 'CANCELED';
 

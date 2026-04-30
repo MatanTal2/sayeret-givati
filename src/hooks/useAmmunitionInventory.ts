@@ -47,6 +47,7 @@ export interface UseAmmunitionInventoryReturn {
   createSerialItem: (payload: CreateSerialItemPayload) => Promise<boolean>;
   updateSerialItem: (serial: string, payload: UpdateSerialItemPayload) => Promise<boolean>;
   deleteSerialItem: (serial: string) => Promise<boolean>;
+  returnSerialItemToMgr: (serial: string) => Promise<boolean>;
 }
 
 export function useAmmunitionInventory(): UseAmmunitionInventoryReturn {
@@ -171,6 +172,25 @@ export function useAmmunitionInventory(): UseAmmunitionInventoryReturn {
     [refresh]
   );
 
+  const returnSerialItemToMgr = useCallback(
+    async (serial: string) => {
+      try {
+        const res = await apiFetch(`/api/ammunition-inventory/${encodeURIComponent(serial)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ action: 'return-to-mgr' }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.error || 'החזרה לאחראי תחמושת נכשלה');
+        await refresh();
+        return true;
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'שגיאה לא צפויה');
+        return false;
+      }
+    },
+    [refresh]
+  );
+
   return {
     stock,
     items,
@@ -182,5 +202,6 @@ export function useAmmunitionInventory(): UseAmmunitionInventoryReturn {
     createSerialItem,
     updateSerialItem,
     deleteSerialItem,
+    returnSerialItemToMgr,
   };
 }

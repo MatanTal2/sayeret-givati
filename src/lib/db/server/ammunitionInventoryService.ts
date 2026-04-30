@@ -30,7 +30,7 @@ import type { ApiActor } from './policyHelpers';
 import { UserType } from '@/types/user';
 
 const BRUCE_STATES: BruceState[] = ['FULL', 'MORE_THAN_HALF', 'LESS_THAN_HALF', 'EMPTY'];
-const ITEM_STATUSES: AmmunitionItemStatus[] = ['AVAILABLE', 'CONSUMED', 'LOST', 'DAMAGED'];
+const ITEM_STATUSES: AmmunitionItemStatus[] = ['AVAILABLE', 'CONSUMED', 'LOST', 'DAMAGED', 'RETURNED'];
 
 function isManagerOrAbove(userType: UserType): boolean {
   return (
@@ -358,6 +358,47 @@ export async function serverUpdateSerialItem(input: UpdateSerialItemInput): Prom
   }
 
   await ref.update(updates);
+}
+
+export async function serverReturnSerialItemToMgr(
+  actor: ApiActor,
+  serial: string
+): Promise<{ ammoMgrId: string }> {
+  const db = getAdminDb();
+  const ref = db.collection(COLLECTIONS.AMMUNITION).doc(serial);
+  const snap = await ref.get();
+  if (!snap.exists) throw new Error('Serial item not found');
+  const item = snap.data() as AmmunitionItem;
+
+  if (item.status !== 'CONSUMED') {
+    throw new Error('Only CONSUMED items can be returned to the ammo manager');
+  }
+
+  const ammoMgrId = await getResponsibleManagerId();
+  if (!ammoMgrId) {
+    throw new Error('No ammo-responsible user is configured in system config');
+  }
+
+  // Permission: admin / system_manager / manager, OR ammo-responsible user, OR TL of holding team.
+  let allowed = isManagerOrAbove(actor.userType) || actor.uid === ammoMgrId;
+  if (!allowed && actor.userType === UserType.TEAM_LEADER && actor.teamId) {
+    if (item.currentHolderType === 'TEAM') {
+      allowed = item.currentHolderId === actor.teamId;
+    } else {
+      const holderTeam = await userTeamId(item.currentHolderId);
+      allowed = !!holderTeam && holderTeam === actor.teamId;
+    }
+  }
+  if (!allowed) throw new Error('Forbidden: only TL, ammo-responsible, or manager+ may return items');
+
+  await ref.update({
+    currentHolderType: 'USER',
+    currentHolderId: ammoMgrId,
+    status: 'RETURNED',
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+
+  return { ammoMgrId };
 }
 
 export async function serverDeleteSerialItem(actor: ApiActor, serial: string): Promise<void> {

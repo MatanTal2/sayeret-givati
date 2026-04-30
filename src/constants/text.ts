@@ -721,6 +721,33 @@ export const TEXT_CONSTANTS = {
         TEAM: 'צוות',
         BOTH: 'אישי וצוות'
       },
+      ITEM_STATUS: {
+        AVAILABLE: 'זמין',
+        CONSUMED: 'נוצל',
+        RETURNED: 'הוחזר',
+        LOST: 'אבד',
+        DAMAGED: 'פגום'
+      },
+      INVENTORY_ACTIONS: {
+        TRANSFER: 'העבר',
+        RETURN_TO_MGR: 'החזר לאחראי',
+        DELETE: 'מחק',
+        DELETE_CONFIRM: 'למחוק את הרשומה?',
+        RETURN_CONFIRM: 'להחזיר את הפריט לאחראי תחמושת?'
+      },
+      USED_SECTION: 'תחמושת ששומשה',
+      USED_SECTION_EMPTY: 'אין פריטים שנוצלו',
+      SCOPE_PERSONAL: 'אישי',
+      SCOPE_TEAM: 'צוות',
+      SCOPE_ALL: 'הכל',
+      TRANSFER_TITLE: 'העברת פריט',
+      TRANSFER_TARGET: 'יעד',
+      TRANSFER_TO_USER: 'משתמש',
+      TRANSFER_TO_TEAM: 'צוות',
+      TRANSFER_SUBMIT: 'העבר',
+      TRANSFER_NO_CHANGE: 'אין שינוי ביעד',
+      AMMO_TEAM_HEADER: 'תחמושת צוותית',
+      AMMO_TEAM_EMPTY: 'אין פריטי תחמושת צוותית',
       SECURITY_LEVEL: {
         EXPLOSIVE: 'נפיץ',
         GRABBABLE: 'חמידה'
