@@ -32,7 +32,11 @@ export enum NotificationType {
   COMMANDER_MESSAGE = 'commander_message',
   DAILY_CHECK_REMINDER = 'daily_check_reminder',
   AMMO_REPORT_SUBMITTED = 'ammo_report_submitted',
-  AMMO_REPORT_REQUESTED = 'ammo_report_requested'
+  AMMO_REPORT_REQUESTED = 'ammo_report_requested',
+  TRAINING_PLAN_SUBMITTED = 'training_plan_submitted',
+  TRAINING_PLAN_APPROVED = 'training_plan_approved',
+  TRAINING_PLAN_REJECTED = 'training_plan_rejected',
+  AMMO_RESTOCK_REQUEST = 'ammo_restock_request'
 }
 
 export interface CreateNotificationData {

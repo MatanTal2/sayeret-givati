@@ -179,6 +179,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Training plans — authenticated read; writes server-only via /api/training-plans.
+    match /trainingPlans/{planId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // Deny everything else
     match /{document=**} {
       allow read, write: if false;
