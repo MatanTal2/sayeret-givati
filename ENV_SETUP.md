@@ -27,14 +27,6 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
 # Add a test phone (with fixed OTP code) for local dev / CI.
 
 # ==============================================
-# 📊 GOOGLE SHEETS INTEGRATION (Optional)
-# ==============================================
-# For status reporting functionality
-GOOGLE_SHEETS_PRIVATE_KEY_BASE64=your_base64_encoded_private_key
-GOOGLE_SHEETS_CLIENT_EMAIL=your_service_account_email@project.iam.gserviceaccount.com
-GOOGLE_SHEET_ID=your_google_sheet_id
-
-# ==============================================
 # 🛠️ DEVELOPMENT SETTINGS
 # ==============================================
 NODE_ENV=development
@@ -61,10 +53,3 @@ NODE_ENV=development
 4. Phone numbers for testing → add test phone (e.g. `+972 50 123 4567` → fixed code `123456`) for local dev / CI
 5. Upgrade project to Blaze plan if not already (Identity Platform features require it)
 
-### Google Sheets (Optional)
-
-1. Create Google Cloud Project
-2. Enable Sheets API
-3. Create Service Account
-4. Download JSON key
-5. Base64 encode the private key

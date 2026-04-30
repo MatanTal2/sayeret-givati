@@ -4,8 +4,8 @@ import { auth } from './firebase';
  * Authenticated fetch wrapper. Attaches the current user's Firebase ID token
  * as `Authorization: Bearer <token>`. Use for every call to a protected
  * `/api/...` route. Public auth routes (`/api/auth/register`,
- * `/api/auth/verify-military-id`, `/api/auth/check-email-verified`) and
- * `/api/sheets` use plain `fetch` instead.
+ * `/api/auth/verify-military-id`, `/api/auth/check-email-verified`) use plain
+ * `fetch` instead.
  *
  * Throws `Error('Not authenticated')` if there is no signed-in user.
  */
