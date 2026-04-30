@@ -9,22 +9,24 @@
  * Doc id strategy: `militaryPersonalNumberHash`. Registered users
  * overwrite the personnel-only entry (source = 'users', isRegistered = true).
  *
- * Credentials: reads `GOOGLE_SERVICE_ACCOUNT_JSON` (base64) and
+ * Credentials: reads `GOOGLE_SERVICE_ACCOUNT_JSON` and
  * `NEXT_PUBLIC_FIREBASE_PROJECT_ID` from `.env.local` — same vars the
- * Next.js runtime uses. No separate `sa.json` file required.
+ * Next.js runtime uses. The cred value is auto-detected: plain JSON OR
+ * base64-encoded JSON both work. No separate `sa.json` file required and
+ * no transpiler needed.
  *
  * Usage:
- *   npx ts-node scripts/backfill-phone-book.ts [--project <id>] [--dry-run]
+ *   node scripts/backfill-phone-book.js [--project <id>] [--dry-run]
  *
  * Flags:
  *   --project <id>   Override project id (defaults to NEXT_PUBLIC_FIREBASE_PROJECT_ID).
  *   --dry-run        Log the planned writes without persisting.
  */
-import * as admin from 'firebase-admin';
-import { readFileSync } from 'fs';
-import * as path from 'path';
+const admin = require('firebase-admin');
+const { readFileSync } = require('fs');
+const path = require('path');
 
-function loadEnvLocal(): void {
+function loadEnvLocal() {
   try {
     const file = readFileSync(path.resolve(process.cwd(), '.env.local'), 'utf8');
     for (const line of file.split(/\r?\n/)) {
@@ -47,6 +49,24 @@ function loadEnvLocal(): void {
   }
 }
 
+function parseServiceAccount(raw) {
+  // Try plain JSON first.
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // Fall through.
+  }
+  // Try base64-encoded JSON.
+  try {
+    const decoded = Buffer.from(raw, 'base64').toString('utf8');
+    return JSON.parse(decoded);
+  } catch (e) {
+    throw new Error(
+      `GOOGLE_SERVICE_ACCOUNT_JSON is neither plain JSON nor base64-encoded JSON: ${e.message}`
+    );
+  }
+}
+
 loadEnvLocal();
 
 const args = process.argv.slice(2);
@@ -60,18 +80,17 @@ if (!projectId) {
   process.exit(1);
 }
 
-const saB64 = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
-if (!saB64) {
-  console.error('Missing GOOGLE_SERVICE_ACCOUNT_JSON in .env.local (base64-encoded service-account JSON)');
+const saRaw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+if (!saRaw) {
+  console.error('Missing GOOGLE_SERVICE_ACCOUNT_JSON in .env.local');
   process.exit(1);
 }
 
-let saJson: admin.ServiceAccount;
+let saJson;
 try {
-  const decoded = Buffer.from(saB64, 'base64').toString('utf8');
-  saJson = JSON.parse(decoded);
+  saJson = parseServiceAccount(saRaw);
 } catch (e) {
-  console.error('Failed to decode GOOGLE_SERVICE_ACCOUNT_JSON:', e);
+  console.error(e.message);
   process.exit(1);
 }
 
@@ -86,37 +105,32 @@ const COLLECTIONS = {
   USERS: 'users',
   AUTHORIZED_PERSONNEL: 'authorized_personnel',
   PHONE_BOOK: 'phoneBook',
-} as const;
+};
 
-interface UserRow {
-  id: string;
-  data: FirebaseFirestore.DocumentData;
-}
-
-function buildDisplayName(firstName?: string, lastName?: string, fallback?: string): string {
-  const parts = [firstName, lastName].filter((s): s is string => !!s && !!s.trim());
+function buildDisplayName(firstName, lastName, fallback) {
+  const parts = [firstName, lastName].filter((s) => !!s && !!String(s).trim());
   return parts.join(' ').trim() || fallback || '';
 }
 
-function pruneUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
-  const out: Record<string, unknown> = {};
+function pruneUndefined(obj) {
+  const out = {};
   for (const [k, v] of Object.entries(obj)) {
     if (v !== undefined && v !== '') out[k] = v;
   }
-  return out as Partial<T>;
+  return out;
 }
 
-async function loadUsers(): Promise<UserRow[]> {
+async function loadUsers() {
   const snap = await db.collection(COLLECTIONS.USERS).get();
   return snap.docs.map((d) => ({ id: d.id, data: d.data() }));
 }
 
-async function loadPersonnel(): Promise<UserRow[]> {
+async function loadPersonnel() {
   const snap = await db.collection(COLLECTIONS.AUTHORIZED_PERSONNEL).get();
   return snap.docs.map((d) => ({ id: d.id, data: d.data() }));
 }
 
-async function upsertEntry(hash: string, payload: Record<string, unknown>): Promise<void> {
+async function upsertEntry(hash, payload) {
   const ref = db.collection(COLLECTIONS.PHONE_BOOK).doc(hash);
   if (dryRun) {
     console.log(`[dry-run] upsert ${hash}:`, payload);
@@ -140,7 +154,7 @@ async function upsertEntry(hash: string, payload: Record<string, unknown>): Prom
   }
 }
 
-async function main(): Promise<void> {
+async function main() {
   const [personnel, users] = await Promise.all([loadPersonnel(), loadUsers()]);
   console.log(`Loaded ${personnel.length} personnel rows and ${users.length} user rows.`);
 
@@ -150,14 +164,14 @@ async function main(): Promise<void> {
 
   // 1) Seed from authorized_personnel.
   for (const p of personnel) {
-    const hash = (p.data.militaryPersonalNumberHash as string) || p.id;
+    const hash = p.data.militaryPersonalNumberHash || p.id;
     if (!hash) {
       skipped++;
       continue;
     }
     const data = pruneUndefined({
       id: hash,
-      source: 'authorized_personnel' as const,
+      source: 'authorized_personnel',
       militaryPersonalNumberHash: hash,
       firstName: p.data.firstName,
       lastName: p.data.lastName,
@@ -172,14 +186,14 @@ async function main(): Promise<void> {
 
   // 2) Overlay users (overrides source + isRegistered + adds email/team/photo).
   for (const u of users) {
-    const hash = u.data.militaryPersonalNumberHash as string | undefined;
+    const hash = u.data.militaryPersonalNumberHash;
     if (!hash) {
       skipped++;
       continue;
     }
     const data = pruneUndefined({
       id: hash,
-      source: 'users' as const,
+      source: 'users',
       userId: u.id,
       militaryPersonalNumberHash: hash,
       firstName: u.data.firstName,

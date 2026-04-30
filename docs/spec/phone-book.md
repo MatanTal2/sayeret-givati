@@ -53,15 +53,18 @@ it never downgrades an entry that is already `source='users'`.
 
 ## Backfill
 
-`scripts/backfill-phone-book.ts` reads both source collections via
+`scripts/backfill-phone-book.js` reads both source collections via
 firebase-admin and upserts every doc. Idempotent.
 
-Credentials are loaded from `.env.local` — same `GOOGLE_SERVICE_ACCOUNT_JSON`
-(base64) and `NEXT_PUBLIC_FIREBASE_PROJECT_ID` that the Next.js runtime
-uses. No separate `sa.json` file required.
+Credentials and project id load from `.env.local` — same
+`GOOGLE_SERVICE_ACCOUNT_JSON` and `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+that the Next.js runtime uses. The cred value is auto-detected:
+plain JSON OR base64-encoded JSON both work. No separate `sa.json`
+file required and no transpiler (plain CommonJS, runs under `node`
+directly).
 
 ```
-npx ts-node scripts/backfill-phone-book.ts [--dry-run]
+node scripts/backfill-phone-book.js [--dry-run]
 ```
 
 Run once before pointing client traffic at `/phone-book`.
