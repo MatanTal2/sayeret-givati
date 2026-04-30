@@ -62,15 +62,12 @@
      - Working precedent — already resolves IDs to names: `src/components/management/tabs/TemplateForm.tsx:79–96` uses `CategoriesService.getCategories()`.
      - Schema confirming the fields are IDs not names: `src/types/equipment.ts:18–19`.
    - **Suggested fix:** Lift the category lookup the form already does into `TemplatesTab` (or extract a `useCategoryLookup` hook returning `(id) => name`). Render `lookup(t.category) / lookup(t.subcategory)` everywhere, falling back to the raw ID in a warning style if unresolved (helps surface orphan refs).
-10. Manage Templates rows overflow on narrow screens; need collapsed default
-    - **Repro:** Management → Equipment Templates. Row width exceeds viewport on laptop and mobile; horizontal scroll required to see actions.
-    - **Why this matters:** Action buttons get pushed off-screen and admins miss them.
-    - **Suggested redesign (per user request):**
-      - Collapsed row by default: **template name + actions only**.
-      - Click row → expands to reveal description, category / subcategory (resolved per #9), serial-number flag, daily-status flag, status, audit timestamps.
-      - Use Headless UI `Disclosure` per the project's UI-libs preference (no custom expand/collapse logic).
-    - **File paths:** `src/components/management/tabs/TemplatesTab.tsx` row markup around lines 200–235 (proposed) and 327–332 (canonical).
-    - **Suggested fix:** Replace the flat row markup with `<Disclosure>`. Apply to both the proposed and canonical sections so they stay visually consistent.
+10. ~~Manage Templates rows overflow on narrow screens; need collapsed default~~
+    - **FIXED (verified 2026-04-30 on `fix/templates-ui-and-status-cleanup`):** the `renderRow` helper in `TemplatesTab.tsx:295-340` already wraps every row in Headless UI `<Disclosure as="li">`:
+      - Collapsed header (`DisclosureButton`): chevron + template name only.
+      - Action buttons live in a `flex-shrink-0` container outside the button so they are always reachable.
+      - `DisclosurePanel` reveals category + subcategory (resolved via `useCategoryLookup`), description, notes, `requiresSerialNumber`, `requiresDailyStatusCheck`, default catalog number, and lifecycle status.
+      - Both canonical, proposed, and pending sections use the same renderer through the shared `section()` helper, so they stay visually consistent.
 11. ~~Canonical templates list missing edit + delete actions~~
     - **FIXED (verified 2026-04-30 on `fix/templates-ui-and-status-cleanup`):** all three pieces shipped in earlier work; verification confirms:
       - UI: `TemplatesTab.tsx` `canonicalActions()` — for ADMIN / SYSTEM_MANAGER renders an `"ערוך"` button + conditional `"השבת"` button (only when `isActive === true`); falls back to status badge for non-admins.
