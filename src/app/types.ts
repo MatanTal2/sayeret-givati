@@ -8,5 +8,4 @@ export interface Soldier {
   customStatus?: string;
   notes?: string;
   isSelected: boolean;
-  isManuallyAdded?: boolean; // Flag to identify manually added soldiers
-} 
+}

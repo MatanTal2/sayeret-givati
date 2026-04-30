@@ -22,7 +22,6 @@ npx jest src/lib/__tests__/adminUtils.test.ts
 
 Copy `ENV_SETUP.md` to `.env.local`. Required variables:
 - `NEXT_PUBLIC_FIREBASE_*` — Firebase client SDK config
-- `GOOGLE_SHEETS_*` — optional, for daily status reporting
 
 OTP is provided by Firebase Phone Auth (no env vars). Phone provider must be enabled in Firebase Console → Authentication → Sign-in method, and the project must be on the Blaze plan. Add a test phone number in the console for local dev / CI.
 
@@ -53,7 +52,7 @@ Firestore security rules in `firebase/firestore.rules` are deployed and in sync 
 | `src/constants/` | Centralized config constants (collection names, admin config, text) |
 | `src/data/` | Static data (equipment templates) |
 | `src/app/` | Next.js App Router pages and layouts |
-| `src/app/api/` | API routes: `auth/` (register, verify-military-id, check-email-verified), `sheets/` |
+| `src/app/api/` | API routes: `auth/` (register, verify-military-id, check-email-verified), `soldier-status/` |
 | `src/components/` | Shared UI components |
 | `src/utils/` | Pure utility functions |
 
@@ -64,6 +63,7 @@ Firestore security rules in `firebase/firestore.rules` are deployed and in sync 
 - `equipmentTemplates` — equipment type definitions (templates)
 - `equipment` — individual equipment items (document ID = serial number)
 - `actionsLog` — audit trail for all mutations
+- `soldierStatus` — daily status annotation per soldier (doc ID = `militaryPersonalNumberHash`, matches `authorized_personnel` doc ID). Body: `{ status: 'בית' | 'משמר' | 'אחר', customStatus?, updatedAt }`. Audit + history fields intentionally deferred. Roster (name, platoon) is joined at read time from `users` ∪ `authorized_personnel` — never duplicated.
 
 ### Auth flow
 
