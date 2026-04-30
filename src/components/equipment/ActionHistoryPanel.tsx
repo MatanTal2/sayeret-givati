@@ -64,7 +64,7 @@ export default function ActionHistoryPanel({ equipment, onClose }: ActionHistory
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">{labels.TITLE}</h2>
             <p className="text-sm text-neutral-500 mt-0.5">
-              {equipment.productName} · #{equipment.id}
+              {equipment.productName} · צ: {equipment.id}
             </p>
           </div>
           <button

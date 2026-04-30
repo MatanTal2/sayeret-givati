@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Camera } from 'lucide-react';
 import { useCameraCapture } from '@/hooks/useCameraCapture';
 import { TEXT_CONSTANTS } from '@/constants/text';
 
@@ -108,9 +109,19 @@ export default function CameraCapture({
     );
   }
 
+  if (previewUrl) {
+    return (
+      <div className="relative">
+        <PreviewBox src={previewUrl} onRetake={handleRetake} onUse={handleUsePhoto} />
+      </div>
+    );
+  }
+
+  const showVideo = camera.isActive || camera.isStarting;
+
   return (
     <div className="relative">
-      {!previewUrl ? (
+      {showVideo ? (
         <>
           <video
             ref={camera.videoRef}
@@ -119,15 +130,6 @@ export default function CameraCapture({
             muted
           />
           <div className="flex items-center justify-center gap-3 mt-3">
-            {!camera.isActive && !camera.isStarting && (
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => camera.start(preferRearCamera)}
-              >
-                {TEXT_CONSTANTS.CAMERA.START}
-              </button>
-            )}
             {camera.isStarting && (
               <span className="text-sm text-neutral-600">{TEXT_CONSTANTS.CAMERA.STARTING}</span>
             )}
@@ -137,14 +139,24 @@ export default function CameraCapture({
               </button>
             )}
           </div>
-          {(captureError || camera.error) && (
-            <p className="text-danger-600 text-xs mt-2 text-center">
-              {captureError ?? camera.error}
-            </p>
-          )}
         </>
       ) : (
-        <PreviewBox src={previewUrl} onRetake={handleRetake} onUse={handleUsePhoto} />
+        <button
+          type="button"
+          onClick={() => camera.start(preferRearCamera)}
+          className="w-full aspect-[3/2] rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50 hover:bg-neutral-100 hover:border-primary-400 transition-colors flex flex-col items-center justify-center gap-2 text-neutral-600"
+        >
+          <Camera className="w-8 h-8" />
+          <span className="text-sm font-medium">{TEXT_CONSTANTS.CAMERA.START}</span>
+          <span className="text-xs text-neutral-500 px-3 text-center">
+            {TEXT_CONSTANTS.CAMERA.PERMISSION_HINT}
+          </span>
+        </button>
+      )}
+      {(captureError || camera.error) && (
+        <p className="text-danger-600 text-xs mt-2 text-center">
+          {captureError ?? camera.error}
+        </p>
       )}
     </div>
   );

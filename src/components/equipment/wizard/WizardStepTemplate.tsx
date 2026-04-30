@@ -1,11 +1,14 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { type EquipmentType, TemplateStatus } from '@/types/equipment';
 import { CategoriesService, type Category } from '@/lib/categories';
 import { EquipmentService } from '@/lib/equipmentService';
 import { Select } from '@/components/ui';
+import { cn } from '@/lib/cn';
 
 interface Props {
   categoryId: string | null;
@@ -16,6 +19,8 @@ interface Props {
   onSelectSubcategory: (subcategoryId: string | null) => void;
   onRequestNew: () => void;
 }
+
+const ALL_SUB_VALUE = '__all__';
 
 export default function WizardStepTemplate({
   categoryId,
@@ -47,7 +52,6 @@ export default function WizardStepTemplate({
     EquipmentService.Types.getEquipmentTypes({ activeOnly: true })
       .then((res) => {
         if (!cancelled && res.success) {
-          // Regular users only see canonical templates
           setAllTemplates(res.equipmentTypes.filter((t) => t.status === TemplateStatus.CANONICAL));
         }
       })
@@ -78,8 +82,11 @@ export default function WizardStepTemplate({
     [categories],
   );
   const subcategoryOptions = useMemo(
-    () => subcategories.map((s) => ({ value: s.id, label: s.name })),
-    [subcategories],
+    () => [
+      { value: ALL_SUB_VALUE, label: labels.ALL_SUBCATEGORIES },
+      ...subcategories.map((s) => ({ value: s.id, label: s.name })),
+    ],
+    [subcategories, labels.ALL_SUBCATEGORIES],
   );
 
   return (
@@ -106,10 +113,9 @@ export default function WizardStepTemplate({
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">{labels.SUBCATEGORY}</label>
           <Select
-            value={subcategoryId}
-            onChange={(v) => onSelectSubcategory(v)}
+            value={subcategoryId ?? ALL_SUB_VALUE}
+            onChange={(v) => onSelectSubcategory(v === ALL_SUB_VALUE ? null : v)}
             options={subcategoryOptions}
-            clearable
             ariaLabel={labels.SUBCATEGORY}
           />
         </div>
@@ -123,34 +129,65 @@ export default function WizardStepTemplate({
           ) : filteredTemplates.length === 0 ? (
             <p className="text-sm text-neutral-500">{labels.EMPTY_TEMPLATES}</p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-2 max-h-72 overflow-y-auto pe-1">
               {filteredTemplates.map((t) => {
                 const active = template?.id === t.id;
+                const hasExtra = !!t.notes || !!t.defaultCatalogNumber;
                 return (
-                  <li key={t.id}>
-                    <button
-                      type="button"
-                      onClick={() => onPick({ categoryId, subcategoryId, template: t })}
-                      className={`w-full text-start p-3 rounded-lg border transition-all ${
-                        active
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50'
-                      }`}
-                    >
-                      <div className="text-sm font-medium text-neutral-900">{t.name}</div>
-                      {t.description && (
-                        <div className="text-xs text-neutral-500 mt-0.5">{t.description}</div>
-                      )}
-                      <div className="flex items-center gap-2 mt-1">
-                        {t.requiresSerialNumber && (
-                          <span className="text-xs px-1.5 py-0.5 rounded-full bg-info-100 text-info-700">צ</span>
+                  <Disclosure key={t.id} as="li">
+                    {({ open }) => (
+                      <div
+                        className={cn(
+                          'rounded-lg border transition-colors overflow-hidden',
+                          active ? 'border-primary-500 bg-primary-50' : 'border-neutral-200',
                         )}
-                        {t.requiresDailyStatusCheck && (
-                          <span className="text-xs px-1.5 py-0.5 rounded-full bg-warning-100 text-warning-700">דיווח יומי</span>
-                        )}
+                      >
+                        <DisclosureButton
+                          onClick={() => onPick({ categoryId, subcategoryId, template: t })}
+                          className={cn(
+                            'w-full text-start p-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
+                            !active && 'hover:bg-neutral-50',
+                          )}
+                        >
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-medium text-neutral-900">{t.name}</span>
+                            {t.requiresSerialNumber && (
+                              <span className="text-xs px-1.5 py-0.5 rounded-full bg-info-100 text-info-700">צ</span>
+                            )}
+                            {t.requiresDailyStatusCheck && (
+                              <span className="text-xs px-1.5 py-0.5 rounded-full bg-warning-100 text-warning-700">דיווח</span>
+                            )}
+                            <ChevronDown
+                              className={cn(
+                                'ms-auto w-4 h-4 text-neutral-500 transition-transform',
+                                open && 'rotate-180',
+                              )}
+                            />
+                          </div>
+                          {t.description && (
+                            <div className="text-xs text-neutral-500 mt-1">{t.description}</div>
+                          )}
+                        </DisclosureButton>
+                        <DisclosurePanel className="px-3 pb-3 pt-2 border-t border-neutral-200 text-xs space-y-1.5 bg-white">
+                          {t.notes && (
+                            <div>
+                              <span className="font-medium text-neutral-500">{labels.TEMPLATE_NOTES_LABEL}:</span>{' '}
+                              <span className="text-neutral-700">{t.notes}</span>
+                            </div>
+                          )}
+                          {t.defaultCatalogNumber && (
+                            <div>
+                              <span className="font-medium text-neutral-500">{labels.TEMPLATE_DEFAULT_CATALOG_LABEL}:</span>{' '}
+                              <span className="text-neutral-700">{t.defaultCatalogNumber}</span>
+                            </div>
+                          )}
+                          {!hasExtra && (
+                            <p className="text-neutral-500">{labels.TEMPLATE_NO_EXTRA_INFO}</p>
+                          )}
+                        </DisclosurePanel>
                       </div>
-                    </button>
-                  </li>
+                    )}
+                  </Disclosure>
                 );
               })}
             </ul>

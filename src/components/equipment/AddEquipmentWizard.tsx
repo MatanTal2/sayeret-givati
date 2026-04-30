@@ -138,7 +138,7 @@ export default function AddEquipmentWizard({
           const upload = await uploadEquipmentPhoto(draft.photoBlob, id, 'signup');
           photoUrl = upload.url;
         }
-        if (!photoUrl) throw new Error(labels.PHOTO_REQUIRED_ERROR);
+        if (state.template.requiresSerialNumber && !photoUrl) throw new Error(labels.PHOTO_REQUIRED_ERROR);
 
         const id = state.template.requiresSerialNumber ? draft.serialNumber : crypto.randomUUID();
         const signerName =
@@ -164,7 +164,7 @@ export default function AddEquipmentWizard({
           location: draft.location || '',
           condition: draft.condition,
           catalogNumber: draft.catalogNumber || undefined,
-          photoUrl,
+          photoUrl: photoUrl ?? undefined,
           notes: draft.notes || undefined,
           requiresDailyStatusCheck: state.template.requiresDailyStatusCheck,
         });
@@ -353,9 +353,10 @@ function computeCanGoNext(state: WizardState): boolean {
     case 'template': return !!state.template;
     case 'details': {
       if (!state.template) return false;
+      const photoRequired = state.template.requiresSerialNumber;
       for (const item of state.items) {
         if (state.template.requiresSerialNumber && !item.serialNumber) return false;
-        if (!item.photoBlob && !item.photoUrl) return false;
+        if (photoRequired && !item.photoBlob && !item.photoUrl) return false;
       }
       return true;
     }

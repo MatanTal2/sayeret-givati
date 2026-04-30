@@ -40,3 +40,4 @@ Core CRUD operations for equipment types (templates) and equipment items. Two ma
 - 724 lines — candidate for split between types service and items service.
 - `EQUIPMENT_COLLECTION` defined locally as `'equipment'` — duplicated in other files.
 - `transferEquipment()` uses Firestore transaction for atomicity.
+- `getEquipmentTypes()` does **not** `orderBy` on Firestore. Firestore drops every doc that lacks the order field, and `serverCreateEquipmentType` / `serverProposeTemplate` do not write `sortOrder`. Sorting happens client-side: `sortOrder` (missing → `MAX_SAFE_INTEGER`) then `name`. See `docs/bugs.md` #15 for the bug this avoids.

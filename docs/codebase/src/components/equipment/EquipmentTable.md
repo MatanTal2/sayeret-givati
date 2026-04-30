@@ -16,6 +16,10 @@ equipment.signedById === user.uid && equipment.currentHolderId !== user.uid
 
 Computed client-side from `lastReportUpdate` against a 7-day threshold. Phase 1 has no daily cron; the badge is the user-visible signal that a report is overdue.
 
+## Category / subcategory rendering
+
+`Equipment.category` and `Equipment.subcategory` are stored as Firestore doc IDs (mirrors `EquipmentType`). The expanded row resolves them to Hebrew names via `useCategoryLookup` and renders `cat / sub`. Unresolved IDs fall back to the raw ID with `text-warning-700` (same pattern as `TemplatesTab`), so orphan refs surface visibly instead of silently. See `docs/bugs.md` #16.
+
 ## What this component does NOT do
 
 - Filtering / search — that is the page's job; the table receives the already-filtered list.

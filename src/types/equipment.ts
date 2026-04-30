@@ -76,7 +76,7 @@ export interface Equipment {
 
   // Additional Info
   catalogNumber?: string; // Army catalog number (מקט). Optional — not always known at sign-up.
-  photoUrl: string; // Initial sign-up photo URL (required at creation)
+  photoUrl?: string; // Initial sign-up photo. Required for serialized (צ) items, optional for non-serialized templates where the picture is captured on the template itself.
   lastReportPhotoUrl?: string; // Most recent report photo (populated by report action)
   batchId?: string; // Groups items added in a single bulk sign-up
   acquisitionCost?: number; // Original cost in ILS

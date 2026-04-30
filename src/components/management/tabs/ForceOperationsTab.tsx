@@ -235,7 +235,7 @@ function ItemList({
               className="w-4 h-4 text-primary-600 focus:ring-primary-500"
             />
             <div className="flex-1 text-sm">
-              <div className="font-medium text-neutral-900">#{e.id} · {e.productName}</div>
+              <div className="font-medium text-neutral-900">צ: {e.id} · {e.productName}</div>
               <div className="text-xs text-neutral-500">
                 מחזיק: {e.currentHolder} · חתום: {e.signedBy}
               </div>
