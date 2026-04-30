@@ -16,7 +16,9 @@ import { useAmmunitionReportRequests } from '@/hooks/useAmmunitionReportRequests
 import { useUsers } from '@/hooks/useUsers';
 import AmmunitionInventoryView, {
   type InventoryFilter,
+  type AmmunitionViewMode,
 } from '@/components/ammunition/AmmunitionInventoryView';
+import AmmunitionReportsList from '@/components/ammunition/AmmunitionReportsList';
 import AddInventoryModal from '@/components/ammunition/AddInventoryModal';
 import ReportUsageForm from '@/components/ammunition/ReportUsageForm';
 import TransferAmmoItemModal from '@/components/ammunition/TransferAmmoItemModal';
@@ -53,7 +55,7 @@ function AmmunitionPageContent() {
     returnSerialItemToMgr,
     refresh: refreshInventory,
   } = useAmmunitionInventory();
-  const { submit: submitReport } = useAmmunitionReports();
+  const { reports, submit: submitReport } = useAmmunitionReports();
   const { requests } = useAmmunitionReportRequests();
   const { users } = useUsers();
   const searchParams = useSearchParams();
@@ -63,6 +65,7 @@ function AmmunitionPageContent() {
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [transferTarget, setTransferTarget] = useState<AmmunitionItem | null>(null);
   const [scope, setScope] = useState<Scope>('personal');
+  const [viewMode, setViewMode] = useState<AmmunitionViewMode>('active');
 
   useEffect(() => {
     if (requestIdParam) {
@@ -194,23 +197,57 @@ function AmmunitionPageContent() {
         ))}
       </div>
 
+      <div className="inline-flex rounded-lg border border-neutral-200 p-0.5 bg-neutral-50 self-start">
+        {(['active', 'used'] as AmmunitionViewMode[]).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setViewMode(m)}
+            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+              viewMode === m
+                ? 'bg-white text-primary-700 shadow-sm'
+                : 'text-neutral-600 hover:text-neutral-900'
+            }`}
+          >
+            {m === 'active' ? T.VIEW_ACTIVE : T.VIEW_HISTORY}
+          </button>
+        ))}
+      </div>
+
       {isLoading ? (
         <div className="text-sm text-neutral-500 text-center py-12">טוען...</div>
       ) : (
-        <AmmunitionInventoryView
-          templates={templates}
-          stock={stock}
-          items={items}
-          filter={filterByScope}
-          showHolder={showHolder}
-          resolveHolderName={resolveHolderName}
-          canMutate={canMutate}
-          canDeleteRow={canDeleteRow}
-          onDeleteStock={(id) => deleteStock(id)}
-          onDeleteItem={(serial) => deleteSerialItem(serial)}
-          onTransferItem={(item) => setTransferTarget(item)}
-          onReturnItemToMgr={(item) => returnSerialItemToMgr(item.id)}
-        />
+        <>
+          <AmmunitionInventoryView
+            templates={templates}
+            stock={stock}
+            items={items}
+            filter={filterByScope}
+            showHolder={showHolder}
+            viewMode={viewMode}
+            resolveHolderName={resolveHolderName}
+            canMutate={canMutate}
+            canDeleteRow={canDeleteRow}
+            onDeleteStock={(id) => deleteStock(id)}
+            onDeleteItem={(serial) => deleteSerialItem(serial)}
+            onTransferItem={(item) => setTransferTarget(item)}
+            onReturnItemToMgr={(item) => returnSerialItemToMgr(item.id)}
+          />
+          {viewMode === 'used' && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-neutral-700">{T.HISTORY_REPORTS_TITLE}</h3>
+              <AmmunitionReportsList
+                reports={reports.filter((r) => {
+                  if (scope === 'personal') return r.reporterId === enhancedUser.uid;
+                  if (scope === 'team') return r.teamId === enhancedUser.teamId;
+                  return true;
+                })}
+                templates={templates}
+                resolveReporterName={(uid, fallback) => userNameByUid.get(uid) || fallback}
+              />
+            </div>
+          )}
+        </>
       )}
 
       {showAdd && (

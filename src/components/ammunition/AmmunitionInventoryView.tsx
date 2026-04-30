@@ -40,6 +40,8 @@ type Row =
       sortBucket: 0 | 1;
     };
 
+export type AmmunitionViewMode = 'active' | 'used';
+
 export interface AmmunitionInventoryViewProps {
   templates: AmmunitionType[];
   stock: AmmunitionStock[];
@@ -47,6 +49,8 @@ export interface AmmunitionInventoryViewProps {
   filter?: InventoryFilter;
   emptyMessage?: string;
   showHolder?: boolean;
+  /** 'active' (default) hides used SERIAL items; 'used' shows only used items, no BRUCE/LOOSE_COUNT stock rows. */
+  viewMode?: AmmunitionViewMode;
   resolveHolderName?: (holderType: HolderType, holderId: string) => string;
   /** UI-side gate: which rows the actor can act on at all. Server re-validates. */
   canMutate?: (entry: { templateId: string; holderType: HolderType; holderId: string }) => boolean;
@@ -93,6 +97,7 @@ export default function AmmunitionInventoryView({
   filter,
   emptyMessage,
   showHolder = false,
+  viewMode = 'active',
   resolveHolderName,
   canMutate,
   canDeleteRow,
@@ -114,12 +119,14 @@ export default function AmmunitionInventoryView({
 
   const rows = useMemo<Row[]>(() => {
     const out: Row[] = [];
-    for (const s of stock) {
-      if (filter?.holderType && s.holderType !== filter.holderType) continue;
-      if (filter?.holderId && s.holderId !== filter.holderId) continue;
-      const tpl = templatesById.get(s.templateId);
-      if (!tpl) continue;
-      out.push({ kind: 'stock', key: `s:${s.id}`, template: tpl, stock: s, sortBucket: 0 });
+    if (viewMode === 'active') {
+      for (const s of stock) {
+        if (filter?.holderType && s.holderType !== filter.holderType) continue;
+        if (filter?.holderId && s.holderId !== filter.holderId) continue;
+        const tpl = templatesById.get(s.templateId);
+        if (!tpl) continue;
+        out.push({ kind: 'stock', key: `s:${s.id}`, template: tpl, stock: s, sortBucket: 0 });
+      }
     }
     for (const it of items) {
       if (filter?.holderType && it.currentHolderType !== filter.holderType) continue;
@@ -127,22 +134,23 @@ export default function AmmunitionInventoryView({
       const tpl = templatesById.get(it.templateId);
       if (!tpl) continue;
       const used = USED_STATUSES.includes(it.status);
+      if (viewMode === 'active' && used) continue;
+      if (viewMode === 'used' && !used) continue;
       out.push({
         kind: 'item',
         key: `i:${it.id}`,
         template: tpl,
         item: it,
-        sortBucket: used ? 1 : 0,
+        sortBucket: 0,
       });
     }
     out.sort((a, b) => {
-      if (a.sortBucket !== b.sortBucket) return a.sortBucket - b.sortBucket;
       const c = a.template.name.localeCompare(b.template.name, 'he');
       if (c !== 0) return c;
       return a.key.localeCompare(b.key);
     });
     return out;
-  }, [stock, items, filter, templatesById]);
+  }, [stock, items, filter, templatesById, viewMode]);
 
   if (rows.length === 0) {
     return (
