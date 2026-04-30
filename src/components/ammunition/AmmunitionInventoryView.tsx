@@ -2,7 +2,8 @@
 
 import React, { useMemo, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { FEATURES } from '@/constants/text';
+import { FEATURES, TEXT_CONSTANTS } from '@/constants/text';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import AmmunitionRowActions, {
   type AmmunitionRowAction,
 } from './AmmunitionRowActions';
@@ -80,6 +81,11 @@ function quantityCell(stock: AmmunitionStock, template: AmmunitionType): string 
   return `${stock.quantity ?? 0} יח׳`;
 }
 
+type PendingConfirm =
+  | { kind: 'delete-stock'; stockId: string }
+  | { kind: 'delete-item'; serial: string }
+  | { kind: 'return-item'; serial: string };
+
 export default function AmmunitionInventoryView({
   templates,
   stock,
@@ -96,6 +102,7 @@ export default function AmmunitionInventoryView({
   onReturnItemToMgr,
 }: AmmunitionInventoryViewProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [pending, setPending] = useState<PendingConfirm | null>(null);
   const toggleExpanded = (key: string) =>
     setExpanded((prev) => (prev === key ? null : key));
 
@@ -148,7 +155,7 @@ export default function AmmunitionInventoryView({
   const handleAction = (row: Row, action: AmmunitionRowAction) => {
     if (row.kind === 'stock') {
       if (action === 'delete' && onDeleteStock) {
-        if (window.confirm(T.INVENTORY_ACTIONS.DELETE_CONFIRM)) onDeleteStock(row.stock.id);
+        setPending({ kind: 'delete-stock', stockId: row.stock.id });
       }
       return;
     }
@@ -156,15 +163,43 @@ export default function AmmunitionInventoryView({
     if (action === 'transfer' && onTransferItem) {
       onTransferItem(it);
     } else if (action === 'return-to-mgr' && onReturnItemToMgr) {
-      if (window.confirm(T.INVENTORY_ACTIONS.RETURN_CONFIRM)) onReturnItemToMgr(it);
+      setPending({ kind: 'return-item', serial: it.id });
     } else if (action === 'delete' && onDeleteItem) {
-      if (window.confirm(T.INVENTORY_ACTIONS.DELETE_CONFIRM)) onDeleteItem(it.id);
+      setPending({ kind: 'delete-item', serial: it.id });
     }
   };
+
+  const confirmPending = () => {
+    if (!pending) return;
+    if (pending.kind === 'delete-stock' && onDeleteStock) onDeleteStock(pending.stockId);
+    else if (pending.kind === 'delete-item' && onDeleteItem) onDeleteItem(pending.serial);
+    else if (pending.kind === 'return-item' && onReturnItemToMgr) {
+      const it = items.find((i) => i.id === pending.serial);
+      if (it) onReturnItemToMgr(it);
+    }
+    setPending(null);
+  };
+
+  const confirmCopy = pending
+    ? pending.kind === 'return-item'
+      ? {
+          title: T.INVENTORY_ACTIONS.RETURN_TO_MGR,
+          message: T.INVENTORY_ACTIONS.RETURN_CONFIRM,
+          confirmText: T.INVENTORY_ACTIONS.RETURN_TO_MGR,
+          variant: 'info' as const,
+        }
+      : {
+          title: T.INVENTORY_ACTIONS.DELETE,
+          message: T.INVENTORY_ACTIONS.DELETE_CONFIRM,
+          confirmText: T.INVENTORY_ACTIONS.DELETE,
+          variant: 'danger' as const,
+        }
+    : null;
 
   const colCount = 4 + (showHolder ? 1 : 0) + 1; // chevron + name + qty + status + (holder?) + actions
 
   return (
+    <>
     <div className="overflow-x-auto border border-neutral-200 rounded-lg">
       <table className="min-w-full text-right text-sm">
         <thead className="bg-neutral-50">
@@ -314,6 +349,20 @@ export default function AmmunitionInventoryView({
         </tbody>
       </table>
     </div>
+    {confirmCopy && (
+      <ConfirmationModal
+        isOpen={!!pending}
+        title={confirmCopy.title}
+        message={confirmCopy.message}
+        confirmText={confirmCopy.confirmText}
+        cancelText={TEXT_CONSTANTS.BUTTONS.CANCEL}
+        onConfirm={confirmPending}
+        onCancel={() => setPending(null)}
+        variant={confirmCopy.variant}
+        useHomePageStyle
+      />
+    )}
+    </>
   );
 }
 
