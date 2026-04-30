@@ -137,7 +137,12 @@ function ItemEditor({ template, item, index, total, showHeader, onChange, onRemo
 
       <div>
         <label className="block text-xs font-medium text-neutral-600 mb-1">
-          {labels.PHOTO_LABEL} <span className="text-danger-600">*</span>
+          {labels.PHOTO_LABEL}{' '}
+          {template.requiresSerialNumber ? (
+            <span className="text-danger-600">*</span>
+          ) : (
+            <span className="text-neutral-400">({labels.CATALOG_OPTIONAL})</span>
+          )}
         </label>
         {previewUrl ? (
           <div className="space-y-2">

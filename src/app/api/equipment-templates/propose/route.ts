@@ -49,7 +49,12 @@ export async function POST(request: Request) {
       notes: input.notes,
       draftPayload: input.draftPayload,
     });
-    return NextResponse.json({ success: true, templateId: result.templateId, draftId: result.draftId });
+    return NextResponse.json({
+      success: true,
+      templateId: result.templateId,
+      draftId: result.draftId,
+      status: result.status,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error('[API] equipment-templates/propose POST failed:', message);

@@ -43,15 +43,21 @@ interface ProposeTemplateInput {
 
 export async function serverProposeTemplate(
   input: ProposeTemplateInput
-): Promise<{ templateId: string; draftId?: string }> {
+): Promise<{ templateId: string; draftId?: string; status: TemplateStatus }> {
   const db = getAdminDb();
 
-  // Regular users → PENDING_REQUEST. Team leaders → PROPOSED.
-  // Managers/admins should use canonical creation, not this path; treat as proposed if they arrive here.
+  // Admins / system managers are themselves the approval authority — make their
+  // submission canonical immediately so they don't get a misleading "wait for
+  // approval" message and a doc nobody else can review.
+  const isAutoCanonical =
+    input.proposerUserType === UserType.ADMIN ||
+    input.proposerUserType === UserType.SYSTEM_MANAGER;
   const isRegularUser = input.proposerUserType === UserType.USER;
-  const status: TemplateStatus = isRegularUser
-    ? TemplateStatus.PENDING_REQUEST
-    : TemplateStatus.PROPOSED;
+  const status: TemplateStatus = isAutoCanonical
+    ? TemplateStatus.CANONICAL
+    : isRegularUser
+      ? TemplateStatus.PENDING_REQUEST
+      : TemplateStatus.PROPOSED;
 
   const templateRef = db.collection(COLLECTIONS.EQUIPMENT_TEMPLATES).doc();
   const data: Record<string, unknown> = {
@@ -61,7 +67,7 @@ export async function serverProposeTemplate(
     subcategory: input.subcategory,
     requiresSerialNumber: input.requiresSerialNumber,
     requiresDailyStatusCheck: input.requiresDailyStatusCheck,
-    isActive: false, // Not usable until reviewed
+    isActive: isAutoCanonical,
     templateCreatorId: input.proposerUserId,
     status,
     proposedByUserId: input.proposerUserId,
@@ -69,6 +75,10 @@ export async function serverProposeTemplate(
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
   };
+  if (isAutoCanonical) {
+    data.reviewedByUserId = input.proposerUserId;
+    data.reviewedAt = FieldValue.serverTimestamp();
+  }
   if (input.defaultCatalogNumber) data.defaultCatalogNumber = input.defaultCatalogNumber;
   if (input.description) data.description = input.description;
   if (input.notes) data.notes = input.notes;
@@ -100,10 +110,13 @@ export async function serverProposeTemplate(
 
   // Post-write side effects (non-critical)
   try {
-    await serverCreateActionLog({
-      actionType: isRegularUser
+    const actionType = isAutoCanonical
+      ? ActionType.TEMPLATE_APPROVED
+      : isRegularUser
         ? ActionType.TEMPLATE_REQUESTED
-        : ActionType.TEMPLATE_PROPOSED,
+        : ActionType.TEMPLATE_PROPOSED;
+    await serverCreateActionLog({
+      actionType,
       equipmentId: '',
       equipmentDocId: templateRef.id,
       equipmentName: input.name,
@@ -111,38 +124,41 @@ export async function serverProposeTemplate(
       actorName: input.proposerUserName,
     });
 
-    // Notify every manager/admin. We query once and batch the notifications.
-    const db2 = getAdminDb();
-    const managersSnapshot = await db2
-      .collection(COLLECTIONS.USERS)
-      .where('userType', 'in', [UserType.ADMIN, UserType.SYSTEM_MANAGER, UserType.MANAGER])
-      .get();
+    // Auto-canonical submissions don't need reviewer notifications — there's
+    // nothing to review.
+    if (!isAutoCanonical) {
+      const db2 = getAdminDb();
+      const managersSnapshot = await db2
+        .collection(COLLECTIONS.USERS)
+        .where('userType', 'in', [UserType.ADMIN, UserType.SYSTEM_MANAGER, UserType.MANAGER])
+        .get();
 
-    if (!managersSnapshot.empty) {
-      const notificationType = isRegularUser
-        ? 'new_template_request_for_review'
-        : 'template_proposed_for_review';
-      const title = isRegularUser
-        ? 'בקשת תבנית חדשה מחייל'
-        : 'הצעת תבנית ממפקד צוות';
-      const message = `${input.proposerUserName} ביקש תבנית חדשה: ${input.name}`;
+      if (!managersSnapshot.empty) {
+        const notificationType = isRegularUser
+          ? 'new_template_request_for_review'
+          : 'template_proposed_for_review';
+        const title = isRegularUser
+          ? 'בקשת תבנית חדשה מחייל'
+          : 'הצעת תבנית ממפקד צוות';
+        const message = `${input.proposerUserName} ביקש תבנית חדשה: ${input.name}`;
 
-      await serverCreateBatchNotifications(
-        managersSnapshot.docs.map((d) => ({
-          userId: d.id,
-          type: notificationType,
-          title,
-          message,
-          relatedEquipmentDocId: templateRef.id,
-          equipmentName: input.name,
-        }))
-      );
+        await serverCreateBatchNotifications(
+          managersSnapshot.docs.map((d) => ({
+            userId: d.id,
+            type: notificationType,
+            title,
+            message,
+            relatedEquipmentDocId: templateRef.id,
+            equipmentName: input.name,
+          }))
+        );
+      }
     }
   } catch (e) {
     console.error('[Server] Template propose side effects failed:', e);
   }
 
-  return { templateId: templateRef.id, draftId };
+  return { templateId: templateRef.id, draftId, status };
 }
 
 interface ApproveTemplateInput {

@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Layers, Plus, X, Check, AlertCircle } from 'lucide-react';
+import { Layers, Plus, X, Check, AlertCircle, ChevronDown } from 'lucide-react';
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { Button, Card } from '@/components/ui';
+import { cn } from '@/lib/cn';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserType } from '@/types/user';
 import { EquipmentType, TemplateStatus } from '@/types/equipment';
@@ -11,15 +13,20 @@ import {
   approveTemplateRequest,
   proposeTemplate,
   rejectTemplateRequest,
+  retireCanonicalTemplate,
+  updateCanonicalTemplate,
 } from '@/lib/templateRequestService';
 import TemplateForm, { TemplateFormValues } from '@/components/equipment/TemplateForm';
+import { useCategoryLookup } from '@/hooks/useCategoryLookup';
 
 type DialogState =
   | { kind: 'closed' }
   | { kind: 'create_canonical' }
   | { kind: 'propose' }
   | { kind: 'review'; template: EquipmentType }
-  | { kind: 'reject'; template: EquipmentType };
+  | { kind: 'reject'; template: EquipmentType }
+  | { kind: 'edit_canonical'; template: EquipmentType }
+  | { kind: 'retire'; template: EquipmentType };
 
 export default function TemplatesTab() {
   const { enhancedUser } = useAuth();
@@ -27,14 +34,19 @@ export default function TemplatesTab() {
     enhancedUser?.userType === UserType.ADMIN ||
     enhancedUser?.userType === UserType.SYSTEM_MANAGER ||
     enhancedUser?.userType === UserType.MANAGER;
+  const isAdminOrSystem =
+    enhancedUser?.userType === UserType.ADMIN ||
+    enhancedUser?.userType === UserType.SYSTEM_MANAGER;
   const isTeamLeader = enhancedUser?.userType === UserType.TEAM_LEADER;
 
+  const { categoryName, subcategoryName } = useCategoryLookup();
   const [templates, setTemplates] = useState<EquipmentType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dialog, setDialog] = useState<DialogState>({ kind: 'closed' });
   const [submitting, setSubmitting] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [retireReason, setRetireReason] = useState('');
   const [toast, setToast] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
 
   const refresh = useCallback(async () => {
@@ -170,6 +182,61 @@ export default function TemplatesTab() {
     }
   };
 
+  const handleEditCanonical = async (
+    template: EquipmentType,
+    values: TemplateFormValues
+  ) => {
+    if (!enhancedUser) return;
+    setSubmitting(true);
+    try {
+      await updateCanonicalTemplate({
+        templateId: template.id,
+        actorName:
+          [enhancedUser.firstName, enhancedUser.lastName].filter(Boolean).join(' ') ||
+          enhancedUser.uid,
+        edits: {
+          name: values.name,
+          category: values.category,
+          subcategory: values.subcategory,
+          requiresSerialNumber: values.requiresSerialNumber,
+          requiresDailyStatusCheck: values.requiresDailyStatusCheck,
+          defaultCatalogNumber: values.defaultCatalogNumber || '',
+          description: values.description || '',
+          notes: values.notes || '',
+        },
+      });
+      showToast('success', 'התבנית עודכנה');
+      setDialog({ kind: 'closed' });
+      await refresh();
+    } catch (e) {
+      showToast('error', e instanceof Error ? e.message : 'עדכון נכשל');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRetire = async () => {
+    if (dialog.kind !== 'retire' || !enhancedUser) return;
+    setSubmitting(true);
+    try {
+      await retireCanonicalTemplate({
+        templateId: dialog.template.id,
+        actorName:
+          [enhancedUser.firstName, enhancedUser.lastName].filter(Boolean).join(' ') ||
+          enhancedUser.uid,
+        reason: retireReason.trim() || undefined,
+      });
+      showToast('success', 'התבנית הושבתה');
+      setDialog({ kind: 'closed' });
+      setRetireReason('');
+      await refresh();
+    } catch (e) {
+      showToast('error', e instanceof Error ? e.message : 'השבתה נכשלה');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleReject = async () => {
     if (dialog.kind !== 'reject' || !enhancedUser) return;
     setSubmitting(true);
@@ -193,23 +260,74 @@ export default function TemplatesTab() {
   };
 
   // Render helpers
+  const renderCategoryCell = (t: EquipmentType) => {
+    const cat = categoryName(t.category);
+    const sub = t.subcategory ? subcategoryName(t.subcategory) : null;
+    const catDisplay = cat ?? (
+      <span className="text-warning-700" title="קטגוריה לא נמצאה">{t.category}</span>
+    );
+    const subDisplay =
+      t.subcategory && (
+        <>
+          {' / '}
+          {sub ?? (
+            <span className="text-warning-700" title="תת-קטגוריה לא נמצאה">{t.subcategory}</span>
+          )}
+        </>
+      );
+    return (
+      <>
+        {catDisplay}
+        {subDisplay}
+      </>
+    );
+  };
+
   const renderRow = (t: EquipmentType, actions: React.ReactNode) => (
-    <tr key={t.id} className="hover:bg-neutral-50">
-      <td className="px-4 py-3">
-        <div className="text-sm font-medium text-neutral-900">{t.name}</div>
-        {t.description && (
-          <div className="text-xs text-neutral-500">{t.description}</div>
-        )}
-      </td>
-      <td className="px-4 py-3 text-sm text-neutral-700">
-        {t.category}
-        {t.subcategory ? ` / ${t.subcategory}` : ''}
-      </td>
-      <td className="px-4 py-3 text-sm text-neutral-600">
-        {t.requiresSerialNumber ? 'צ' : '—'}
-      </td>
-      <td className="px-4 py-3 text-sm">{actions}</td>
-    </tr>
+    <Disclosure key={t.id} as="li" className="border-b border-neutral-200 last:border-b-0">
+      {({ open }) => (
+        <>
+          <div className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50">
+            <DisclosureButton className="flex-1 flex items-center gap-2 text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded">
+              <ChevronDown
+                className={cn(
+                  'w-4 h-4 text-neutral-500 transition-transform',
+                  open && 'rotate-180'
+                )}
+              />
+              <span className="text-sm font-medium text-neutral-900">{t.name}</span>
+            </DisclosureButton>
+            <div className="flex-shrink-0">{actions}</div>
+          </div>
+          <DisclosurePanel className="px-4 pb-3 pt-1 bg-neutral-50/60 text-sm text-neutral-700 space-y-1">
+            <div>
+              <span className="font-medium text-neutral-500">קטגוריה:</span>{' '}
+              {renderCategoryCell(t)}
+            </div>
+            {t.description && (
+              <div>
+                <span className="font-medium text-neutral-500">תיאור:</span> {t.description}
+              </div>
+            )}
+            {t.notes && (
+              <div>
+                <span className="font-medium text-neutral-500">הערות:</span> {t.notes}
+              </div>
+            )}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-600 pt-1">
+              <span>{t.requiresSerialNumber ? 'דורש מספר סידורי (צ)' : 'לא צ'}</span>
+              <span>
+                {t.requiresDailyStatusCheck
+                  ? 'דורש בדיקת סטטוס יומי'
+                  : 'לא דורש בדיקה יומית'}
+              </span>
+              {t.defaultCatalogNumber && <span>מק&quot;ט: {t.defaultCatalogNumber}</span>}
+              <span>סטטוס: {t.status}</span>
+            </div>
+          </DisclosurePanel>
+        </>
+      )}
+    </Disclosure>
   );
 
   const reviewActions = (t: EquipmentType) =>
@@ -235,6 +353,45 @@ export default function TemplatesTab() {
       <span className="text-xs text-neutral-500">ממתין</span>
     );
 
+  const canonicalActions = (t: EquipmentType) => {
+    if (!isAdminOrSystem) {
+      return (
+        <span
+          className={cn(
+            'text-xs',
+            t.isActive ? 'text-neutral-500' : 'text-warning-700'
+          )}
+        >
+          {t.isActive ? 'פעיל' : 'מושבת'}
+        </span>
+      );
+    }
+    return (
+      <div className="flex items-center gap-2">
+        {!t.isActive && (
+          <span className="text-xs text-warning-700">מושבת</span>
+        )}
+        <button
+          onClick={() => setDialog({ kind: 'edit_canonical', template: t })}
+          className="text-primary-600 hover:text-primary-800 text-xs"
+        >
+          ערוך
+        </button>
+        {t.isActive && (
+          <button
+            onClick={() => {
+              setDialog({ kind: 'retire', template: t });
+              setRetireReason('');
+            }}
+            className="text-danger-600 hover:text-danger-800 text-xs"
+          >
+            השבת
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const section = (
     title: string,
     items: EquipmentType[],
@@ -250,21 +407,9 @@ export default function TemplatesTab() {
       {items.length === 0 ? (
         <div className="p-6 text-center text-sm text-neutral-500">{emptyMessage}</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-neutral-50">
-              <tr>
-                <th className="px-4 py-2 text-right text-xs font-medium text-neutral-500 uppercase">תבנית</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-neutral-500 uppercase">קטגוריה</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-neutral-500 uppercase">צ</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-neutral-500 uppercase">פעולות</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-200">
-              {items.map((t) => renderRow(t, actions(t)))}
-            </tbody>
-          </table>
-        </div>
+        <ul className="divide-y divide-neutral-200">
+          {items.map((t) => renderRow(t, actions(t)))}
+        </ul>
       )}
     </Card>
   );
@@ -327,7 +472,7 @@ export default function TemplatesTab() {
           {section(
             'תבניות קנוניות',
             canonical,
-            () => <span className="text-xs text-neutral-500">פעיל</span>,
+            canonicalActions,
             'אין תבניות קנוניות'
           )}
           {section(
@@ -387,6 +532,59 @@ export default function TemplatesTab() {
             isSubmitting={submitting}
             submitLabel="אשר תבנית"
           />
+        )}
+
+      {dialog.kind === 'edit_canonical' &&
+        modal(
+          'עריכת תבנית קנונית',
+          <TemplateForm
+            mode="edit_and_approve"
+            initialValues={{
+              name: dialog.template.name,
+              description: dialog.template.description || '',
+              category: dialog.template.category,
+              subcategory: dialog.template.subcategory,
+              notes: dialog.template.notes || '',
+              requiresSerialNumber: !!dialog.template.requiresSerialNumber,
+              requiresDailyStatusCheck: !!dialog.template.requiresDailyStatusCheck,
+              defaultCatalogNumber: dialog.template.defaultCatalogNumber || '',
+            }}
+            onSubmit={(v) => handleEditCanonical(dialog.template, v)}
+            onCancel={() => setDialog({ kind: 'closed' })}
+            isSubmitting={submitting}
+            submitLabel="שמור שינויים"
+          />
+        )}
+
+      {dialog.kind === 'retire' &&
+        modal(
+          'השבתת תבנית',
+          <div className="space-y-4">
+            <p className="text-sm text-neutral-700">
+              האם להשבית את התבנית &quot;{dialog.template.name}&quot;? התבנית לא תופיע יותר באשף הוספת ציוד אך פריטי ציוד קיימים שמפנים אליה לא יושפעו.
+            </p>
+            <div>
+              <label htmlFor="retire-reason" className="block text-sm font-medium text-neutral-700 mb-1">
+                סיבה (אופציונלי)
+              </label>
+              <textarea
+                id="retire-reason"
+                value={retireReason}
+                onChange={(e) => setRetireReason(e.target.value)}
+                rows={3}
+                disabled={submitting}
+                className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setDialog({ kind: 'closed' })} disabled={submitting}>
+                ביטול
+              </Button>
+              <Button variant="danger" onClick={handleRetire} isLoading={submitting} disabled={submitting}>
+                השבת
+              </Button>
+            </div>
+          </div>
         )}
 
       {dialog.kind === 'reject' &&

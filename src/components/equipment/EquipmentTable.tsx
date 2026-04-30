@@ -11,6 +11,7 @@ import { Select } from '@/components/ui';
 import StatusComponent from './EquipmentStatus';
 import ConditionComponent from './EquipmentCondition';
 import EquipmentRowActions, { type EquipmentRowAction } from './EquipmentRowActions';
+import { useCategoryLookup } from '@/hooks/useCategoryLookup';
 
 const STALE_REPORT_DAYS = 7;
 
@@ -39,6 +40,7 @@ export default function EquipmentTable({
   const [sortField, setSortField] = useState<SortField>('lastReportUpdate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { categoryName, subcategoryName } = useCategoryLookup();
 
   const sorted = useMemo(() => {
     const list = [...equipment];
@@ -90,6 +92,8 @@ export default function EquipmentTable({
             onToggleSelect={() => onToggleSelect(item.id)}
             onToggleExpand={() => setExpandedId((cur) => (cur === item.id ? null : item.id))}
             onAction={(action) => onRowAction(item, action)}
+            categoryName={categoryName}
+            subcategoryName={subcategoryName}
           />
         ))}
       </ul>
@@ -175,6 +179,8 @@ interface EquipmentRowProps {
   onToggleSelect: () => void;
   onToggleExpand: () => void;
   onAction: (action: EquipmentRowAction) => void;
+  categoryName: (id: string) => string | null;
+  subcategoryName: (id: string) => string | null;
 }
 
 function EquipmentRow({
@@ -185,6 +191,8 @@ function EquipmentRow({
   onToggleSelect,
   onToggleExpand,
   onAction,
+  categoryName,
+  subcategoryName,
 }: EquipmentRowProps) {
   const dimmed = item.signedById === user.uid && item.currentHolderId !== user.uid;
   const stale = isStale(item.lastReportUpdate);
@@ -226,13 +234,21 @@ function EquipmentRow({
               </span>
             )}
           </div>
-          <div className="text-xs text-neutral-500 truncate">#{item.id}</div>
+          <div className="text-xs text-neutral-500 truncate">צ: {item.id}</div>
         </div>
         <div onClick={(e) => e.stopPropagation()}>
           <EquipmentRowActions equipment={item} user={user} onAction={onAction} />
         </div>
       </div>
-      {expanded && <ExpandedPanel item={item} dimmed={dimmed} stale={stale} />}
+      {expanded && (
+        <ExpandedPanel
+          item={item}
+          dimmed={dimmed}
+          stale={stale}
+          categoryName={categoryName}
+          subcategoryName={subcategoryName}
+        />
+      )}
     </li>
   );
 }
@@ -267,11 +283,17 @@ function ExpandedPanel({
   item,
   dimmed,
   stale,
+  categoryName,
+  subcategoryName,
 }: {
   item: Equipment;
   dimmed: boolean;
   stale: { isStale: boolean; days: number };
+  categoryName: (id: string) => string | null;
+  subcategoryName: (id: string) => string | null;
 }) {
+  const catResolved = item.category ? categoryName(item.category) : null;
+  const subResolved = item.subcategory ? subcategoryName(item.subcategory) : null;
   return (
     <div className="px-3 pb-3 pt-2 border-t border-neutral-100 grid grid-cols-2 gap-3 text-xs">
       <PhotoBox url={item.photoUrl} />
@@ -284,7 +306,25 @@ function ExpandedPanel({
         )}
         <Field label="חתום" value={item.signedBy} />
         <Field label={TEXT_CONSTANTS.FEATURES.EQUIPMENT.LOCATION} value={item.location || '—'} />
-        <Field label="קטגוריה" value={item.category} />
+        <Field label="קטגוריה">
+          {item.category ? (
+            <>
+              {catResolved ?? (
+                <span className="text-warning-700" title="קטגוריה לא נמצאה">{item.category}</span>
+              )}
+              {item.subcategory && (
+                <>
+                  {' / '}
+                  {subResolved ?? (
+                    <span className="text-warning-700" title="תת-קטגוריה לא נמצאה">{item.subcategory}</span>
+                  )}
+                </>
+              )}
+            </>
+          ) : (
+            '—'
+          )}
+        </Field>
       </div>
       <div className="col-span-2 space-y-1.5 pt-2 border-t border-neutral-100">
         <div className="flex items-center justify-between">
@@ -319,7 +359,7 @@ function Field({ label, value, children }: { label: string; value?: string; chil
   );
 }
 
-function PhotoBox({ url }: { url: string }) {
+function PhotoBox({ url }: { url?: string }) {
   if (!url) {
     return (
       <div className="aspect-square rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-400 text-xs">

@@ -186,14 +186,15 @@ export class EquipmentTypesService {
         email: auth.currentUser.email
       } : 'No user authenticated');
       
-      let q = query(collection(db, EQUIPMENT_TEMPLATES_COLLECTION), orderBy('sortOrder'), orderBy('name'));
-      
-      // Filter by active status
+      // No orderBy on Firestore: docs missing the order field are excluded
+      // by the query, and serverCreateEquipmentType / serverProposeTemplate
+      // do not write `sortOrder`. Sort client-side instead so every doc shows.
+      let q = query(collection(db, EQUIPMENT_TEMPLATES_COLLECTION));
+
       if (activeOnly) {
         q = query(q, where('isActive', '==', true));
       }
-      
-      // Filter by category
+
       if (category) {
         q = query(q, where('category', '==', category));
       }
@@ -203,6 +204,13 @@ export class EquipmentTypesService {
 
       querySnapshot.forEach((doc) => {
         equipmentTypes.push({ id: doc.id, ...doc.data() } as EquipmentType);
+      });
+
+      equipmentTypes.sort((a, b) => {
+        const sa = (a as unknown as { sortOrder?: number }).sortOrder ?? Number.MAX_SAFE_INTEGER;
+        const sb = (b as unknown as { sortOrder?: number }).sortOrder ?? Number.MAX_SAFE_INTEGER;
+        if (sa !== sb) return sa - sb;
+        return (a.name ?? '').localeCompare(b.name ?? '');
       });
 
       return {

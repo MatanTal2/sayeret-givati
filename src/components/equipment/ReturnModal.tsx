@@ -56,7 +56,7 @@ export default function ReturnModal({ equipment, isHolder, onClose, onSubmit }: 
         <header className="flex items-start justify-between p-5 border-b border-neutral-200">
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">{labels.TITLE}</h2>
-            <p className="text-sm text-neutral-500 mt-0.5">{equipment.productName} · #{equipment.id}</p>
+            <p className="text-sm text-neutral-500 mt-0.5">{equipment.productName} · צ: {equipment.id}</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-md text-neutral-500 hover:bg-neutral-100" aria-label="close">
             <X className="w-5 h-5" />

@@ -76,7 +76,7 @@ export interface Equipment {
 
   // Additional Info
   catalogNumber?: string; // Army catalog number (מקט). Optional — not always known at sign-up.
-  photoUrl: string; // Initial sign-up photo URL (required at creation)
+  photoUrl?: string; // Initial sign-up photo. Required for serialized (צ) items, optional for non-serialized templates where the picture is captured on the template itself.
   lastReportPhotoUrl?: string; // Most recent report photo (populated by report action)
   batchId?: string; // Groups items added in a single bulk sign-up
   acquisitionCost?: number; // Original cost in ILS
@@ -425,6 +425,8 @@ export enum ActionType {
   TEMPLATE_REQUESTED = 'template_requested',
   TEMPLATE_APPROVED = 'template_approved',
   TEMPLATE_REJECTED = 'template_rejected',
+  TEMPLATE_UPDATED = 'template_updated',
+  TEMPLATE_RETIRED = 'template_retired',
 
   // Sign in/out actions
   SIGN_IN = 'sign_in',

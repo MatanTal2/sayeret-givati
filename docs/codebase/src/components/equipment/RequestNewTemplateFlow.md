@@ -21,10 +21,10 @@ After the manager approves, `serverPromoteDraftsForTemplate` flips the draft sta
 | `capturedCatalogNumber` | Optional מק"ט |
 | `capturedNotes` | Optional notes |
 | `onCancel` | Back to category step |
-| `onSubmitted` | Receives `{ templateId, draftId }` |
+| `onSubmitted` | Receives `{ templateId, draftId, status }` |
 
 ## States
 
-- Form (`TemplateForm` + info banner explaining the pending flow)
+- Form (`TemplateForm` + info banner — wording differs for ADMIN / SYSTEM_MANAGER, who skip the approval flow)
 - Error (banner with last error message)
-- Submitted (success card; user is told they will receive a notification)
+- Submitted (success card; copy switches on returned `status`: CANONICAL → "התבנית נוצרה" + "available immediately"; PENDING_REQUEST / PROPOSED → "ההצעה נשלחה לבדיקה" + notification promise)

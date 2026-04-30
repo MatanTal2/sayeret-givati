@@ -38,14 +38,14 @@ interface ProposeTemplateArgs {
 
 export async function proposeTemplate(
   args: ProposeTemplateArgs
-): Promise<{ templateId: string; draftId?: string }> {
+): Promise<{ templateId: string; draftId?: string; status: TemplateStatus }> {
   const response = await apiFetch('/api/equipment-templates/propose', {
     method: 'POST',
     body: JSON.stringify(args),
   });
   const result = await response.json();
   if (!result.success) throw new Error(result.error || 'Failed to propose template');
-  return { templateId: result.templateId, draftId: result.draftId };
+  return { templateId: result.templateId, draftId: result.draftId, status: result.status };
 }
 
 interface ApproveTemplateArgs {
@@ -85,6 +85,46 @@ export async function rejectTemplateRequest(args: RejectTemplateArgs): Promise<v
   });
   const result = await response.json();
   if (!result.success) throw new Error(result.error || 'Failed to reject template');
+}
+
+interface UpdateCanonicalTemplateArgs {
+  templateId: string;
+  actorName: string;
+  edits: Partial<{
+    name: string;
+    category: string;
+    subcategory: string;
+    requiresSerialNumber: boolean;
+    requiresDailyStatusCheck: boolean;
+    defaultCatalogNumber: string;
+    description: string;
+    notes: string;
+    isActive: boolean;
+  }>;
+}
+
+export async function updateCanonicalTemplate(args: UpdateCanonicalTemplateArgs): Promise<void> {
+  const response = await apiFetch(`/api/equipment-templates/${encodeURIComponent(args.templateId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ actorName: args.actorName, edits: args.edits }),
+  });
+  const result = await response.json();
+  if (!result.success) throw new Error(result.error || 'Failed to update template');
+}
+
+interface RetireCanonicalTemplateArgs {
+  templateId: string;
+  actorName: string;
+  reason?: string;
+}
+
+export async function retireCanonicalTemplate(args: RetireCanonicalTemplateArgs): Promise<void> {
+  const response = await apiFetch(`/api/equipment-templates/${encodeURIComponent(args.templateId)}`, {
+    method: 'DELETE',
+    body: JSON.stringify({ actorName: args.actorName, reason: args.reason }),
+  });
+  const result = await response.json();
+  if (!result.success) throw new Error(result.error || 'Failed to retire template');
 }
 
 export async function getTemplatesByStatus(

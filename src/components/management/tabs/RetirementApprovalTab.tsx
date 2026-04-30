@@ -99,7 +99,7 @@ function RequestTable({
             <tr key={r.id} className="hover:bg-neutral-50">
               <Td>
                 <div className="font-medium text-neutral-900">{r.equipmentName}</div>
-                <div className="text-xs text-neutral-500">#{r.equipmentId}</div>
+                <div className="text-xs text-neutral-500">צ: {r.equipmentId}</div>
               </Td>
               <Td>{r.signerUserName}</Td>
               <Td>{r.holderUserName}</Td>
