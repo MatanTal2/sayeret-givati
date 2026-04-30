@@ -24,7 +24,11 @@ export type AmmunitionAllocation = 'USER' | 'TEAM' | 'BOTH';
 export type TrackingMode = 'BRUCE' | 'BELT' | 'SERIAL' | 'LOOSE_COUNT';
 export type BruceState = 'FULL' | 'MORE_THAN_HALF' | 'LESS_THAN_HALF' | 'EMPTY';
 export type SecurityLevel = 'EXPLOSIVE' | 'GRABBABLE';
-export type HolderType = 'USER' | 'TEAM';
+/**
+ * UNIT is the central pool — single global warehouse keyed `UNIT_main_${templateId}`.
+ * Admin populates it; assignFromCentral moves stock UNIT → USER/TEAM atomically.
+ */
+export type HolderType = 'USER' | 'TEAM' | 'UNIT';
 
 export type AmmunitionSubcategory =
   | 'BULLETS'

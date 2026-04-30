@@ -155,14 +155,14 @@ Touch `ammunitionInventoryService.ts` only minimally: just permission + the new 
 
 Each step is one commit. Estimated 6–8 commits.
 
-## Open questions
+## Resolved decisions (from user, 2026-04-30)
 
-1. **MANAGER role**: allow UNIT mutations or admin-only? Spec defaults admin-only. If your manager population owns warehouse, flip it.
-2. **Pool entry source**: bulk CSV for UNIT or hand-entry only? Spec says hand-entry first; CSV is a small follow-up if useful.
-3. **Open-bruce state at UNIT**: pool tracks only full ברוסים? Or carry one open-bruce state per template? Spec says full only — open-bruce is created on assignment. Simpler.
-4. **SERIAL multi-issue**: assign N serials in one click vs one-by-one? Spec says multi-select, single txn.
-5. **Notification on assign**: fire to recipient (and TL?) so they see new ammo in their inventory? Spec says yes, recipient + reporter's TL. Mirror of the report flow's recipient list.
-6. **Return path**: separate UI button or piggyback on the existing "החזר לאחראי" action? Spec says reuse — return-to-mgr becomes return-to-UNIT semantically.
+1. **MANAGER role**: ALLOWED to mutate UNIT. `canMutateAmmunitionInventory` UNIT branch lets ADMIN / SYS_MANAGER / MANAGER / `ammoNotificationRecipientUserId` through.
+2. **Pool entry source**: BULK CSV + downloadable sample template, mirroring the admin "bulk authorize personnel" flow already in management. Reuse `BulkTemplateImportModal` infrastructure where possible — separate per-domain mapper for UNIT stock rows (templateName/templateId + bruceCount or quantity).
+3. **Open-bruce state at UNIT**: FULL ברוסים only at UNIT. Open-bruce state is created on assignment (target side), never persisted at UNIT.
+4. **SERIAL multi-issue**: single click moves N serials in one transaction. Assign modal exposes a multi-select of available SERIAL items in the pool for the chosen template; submit moves all chosen items at once.
+5. **Notification on assign**: fire one notification to the *recipient*. Target=USER → notify that user. Target=TEAM → notify the team's TL(s). Body: "הוקצתה לך תחמושת: <template> · <qty>". Deep-link → `/ammunition` (their own scope tab).
+6. **Return path**: SEPARATE button. Add a new "החזר למלאי מרכזי" action distinct from the existing "החזר לאחראי" (which keeps its current semantics on USER↔manager flows). Both buttons coexist in the kebab.
 
 ## Verification
 
