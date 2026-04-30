@@ -23,6 +23,9 @@ import type {
 } from '@/types/ammunition';
 
 export interface CanonicalAmmunitionTemplateSeed {
+  /** Stable key used by the server to dedupe across re-seeds. Renaming a
+   * template in the UI does NOT change this key — the seed matches by it. */
+  seedKey: string;
   name: string;
   description?: string;
   subcategory: AmmunitionSubcategory;
@@ -31,11 +34,14 @@ export interface CanonicalAmmunitionTemplateSeed {
   securityLevel: SecurityLevel;
   bulletsPerCardboard?: number;
   cardboardsPerBruce?: number;
+  bulletsPerString?: number;
+  stringsPerBruce?: number;
 }
 
 export const CANONICAL_AMMUNITION_TEMPLATES: ReadonlyArray<CanonicalAmmunitionTemplateSeed> = [
   // BULLETS — BRUCE / TEAM / EXPLOSIVE. 30 bullets per cardboard, 33 cardboards per Bruce.
   {
+    seedKey: 'bullets_5_56_white',
     name: '5.56 לבן',
     subcategory: 'BULLETS',
     allocation: 'TEAM',
@@ -45,6 +51,7 @@ export const CANONICAL_AMMUNITION_TEMPLATES: ReadonlyArray<CanonicalAmmunitionTe
     cardboardsPerBruce: 33,
   },
   {
+    seedKey: 'bullets_5_56_green',
     name: '5.56 ירוק',
     subcategory: 'BULLETS',
     allocation: 'TEAM',
@@ -54,6 +61,7 @@ export const CANONICAL_AMMUNITION_TEMPLATES: ReadonlyArray<CanonicalAmmunitionTe
     cardboardsPerBruce: 33,
   },
   {
+    seedKey: 'bullets_5_56_tracer',
     name: '5.56 נותב',
     subcategory: 'BULLETS',
     allocation: 'TEAM',
@@ -63,6 +71,7 @@ export const CANONICAL_AMMUNITION_TEMPLATES: ReadonlyArray<CanonicalAmmunitionTe
     cardboardsPerBruce: 33,
   },
   {
+    seedKey: 'bullets_7_62_tracer',
     name: '7.62 נותב',
     subcategory: 'BULLETS',
     allocation: 'TEAM',
@@ -72,6 +81,7 @@ export const CANONICAL_AMMUNITION_TEMPLATES: ReadonlyArray<CanonicalAmmunitionTe
     cardboardsPerBruce: 33,
   },
   {
+    seedKey: 'bullets_0_5_tracer',
     name: '0.5 נותב',
     subcategory: 'BULLETS',
     allocation: 'TEAM',
@@ -83,6 +93,7 @@ export const CANONICAL_AMMUNITION_TEMPLATES: ReadonlyArray<CanonicalAmmunitionTe
 
   // GRENADES — smoke (BOTH/GRABBABLE), spray (USER/EXPLOSIVE).
   {
+    seedKey: 'grenade_smoke',
     name: 'רימון עשן',
     subcategory: 'GRENADES',
     allocation: 'BOTH',
@@ -90,6 +101,7 @@ export const CANONICAL_AMMUNITION_TEMPLATES: ReadonlyArray<CanonicalAmmunitionTe
     securityLevel: 'GRABBABLE',
   },
   {
+    seedKey: 'grenade_fragmentation',
     name: 'רימון רסס',
     subcategory: 'GRENADES',
     allocation: 'USER',
@@ -99,6 +111,7 @@ export const CANONICAL_AMMUNITION_TEMPLATES: ReadonlyArray<CanonicalAmmunitionTe
 
   // LAUNCHER GRENADES — USER / LOOSE_COUNT / EXPLOSIVE.
   {
+    seedKey: 'launcher_smoke',
     name: 'רימון משגר עשן',
     subcategory: 'LAUNCHER_GRENADES',
     allocation: 'USER',
@@ -106,6 +119,7 @@ export const CANONICAL_AMMUNITION_TEMPLATES: ReadonlyArray<CanonicalAmmunitionTe
     securityLevel: 'EXPLOSIVE',
   },
   {
+    seedKey: 'launcher_fragmentation',
     name: 'רימון משגר רסס',
     subcategory: 'LAUNCHER_GRENADES',
     allocation: 'USER',
@@ -113,6 +127,7 @@ export const CANONICAL_AMMUNITION_TEMPLATES: ReadonlyArray<CanonicalAmmunitionTe
     securityLevel: 'EXPLOSIVE',
   },
   {
+    seedKey: 'launcher_illum',
     name: 'רימון משגר תאורה',
     subcategory: 'LAUNCHER_GRENADES',
     allocation: 'USER',
@@ -121,13 +136,26 @@ export const CANONICAL_AMMUNITION_TEMPLATES: ReadonlyArray<CanonicalAmmunitionTe
   },
 
   // SHOULDER MISSILES — SERIAL / TEAM / EXPLOSIVE.
-  { name: 'יתד', subcategory: 'SHOULDER_MISSILES', allocation: 'TEAM', trackingMode: 'SERIAL', securityLevel: 'EXPLOSIVE' },
-  { name: 'חולית', subcategory: 'SHOULDER_MISSILES', allocation: 'TEAM', trackingMode: 'SERIAL', securityLevel: 'EXPLOSIVE' },
-  { name: 'לאו', subcategory: 'SHOULDER_MISSILES', allocation: 'TEAM', trackingMode: 'SERIAL', securityLevel: 'EXPLOSIVE' },
-  { name: 'מטאדור', subcategory: 'SHOULDER_MISSILES', allocation: 'TEAM', trackingMode: 'SERIAL', securityLevel: 'EXPLOSIVE' },
+  { seedKey: 'shoulder_yated', name: 'יתד', subcategory: 'SHOULDER_MISSILES', allocation: 'TEAM', trackingMode: 'SERIAL', securityLevel: 'EXPLOSIVE' },
+  { seedKey: 'shoulder_holit', name: 'חולית', subcategory: 'SHOULDER_MISSILES', allocation: 'TEAM', trackingMode: 'SERIAL', securityLevel: 'EXPLOSIVE' },
+  { seedKey: 'shoulder_lao', name: 'לאו', subcategory: 'SHOULDER_MISSILES', allocation: 'TEAM', trackingMode: 'SERIAL', securityLevel: 'EXPLOSIVE' },
+  { seedKey: 'shoulder_metador', name: 'מטאדור', subcategory: 'SHOULDER_MISSILES', allocation: 'TEAM', trackingMode: 'SERIAL', securityLevel: 'EXPLOSIVE' },
+
+  // MORTAR — 120mm. All EXPLOSIVE / TEAM. עוקץ פלדה is SERIAL (single per box).
+  // TODO: add the rest of the 120mm variants (smoke-explosive, illum, HE, etc.) once user enumerates them.
+  {
+    seedKey: 'mortar_120_okatz_pelda',
+    name: 'עוקץ פלדה',
+    description: '120 מ"מ עשן-נפיץ, צ, יחיד בארגז',
+    subcategory: 'MORTAR',
+    allocation: 'TEAM',
+    trackingMode: 'SERIAL',
+    securityLevel: 'EXPLOSIVE',
+  },
 
   // MINES — light mine, SERIAL / TEAM / EXPLOSIVE.
   {
+    seedKey: 'mine_light',
     name: 'מוקש קל',
     subcategory: 'MINES',
     allocation: 'TEAM',
@@ -137,6 +165,7 @@ export const CANONICAL_AMMUNITION_TEMPLATES: ReadonlyArray<CanonicalAmmunitionTe
 
   // OTHER — נר עשן (TEAM/EXPLOSIVE), מעיל רוח (TEAM/GRABBABLE).
   {
+    seedKey: 'other_smoke_candle',
     name: 'נר עשן',
     subcategory: 'OTHER',
     allocation: 'TEAM',
@@ -144,6 +173,7 @@ export const CANONICAL_AMMUNITION_TEMPLATES: ReadonlyArray<CanonicalAmmunitionTe
     securityLevel: 'EXPLOSIVE',
   },
   {
+    seedKey: 'other_wind_jacket',
     name: 'מעיל רוח',
     subcategory: 'OTHER',
     allocation: 'TEAM',

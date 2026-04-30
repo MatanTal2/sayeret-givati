@@ -239,26 +239,39 @@ export async function serverSeedCanonicalAmmunitionTemplates(
   const db = getAdminDb();
   const col = db.collection(COLLECTIONS.AMMUNITION_TEMPLATES);
 
+  // Match by stable seedKey, NOT name. Renaming a template in the UI must
+  // not cause a duplicate on the next re-seed.
   const existingSnap = await col.where('status', '==', 'CANONICAL').get();
-  const existingNames = new Set(existingSnap.docs.map((d) => d.data().name as string));
+  const existingSeedKeys = new Set(
+    existingSnap.docs
+      .map((d) => d.data().seedKey as string | undefined)
+      .filter((k): k is string => typeof k === 'string')
+  );
 
   let created = 0;
   let skipped = 0;
   const batch = db.batch();
   for (const seed of CANONICAL_AMMUNITION_TEMPLATES) {
-    if (existingNames.has(seed.name)) {
+    if (existingSeedKeys.has(seed.seedKey)) {
       skipped += 1;
       continue;
     }
     const ref = col.doc();
-    const total =
+    const bruceTotal =
       seed.trackingMode === 'BRUCE' &&
       seed.bulletsPerCardboard &&
       seed.cardboardsPerBruce
         ? seed.bulletsPerCardboard * seed.cardboardsPerBruce
         : undefined;
+    const beltTotal =
+      seed.trackingMode === 'BELT' &&
+      seed.bulletsPerString &&
+      seed.stringsPerBruce
+        ? seed.bulletsPerString * seed.stringsPerBruce
+        : undefined;
     const data: Record<string, unknown> = {
       id: ref.id,
+      seedKey: seed.seedKey,
       name: seed.name,
       subcategory: seed.subcategory,
       allocation: seed.allocation,
@@ -273,7 +286,12 @@ export async function serverSeedCanonicalAmmunitionTemplates(
     if (seed.trackingMode === 'BRUCE') {
       data.bulletsPerCardboard = seed.bulletsPerCardboard;
       data.cardboardsPerBruce = seed.cardboardsPerBruce;
-      if (total) data.totalBulletsPerBruce = total;
+      if (bruceTotal) data.totalBulletsPerBruce = bruceTotal;
+    }
+    if (seed.trackingMode === 'BELT') {
+      data.bulletsPerString = seed.bulletsPerString;
+      data.stringsPerBruce = seed.stringsPerBruce;
+      if (beltTotal) data.totalBulletsPerStringBruce = beltTotal;
     }
     batch.set(ref, data);
     created += 1;
