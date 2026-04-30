@@ -858,6 +858,25 @@ export const TEXT_CONSTANTS = {
         ERR_SUBMIT_FAILED: 'שליחת התכנון נכשלה'
       }
     },
+    PHONE_BOOK: {
+      TITLE: 'ספר טלפונים',
+      DESCRIPTION: 'אנשי קשר של היחידה',
+      SEARCH_PLACEHOLDER: 'חפש לפי שם',
+      FILTER_TEAM: 'צוות',
+      FILTER_TEAM_ALL: 'כל הצוותים',
+      FILTER_ROLE: 'תפקיד',
+      FILTER_ROLE_ALL: 'כל התפקידים',
+      EMPTY: 'אין רשומות בספר הטלפונים',
+      EMPTY_FILTERED: 'לא נמצאו תוצאות לחיפוש',
+      LOADING: 'טוען...',
+      COL_NAME: 'שם',
+      COL_PHONE: 'טלפון',
+      COL_TEAM: 'צוות',
+      COL_ROLE: 'תפקיד',
+      COL_EMAIL: 'אימייל',
+      UNREGISTERED_BADGE: 'לא רשום',
+      TOTAL: 'סה״כ {count}'
+    },
     CONVOYS: {
       TITLE: 'שיירות',
       DESCRIPTION: 'תכנון וניהול שיירות'

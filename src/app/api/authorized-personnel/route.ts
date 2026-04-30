@@ -5,6 +5,10 @@ import {
   serverSyncPersonnelToUser,
   serverDeletePersonnel,
 } from '@/lib/db/server/authorizedPersonnelService';
+import {
+  serverDeletePhoneBookEntryByHash,
+  serverUpsertPhoneBookFromPersonnel,
+} from '@/lib/db/server/phoneBookService';
 import { getActorOrError } from '@/lib/db/server/auth';
 import { UserType } from '@/types/user';
 
@@ -25,6 +29,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'docId and data are required' }, { status: 400 });
     }
     const id = await serverAddPersonnel(docId, data);
+    await serverUpsertPhoneBookFromPersonnel({
+      militaryPersonalNumberHash: docId,
+      firstName: data?.firstName,
+      lastName: data?.lastName,
+      phoneNumber: data?.phoneNumber,
+      userType: data?.userType,
+      registered: data?.registered ?? false,
+    });
     return NextResponse.json({ success: true, id });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -52,6 +64,15 @@ export async function PUT(request: Request) {
       await serverSyncPersonnelToUser(militaryIdHash, updates);
     }
 
+    await serverUpsertPhoneBookFromPersonnel({
+      militaryPersonalNumberHash: personnelId,
+      firstName: updates?.firstName,
+      lastName: updates?.lastName,
+      phoneNumber: updates?.phoneNumber,
+      userType: updates?.userType,
+      registered: updates?.registered,
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -73,6 +94,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: 'Personnel id is required' }, { status: 400 });
     }
     await serverDeletePersonnel(id);
+    await serverDeletePhoneBookEntryByHash(id);
     return NextResponse.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
