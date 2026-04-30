@@ -13,6 +13,7 @@ import { useAmmunitionTemplates } from '@/hooks/useAmmunitionTemplates';
 import { useAmmunitionInventory } from '@/hooks/useAmmunitionInventory';
 import { useAmmunitionReports } from '@/hooks/useAmmunitionReports';
 import { useAmmunitionReportRequests } from '@/hooks/useAmmunitionReportRequests';
+import { useUsers } from '@/hooks/useUsers';
 import AmmunitionInventoryView, {
   type InventoryFilter,
 } from '@/components/ammunition/AmmunitionInventoryView';
@@ -54,6 +55,7 @@ function AmmunitionPageContent() {
   } = useAmmunitionInventory();
   const { submit: submitReport } = useAmmunitionReports();
   const { requests } = useAmmunitionReportRequests();
+  const { users } = useUsers();
   const searchParams = useSearchParams();
   const requestIdParam = searchParams.get('requestId');
   const [showAdd, setShowAdd] = useState(false);
@@ -102,6 +104,20 @@ function AmmunitionPageContent() {
   }, [scope, filterPersonal, filterTeam]);
 
   const showHolder = scope !== 'personal';
+
+  const userNameByUid = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const u of users) {
+      const name = u.fullName?.trim() || `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim();
+      if (name) m.set(u.uid, name);
+    }
+    return m;
+  }, [users]);
+
+  const resolveHolderName = (holderType: HolderType, holderId: string): string => {
+    if (holderType === 'TEAM') return `${T.HOLDER_TEAM_PREFIX} ${holderId}`;
+    return userNameByUid.get(holderId) || T.HOLDER_USER_UNKNOWN;
+  };
 
   const canMutate = (entry: { templateId: string; holderType: HolderType; holderId: string }) => {
     if (!enhancedUser) return false;
@@ -187,6 +203,7 @@ function AmmunitionPageContent() {
           items={items}
           filter={filterByScope}
           showHolder={showHolder}
+          resolveHolderName={resolveHolderName}
           canMutate={canMutate}
           canDeleteRow={canDeleteRow}
           onDeleteStock={(id) => deleteStock(id)}

@@ -50,20 +50,29 @@ export interface UseAmmunitionInventoryReturn {
   returnSerialItemToMgr: (serial: string) => Promise<boolean>;
 }
 
+// Module-level cache so navigating between pages does not refetch the entire
+// inventory. Stale-while-revalidate: subsequent mounts paint from cache
+// immediately, then refresh in the background. The set of mutators in this
+// hook all call refresh() on success, so the cache is kept current.
+let cachedStock: AmmunitionStock[] | null = null;
+let cachedItems: AmmunitionItem[] | null = null;
+
 export function useAmmunitionInventory(): UseAmmunitionInventoryReturn {
-  const [stock, setStock] = useState<AmmunitionStock[]>([]);
-  const [items, setItems] = useState<AmmunitionItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [stock, setStock] = useState<AmmunitionStock[]>(cachedStock ?? []);
+  const [items, setItems] = useState<AmmunitionItem[]>(cachedItems ?? []);
+  const [isLoading, setIsLoading] = useState(cachedStock === null);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    setIsLoading(true);
+    if (cachedStock === null) setIsLoading(true);
     setError(null);
     try {
       const [s, i] = await Promise.all([
         listAmmunitionStock(),
         listSerialAmmunitionItems(),
       ]);
+      cachedStock = s;
+      cachedItems = i;
       setStock(s);
       setItems(i);
     } catch (e) {
