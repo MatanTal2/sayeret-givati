@@ -1,6 +1,6 @@
 # Ammunition Central Stock — Phase 9
 
-Status: PROPOSED. No code yet. Awaiting user sign-off on this spec.
+Status: SHIPPED on branch `fix/ammo-defects-and-central-stock`. Six commits add type widening, server txns, API, UI, return-to-unit kebab, and CSV bulk import. Run a single `firebase deploy --only firestore:rules` after merge — rules already permit UNIT (collection-level deny + admin gate).
 
 ## Context
 
