@@ -1,39 +1,85 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { ArrowRight, Target } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import AppShell from '@/app/components/AppShell';
-import { Card } from '@/components/ui';
+import { Button, Card } from '@/components/ui';
 import { FEATURES } from '@/constants/text';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserType } from '@/types/user';
+import { useTrainingPlans } from '@/hooks/useTrainingPlans';
+import PlanTrainingModal from '@/components/ammunition/PlanTrainingModal';
+import PlannedTrainingsTable from '@/components/ammunition/PlannedTrainingsTable';
+import AmmunitionBellyView from '@/components/ammunition/AmmunitionBellyView';
 
-const T = FEATURES.AMMUNITION;
+const TT = FEATURES.AMMUNITION.TRAINING;
+
+function isTeamLeaderOrAbove(userType: UserType | null | undefined): boolean {
+  if (!userType) return false;
+  return (
+    userType === UserType.ADMIN ||
+    userType === UserType.SYSTEM_MANAGER ||
+    userType === UserType.MANAGER ||
+    userType === UserType.TEAM_LEADER
+  );
+}
 
 export default function AmmunitionTrainingPage() {
+  const { enhancedUser } = useAuth();
+  const {
+    plans,
+    isLoading,
+    error,
+    create,
+    approve,
+    reject,
+    cancel,
+    complete,
+    requestRestock,
+  } = useTrainingPlans();
+  const [planModalOpen, setPlanModalOpen] = useState(false);
+
+  const canPlan = isTeamLeaderOrAbove(enhancedUser?.userType ?? undefined);
+
   return (
     <AuthGuard>
-      <AppShell title={`🎯 ${T.TITLE} · אימונים`} subtitle="תכנון אימוני ירי וניהול תקציב תחמושת">
-        <div className="max-w-3xl mx-auto w-full">
-          <Card padding="lg" className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-primary-50 rounded-full flex items-center justify-center">
-              <Target className="w-8 h-8 text-primary-600" />
+      <AppShell title={TT.PAGE_TITLE} subtitle={TT.PAGE_SUBTITLE}>
+        <div className="max-w-6xl mx-auto w-full space-y-6">
+          {error && (
+            <div className="p-3 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm">
+              {error}
             </div>
-            <h2 className="text-xl font-semibold text-neutral-900 mb-2">בקרוב</h2>
-            <p className="text-sm text-neutral-600 mb-6 max-w-lg mx-auto">
-              המודול הזה יאפשר לתכנן אימוני ירי, להגדיר תקציב תחמושת לכל אימון,
-              להקצות פריטים לחיילים ולעקוב אחרי שימוש בפועל אל מול התכנון.
-              הפיתוח יחל לאחר ייצוב המודול הנוכחי.
-            </p>
-            <Link
-              href="/ammunition"
-              className="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
-            >
-              <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-              חזרה לתחמושת
-            </Link>
+          )}
+
+          {canPlan && (
+            <div className="flex items-center justify-end">
+              <Button onClick={() => setPlanModalOpen(true)}>
+                <Plus className="w-4 h-4 ms-1" />
+                {TT.PLAN_BUTTON}
+              </Button>
+            </div>
+          )}
+
+          <Card padding="lg">
+            <AmmunitionBellyView plans={plans} onSubmitRestock={requestRestock} />
+          </Card>
+
+          <Card padding="lg">
+            <PlannedTrainingsTable
+              plans={plans}
+              isLoading={isLoading}
+              onApprove={approve}
+              onReject={reject}
+              onCancel={cancel}
+              onComplete={complete}
+            />
           </Card>
         </div>
+
+        {planModalOpen && (
+          <PlanTrainingModal onClose={() => setPlanModalOpen(false)} onSubmit={create} />
+        )}
       </AppShell>
     </AuthGuard>
   );

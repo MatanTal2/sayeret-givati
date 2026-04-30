@@ -27,6 +27,7 @@ export const COLLECTIONS = {
   SYSTEM_CONFIG: 'systemConfig',
   PERMISSION_GRANTS: 'permissionGrants',
   SOLDIER_STATUS: 'soldierStatus',
+  TRAINING_PLANS: 'trainingPlans',
 } as const;
 
 export type CollectionName = typeof COLLECTIONS[keyof typeof COLLECTIONS];
