@@ -129,6 +129,105 @@ interface CanonicalRetireInput {
  * Physical delete is NOT supported — Equipment items reference template IDs
  * directly and would be orphaned.
  */
+export interface EquipmentBulkImportResult {
+  created: number;
+  errors: Array<{ index: number; error: string }>;
+}
+
+interface EquipmentBulkRow {
+  name?: unknown;
+  description?: unknown;
+  category?: unknown;
+  subcategory?: unknown;
+  requiresSerialNumber?: unknown;
+  requiresDailyStatusCheck?: unknown;
+  defaultCatalogNumber?: unknown;
+  notes?: unknown;
+}
+
+/**
+ * Validate + write many equipment templates as CANONICAL in one batched
+ * commit. Returns per-row errors when validation fails on any row, and only
+ * commits the batch when every row validates — admins re-upload after
+ * fixing instead of dealing with partial imports.
+ */
+export async function serverBulkCreateEquipmentTemplates(
+  rows: EquipmentBulkRow[],
+  templateCreatorId: string
+): Promise<EquipmentBulkImportResult> {
+  const errors: Array<{ index: number; error: string }> = [];
+  const validated: EquipmentTypeInput[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    try {
+      const name = typeof r.name === 'string' ? r.name.trim() : '';
+      if (name.length < 2) throw new Error('name must be at least 2 characters');
+      const category = typeof r.category === 'string' ? r.category.trim() : '';
+      if (!category) throw new Error('category is required');
+      const subcategory = typeof r.subcategory === 'string' ? r.subcategory.trim() : '';
+      if (!subcategory) throw new Error('subcategory is required');
+      if (typeof r.requiresSerialNumber !== 'boolean') {
+        throw new Error('requiresSerialNumber must be a boolean');
+      }
+      if (typeof r.requiresDailyStatusCheck !== 'boolean') {
+        throw new Error('requiresDailyStatusCheck must be a boolean');
+      }
+      const description =
+        typeof r.description === 'string' && r.description.trim()
+          ? r.description.trim()
+          : undefined;
+      const notes =
+        typeof r.notes === 'string' && r.notes.trim() ? r.notes.trim() : undefined;
+      const defaultCatalogNumber =
+        typeof r.defaultCatalogNumber === 'string' && r.defaultCatalogNumber.trim()
+          ? r.defaultCatalogNumber.trim()
+          : undefined;
+      validated.push({
+        name,
+        category,
+        subcategory,
+        ...(description ? { description } : {}),
+        ...(notes ? { notes } : {}),
+        ...(defaultCatalogNumber ? { defaultCatalogNumber } : {}),
+        requiresSerialNumber: r.requiresSerialNumber,
+        requiresDailyStatusCheck: r.requiresDailyStatusCheck,
+        isActive: true,
+        templateCreatorId,
+        status: TemplateStatus.CANONICAL,
+      });
+    } catch (e) {
+      errors.push({ index: i, error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+  if (errors.length > 0) return { created: 0, errors };
+
+  const db = getAdminDb();
+  const col = db.collection(COLLECTIONS.EQUIPMENT_TEMPLATES);
+  const batch = db.batch();
+  for (const input of validated) {
+    const ref = col.doc();
+    const data: Record<string, unknown> = {
+      id: ref.id,
+      name: input.name,
+      category: input.category,
+      subcategory: input.subcategory,
+      requiresDailyStatusCheck: input.requiresDailyStatusCheck,
+      requiresSerialNumber: input.requiresSerialNumber,
+      isActive: input.isActive,
+      templateCreatorId: input.templateCreatorId,
+      status: input.status,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    };
+    if (input.description) data.description = input.description;
+    if (input.notes) data.notes = input.notes;
+    if (input.defaultCatalogNumber) data.defaultCatalogNumber = input.defaultCatalogNumber;
+    batch.set(ref, data);
+  }
+  await batch.commit();
+  return { created: validated.length, errors: [] };
+}
+
 export async function serverRetireCanonicalTemplate(input: CanonicalRetireInput): Promise<void> {
   if (!input.templateId) throw new Error('templateId is required');
   const db = getAdminDb();

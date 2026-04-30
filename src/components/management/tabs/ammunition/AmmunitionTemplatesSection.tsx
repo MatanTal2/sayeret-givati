@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import {
   Plus,
+  Upload,
   AlertCircle,
   Check,
   X,
@@ -14,10 +15,17 @@ import { Button, Card } from '@/components/ui';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import { FEATURES, TEXT_CONSTANTS } from '@/constants/text';
 import { cn } from '@/lib/cn';
+import { apiFetch } from '@/lib/apiFetch';
 import {
   useAmmunitionTemplates,
   type CreateAmmunitionTemplatePayload,
 } from '@/hooks/useAmmunitionTemplates';
+import BulkTemplateImportModal from '@/components/management/BulkTemplateImportModal';
+import {
+  AMMO_TEMPLATE_CSV_HEADERS,
+  AMMO_TEMPLATE_CSV_SAMPLE_ROW,
+  csvRowToAmmoTemplatePayload,
+} from '@/lib/ammunition/templatesCsv';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserType } from '@/types/user';
 import AmmunitionTemplateForm, {
@@ -82,10 +90,11 @@ export default function AmmunitionTemplatesSection() {
     enhancedUser?.userType === UserType.SYSTEM_MANAGER ||
     enhancedUser?.userType === UserType.MANAGER;
 
-  const { templates, isLoading, error, create, update, remove } =
+  const { templates, isLoading, error, create, update, remove, refresh } =
     useAmmunitionTemplates();
   const [dialog, setDialog] = useState<Dialog>({ kind: 'closed' });
   const [pendingDelete, setPendingDelete] = useState<AmmunitionType | null>(null);
+  const [showBulkImport, setShowBulkImport] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
 
@@ -184,6 +193,9 @@ export default function AmmunitionTemplatesSection() {
           <Button onClick={() => setDialog({ kind: 'create' })}>
             <Plus className="w-4 h-4 ms-1" /> תבנית חדשה
           </Button>
+          <Button variant="secondary" onClick={() => setShowBulkImport(true)}>
+            <Upload className="w-4 h-4 ms-1" /> ייבא CSV
+          </Button>
         </div>
       )}
 
@@ -248,6 +260,35 @@ export default function AmmunitionTemplatesSection() {
             />
           </div>
         </div>
+      )}
+
+      {showBulkImport && (
+        <BulkTemplateImportModal<CreateAmmunitionTemplatePayload>
+          title="ייבוא תבניות תחמושת מ-CSV"
+          csvHeaders={AMMO_TEMPLATE_CSV_HEADERS}
+          csvSampleRow={AMMO_TEMPLATE_CSV_SAMPLE_ROW}
+          csvFileName="ammunition-templates-template.csv"
+          mapRow={csvRowToAmmoTemplatePayload}
+          onClose={() => {
+            setShowBulkImport(false);
+            refresh();
+          }}
+          onSubmit={async (rows) => {
+            const res = await apiFetch('/api/ammunition-templates', {
+              method: 'POST',
+              body: JSON.stringify({ action: 'bulk_import', rows }),
+            });
+            const json = await res.json();
+            if (!res.ok || !json.success) {
+              throw new Error(json.error || 'ייבוא נכשל');
+            }
+            await refresh();
+            return {
+              created: json.created ?? 0,
+              errors: json.errors ?? [],
+            };
+          }}
+        />
       )}
 
       <ConfirmationModal

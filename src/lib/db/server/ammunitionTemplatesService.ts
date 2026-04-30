@@ -232,3 +232,68 @@ export async function serverListAmmunitionTemplates(): Promise<AmmunitionType[]>
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as AmmunitionType);
 }
 
+export interface BulkImportResult {
+  created: number;
+  errors: Array<{ index: number; error: string }>;
+}
+
+/**
+ * Validate + write many ammunition templates in one batched commit. Each
+ * payload runs through the same validator used by the single-create path.
+ * Returns per-row errors instead of throwing on the first invalid row, so
+ * the UI can show the user exactly which CSV lines failed.
+ *
+ * The batch is committed atomically only if every row validates. Partial
+ * imports are intentionally avoided — the user fixes the CSV and re-uploads.
+ */
+export async function serverBulkCreateAmmunitionTemplates(
+  rawPayloads: unknown[],
+  createdBy: string
+): Promise<BulkImportResult> {
+  const errors: Array<{ index: number; error: string }> = [];
+  const validated: AmmunitionTemplateInput[] = [];
+  for (let i = 0; i < rawPayloads.length; i++) {
+    try {
+      const v = validateAmmunitionTemplateInput({ ...(rawPayloads[i] as object), createdBy });
+      validated.push(v);
+    } catch (e) {
+      errors.push({ index: i, error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+  if (errors.length > 0) return { created: 0, errors };
+
+  const db = getAdminDb();
+  const col = db.collection(COLLECTIONS.AMMUNITION_TEMPLATES);
+  const batch = db.batch();
+  for (const input of validated) {
+    const ref = col.doc();
+    const data: Record<string, unknown> = {
+      id: ref.id,
+      name: input.name,
+      subcategory: input.subcategory,
+      allocation: input.allocation,
+      trackingMode: input.trackingMode,
+      securityLevel: input.securityLevel,
+      status: input.status,
+      createdBy: input.createdBy,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    };
+    if (input.description) data.description = input.description;
+    const total = totalBulletsFor(input);
+    if (input.trackingMode === 'BRUCE') {
+      data.bulletsPerCardboard = input.bulletsPerCardboard;
+      data.cardboardsPerBruce = input.cardboardsPerBruce;
+      if (total) data.totalBulletsPerBruce = total;
+    }
+    if (input.trackingMode === 'BELT') {
+      data.bulletsPerString = input.bulletsPerString;
+      data.stringsPerBruce = input.stringsPerBruce;
+      if (total) data.totalBulletsPerStringBruce = total;
+    }
+    batch.set(ref, data);
+  }
+  await batch.commit();
+  return { created: validated.length, errors: [] };
+}
+
