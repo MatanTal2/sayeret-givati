@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Layers, Plus, X, Check, AlertCircle } from 'lucide-react';
+import { Layers, Plus, X, Check, AlertCircle, ChevronDown } from 'lucide-react';
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { Button, Card } from '@/components/ui';
+import { cn } from '@/lib/cn';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserType } from '@/types/user';
 import { EquipmentType, TemplateStatus } from '@/types/equipment';
@@ -219,21 +221,50 @@ export default function TemplatesTab() {
   };
 
   const renderRow = (t: EquipmentType, actions: React.ReactNode) => (
-    <tr key={t.id} className="hover:bg-neutral-50">
-      <td className="px-4 py-3">
-        <div className="text-sm font-medium text-neutral-900">{t.name}</div>
-        {t.description && (
-          <div className="text-xs text-neutral-500">{t.description}</div>
-        )}
-      </td>
-      <td className="px-4 py-3 text-sm text-neutral-700">
-        {renderCategoryCell(t)}
-      </td>
-      <td className="px-4 py-3 text-sm text-neutral-600">
-        {t.requiresSerialNumber ? 'צ' : '—'}
-      </td>
-      <td className="px-4 py-3 text-sm">{actions}</td>
-    </tr>
+    <Disclosure key={t.id} as="li" className="border-b border-neutral-200 last:border-b-0">
+      {({ open }) => (
+        <>
+          <div className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50">
+            <DisclosureButton className="flex-1 flex items-center gap-2 text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded">
+              <ChevronDown
+                className={cn(
+                  'w-4 h-4 text-neutral-500 transition-transform',
+                  open && 'rotate-180'
+                )}
+              />
+              <span className="text-sm font-medium text-neutral-900">{t.name}</span>
+            </DisclosureButton>
+            <div className="flex-shrink-0">{actions}</div>
+          </div>
+          <DisclosurePanel className="px-4 pb-3 pt-1 bg-neutral-50/60 text-sm text-neutral-700 space-y-1">
+            <div>
+              <span className="font-medium text-neutral-500">קטגוריה:</span>{' '}
+              {renderCategoryCell(t)}
+            </div>
+            {t.description && (
+              <div>
+                <span className="font-medium text-neutral-500">תיאור:</span> {t.description}
+              </div>
+            )}
+            {t.notes && (
+              <div>
+                <span className="font-medium text-neutral-500">הערות:</span> {t.notes}
+              </div>
+            )}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-600 pt-1">
+              <span>{t.requiresSerialNumber ? 'דורש מספר סידורי (צ)' : 'לא צ'}</span>
+              <span>
+                {t.requiresDailyStatusCheck
+                  ? 'דורש בדיקת סטטוס יומי'
+                  : 'לא דורש בדיקה יומית'}
+              </span>
+              {t.defaultCatalogNumber && <span>מק&quot;ט: {t.defaultCatalogNumber}</span>}
+              <span>סטטוס: {t.status}</span>
+            </div>
+          </DisclosurePanel>
+        </>
+      )}
+    </Disclosure>
   );
 
   const reviewActions = (t: EquipmentType) =>
@@ -274,21 +305,9 @@ export default function TemplatesTab() {
       {items.length === 0 ? (
         <div className="p-6 text-center text-sm text-neutral-500">{emptyMessage}</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-neutral-50">
-              <tr>
-                <th className="px-4 py-2 text-right text-xs font-medium text-neutral-500 uppercase">תבנית</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-neutral-500 uppercase">קטגוריה</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-neutral-500 uppercase">צ</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-neutral-500 uppercase">פעולות</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-200">
-              {items.map((t) => renderRow(t, actions(t)))}
-            </tbody>
-          </table>
-        </div>
+        <ul className="divide-y divide-neutral-200">
+          {items.map((t) => renderRow(t, actions(t)))}
+        </ul>
       )}
     </Card>
   );
