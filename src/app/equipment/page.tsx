@@ -21,6 +21,7 @@ import TransferModal from '@/components/equipment/TransferModal';
 import ActionHistoryPanel from '@/components/equipment/ActionHistoryPanel';
 import { type Equipment, EquipmentStatus } from '@/types/equipment';
 import PersonalAmmunitionSection from '@/components/equipment/PersonalAmmunitionSection';
+import TeamAmmunitionSection from '@/components/equipment/TeamAmmunitionSection';
 import { Select } from '@/components/ui';
 
 type ActiveModal =
@@ -187,7 +188,8 @@ function EquipmentPageContent() {
         allowRetire={false}
       />
 
-      <PersonalAmmunitionSection user={enhancedUser} />
+      {scope === 'self' && <PersonalAmmunitionSection user={enhancedUser} />}
+      {scope === 'team' && <TeamAmmunitionSection user={enhancedUser} />}
 
       {activeModal?.kind === 'wizard' && (
         <AddEquipmentWizard
