@@ -71,6 +71,16 @@ export function getFeatureRoutes(): FeatureRoute[] {
       isComingSoon: false
     },
     {
+      title: TEXT_CONSTANTS.FEATURES.PHONE_BOOK.TITLE,
+      description: TEXT_CONSTANTS.FEATURES.PHONE_BOOK.DESCRIPTION,
+      icon: "📞",
+      href: "/phone-book",
+      available: true,
+      color: "bg-primary-600",
+      requiresAuth: true,
+      isComingSoon: false
+    },
+    {
       title: TEXT_CONSTANTS.FEATURES.CONVOYS.TITLE,
       description: TEXT_CONSTANTS.FEATURES.CONVOYS.DESCRIPTION,
       icon: "🚗",
