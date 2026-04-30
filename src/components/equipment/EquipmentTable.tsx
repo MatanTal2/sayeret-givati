@@ -12,6 +12,7 @@ import StatusComponent from './EquipmentStatus';
 import ConditionComponent from './EquipmentCondition';
 import EquipmentRowActions, { type EquipmentRowAction } from './EquipmentRowActions';
 import { useCategoryLookup } from '@/hooks/useCategoryLookup';
+import { equipmentSerialDisplay } from '@/utils/equipmentDisplay';
 
 const STALE_REPORT_DAYS = 7;
 
@@ -196,7 +197,8 @@ function EquipmentRow({
 }: EquipmentRowProps) {
   const dimmed = item.signedById === user.uid && item.currentHolderId !== user.uid;
   const stale = isStale(item.lastReportUpdate);
-  const requiresSerial = !!item.id;
+  const serial = equipmentSerialDisplay(item);
+  const requiresSerial = serial !== null;
 
   return (
     <li
@@ -234,7 +236,9 @@ function EquipmentRow({
               </span>
             )}
           </div>
-          <div className="text-xs text-neutral-500 truncate">צ: {item.id}</div>
+          {serial && (
+            <div className="text-xs text-neutral-500 truncate">צ: {serial}</div>
+          )}
         </div>
         <div onClick={(e) => e.stopPropagation()}>
           <EquipmentRowActions equipment={item} user={user} onAction={onAction} />

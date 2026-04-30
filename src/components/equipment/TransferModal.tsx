@@ -7,6 +7,7 @@ import { TEXT_CONSTANTS } from '@/constants/text';
 import { useAuth } from '@/contexts/AuthContext';
 import { createTransferRequest } from '@/lib/transferRequestService';
 import { searchUsers, UserSearchResult } from '@/lib/userService';
+import { equipmentSerialDisplay } from '@/utils/equipmentDisplay';
 
 interface TransferModalProps {
   isOpen: boolean;
@@ -206,7 +207,12 @@ export default function TransferModal({
               </div>
               <div>
                 <h3 className="font-medium text-neutral-900">{equipment.productName}</h3>
-                <p className="text-sm text-neutral-600">מס&apos; סידורי: {equipment.id}</p>
+                {(() => {
+                  const s = equipmentSerialDisplay(equipment);
+                  return s ? (
+                    <p className="text-sm text-neutral-600">מס&apos; סידורי: {s}</p>
+                  ) : null;
+                })()}
               </div>
             </div>
           </div>

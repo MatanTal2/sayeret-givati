@@ -84,6 +84,7 @@ export interface Equipment {
   maintenanceNotes?: string; // Maintenance history and notes
   qrCode?: string; // QR code for quick scanning
   requiresDailyStatusCheck?: boolean; // Whether this equipment requires daily status checks (inherited from template)
+  hasSerialNumber?: boolean; // True iff template.requiresSerialNumber. When false, `id` is auto-generated and must NOT be displayed as a צ. Optional for back-compat with pre-flag docs (use !== false to treat unknown as serialized).
   
   // Audit Trail
   trackingHistory: EquipmentHistoryEntry[]; // Array of transfer/action records

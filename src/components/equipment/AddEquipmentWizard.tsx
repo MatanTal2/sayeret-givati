@@ -167,6 +167,7 @@ export default function AddEquipmentWizard({
           photoUrl: photoUrl ?? undefined,
           notes: draft.notes || undefined,
           requiresDailyStatusCheck: state.template.requiresDailyStatusCheck,
+          hasSerialNumber: state.template.requiresSerialNumber,
         });
       }
 
