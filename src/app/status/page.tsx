@@ -1,7 +1,5 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import Image from 'next/image';
-import Link from 'next/link';
 import { Soldier } from '../types';
 import { formatReportDate, formatReportTime, formatLastUpdated } from '@/lib/dateUtils';
 import { mapStructuredStatusToRaw } from '@/lib/statusUtils';
@@ -12,6 +10,7 @@ import { Download } from "lucide-react";
 import SoldiersTableDesktop from '../components/SoldiersTableDesktop';
 import SoldiersTableMobile from '../components/SoldiersTableMobile';
 import AuthGuard from '@/components/auth/AuthGuard';
+import AppShell from '@/app/components/AppShell';
 import { useSoldierStatus } from '@/hooks/useSoldierStatus';
 
 export default function StatusPage() {
@@ -228,55 +227,22 @@ export default function StatusPage() {
     setTimeout(() => setIsDownloading(false), 2000);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-neutral-600">{TEXT_CONSTANTS.STATUS_PAGE.LOADING_DATA}</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-neutral-50 relative">
-        <header className="bg-white shadow-sm border-b border-neutral-200 mb-6">
-          <div className="max-w-6xl mx-auto px-4 py-4">
-            <div className="flex items-center gap-4">
-              <Link href="/" className="hover:opacity-80 transition-opacity">
-                <Image
-                  src="/sayeret-givati-logo.png"
-                  alt={TEXT_CONSTANTS.ARIA_LABELS.LOGO}
-                  width={567}
-                  height={400}
-                  priority
-                  className="h-16 w-auto"
-                />
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold text-neutral-900">מערכת שבצ״ק מסייעת</h1>
-                <p className="text-lg text-neutral-700 font-medium">
-                  {TEXT_CONSTANTS.STATUS_PAGE.UNIT_NAME}
-                </p>
-              </div>
-              <div className="mr-auto">
-                <Link
-                  href="/"
-                  className="px-4 py-2 text-primary-600 hover:text-primary-800 font-medium transition-colors"
-                >
-                  <span className="md:hidden">🏠 ←</span>
-                  <span className="hidden md:inline">
-                    {TEXT_CONSTANTS.STATUS_PAGE.BACK_TO_HOME_SHORT}
-                  </span>
-                </Link>
-              </div>
+      <AppShell
+        title="מערכת שבצ״ק מסייעת"
+        subtitle={TEXT_CONSTANTS.STATUS_PAGE.UNIT_NAME}
+      >
+        {loading ? (
+          <div className="flex items-center justify-center py-24">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+              <p className="text-neutral-600">{TEXT_CONSTANTS.STATUS_PAGE.LOADING_DATA}</p>
             </div>
           </div>
-        </header>
-
-        <div className="max-w-6xl mx-auto px-4 pb-32">
+        ) : (
+        <>
+        <div className="max-w-6xl mx-auto w-full pb-32">
           {error && (
             <div className="mb-6 p-4 bg-danger-50 border border-danger-200 rounded-lg">
               <div className="flex items-center gap-2">
@@ -515,7 +481,9 @@ export default function StatusPage() {
             </div>
           </div>
         )}
-      </div>
+        </>
+        )}
+      </AppShell>
     </AuthGuard>
   );
 }

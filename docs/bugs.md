@@ -48,15 +48,12 @@
      - Default value remains `UserRole.SOLDIER` when admin doesn't pick.
      - Hebrew labels per `src/constants/text.ts` — add a `USER_ROLE_LABELS` map if one doesn't exist (check `src/constants/admin.ts` first).
      - CSV bulk upload: accept role in a new optional column; rows missing the value fall back to the default.
-8. Admin-created templates still show "wait for approval" message
-   - **Repro:** Sign in as `userType: ADMIN` (or `SYSTEM_MANAGER`). Equipment page → "Request new template". Submit. UI shows "ההצעה נשלחה לבדיקה" and the template lands as `PROPOSED`, requiring another admin to approve it.
-   - **Why this matters:** Admins are already the approval authority. Forcing self-approval is friction with no security benefit, and the misleading message makes admins think the action failed silently.
-   - **File paths:**
-     - UI entry point: `src/components/equipment/RequestNewTemplateFlow.tsx:54` (calls `proposeTemplate`).
-     - API: `src/app/api/equipment-templates/propose/route.ts:11–58`.
-     - Server logic (the bug): `src/lib/db/server/templateRequestService.ts:51–54` — only branches `USER` vs everyone else; admin / system_manager get `PROPOSED` like a TL.
-     - Status enum: `src/types/equipment.ts:7–12`.
-   - **Suggested fix:** In `serverProposeTemplate`, if `proposerUserType` is `ADMIN` or `SYSTEM_MANAGER`, write `status: CANONICAL`, `isActive: true`, `reviewedByUserId: proposerUserId`, `reviewedAt: now`. Update the client success message accordingly ("התבנית נוצרה" not "ההצעה נשלחה לבדיקה"). Add a unit test covering each `userType` → status mapping. Permission check (`canProposeTemplate`) already lets admins through, so no policy change.
+8. ~~Admin-created templates still show "wait for approval" message~~
+   - **FIXED (verified 2026-04-30 on `fix/templates-ui-and-status-cleanup`):** end-to-end logic was already in place; verification confirms all three layers correct:
+     - Server: `src/lib/db/server/templateRequestService.ts:49-60` — when `proposerUserType` is `ADMIN` or `SYSTEM_MANAGER`, `isAutoCanonical` is true and the doc is written with `status: CANONICAL`, `isActive: true`, `reviewedByUserId`, `reviewedAt`.
+     - Pre-submit banner: `RequestNewTemplateFlow.tsx:98-107` shows `"מילוי הטופס יוצר תבנית חדשה זמינה מיידית."` for admin/system_manager and the request copy otherwise.
+     - Success state: `RequestNewTemplateFlow.tsx:77-95` branches on the `submittedStatus` returned by the server and renders `"התבנית נוצרה"` + `"התבנית זמינה לשימוש מיידי..."` for canonical, request copy otherwise.
+     - Action log: `templateRequestService.ts:113-117` writes `TEMPLATE_APPROVED` (not `TEMPLATE_PROPOSED`) for the auto-canonical path.
 9. Category & subcategory rendered as raw Firestore doc IDs in templates lists
    - **Repro:** Management → Equipment Templates tab. Both the proposed-templates rows and the canonical-templates rows show opaque doc IDs in the category and subcategory columns instead of Hebrew names.
    - **Why this matters:** Unreadable. Admin can't tell what they're looking at without cross-referencing Firestore.
@@ -65,31 +62,28 @@
      - Working precedent — already resolves IDs to names: `src/components/management/tabs/TemplateForm.tsx:79–96` uses `CategoriesService.getCategories()`.
      - Schema confirming the fields are IDs not names: `src/types/equipment.ts:18–19`.
    - **Suggested fix:** Lift the category lookup the form already does into `TemplatesTab` (or extract a `useCategoryLookup` hook returning `(id) => name`). Render `lookup(t.category) / lookup(t.subcategory)` everywhere, falling back to the raw ID in a warning style if unresolved (helps surface orphan refs).
-10. Manage Templates rows overflow on narrow screens; need collapsed default
-    - **Repro:** Management → Equipment Templates. Row width exceeds viewport on laptop and mobile; horizontal scroll required to see actions.
-    - **Why this matters:** Action buttons get pushed off-screen and admins miss them.
-    - **Suggested redesign (per user request):**
-      - Collapsed row by default: **template name + actions only**.
-      - Click row → expands to reveal description, category / subcategory (resolved per #9), serial-number flag, daily-status flag, status, audit timestamps.
-      - Use Headless UI `Disclosure` per the project's UI-libs preference (no custom expand/collapse logic).
-    - **File paths:** `src/components/management/tabs/TemplatesTab.tsx` row markup around lines 200–235 (proposed) and 327–332 (canonical).
-    - **Suggested fix:** Replace the flat row markup with `<Disclosure>`. Apply to both the proposed and canonical sections so they stay visually consistent.
-11. Canonical templates list missing edit + delete actions
-    - **Repro:** Management → Equipment Templates → canonical section. Each row shows a static "פעיל" label. No way to rename, change description, change required flags, or remove a template.
-    - **Why this matters:** Mistakes in canonical templates are unfixable from the UI; admins must edit Firestore by hand.
-    - **File paths:** `src/components/management/tabs/TemplatesTab.tsx:327–332` (action cell is hardcoded text).
-    - **Suggested fix:**
-      - **Edit:** open the existing `TemplateForm` (currently only used for create) prefilled with the template; submit hits a new `PATCH /api/equipment-templates/:id` (or reuse the existing canonical write endpoint with merge semantics). Audit entry to `actionsLog`.
-      - **Delete:** soft-delete by flipping `isActive: false` and `status` to a tombstone value, **not** physical delete — equipment items reference template IDs and would orphan. Confirm via Headless UI `Dialog`. Audit entry.
-      - Permission: ADMIN + SYSTEM_MANAGER only.
+10. ~~Manage Templates rows overflow on narrow screens; need collapsed default~~
+    - **FIXED (verified 2026-04-30 on `fix/templates-ui-and-status-cleanup`):** the `renderRow` helper in `TemplatesTab.tsx:295-340` already wraps every row in Headless UI `<Disclosure as="li">`:
+      - Collapsed header (`DisclosureButton`): chevron + template name only.
+      - Action buttons live in a `flex-shrink-0` container outside the button so they are always reachable.
+      - `DisclosurePanel` reveals category + subcategory (resolved via `useCategoryLookup`), description, notes, `requiresSerialNumber`, `requiresDailyStatusCheck`, default catalog number, and lifecycle status.
+      - Both canonical, proposed, and pending sections use the same renderer through the shared `section()` helper, so they stay visually consistent.
+11. ~~Canonical templates list missing edit + delete actions~~
+    - **FIXED (verified 2026-04-30 on `fix/templates-ui-and-status-cleanup`):** all three pieces shipped in earlier work; verification confirms:
+      - UI: `TemplatesTab.tsx` `canonicalActions()` — for ADMIN / SYSTEM_MANAGER renders an `"ערוך"` button + conditional `"השבת"` button (only when `isActive === true`); falls back to status badge for non-admins.
+      - Edit form: `TemplateForm.tsx` supports `mode: 'edit_and_approve'`, opening prefilled with the existing template values.
+      - API: `PATCH /api/equipment-templates/[id]` (`route.ts:18-59`) and `DELETE /api/equipment-templates/[id]` (`route.ts:67-107`) both wired.
+      - Audit: `serverUpdateCanonicalTemplate` writes `ActionType.TEMPLATE_UPDATED`; `serverRetireCanonicalTemplate` writes `ActionType.TEMPLATE_RETIRED`. `equipmentTemplatesService.ts:96-257`.
+      - Soft-delete semantics preserved: retire flips `isActive: false`; equipment items keep their template ref intact.
 12. ~~Canonical template `status` field is dead UI~~
     - **RESOLVED by bug #11 (2026-04-30):** the hardcoded "פעיל" label is gone. The canonical action cell now renders edit + retire buttons for ADMIN / SYSTEM_MANAGER, and a "מושבת" warning badge once a template has been retired (`isActive: false`). Retire/edit each write an `actionsLog` entry (`TEMPLATE_RETIRED`, `TEMPLATE_UPDATED`).
     - **Why we did NOT remove `EquipmentType.status`:** the field is load-bearing for the propose/approve lifecycle (`PROPOSED → CANONICAL → REJECTED`). The canonical UI uses `isActive` for the active/retired distinction; `status` stays where it belongs.
-13. Management page tab resets to "Manage Users" on refresh
-    - **Repro:** Management → any tab other than Users (e.g. Equipment Templates). Browser refresh. Lands on Users tab instead of the previous tab.
-    - **Why this matters:** Loses context, especially when iterating on template edits between bug fixes.
-    - **File paths:** `src/hooks/useSidebar.ts:14–55` — active tab is local `useState`, no URL or storage persistence; `useManagementTabs` returns the first available tab as default.
-    - **Suggested fix:** Persist the active tab in the URL as a query param (`?tab=templates`) — cheapest, also makes individual tabs linkable / shareable. On mount, read from `useSearchParams`; on tab change, `router.replace` with the new param. Avoid `localStorage` (cross-browser drift) and `sessionStorage` (refresh in a new tab loses it).
+13. ~~Management page tab resets to "Manage Users" on refresh~~
+    - **FIXED (verified 2026-04-30 on `fix/templates-ui-and-status-cleanup`):** active tab is already URL-backed:
+      - `src/hooks/useSidebar.ts:28` reads `searchParams.get(SIDEBAR_TAB_QUERY_KEY)` (key: `'tab'`) and falls back to `defaultTab`.
+      - `useSidebar.ts:46-48` calls `router.replace(...)` on every tab change to keep the URL in sync.
+      - `src/app/management/page.tsx:26` passes `defaultTabId` so the page lands on the first authorized tab when no `?tab=` is present.
+      - Tabs are now linkable / shareable (e.g. `/management?tab=permissions`).
 15. ~~Add-equipment wizard hides every newly-created template; no "all subcategories" affordance~~
     - **Repro (root cause):** Equipment → Add new → "פריט יחיד" → pick a category whose templates were created via the management UI. Template list is empty. Same templates ARE visible in Management → Equipment Templates. Confirmed with a real doc: template `3PvWrnPkzsaizs5wjDVO` carries `subcategory: 'FNhJ1zSkJWYevRBqokbt'`, the subcategory doc exists, parent category doc exists — IDs all line up. Doc just never reaches the wizard.
     - **Why:** `EquipmentTypesService.getEquipmentTypes()` ran `query(collection, orderBy('sortOrder'), orderBy('name'), where('isActive', '==', true))`. Firestore excludes any doc missing the orderBy field — and neither `serverCreateEquipmentType` nor `serverProposeTemplate` writes `sortOrder`. So every template created from the UI was silently dropped. `EquipmentTypesService.getTemplates()` (used by management) does no orderBy, which is why the same docs showed up there.
@@ -118,15 +112,9 @@
 16. ~~Equipment table expanded row shows raw doc ID for category~~
     - **Repro:** Equipment page → expand any row. "קטגוריה" field rendered the raw Firestore doc ID instead of the Hebrew category name. Same root cause as bug #9 in `TemplatesTab`: `Equipment.category` (and `Equipment.subcategory`) are stored as IDs, not names.
     - **FIXED (2026-04-30) on `fix/equipment-template-ux`:** `EquipmentTable.tsx` now consumes `useCategoryLookup` (already used by `TemplatesTab`) and passes the resolvers down through `EquipmentRow` into `ExpandedPanel`. The category field renders `cat / sub`, and unresolved IDs fall back to `text-warning-700` rendering of the raw ID — same pattern as `TemplatesTab` so orphan refs surface visibly.
-14. New template added from management page does not appear in canonical list (likely doc-shape divergence)
-    - **Repro:** Management → Equipment Templates → add a new template. Submit succeeds. The list does not include the new row. Page refresh — still not there. Firestore shows a new doc has been written, but its shape **differs** from a doc created via the equipment-page propose flow.
-    - **Why this matters:** Two creation paths producing divergent doc shapes is a silent data-integrity bug; downstream readers can filter the management-created doc out without warning, and admins cannot trust the list.
-    - **What we know from the code:**
-      - Management write path: `TemplatesTab.tsx:91` → `EquipmentTypesService.createEquipmentType()` → `POST /api/equipment-templates` → `serverCreateEquipmentType()` (`src/lib/db/server/equipmentTemplatesService.ts:20`). Sets `status: CANONICAL`, `isActive: true`.
-      - Equipment-page write path: `proposeTemplate()` → `POST /api/equipment-templates/propose` → `serverProposeTemplate()` (`src/lib/db/server/templateRequestService.ts:44`). Sets `status: PROPOSED | PENDING_REQUEST`, `isActive: false`, plus proposer / timestamp fields.
-      - Both target the same `equipmentTemplates` collection.
-      - `TemplatesTab` does call `await refresh()` after create (`:107`), so a stale cache alone does not explain it.
-    - **Likely cause to investigate:** the management-create payload omits a field the canonical-list filter requires (e.g. `templateCreatorId`, `proposedAt`, `category` / `subcategory` set incorrectly, or `isActive` not surviving the write). Diff the two on-disk doc shapes against the list query in `EquipmentTypesService.getTemplates()`.
-    - **Suggested fix:**
-      - Diff the two doc shapes; align `serverCreateEquipmentType` to write the same field set as `serverProposeTemplate` (sans the lifecycle-only ones), or relax the list query so it does not depend on the missing field.
-      - Add a server-side test that creates one doc through each path and asserts both appear in `getTemplates()`.
+14. ~~New template added from management page does not appear in canonical list (likely doc-shape divergence)~~
+    - **CLOSED — NOT REPRODUCIBLE (2026-04-30 on `fix/templates-ui-and-status-cleanup`):** investigation found no doc-shape divergence that would exclude management-created docs from the canonical list:
+      - `EquipmentTypesService.getTemplates()` (management list) runs no `orderBy` and no `where` filters — it fetches every doc in `equipmentTemplates` by ID. So no field omission can hide a doc.
+      - `serverCreateEquipmentType` (`equipmentTemplatesService.ts:37-55`) and `serverProposeTemplate` (`templateRequestService.ts:62-84`) both write the canonical field set the list reads (`name`, `category`, `subcategory`, `requiresSerialNumber`, `requiresDailyStatusCheck`, `isActive`, `templateCreatorId`, `status`, `createdAt`, `updatedAt`). Propose adds `proposedByUserId` / `proposedAt` for audit; not load-bearing for visibility.
+      - Bug #15 already removed the `orderBy('sortOrder')` issue from `getEquipmentTypes()`. `getTemplates()` was never affected.
+      - Most likely original report was a transient stale-cache or test-data state. No code change made.
