@@ -193,6 +193,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Guard schedules — private to creator. Writes server-only via
+    // /api/guard-schedules. Sharing is implemented as clone-on-share —
+    // the recipient gets a brand-new doc owned by them, so this rule
+    // intentionally forbids cross-user reads.
+    match /guardSchedules/{scheduleId} {
+      allow read: if request.auth != null && resource.data.createdBy == request.auth.uid;
+      allow write: if false;
+    }
+
     // Deny everything else
     match /{document=**} {
       allow read, write: if false;

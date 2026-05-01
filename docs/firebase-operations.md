@@ -36,6 +36,7 @@ All Firestore operations in the codebase, organized by collection.
 | `systemConfig` | `COLLECTIONS.SYSTEM_CONFIG = 'systemConfig'` | `src/lib/db/collections.ts` — single doc `main`. Fields: `ammoNotificationRecipientUserId` (Phase 1 ammunition), `teams: string[]` (registration team dropdown source — admin tab editable). |
 | `permissionGrants` | `COLLECTIONS.PERMISSION_GRANTS = 'permissionGrants'` | `src/lib/db/collections.ts` — time-limited role bumps. Server-only writes via `src/lib/db/server/permissionGrantsService.ts`; clients read via `/api/permission-grants` GET. Rule allows users to read their own grants. |
 | `soldierStatus` | `COLLECTIONS.SOLDIER_STATUS = 'soldierStatus'` | `src/lib/db/collections.ts` — daily status annotation, doc id = `militaryPersonalNumberHash`. Server-only writes via `src/lib/db/server/soldierStatusService.ts`. Reads only via `GET /api/soldier-status` (joined roster). |
+| `guardSchedules` | `COLLECTIONS.GUARD_SCHEDULES = 'guardSchedules'` | `src/lib/db/collections.ts` — owner-private schedule docs. Server-only writes via `src/lib/db/server/guardScheduleService.ts`. Client reads via `src/lib/db/guardScheduleClient.ts` (rule limits read to creator). Sharing is clone-on-share — see `docs/spec/guard-scheduler.md`. |
 
 ---
 

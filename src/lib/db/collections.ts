@@ -29,6 +29,7 @@ export const COLLECTIONS = {
   SOLDIER_STATUS: 'soldierStatus',
   TRAINING_PLANS: 'trainingPlans',
   PHONE_BOOK: 'phoneBook',
+  GUARD_SCHEDULES: 'guardSchedules',
 } as const;
 
 export type CollectionName = typeof COLLECTIONS[keyof typeof COLLECTIONS];

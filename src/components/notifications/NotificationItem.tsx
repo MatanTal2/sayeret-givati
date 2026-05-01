@@ -162,6 +162,12 @@ function resolveNotificationTarget(n: NotificationDisplayData): string | null {
       : '/ammunition';
   }
 
+  if (t === 'guard_schedule_shared') {
+    return n.relatedGuardScheduleId
+      ? `/guard-scheduler/${n.relatedGuardScheduleId}`
+      : '/guard-scheduler';
+  }
+
   return null;
 }
 
@@ -191,6 +197,8 @@ function getTypeLabel(type: string): string {
       return 'דיווח תחמושת';
     case 'ammo_report_requested':
       return 'בקשת דיווח תחמושת';
+    case 'guard_schedule_shared':
+      return 'לוח שמירות';
     default:
       return 'התראה';
   }

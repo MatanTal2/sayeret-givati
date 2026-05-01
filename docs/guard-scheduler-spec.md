@@ -1,4 +1,6 @@
-# ⏰ מחולל שמירות - Guard Schedule Generator Specification
+> **Superseded.** The current production spec lives at `docs/spec/guard-scheduler.md`. This file is kept only as a historical reference for the original brainstorming notes.
+
+# ⏰ מחולל שמירות - Guard Schedule Generator Specification (legacy)
 
 ## 📋 Overview
 

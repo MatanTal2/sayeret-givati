@@ -14,6 +14,7 @@ interface NotificationInput {
   relatedEquipmentId?: string;
   relatedEquipmentDocId?: string;
   relatedTransferId?: string;
+  relatedGuardScheduleId?: string;
   equipmentName?: string;
 }
 

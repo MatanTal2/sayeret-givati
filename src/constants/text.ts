@@ -907,7 +907,117 @@ export const TEXT_CONSTANTS = {
     },
     GUARD_SCHEDULER: {
       TITLE: 'מחולל שמירות',
-      DESCRIPTION: 'יצירת לוחות שמירה אוטומטיים עם אילוצים'
+      DESCRIPTION: 'יצירת לוחות שמירה אוטומטיים עם אילוצים',
+      SUBTITLE: 'בנו לוח שמירות חכם לעמדה — אקראי והוגן',
+      STEPS: {
+        POSTS: 'עמדות',
+        PERSONNEL: 'משתתפים',
+        CONFIG: 'הגדרות',
+        PREVIEW: 'תצוגה ועריכה',
+        EXPORT: 'ייצוא ושיתוף'
+      },
+      POSTS: {
+        TITLE: 'עמדות שמירה',
+        ADD: 'הוסף עמדה',
+        REMOVE: 'הסר עמדה',
+        NAME_LABEL: 'שם העמדה',
+        NAME_PLACEHOLDER: 'לדוגמה: שער ראשי',
+        DEFAULT_HEADCOUNT: 'מספר שומרים בברירת מחדל',
+        NOTES_LABEL: 'הערות',
+        WINDOWS_TITLE: 'משבצות שעות (אופציונלי)',
+        WINDOWS_HINT: 'הגדירו מספר שומרים שונה לטווחי שעות. ללא משבצות — תקף ברירת המחדל.',
+        WINDOW_ADD: 'הוסף משבצת',
+        WINDOW_REMOVE: 'הסר',
+        START_HOUR: 'משעה',
+        END_HOUR: 'עד שעה',
+        COUNT: 'שומרים',
+        OVERLAP_ERROR: 'משבצות חופפות'
+      },
+      PERSONNEL: {
+        TITLE: 'משתתפים',
+        PICK_FROM_USERS: 'בחר ממשתמשי המערכת',
+        SEARCH_PLACEHOLDER: 'חפש שם...',
+        FREE_TEXT_TITLE: 'הוסף שמות חופשיים',
+        FREE_TEXT_PLACEHOLDER: 'שם בכל שורה',
+        FREE_TEXT_HINT: 'שם בכל שורה. כפילויות עם רשימת המשתמשים יוסרו אוטומטית.',
+        SELECTED_COUNT: 'נבחרו {count} משתתפים',
+        DEDUP_NOTICE: 'הוסרו כפילויות',
+        EMPTY: 'בחרו לפחות משתתף אחד'
+      },
+      CONFIG: {
+        TITLE: 'הגדרות הלוח',
+        START: 'התחלה',
+        END: 'סיום',
+        SHIFT_DURATION: 'משך משמרת (שעות)',
+        ALGORITHM: 'אלגוריתם',
+        ALGO_ROUND_ROBIN: 'סבב רגיל',
+        ALGO_ROUND_ROBIN_HINT: 'סבב פשוט וצפוי לפי סדר הרשימה',
+        ALGO_RANDOM_FAIR: 'אקראי הוגן (מומלץ)',
+        ALGO_RANDOM_FAIR_HINT: 'אקראי ככל האפשר עם איזון מספר משמרות לאדם',
+        ALGO_CONSTRAINT_AWARE: 'מתחשב באילוצים',
+        ALGO_CONSTRAINT_AWARE_HINT: 'אקראי הוגן + מסנן זמני אי־זמינות',
+        SEED_LABEL: 'גרעין אקראיות (אופציונלי)',
+        SEED_PLACEHOLDER: 'מילה קבועה לחזרה על אותה תוצאה'
+      },
+      PREVIEW: {
+        TITLE: 'תצוגת הלוח',
+        EMPTY: 'הריצו את היוצר כדי לראות את הלוח',
+        FAIRNESS: 'הוגנות (פער משמרות): {value}',
+        WARNINGS_TITLE: 'אזהרות',
+        COL_DAY: 'יום',
+        COL_TIME: 'שעות',
+        COL_POST: 'עמדה',
+        COL_PEOPLE: 'משתתפים',
+        COL_LOCK: 'נעול',
+        SWAP: 'החלפה',
+        LOCK: 'נעל',
+        UNLOCK: 'בטל נעילה',
+        REGENERATE_FRESH: 'ייצור מחדש מאפס',
+        REGENERATE_KEEP_LOCKS: 'ייצור מחדש (שמור נעולים)'
+      },
+      SWAP_DIALOG: {
+        TITLE: 'החלפת משתתף',
+        FROM_LABEL: 'מחליף את',
+        TO_LABEL: 'במקומו',
+        CANCEL: 'ביטול',
+        APPLY: 'החלף'
+      },
+      EXPORT: {
+        TITLE: 'ייצוא ושיתוף',
+        TITLE_LABEL: 'כותרת הלוח',
+        TITLE_PLACEHOLDER: 'לדוגמה: שמירות שבוע 18',
+        COPY_TEXT: 'העתק טקסט',
+        DOWNLOAD_CSV: 'הורד CSV',
+        DOWNLOAD_TEXT: 'הורד טקסט',
+        SAVE_CLOUD: 'שמור בענן',
+        SAVED: 'הלוח נשמר',
+        SHARE_COPY: 'שתף עותק...',
+        OFFLINE_LINK: 'הורד גרסת אופליין',
+        OFFLINE_HINT: 'כלי HTML עצמאי לעבודה ללא רשת',
+        COPIED: 'הועתק'
+      },
+      SHARE_DIALOG: {
+        TITLE: 'שיתוף עותק של הלוח',
+        DESCRIPTION: 'בחירת נמען תיצור עותק חדש של הלוח שיהיה בבעלותו, וישלח לו עדכון. הלוח שלכם נשאר ללא שינוי.',
+        SEARCH_PLACEHOLDER: 'חפש משתמש...',
+        CANCEL: 'ביטול',
+        SHARE: 'שלח עותק',
+        SUCCESS: 'נשלח עותק לנמען'
+      },
+      WARNINGS: {
+        ROSTER_TOO_SMALL: 'מספר המשתתפים קטן מדרישת השומרים — חלק מהמשמרות לא יתמלאו',
+        CANNOT_MEET_HEADCOUNT: 'משמרת בלתי ניתנת למילוי מלא',
+        BLACKOUT_OVERRUN: 'אילוצי אי־זמינות מצמצמים את המאגר מתחת לדרישה'
+      },
+      ERRORS: {
+        INVALID_DATES: 'תאריכי התחלה וסיום לא תקינים',
+        INVALID_DURATION: 'משך משמרת חייב להיות בין חצי שעה ל־12 שעות',
+        NO_POSTS: 'יש להגדיר לפחות עמדה אחת',
+        NO_ROSTER: 'יש להוסיף לפחות משתתף אחד',
+        TITLE_REQUIRED: 'יש להזין כותרת ללוח',
+        SAVE_FAILED: 'שמירה נכשלה',
+        SHARE_FAILED: 'שיתוף נכשל'
+      }
     },
     ADDITIONAL_TOOLS: {
       TITLE: 'כלים נוספים',

@@ -14,6 +14,7 @@ export interface Notification {
   relatedEquipmentId?: string; // equipment serial number/display ID
   relatedEquipmentDocId?: string; // Firestore document ID
   relatedTransferId?: string; // transfer request ID
+  relatedGuardScheduleId?: string; // guard schedule document ID
   equipmentName?: string; // denormalized field for UI display
   isRead: boolean; // default false
   createdAt: Timestamp;
@@ -37,7 +38,8 @@ export enum NotificationType {
   TRAINING_PLAN_APPROVED = 'training_plan_approved',
   TRAINING_PLAN_REJECTED = 'training_plan_rejected',
   AMMO_RESTOCK_REQUEST = 'ammo_restock_request',
-  AMMO_ASSIGNED_FROM_CENTRAL = 'ammo_assigned_from_central'
+  AMMO_ASSIGNED_FROM_CENTRAL = 'ammo_assigned_from_central',
+  GUARD_SCHEDULE_SHARED = 'guard_schedule_shared'
 }
 
 export interface CreateNotificationData {
@@ -46,6 +48,7 @@ export interface CreateNotificationData {
   relatedEquipmentId?: string;
   relatedEquipmentDocId?: string;
   relatedTransferId?: string;
+  relatedGuardScheduleId?: string;
   equipmentName?: string;
 }
 
@@ -84,6 +87,7 @@ export interface NotificationDisplayData {
   equipmentName?: string;
   relatedEquipmentDocId?: string;
   relatedTransferId?: string;
+  relatedGuardScheduleId?: string;
 }
 
 // Notification settings

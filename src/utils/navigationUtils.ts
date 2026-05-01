@@ -95,10 +95,10 @@ export function getFeatureRoutes(): FeatureRoute[] {
       description: TEXT_CONSTANTS.FEATURES.GUARD_SCHEDULER.DESCRIPTION,
       icon: "⏰",
       href: "/guard-scheduler",
-      available: false,
-      color: "bg-gray-400",
+      available: true,
+      color: "bg-info-600",
       requiresAuth: true,
-      isComingSoon: true
+      isComingSoon: false
     },
     {
       title: TEXT_CONSTANTS.FEATURES.ADDITIONAL_TOOLS.TITLE,

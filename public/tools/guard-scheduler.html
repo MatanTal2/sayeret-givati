@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>מחולל שמירות — אופליין</title>
+<style>
+  :root {
+    --primary: #7c3aed;
+    --primary-dark: #5b21b6;
+    --neutral-50: #fafaf9;
+    --neutral-100: #f5f5f4;
+    --neutral-200: #e7e5e4;
+    --neutral-400: #a8a29e;
+    --neutral-700: #44403c;
+    --neutral-900: #1c1917;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    --success: #22c55e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+    background: var(--neutral-50);
+    color: var(--neutral-900);
+  }
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+  h1 { margin: 0 0 4px; font-size: 24px; }
+  h2 { margin: 16px 0 8px; font-size: 18px; }
+  h3 { margin: 8px 0 6px; font-size: 16px; }
+  .subtitle { color: var(--neutral-700); margin: 0 0 16px; }
+  .card {
+    background: white;
+    border: 1px solid var(--neutral-200);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    margin-bottom: 12px;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+  label { display: flex; flex-direction: column; font-size: 13px; color: var(--neutral-700); }
+  input, select, textarea {
+    margin-top: 4px;
+    padding: 8px 10px;
+    border: 1px solid var(--neutral-200);
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+  }
+  textarea { min-height: 100px; }
+  button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 12px;
+    background: var(--neutral-100);
+    color: var(--neutral-900);
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+  }
+  button:hover { background: var(--neutral-200); }
+  button.primary { background: var(--primary); color: white; }
+  button.primary:hover { background: var(--primary-dark); }
+  button.danger { background: var(--danger); color: white; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 8px; text-align: right; border-bottom: 1px solid var(--neutral-100); }
+  th { background: var(--neutral-50); font-size: 12px; text-transform: uppercase; color: var(--neutral-700); }
+  .pill {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    background: var(--neutral-100); color: var(--neutral-900);
+    font-size: 12px; margin: 2px;
+  }
+  .warn { color: var(--warning); }
+  .err  { color: var(--danger); }
+  .ok   { color: var(--success); }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .tab {
+    padding: 6px 14px; border-radius: 999px; cursor: pointer;
+    background: var(--neutral-100); color: var(--neutral-700);
+  }
+  .tab.active { background: var(--primary); color: white; }
+  .saved-item { display: flex; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--neutral-100); }
+  .saved-item:last-child { border-bottom: none; }
+  .pre { white-space: pre-wrap; background: var(--neutral-50); padding: 12px; border-radius: 12px; font-family: monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🛡️ מחולל שמירות — אופליין</h1>
+  <p class="subtitle">בנו לוח שמירות חכם ללא חיבור לרשת. נשמר במכשיר עד 5 רשימות.</p>
+
+  <nav class="tabs" aria-label="שלבים" id="tabs">
+    <button class="tab active" data-tab="posts">1. עמדות</button>
+    <button class="tab" data-tab="personnel">2. משתתפים</button>
+    <button class="tab" data-tab="config">3. הגדרות</button>
+    <button class="tab" data-tab="preview">4. תצוגה</button>
+    <button class="tab" data-tab="export">5. ייצוא</button>
+    <button class="tab" data-tab="saved">📂 שמורים</button>
+  </nav>
+
+  <section id="tab-posts" class="tab-panel">
+    <div class="card">
+      <div class="row" style="justify-content: space-between; align-items: center;">
+        <h2 style="margin:0;">עמדות שמירה</h2>
+        <button class="primary" id="add-post">הוסף עמדה</button>
+      </div>
+      <div id="posts-list"></div>
+    </div>
+  </section>
+
+  <section id="tab-personnel" class="tab-panel" hidden>
+    <div class="card">
+      <h2>משתתפים</h2>
+      <p class="subtitle">שם בכל שורה. כפילויות יוסרו אוטומטית.</p>
+      <textarea id="personnel-text" placeholder="שם בכל שורה"></textarea>
+      <p id="personnel-count" class="subtitle"></p>
+    </div>
+  </section>
+
+  <section id="tab-config" class="tab-panel" hidden>
+    <div class="card">
+      <h2>הגדרות הלוח</h2>
+      <div class="row">
+        <label>התחלה
+          <input type="datetime-local" id="cfg-start" />
+        </label>
+        <label>סיום
+          <input type="datetime-local" id="cfg-end" />
+        </label>
+        <label>משך משמרת (שעות)
+          <select id="cfg-duration">
+            <option>0.5</option><option>1</option><option>1.5</option>
+            <option selected>2</option><option>3</option><option>4</option>
+            <option>6</option><option>8</option><option>12</option>
+          </select>
+        </label>
+        <label>גרעין (אופציונלי)
+          <input type="text" id="cfg-seed" placeholder="קבוע לחזרה" />
+        </label>
+      </div>
+      <h3>אלגוריתם</h3>
+      <label><input type="radio" name="algo" value="random_fair" checked /> אקראי הוגן (מומלץ)</label><br/>
+      <label><input type="radio" name="algo" value="round_robin" /> סבב רגיל</label><br/>
+      <label><input type="radio" name="algo" value="constraint_aware" /> מתחשב באילוצים</label>
+      <div class="row" style="margin-top: 12px;">
+        <button class="primary" id="generate-btn">ייצור לוח</button>
+        <span id="generate-error" class="err"></span>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-preview" class="tab-panel" hidden>
+    <div class="card">
+      <h2>תצוגת הלוח</h2>
+      <div id="preview-meta" class="subtitle"></div>
+      <ul id="preview-warnings"></ul>
+      <div id="preview-table"></div>
+      <div class="row" style="margin-top: 12px;">
+        <button id="regen-fresh">ייצור מחדש מאפס</button>
+        <button id="regen-keep">ייצור מחדש (שמור נעולים)</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-export" class="tab-panel" hidden>
+    <div class="card">
+      <h2>ייצוא ושמירה</h2>
+      <label>כותרת הלוח
+        <input type="text" id="export-title" placeholder="שמירות שבוע 18" />
+      </label>
+      <div class="row" style="margin-top: 12px;">
+        <button id="copy-text">העתק טקסט</button>
+        <button id="download-text">הורד טקסט</button>
+        <button id="download-csv">הורד CSV</button>
+        <button class="primary" id="save-local">שמור במכשיר</button>
+      </div>
+      <p id="export-feedback" class="ok"></p>
+      <h3 style="margin-top:16px;">תצוגה מקדימה</h3>
+      <pre class="pre" id="export-preview"></pre>
+    </div>
+  </section>
+
+  <section id="tab-saved" class="tab-panel" hidden>
+    <div class="card">
+      <h2>רשימות שמורות במכשיר (עד 5)</h2>
+      <div id="saved-list"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+'use strict';
+
+// ---- Algorithm (parity port of src/lib/guardSchedule/algorithm.ts) ---------
+// @begin-algorithm
+function parseLocal(s) {
+  const [d, t] = s.split('T');
+  const [y, mo, da] = d.split('-').map(Number);
+  const [h, mi] = t.split(':').map(Number);
+  return new Date(y, mo - 1, da, h, mi).getTime();
+}
+function formatLocal(ms) {
+  const d = new Date(ms);
+  const pad = (n) => n.toString().padStart(2, '0');
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+function hashSeed(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function mulberry32(seed) {
+  let t = seed >>> 0;
+  return function () {
+    t = (t + 0x6d2b79f5) >>> 0;
+    let r = Math.imul(t ^ (t >>> 15), t | 1);
+    r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function fisherYates(arr, rng) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function hourMatchesWindow(hour, w) {
+  if (w.startHour === w.endHour) return false;
+  if (w.startHour < w.endHour) return hour >= w.startHour && hour < w.endHour;
+  return hour >= w.startHour || hour < w.endHour;
+}
+function shiftHourSet(startMs, endMs) {
+  const set = new Set();
+  let cursor = startMs;
+  while (cursor < endMs) {
+    set.add(new Date(cursor).getHours());
+    cursor += 30 * 60 * 1000;
+  }
+  return Array.from(set);
+}
+function headcountForShift(post, startMs, endMs) {
+  if (!post.headcountWindows || post.headcountWindows.length === 0) return post.defaultHeadcount;
+  const hours = shiftHourSet(startMs, endMs);
+  let max = -1, matched = false;
+  for (const h of hours) {
+    let bestForHour = -1;
+    for (const w of post.headcountWindows) {
+      if (hourMatchesWindow(h, w) && w.headcount > bestForHour) bestForHour = w.headcount;
+    }
+    if (bestForHour < 0) {
+      if (post.defaultHeadcount > max) max = post.defaultHeadcount;
+      matched = true;
+    } else {
+      if (bestForHour > max) max = bestForHour;
+      matched = true;
+    }
+  }
+  return matched ? Math.max(0, max) : post.defaultHeadcount;
+}
+function expandShifts(posts, config) {
+  const startMs = parseLocal(config.startAt);
+  const endMs = parseLocal(config.endAt);
+  if (!(endMs > startMs)) return [];
+  const stepMs = config.shiftDurationHours * 3600 * 1000;
+  if (stepMs <= 0) return [];
+  const shifts = [];
+  for (const post of posts) {
+    let cursor = startMs, idx = 0;
+    while (cursor < endMs) {
+      const shiftEnd = Math.min(cursor + stepMs, endMs);
+      shifts.push({
+        id: post.id+'_'+idx, postId: post.id, postName: post.name,
+        start: formatLocal(cursor), end: formatLocal(shiftEnd),
+        requiredHeadcount: headcountForShift(post, cursor, shiftEnd),
+      });
+      cursor = shiftEnd; idx++;
+    }
+  }
+  return shifts;
+}
+function isoOverlap(aS, aE, bS, bE) { return aS < bE && bS < aE; }
+function violatesBlackout(person, shift) {
+  if (!person.blackoutHours || !person.blackoutHours.length) return false;
+  for (const b of person.blackoutHours) if (isoOverlap(b.start, b.end, shift.start, shift.end)) return true;
+  return false;
+}
+function generateSchedule(input) {
+  const shifts = expandShifts(input.posts, input.config);
+  const seedSource = input.config.seed != null && input.config.seed !== ''
+    ? input.config.seed
+    : (Date.now().toString(36) + '-' + Math.floor(Math.random()*1e9).toString(36));
+  const rng = mulberry32(hashSeed(seedSource));
+  const shuffled = fisherYates(input.roster, rng);
+  const orderIndex = new Map(shuffled.map((p,i) => [p.id, i]));
+
+  const counts = new Map(), lastEnd = new Map();
+  for (const p of input.roster) { counts.set(p.id, 0); lastEnd.set(p.id, ''); }
+  const existing = new Map();
+  for (const a of (input.existingAssignments || [])) existing.set(a.shiftId, a);
+  const sortedShifts = shifts.slice().sort((a,b) =>
+    a.start === b.start ? a.id.localeCompare(b.id) : a.start.localeCompare(b.start));
+
+  const assignments = [], warnings = [];
+  let rrPointer = 0;
+
+  for (const shift of sortedShifts) {
+    const ex = existing.get(shift.id);
+    if (ex && ex.locked) {
+      assignments.push(ex);
+      for (const pid of ex.personIds) {
+        counts.set(pid, (counts.get(pid)||0)+1);
+        const prev = lastEnd.get(pid)||'';
+        if (shift.end > prev) lastEnd.set(pid, shift.end);
+      }
+      continue;
+    }
+    const need = shift.requiredHeadcount;
+    if (need <= 0 || input.roster.length === 0) {
+      assignments.push({ shiftId: shift.id, personIds: [], locked: false });
+      continue;
+    }
+    let candidates = input.roster.slice();
+    if (input.config.algorithm === 'constraint_aware') {
+      const filtered = candidates.filter(p => !violatesBlackout(p, shift));
+      if (filtered.length < need) {
+        warnings.push({ code:'blackout_overrun', message:'shift '+shift.id+': insufficient', shiftId: shift.id });
+      } else {
+        candidates = filtered;
+      }
+    }
+    if (candidates.length < need) {
+      warnings.push({ code:'cannot_meet_headcount', message:'shift '+shift.id+': only '+candidates.length+' of '+need, shiftId: shift.id });
+    }
+    let picked = [];
+    if (input.config.algorithm === 'round_robin') {
+      const take = Math.min(need, candidates.length);
+      const start = candidates.length === 0 ? 0 : rrPointer % candidates.length;
+      for (let i = 0; i < take; i++) picked.push(candidates[(start+i) % candidates.length]);
+      rrPointer += take;
+    } else {
+      const ranked = candidates.slice().sort((a,b) => {
+        const ac = counts.get(a.id)||0, bc = counts.get(b.id)||0;
+        if (ac !== bc) return ac - bc;
+        const al = lastEnd.get(a.id)||'', bl = lastEnd.get(b.id)||'';
+        if (al !== bl) return al.localeCompare(bl);
+        return (orderIndex.get(a.id)||0) - (orderIndex.get(b.id)||0);
+      });
+      picked = ranked.slice(0, Math.min(need, ranked.length));
+    }
+    const personIds = picked.map(p => p.id);
+    assignments.push({ shiftId: shift.id, personIds, locked: false });
+    for (const pid of personIds) {
+      counts.set(pid, (counts.get(pid)||0)+1);
+      const prev = lastEnd.get(pid)||'';
+      if (shift.end > prev) lastEnd.set(pid, shift.end);
+    }
+  }
+  const stats = input.roster.map(p => ({
+    personId: p.id,
+    shiftsAssigned: counts.get(p.id) || 0,
+    totalHours: (counts.get(p.id)||0) * input.config.shiftDurationHours,
+  }));
+  const c = stats.map(s => s.shiftsAssigned);
+  const fairnessScore = c.length === 0 ? 0 : Math.max.apply(null,c) - Math.min.apply(null,c);
+  const maxRequired = shifts.reduce((m,s) => Math.max(m, s.requiredHeadcount), 0);
+  if (input.roster.length > 0 && input.roster.length < maxRequired) {
+    warnings.push({ code:'roster_too_small', message:'roster '+input.roster.length+' < required '+maxRequired });
+  }
+  return { shifts, assignments, stats, fairnessScore, warnings };
+}
+
+// Expose for parity testing.
+window.__guardSchedule = { expandShifts, generateSchedule, mulberry32, hashSeed, parseLocal, formatLocal };
+// @end-algorithm
+
+// ---- App state -------------------------------------------------------------
+
+const state = {
+  posts: [],
+  rosterText: '',
+  config: {
+    startAt: defaultStart(),
+    endAt: defaultEnd(),
+    shiftDurationHours: 2,
+    algorithm: 'random_fair',
+    seed: '',
+  },
+  result: null,
+  title: '',
+};
+
+function defaultStart() {
+  const d = new Date(); d.setHours(18,0,0,0);
+  return formatLocal(d.getTime());
+}
+function defaultEnd() {
+  const d = new Date(); d.setHours(18,0,0,0);
+  d.setHours(d.getHours()+12);
+  return formatLocal(d.getTime());
+}
+
+function rosterFromText(text) {
+  const seen = new Set(), out = [];
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    out.push({ id: 'free-'+trimmed.replace(/\s+/g,'-'), source:'free_text', displayName: trimmed });
+  }
+  return out;
+}
+
+// ---- localStorage saved lists ----------------------------------------------
+
+const SAVED_KEY = 'guard_scheduler_saved_v1';
+const MAX_SAVED = 5;
+
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(SAVED_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.items)) return [];
+    return parsed.items;
+  } catch { return []; }
+}
+function persistSaved(items) {
+  try { localStorage.setItem(SAVED_KEY, JSON.stringify({ version: 1, items })); } catch {}
+}
+function saveCurrent(title) {
+  const items = loadSaved();
+  const entry = {
+    id: 'sav-'+Date.now().toString(36),
+    savedAt: Date.now(),
+    title,
+    posts: state.posts,
+    rosterText: state.rosterText,
+    config: state.config,
+    result: state.result,
+  };
+  const next = [entry, ...items].slice(0, MAX_SAVED);
+  persistSaved(next);
+}
+function deleteSaved(id) {
+  const items = loadSaved().filter(s => s.id !== id);
+  persistSaved(items);
+}
+function loadEntry(id) {
+  const item = loadSaved().find(s => s.id === id);
+  if (!item) return;
+  state.posts = item.posts || [];
+  state.rosterText = item.rosterText || '';
+  state.config = item.config || state.config;
+  state.result = item.result || null;
+  state.title = item.title || '';
+  renderAll();
+  switchTab('preview');
+}
+
+// ---- Rendering -------------------------------------------------------------
+
+function $(id) { return document.getElementById(id); }
+
+function renderPosts() {
+  const root = $('posts-list');
+  root.innerHTML = '';
+  state.posts.forEach((p, idx) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const head = document.createElement('div');
+    head.className = 'row';
+    head.innerHTML = `
+      <label style="flex:1; min-width:200px;">שם העמדה
+        <input type="text" data-field="name" value="${escapeAttr(p.name)}" placeholder="שער ראשי" />
+      </label>
+      <label>שומרים בברירת מחדל
+        <input type="number" min="0" data-field="defaultHeadcount" value="${p.defaultHeadcount}" />
+      </label>
+      <button data-action="remove">הסר</button>
+    `;
+    card.appendChild(head);
+    head.querySelectorAll('input').forEach((el) => {
+      el.addEventListener('input', (e) => {
+        const field = e.target.getAttribute('data-field');
+        if (field === 'defaultHeadcount') p.defaultHeadcount = Math.max(0, Number(e.target.value));
+        else p.name = e.target.value;
+      });
+    });
+    head.querySelector('[data-action=remove]').addEventListener('click', () => {
+      state.posts.splice(idx, 1); renderPosts();
+    });
+
+    const wins = document.createElement('div');
+    wins.style.marginTop = '8px';
+    wins.innerHTML = `<h3>משבצות שעות (אופציונלי)</h3>`;
+    p.headcountWindows.forEach((w, wi) => {
+      const r = document.createElement('div');
+      r.className = 'row';
+      r.innerHTML = `
+        <label>משעה <input type="number" min="0" max="23" value="${w.startHour}" data-w="start"/></label>
+        <label>עד שעה <input type="number" min="1" max="24" value="${w.endHour}" data-w="end"/></label>
+        <label>שומרים <input type="number" min="0" value="${w.headcount}" data-w="count"/></label>
+        <button data-w="del">הסר</button>
+      `;
+      r.querySelectorAll('input').forEach((el) => {
+        el.addEventListener('input', (e) => {
+          const k = e.target.getAttribute('data-w');
+          const v = Number(e.target.value);
+          if (k === 'start') w.startHour = v;
+          if (k === 'end') w.endHour = v;
+          if (k === 'count') w.headcount = Math.max(0, v);
+        });
+      });
+      r.querySelector('[data-w=del]').addEventListener('click', () => {
+        p.headcountWindows.splice(wi, 1); renderPosts();
+      });
+      wins.appendChild(r);
+    });
+    const addWin = document.createElement('button');
+    addWin.textContent = 'הוסף משבצת';
+    addWin.addEventListener('click', () => {
+      p.headcountWindows.push({ startHour: 0, endHour: 6, headcount: 1 });
+      renderPosts();
+    });
+    wins.appendChild(addWin);
+    card.appendChild(wins);
+    root.appendChild(card);
+  });
+}
+
+function renderPersonnel() {
+  $('personnel-text').value = state.rosterText;
+  const roster = rosterFromText(state.rosterText);
+  $('personnel-count').textContent = roster.length === 0 ? 'הוסיפו לפחות שם אחד' : 'נבחרו '+roster.length+' משתתפים';
+}
+
+function renderConfig() {
+  $('cfg-start').value = state.config.startAt;
+  $('cfg-end').value = state.config.endAt;
+  $('cfg-duration').value = String(state.config.shiftDurationHours);
+  $('cfg-seed').value = state.config.seed || '';
+  document.querySelectorAll('input[name=algo]').forEach(r => { r.checked = r.value === state.config.algorithm; });
+}
+
+const HEBREW_DAY = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+function fmtDay(s) { const d = new Date(parseLocal(s)); return HEBREW_DAY[d.getDay()]+' '+pad2(d.getDate())+'/'+pad2(d.getMonth()+1); }
+function fmtTime(s) { const d = new Date(parseLocal(s)); return pad2(d.getHours())+':'+pad2(d.getMinutes()); }
+function pad2(n) { return n.toString().padStart(2,'0'); }
+
+function renderPreview() {
+  const meta = $('preview-meta');
+  const wlist = $('preview-warnings');
+  const tbl = $('preview-table');
+  if (!state.result) {
+    meta.textContent = 'הריצו את היוצר כדי לראות את הלוח';
+    wlist.innerHTML = ''; tbl.innerHTML = '';
+    return;
+  }
+  meta.textContent = 'הוגנות (פער משמרות): '+state.result.fairnessScore;
+  wlist.innerHTML = '';
+  state.result.warnings.forEach(w => {
+    const li = document.createElement('li');
+    li.className = 'warn';
+    li.textContent = '• '+w.message;
+    wlist.appendChild(li);
+  });
+
+  const roster = rosterFromText(state.rosterText);
+  const personById = new Map(roster.map(p => [p.id, p.displayName]));
+  const shiftById = new Map(state.result.shifts.map(s => [s.id, s]));
+  const rows = state.result.assignments
+    .map(a => ({ a, shift: shiftById.get(a.shiftId) }))
+    .filter(r => r.shift)
+    .sort((x,y) => x.shift.start === y.shift.start
+      ? x.shift.postName.localeCompare(y.shift.postName, 'he')
+      : x.shift.start.localeCompare(y.shift.start));
+
+  const t = document.createElement('table');
+  t.innerHTML = '<thead><tr><th>יום</th><th>שעות</th><th>עמדה</th><th>משתתפים</th><th>נעול</th></tr></thead>';
+  const tb = document.createElement('tbody');
+  rows.forEach(({ a, shift }) => {
+    const tr = document.createElement('tr');
+    const names = a.personIds.map(pid => '<span class="pill">'+escapeHtml(personById.get(pid) || pid)+'</span>').join(' ');
+    tr.innerHTML = '<td>'+fmtDay(shift.start)+'</td>'+
+      '<td>'+fmtTime(shift.start)+'–'+fmtTime(shift.end)+'</td>'+
+      '<td>'+escapeHtml(shift.postName)+'</td>'+
+      '<td>'+(names || '—')+'</td>'+
+      '<td><button data-lock="'+a.shiftId+'">'+(a.locked ? 'בטל נעילה' : 'נעל')+'</button></td>';
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+  tbl.innerHTML = '';
+  tbl.appendChild(t);
+  tbl.querySelectorAll('button[data-lock]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sid = btn.getAttribute('data-lock');
+      const a = state.result.assignments.find(x => x.shiftId === sid);
+      if (a) { a.locked = !a.locked; renderPreview(); }
+    });
+  });
+}
+
+function renderExport() {
+  $('export-title').value = state.title || '';
+  if (state.result) {
+    $('export-preview').textContent = buildText(state.title || 'לוח שמירות');
+  } else {
+    $('export-preview').textContent = '—';
+  }
+}
+
+function renderSaved() {
+  const root = $('saved-list');
+  const items = loadSaved();
+  root.innerHTML = '';
+  if (items.length === 0) { root.innerHTML = '<p class="subtitle">אין רשימות שמורות</p>'; return; }
+  items.forEach(it => {
+    const div = document.createElement('div');
+    div.className = 'saved-item';
+    div.innerHTML = '<strong style="flex:1;">'+escapeHtml(it.title || '(ללא כותרת)')+'</strong>'+
+      '<span class="subtitle">'+new Date(it.savedAt).toLocaleString('he')+'</span>'+
+      '<button data-load>טען</button>'+
+      '<button data-del class="danger">מחק</button>';
+    div.querySelector('[data-load]').addEventListener('click', () => loadEntry(it.id));
+    div.querySelector('[data-del]').addEventListener('click', () => { deleteSaved(it.id); renderSaved(); });
+    root.appendChild(div);
+  });
+}
+
+function renderAll() {
+  renderPosts(); renderPersonnel(); renderConfig(); renderPreview(); renderExport(); renderSaved();
+}
+
+// ---- Export builders -------------------------------------------------------
+
+function buildText(title) {
+  const result = state.result; if (!result) return '';
+  const roster = rosterFromText(state.rosterText);
+  const personById = new Map(roster.map(p => [p.id, p.displayName]));
+  const shiftById = new Map(result.shifts.map(s => [s.id, s]));
+  const rows = result.assignments
+    .map(a => ({ a, shift: shiftById.get(a.shiftId) }))
+    .filter(r => r.shift)
+    .sort((x,y) => x.shift.start === y.shift.start
+      ? x.shift.postName.localeCompare(y.shift.postName,'he')
+      : x.shift.start.localeCompare(y.shift.start));
+  const lines = ['🛡️ '+title, ''];
+  let lastDay = '';
+  for (const { a, shift } of rows) {
+    const day = shift.start.slice(0,10);
+    if (day !== lastDay) {
+      if (lastDay) lines.push('');
+      lines.push('📅 יום '+fmtDay(shift.start));
+      lastDay = day;
+    }
+    const names = a.personIds.map(pid => personById.get(pid) || pid).join(' + ');
+    const lock = a.locked ? ' 🔒' : '';
+    lines.push('🕐 '+fmtTime(shift.start)+'–'+fmtTime(shift.end)+' · '+shift.postName+' — '+(names || '—')+lock);
+  }
+  return lines.join('\n');
+}
+function buildCsv(title) {
+  const result = state.result; if (!result) return '';
+  const roster = rosterFromText(state.rosterText);
+  const personById = new Map(roster.map(p => [p.id, p.displayName]));
+  const shiftById = new Map(result.shifts.map(s => [s.id, s]));
+  const rows = result.assignments
+    .map(a => ({ a, shift: shiftById.get(a.shiftId) }))
+    .filter(r => r.shift)
+    .sort((x,y) => x.shift.start === y.shift.start
+      ? x.shift.postName.localeCompare(y.shift.postName,'he')
+      : x.shift.start.localeCompare(y.shift.start));
+  const escape = (v) => /[",\r\n]/.test(String(v)) ? '"'+String(v).replace(/"/g,'""')+'"' : String(v);
+  const headers = ['יום','התחלה','סיום','עמדה','משתתפים','נעול'];
+  const out = ['﻿'+headers.join(',')];
+  rows.forEach(({a,shift}) => {
+    const names = a.personIds.map(pid => personById.get(pid)||pid).join(' + ');
+    out.push([fmtDay(shift.start), fmtTime(shift.start), fmtTime(shift.end), shift.postName, names, a.locked?'כן':'לא'].map(escape).join(','));
+  });
+  return out.join('\r\n')+'\r\n';
+}
+
+// ---- Helpers ---------------------------------------------------------------
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+}
+function escapeAttr(s) { return escapeHtml(s); }
+function downloadFile(content, name, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ---- Wire-up ---------------------------------------------------------------
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.hidden = p.id !== 'tab-'+name);
+  if (name === 'preview') renderPreview();
+  if (name === 'export') renderExport();
+  if (name === 'saved') renderSaved();
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+$('add-post').addEventListener('click', () => {
+  state.posts.push({ id: 'post-'+Math.random().toString(36).slice(2,9), name: '', defaultHeadcount: 1, headcountWindows: [] });
+  renderPosts();
+});
+$('personnel-text').addEventListener('input', (e) => { state.rosterText = e.target.value; renderPersonnel(); });
+['cfg-start','cfg-end','cfg-duration','cfg-seed'].forEach(id => {
+  $(id).addEventListener('input', (e) => {
+    if (id === 'cfg-start') state.config.startAt = e.target.value;
+    if (id === 'cfg-end') state.config.endAt = e.target.value;
+    if (id === 'cfg-duration') state.config.shiftDurationHours = Number(e.target.value);
+    if (id === 'cfg-seed') state.config.seed = e.target.value;
+  });
+});
+document.querySelectorAll('input[name=algo]').forEach(r => r.addEventListener('change', () => {
+  state.config.algorithm = document.querySelector('input[name=algo]:checked').value;
+}));
+$('generate-btn').addEventListener('click', () => {
+  $('generate-error').textContent = '';
+  const roster = rosterFromText(state.rosterText);
+  if (state.posts.length === 0) { $('generate-error').textContent = 'יש להגדיר עמדה אחת לפחות'; return; }
+  if (roster.length === 0) { $('generate-error').textContent = 'יש להוסיף משתתף אחד לפחות'; return; }
+  if (state.config.startAt >= state.config.endAt) { $('generate-error').textContent = 'תאריכי התחלה וסיום לא תקינים'; return; }
+  state.result = generateSchedule({ posts: state.posts, roster, config: state.config });
+  switchTab('preview');
+});
+$('regen-fresh').addEventListener('click', () => {
+  state.result = generateSchedule({ posts: state.posts, roster: rosterFromText(state.rosterText), config: state.config });
+  renderPreview();
+});
+$('regen-keep').addEventListener('click', () => {
+  if (!state.result) return;
+  state.result = generateSchedule({
+    posts: state.posts, roster: rosterFromText(state.rosterText), config: state.config,
+    existingAssignments: state.result.assignments,
+  });
+  renderPreview();
+});
+$('export-title').addEventListener('input', (e) => { state.title = e.target.value; renderExport(); });
+$('copy-text').addEventListener('click', () => {
+  navigator.clipboard.writeText(buildText(state.title || 'לוח שמירות'))
+    .then(() => { $('export-feedback').textContent = 'הועתק'; setTimeout(() => $('export-feedback').textContent = '', 2000); })
+    .catch(() => {});
+});
+$('download-text').addEventListener('click', () => {
+  downloadFile(buildText(state.title || 'guard'), (state.title||'guard')+'.txt', 'text/plain;charset=utf-8');
+});
+$('download-csv').addEventListener('click', () => {
+  downloadFile(buildCsv(state.title || 'guard'), (state.title||'guard')+'.csv', 'text/csv;charset=utf-8');
+});
+$('save-local').addEventListener('click', () => {
+  if (!state.title.trim()) { $('export-feedback').textContent = 'יש להזין כותרת'; return; }
+  saveCurrent(state.title.trim());
+  $('export-feedback').textContent = 'נשמר במכשיר';
+  setTimeout(() => $('export-feedback').textContent = '', 2000);
+  renderSaved();
+});
+
+renderAll();
+</script>
+</body>
+</html>
