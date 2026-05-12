@@ -185,47 +185,47 @@ export default function ProfilePage() {
             </div>
 
             {/* Military Information */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-neutral-900 mb-6 flex items-center gap-2">
-                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 {TEXT_CONSTANTS.PROFILE.MILITARY_INFO}
               </h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.RANK}</label>
-                  <div className="text-neutral-900">{getDisplayValue(enhancedUser?.rank)}</div>
+
+              <dl className="divide-y divide-neutral-100 -my-2">
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.RANK}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">{getDisplayValue(enhancedUser?.rank)}</dd>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.ROLE}</label>
-                  <div className="text-neutral-900">
-                    {enhancedUser?.role === UserRole.SOLDIER ? TEXT_CONSTANTS.PROFILE.SOLDIER : 
-                     enhancedUser?.role === UserRole.COMMANDER ? TEXT_CONSTANTS.PROFILE.COMMANDER : 
+
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.ROLE}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">
+                    {enhancedUser?.role === UserRole.SOLDIER ? TEXT_CONSTANTS.PROFILE.SOLDIER :
+                     enhancedUser?.role === UserRole.COMMANDER ? TEXT_CONSTANTS.PROFILE.COMMANDER :
                      enhancedUser?.role === UserRole.OFFICER ? TEXT_CONSTANTS.PROFILE.OFFICER :
                      enhancedUser?.role === UserRole.EQUIPMENT_MANAGER ? TEXT_CONSTANTS.PROFILE.EQUIPMENT_MANAGER :
                      getDisplayValue(enhancedUser?.role ? String(enhancedUser.role) : undefined)}
-                  </div>
+                  </dd>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.JOIN_DATE}</label>
-                  <div className="text-neutral-900">{formatDate(enhancedUser?.joinDate)}</div>
+
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.JOIN_DATE}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">{formatDate(enhancedUser?.joinDate)}</dd>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.STATUS}</label>
-                  <div className="text-neutral-900">
-                    {enhancedUser?.status === 'active' ? TEXT_CONSTANTS.PROFILE.ACTIVE : 
-                     enhancedUser?.status === 'inactive' ? TEXT_CONSTANTS.PROFILE.INACTIVE : 
-                     enhancedUser?.status === 'transferred' ? TEXT_CONSTANTS.PROFILE.TRANSFERRED : 
-                     enhancedUser?.status === 'discharged' ? TEXT_CONSTANTS.PROFILE.DISCHARGED : 
+
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.STATUS}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">
+                    {enhancedUser?.status === 'active' ? TEXT_CONSTANTS.PROFILE.ACTIVE :
+                     enhancedUser?.status === 'inactive' ? TEXT_CONSTANTS.PROFILE.INACTIVE :
+                     enhancedUser?.status === 'transferred' ? TEXT_CONSTANTS.PROFILE.TRANSFERRED :
+                     enhancedUser?.status === 'discharged' ? TEXT_CONSTANTS.PROFILE.DISCHARGED :
                      getDisplayValue(enhancedUser?.status)}
-                  </div>
+                  </dd>
                 </div>
-              </div>
+              </dl>
             </div>
 
             {/* Team & Unit Assignment */}
