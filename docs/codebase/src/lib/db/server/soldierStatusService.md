@@ -56,9 +56,11 @@ and the deferred-follow-ups section of the migration plan.
 
 `serverListRoster` is intentionally an in-memory three-collection read:
 
-1. Seed rows from `authorized_personnel` (firstName, lastName, default platoon).
-2. Override / add rows from `users`, preferring user-side firstName/lastName/teamId.
+1. Seed rows from `authorized_personnel` (firstName, lastName, default platoon, `isRegistered: false`).
+2. Override / add rows from `users`, preferring user-side firstName/lastName/teamId and flipping `isRegistered: true`.
 3. Apply each soldier's `soldierStatus` overlay — status, customStatus, updatedAt.
+
+The `isRegistered` flag flows out via `RosterEntry → Soldier` and drives the registered/unregistered dot rendered before the soldier name on both desktop and mobile status tables.
 
 Defaults:
 - Missing `teamId` on the user → `'מסייעת'` (matches the legacy sheet default).
@@ -71,4 +73,4 @@ Defaults:
 - Doc-id is hash, not raw personnel number — by design. The raw personnel
   number is never stored in the system after registration, so the migration
   drops the old "include personnel number in report" feature on `/status`.
-- Backfill is run via `scripts/migrate-soldier-status.ts` (CSV → Firestore).
+- Backfill script (`scripts/migrate-soldier-status.ts`) was retired on 2026-05-12 after production data landed. Recover from git history if a re-run is ever needed.

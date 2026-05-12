@@ -8,6 +8,8 @@
 
 Responsive desktop table for the soldier status page. Renders soldiers in a `<table>` with columns for selection checkbox, ID, name, rank, platoon, status (editable via `StatusToggle`), and an actions menu. Supports multi-select, inline status editing, and per-row actions (edit, delete).
 
+A 2px registration dot renders before the name: `bg-success-500` when `soldier.isRegistered`, `bg-neutral-300` otherwise. Tooltip text from `TEXT_CONSTANTS.STATUS_PAGE.REGISTERED_TOOLTIP` / `UNREGISTERED_TOOLTIP`.
+
 ## Props
 
 | Prop | Type | Required | Description |

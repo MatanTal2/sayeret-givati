@@ -1159,11 +1159,13 @@ export const TEXT_CONSTANTS = {
     UPDATE_FIELD_RANK: 'דרגה',
     UPDATE_FIELD_PHONE: 'מספר טלפון',
     UPDATE_FIELD_USER_TYPE: 'סוג משתמש',
+    UPDATE_FIELD_ROLE: 'תפקיד צבאי',
     UPDATE_FIELD_STATUS: 'סטטוס שירות',
     STATUS_ACTIVE: 'פעיל',
     STATUS_INACTIVE: 'לא פעיל',
     STATUS_TRANSFERRED: 'הועבר',
-    STATUS_DISCHARGED: 'שוחרר'
+    STATUS_DISCHARGED: 'שוחרר',
+    ROLE_DEFAULT_LABEL: 'ברירת מחדל לכלל השורות'
   },
 
   // Error Messages
@@ -1519,6 +1521,10 @@ export const TEXT_CONSTANTS = {
     UPDATE_DATA_BUTTON: (count: number) => count > 0 ? `עדכן נתונים (${count})` : 'עדכן נתונים',
     NO_CHANGES_TOOLTIP: 'אין שינויים לעדכון',
     UPDATE_CHANGES_TOOLTIP: (count: number) => `עדכן ${count} שינויים`,
+
+    // Registration indicator (dot next to soldier name)
+    REGISTERED_TOOLTIP: 'משתמש רשום',
+    UNREGISTERED_TOOLTIP: 'טרם נרשם למערכת',
   },
 
   // Test Dashboard

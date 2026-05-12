@@ -1,5 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 import { UserType } from './user';
+import { UserRole } from './equipment';
 
 // Admin authentication types
 export interface AdminSession {
@@ -39,6 +40,7 @@ export interface AuthorizedPersonnelData {
   rank: string;
   phoneNumber: string;
   userType?: UserType;
+  approvedRole?: UserRole; // Military role; defaults to UserRole.SOLDIER when omitted
   // No email - this is for pre-authorization only
 }
 
@@ -52,7 +54,7 @@ export interface AuthorizedPersonnel {
   userType?: UserType; // User type for system access level
   email?: string; // Personal email for registration (added during user registration, not pre-auth)
   requestedRole?: string; // Role user requested during registration
-  approvedRole: string; // Role approved by admin (defaults to 'soldier')
+  approvedRole: UserRole; // Role approved by admin (defaults to UserRole.SOLDIER)
   roleStatus: 'pending' | 'approved' | 'rejected'; // Role approval status
   status: 'active' | 'inactive' | 'transferred' | 'discharged'; // Default: 'active'
   registered: boolean; // Whether user has completed registration (false by default, true after email/password signup)

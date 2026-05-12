@@ -4,7 +4,10 @@ import { useState, useRef } from 'react';
 import { AdminFirestoreService } from '@/lib/adminUtils';
 import { AuthorizedPersonnelData } from '@/types/admin';
 import { UserType } from '@/types/user';
+import { UserRole } from '@/types/equipment';
+import { USER_ROLE_OPTIONS, USER_ROLE_VALUES, USER_ROLE_LABELS } from '@/constants/admin';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import { Select } from '@/components/ui';
 
 interface CsvUploadResult {
   success: number;
@@ -18,12 +21,13 @@ export default function BulkUpload() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [csvPreview, setCsvPreview] = useState<AuthorizedPersonnelData[] | null>(null);
   const [processingProgress, setProcessingProgress] = useState<string>('');
+  const [defaultRole, setDefaultRole] = useState<UserRole>(UserRole.SOLDIER);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const csvTemplate = `militaryPersonalNumber,firstName,lastName,rank,phoneNumber,userType
-1234567,"מתן","טל","רס״ל","0501234567","user"
-2345678,"אברהם","כהן","סמל","0527654321","team_leader"
-3456789,"דוד","לוי","רב״ט","0546789012","manager"`;
+  const csvTemplate = `militaryPersonalNumber,firstName,lastName,rank,phoneNumber,userType,approvedRole
+1234567,"מתן","טל","רס״ל","0501234567","user","soldier"
+2345678,"אברהם","כהן","סמל","0527654321","team_leader","team_leader"
+3456789,"דוד","לוי","רב״ט","0546789012","manager","sergeant"`;
 
   const downloadTemplate = () => {
     const blob = new Blob([csvTemplate], { type: 'text/csv;charset=utf-8;' });
@@ -51,10 +55,12 @@ export default function BulkUpload() {
           }
 
           const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-          const expectedHeaders = ['militaryPersonalNumber', 'firstName', 'lastName', 'rank', 'phoneNumber', 'userType'];
-          
-          // Validate headers
-          const missingHeaders = expectedHeaders.filter(h => !headers.includes(h));
+          const requiredHeaders = ['militaryPersonalNumber', 'firstName', 'lastName', 'rank', 'phoneNumber', 'userType'];
+          const optionalHeaders = ['approvedRole'];
+          const knownHeaders = [...requiredHeaders, ...optionalHeaders];
+
+          // Validate required headers
+          const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
           if (missingHeaders.length > 0) {
             reject(new Error(`Missing required headers: ${missingHeaders.join(', ')}`));
             return;
@@ -76,11 +82,12 @@ export default function BulkUpload() {
               lastName: '',
               rank: '',
               phoneNumber: '',
-              userType: UserType.USER // Default value
+              userType: UserType.USER,
+              approvedRole: defaultRole,
             };
 
             headers.forEach((header, index) => {
-              if (expectedHeaders.includes(header)) {
+              if (knownHeaders.includes(header)) {
                 switch (header) {
                   case 'militaryPersonalNumber':
                     person.militaryPersonalNumber = values[index];
@@ -100,6 +107,13 @@ export default function BulkUpload() {
                   case 'userType':
                     person.userType = (values[index] as UserType) || UserType.USER;
                     break;
+                  case 'approvedRole': {
+                    const raw = values[index]?.trim();
+                    person.approvedRole = raw && USER_ROLE_VALUES.includes(raw as UserRole)
+                      ? (raw as UserRole)
+                      : defaultRole;
+                    break;
+                  }
                 }
               }
             });
@@ -232,10 +246,11 @@ export default function BulkUpload() {
               <div>• <strong>פורמט טלפון</strong>: ישראלי (050xxxxxxx, +972xxxxxxxxx או 5xxxxxxxx)</div>
               <div>• <strong>מספר אישי</strong>: 5–7 ספרות בלבד</div>
               <div>• <strong>סוג משתמש</strong>: user, team_leader, manager, system_manager, admin (ברירת מחדל: &apos;user&apos;)</div>
+              <div>• <strong>תפקיד צבאי</strong>: עמודה אופציונלית <code>approvedRole</code>. ערכים: {USER_ROLE_VALUES.join(', ')}. שורות ריקות יקבלו את ברירת המחדל למטה.</div>
             </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-wrap items-end gap-4">
             <button
               onClick={downloadTemplate}
               className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded-md
@@ -243,6 +258,19 @@ export default function BulkUpload() {
             >
               📥 הורד תבנית CSV
             </button>
+
+            <div className="min-w-[16rem]">
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
+                {TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_ROLE} — {TEXT_CONSTANTS.ADMIN.ROLE_DEFAULT_LABEL}
+              </label>
+              <Select
+                value={defaultRole}
+                onChange={(v) => v && setDefaultRole(v as UserRole)}
+                options={USER_ROLE_OPTIONS}
+                disabled={isProcessing}
+                ariaLabel={TEXT_CONSTANTS.ADMIN.ROLE_DEFAULT_LABEL}
+              />
+            </div>
           </div>
         </div>
 
@@ -312,6 +340,9 @@ export default function BulkUpload() {
                   <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase">
                     {TEXT_CONSTANTS.ADMIN.BULK_TABLE_USER_TYPE}
                   </th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase">
+                    {TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_ROLE}
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-neutral-200">
@@ -332,6 +363,11 @@ export default function BulkUpload() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-100 text-info-800">
                         {person.userType || UserType.USER}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                        {USER_ROLE_LABELS[person.approvedRole ?? defaultRole]}
                       </span>
                     </td>
                   </tr>

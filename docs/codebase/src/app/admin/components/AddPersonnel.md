@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Form for adding a single authorized person to the `authorized_personnel` collection. Fields: military personal number, first name, last name, rank (`RANK_OPTIONS`), user type (`USER_TYPE_OPTIONS`), phone number.
+Form for adding a single authorized person to the `authorized_personnel` collection. Fields: military personal number, first name, last name, rank (`RANK_OPTIONS`), user type (`USER_TYPE_OPTIONS`), phone number, military role (`USER_ROLE_OPTIONS`, defaults to `UserRole.SOLDIER`).
 
 ## Props
 
@@ -48,6 +48,7 @@ Compact two-column grid (`md:grid-cols-2 gap-4`):
 | 1 | מספר אישי (max 7) · מספר טלפון |
 | 2 | שם פרטי · שם משפחה |
 | 3 | דרגה · סוג משתמש |
+| 4 | תפקיד צבאי (full-width) |
 
 All labels Hebrew. RTL-aware spacing only (`ms-`, `me-`, `gap-` — no `ml-`/`mr-`/`space-x-`).
 

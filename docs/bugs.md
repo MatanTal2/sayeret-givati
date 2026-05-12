@@ -39,29 +39,20 @@
    - **OBSOLETE (2026-04-28):** `usePersonnelManagement` no longer calls `fetchPersonnel()` after mutations. It uses `PersonnelCache.appendToCache` / `updateInCache` / `removeFromCache` / `clearCache` to keep the cache in sync without re-fetching, so no cache-info message overwrites the success message. No fix required.
 6. ~~Admin → AddPersonnel form gives no visible success/failure feedback after submit~~
    - **FIXED (2026-04-28):** `AddPersonnel.tsx` now drives a local `submitState` machine (`idle | submitting | success | error`). Submit button transitions through spinner → green check / red X and reverts after 3s. Status block below the button shows "נוסף בהצלחה" with name + military ID on success, or the backend error string under "הוספת כוח אדם נכשלה". Pattern mirrors `ProfileImageUpload`'s auto-dismiss. Hook contract change: `addPersonnel` now returns `PersonnelOperationResult` so consumers can drive their own UX.
-7. `authorized_personnel.approvedRole` is typed as plain `string` and hardcoded to `'soldier'` in three places (`src/lib/adminUtils.ts:334, 358, 590`). It is never selectable in any of the admin forms — AddPersonnel, BulkUpload, and UpdatePersonnel all skip it. The field is meant to be the soldier's military role, the same value that lands in `FirestoreUserProfile.role` after registration.
-   - **Why this matters:** `UserRole` enum already exists in `src/types/equipment.ts:177` (SOLDIER / TEAM_LEADER / SQUAD_LEADER / SERGEANT / OFFICER / COMMANDER / EQUIPMENT_MANAGER). Without admin selection, every pre-authorized soldier ships as a generic SOLDIER even when the unit knows they are a TL or sergeant up front. Equipment policy and report-request scoping both key off the registered user's role downstream — wrong default = wrong permissions on first login.
-   - **Note:** do NOT confuse with `userType` (UserType: admin/system_manager/manager/team_leader/user) — that is the system access level and is already a dropdown in the admin forms. `approvedRole` is the military role and is a separate concept.
-   - **Fix:**
-     - Tighten the type: `approvedRole: UserRole` (not `string`) in `src/types/admin.ts:55` and `src/lib/db/server/authorizedPersonnelService.ts:17`.
-     - Add a role dropdown (Headless UI Listbox per `feedback_ui_libs`) to AddPersonnel single-add form, BulkUpload (per-row column + a "default role for all rows" selector at the top), and UpdatePersonnel.
-     - Default value remains `UserRole.SOLDIER` when admin doesn't pick.
-     - Hebrew labels per `src/constants/text.ts` — add a `USER_ROLE_LABELS` map if one doesn't exist (check `src/constants/admin.ts` first).
-     - CSV bulk upload: accept role in a new optional column; rows missing the value fall back to the default.
+7. ~~`authorized_personnel.approvedRole` is typed as plain `string` and hardcoded to `'soldier'` in three places~~
+   - **FIXED (2026-05-12 on `fix/admin-role-and-status-polish`):** Type tightened to `UserRole` (`src/types/admin.ts`, `src/lib/db/server/authorizedPersonnelService.ts`). New `USER_ROLE_LABELS` + `USER_ROLE_OPTIONS` + `USER_ROLE_VALUES` in `src/constants/admin.ts`. Hebrew label `UPDATE_FIELD_ROLE` in `src/constants/text.ts`.
+     - **AddPersonnel**: `Select` (Headless UI Listbox via shared component) wired to `formData.approvedRole`; defaults to `UserRole.SOLDIER`.
+     - **BulkUpload**: added optional `approvedRole` CSV column + top-level "default role for all rows" `Select`. Rows missing the column (or with an unknown value) fall back to the default. CSV template + instructions updated. Preview table now shows the role column with Hebrew labels via `USER_ROLE_LABELS`.
+     - **UpdatePersonnel**: role `Select` in the edit form + read-only display badge. Search-result rows now also render a role badge. `updateData.approvedRole` flows through `usePersonnelManagement` → `AdminFirestoreService.updateAuthorizedPersonnel` → `serverUpdatePersonnel`; `shouldSync` propagates role changes to the synced `users` doc when the soldier is already registered.
+     - Server-side validation: `AdminFirestoreService.updateAuthorizedPersonnel` rejects values not in `USER_ROLE_VALUES`.
 8. ~~Admin-created templates still show "wait for approval" message~~
    - **FIXED (verified 2026-04-30 on `fix/templates-ui-and-status-cleanup`):** end-to-end logic was already in place; verification confirms all three layers correct:
      - Server: `src/lib/db/server/templateRequestService.ts:49-60` — when `proposerUserType` is `ADMIN` or `SYSTEM_MANAGER`, `isAutoCanonical` is true and the doc is written with `status: CANONICAL`, `isActive: true`, `reviewedByUserId`, `reviewedAt`.
      - Pre-submit banner: `RequestNewTemplateFlow.tsx:98-107` shows `"מילוי הטופס יוצר תבנית חדשה זמינה מיידית."` for admin/system_manager and the request copy otherwise.
      - Success state: `RequestNewTemplateFlow.tsx:77-95` branches on the `submittedStatus` returned by the server and renders `"התבנית נוצרה"` + `"התבנית זמינה לשימוש מיידי..."` for canonical, request copy otherwise.
      - Action log: `templateRequestService.ts:113-117` writes `TEMPLATE_APPROVED` (not `TEMPLATE_PROPOSED`) for the auto-canonical path.
-9. Category & subcategory rendered as raw Firestore doc IDs in templates lists
-   - **Repro:** Management → Equipment Templates tab. Both the proposed-templates rows and the canonical-templates rows show opaque doc IDs in the category and subcategory columns instead of Hebrew names.
-   - **Why this matters:** Unreadable. Admin can't tell what they're looking at without cross-referencing Firestore.
-   - **File paths:**
-     - Render sites: `src/components/management/tabs/TemplatesTab.tsx:205–206` (proposed list) and `:327–332` (canonical list).
-     - Working precedent — already resolves IDs to names: `src/components/management/tabs/TemplateForm.tsx:79–96` uses `CategoriesService.getCategories()`.
-     - Schema confirming the fields are IDs not names: `src/types/equipment.ts:18–19`.
-   - **Suggested fix:** Lift the category lookup the form already does into `TemplatesTab` (or extract a `useCategoryLookup` hook returning `(id) => name`). Render `lookup(t.category) / lookup(t.subcategory)` everywhere, falling back to the raw ID in a warning style if unresolved (helps surface orphan refs).
+9. ~~Category & subcategory rendered as raw Firestore doc IDs in templates lists~~
+   - **FIXED (verified 2026-05-12 on `fix/admin-role-and-status-polish`):** `TemplatesTab.tsx` imports `useCategoryLookup` at `:21` and `renderCategoryCell` (`:272-293`) resolves both `category` and `subcategory` via the lookup hook, with a `text-warning-700` fallback rendering the raw ID + a Hebrew tooltip if the lookup fails (surfacing orphan refs as suggested). Both proposed and canonical sections render through the shared `renderRow` → `renderCategoryCell` path, so they stay consistent.
 10. ~~Manage Templates rows overflow on narrow screens; need collapsed default~~
     - **FIXED (verified 2026-04-30 on `fix/templates-ui-and-status-cleanup`):** the `renderRow` helper in `TemplatesTab.tsx:295-340` already wraps every row in Headless UI `<Disclosure as="li">`:
       - Collapsed header (`DisclosureButton`): chevron + template name only.

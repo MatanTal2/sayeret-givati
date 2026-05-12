@@ -53,7 +53,7 @@ export default function AmmunitionTrainingPage() {
           )}
 
           {canPlan && (
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-start">
               <Button onClick={() => setPlanModalOpen(true)}>
                 <Plus className="w-4 h-4 ms-1" />
                 {TT.PLAN_BUTTON}

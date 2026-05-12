@@ -20,6 +20,7 @@ None.
 | `isProcessing` | `boolean` | Batch write in progress |
 | `csvPreview` | `AuthorizedPersonnelData[] \| null` | Parsed records before submission |
 | `processingProgress` | `string` | Progress message text |
+| `defaultRole` | `UserRole` | Default military role applied to rows missing/with-unknown `approvedRole` (bug #7 fix). Initial: `UserRole.SOLDIER`. |
 | `fileInputRef` | `RefObject<HTMLInputElement>` | Hidden file input ref |
 
 ## Local Types
@@ -35,9 +36,11 @@ None.
 ## CSV Format
 
 ```
-militaryPersonalNumber,firstName,lastName,rank,phoneNumber,userType
-1234567,"מתן","טל","רס״ל","0501234567","user"
+militaryPersonalNumber,firstName,lastName,rank,phoneNumber,userType,approvedRole
+1234567,"מתן","טל","רס״ל","0501234567","user","soldier"
 ```
+
+`approvedRole` is **optional**. Rows that omit the column, leave it blank, or supply an unknown value fall back to the page-level `defaultRole` selector. Valid values are derived from the `UserRole` enum at runtime (`USER_ROLE_VALUES`).
 
 ## Known Issues / TODO
 

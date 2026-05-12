@@ -60,12 +60,11 @@ a 500.
 
 ## Backfill
 
-One-shot Node script `scripts/migrate-soldier-status.ts`:
+The one-shot CSV → Firestore migration script (`scripts/migrate-soldier-status.ts`)
+was removed on 2026-05-12 after production data landed. Per-doc backfill is no
+longer needed: new status writes happen exclusively via the API, and the
+roster join falls back to status `'בית'` for any soldier without a
+`soldierStatus/{hash}` doc.
 
-1. Export the legacy Google Sheet to CSV.
-2. `GOOGLE_APPLICATION_CREDENTIALS=./sa.json ts-node scripts/migrate-soldier-status.ts --project sayeret-givati-1983 --csv ./sheet-export.csv`
-3. Verify a sample of rows in Firebase console before pointing production traffic at `/api/soldier-status`.
-
-The script is idempotent and supports `--dry-run`. It hashes raw personnel
-numbers from column A and writes `soldierStatus/{hash}`. Rows with no
-matching `authorized_personnel` or `users` doc are logged and skipped.
+If the migration ever needs to be re-run from history, recover the script
+from git (`git show <pre-removal-commit>:scripts/migrate-soldier-status.ts`).

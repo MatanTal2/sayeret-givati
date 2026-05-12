@@ -6,6 +6,7 @@ import { ValidationUtils, AdminFirestoreService } from '@/lib/adminUtils';
 import { PersonnelCache } from '@/lib/personnelCache';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { useAuth } from '@/contexts/AuthContext';
+import { UserRole } from '@/types/equipment';
 
 interface UsePersonnelManagementReturn {
   formData: AuthorizedPersonnelData;
@@ -21,6 +22,8 @@ interface UsePersonnelManagementReturn {
     rank?: string;
     phoneNumber?: string;
     userType?: string;
+    status?: 'active' | 'inactive' | 'transferred' | 'discharged';
+    approvedRole?: UserRole;
   }) => Promise<PersonnelOperationResult>;
   deletePersonnel: (personnelId: string) => Promise<void>;
   fetchPersonnel: (forceRefresh?: boolean) => Promise<void>;
@@ -38,7 +41,8 @@ const initialFormData: AuthorizedPersonnelData = {
   firstName: '',
   lastName: '',
   rank: '',
-  phoneNumber: ''
+  phoneNumber: '',
+  approvedRole: UserRole.SOLDIER,
 };
 
 export function usePersonnelManagement(): UsePersonnelManagementReturn {
@@ -221,6 +225,7 @@ export function usePersonnelManagement(): UsePersonnelManagementReturn {
       phoneNumber?: string;
       userType?: string;
       status?: 'active' | 'inactive' | 'transferred' | 'discharged';
+      approvedRole?: UserRole;
     }
   ): Promise<PersonnelOperationResult> => {
     setIsLoading(true);

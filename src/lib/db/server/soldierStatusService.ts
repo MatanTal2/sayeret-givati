@@ -84,6 +84,7 @@ export async function serverListRoster(): Promise<RosterEntry[]> {
       lastName: data.lastName ?? '',
       platoon: 'מסייעת',
       status: 'בית',
+      isRegistered: false,
     });
   }
 
@@ -99,6 +100,7 @@ export async function serverListRoster(): Promise<RosterEntry[]> {
       lastName: data.lastName ?? existing?.lastName ?? '',
       platoon,
       status: existing?.status ?? 'בית',
+      isRegistered: true,
       ...(existing?.customStatus ? { customStatus: existing.customStatus } : {}),
       ...(existing?.updatedAtMs ? { updatedAtMs: existing.updatedAtMs } : {}),
     });

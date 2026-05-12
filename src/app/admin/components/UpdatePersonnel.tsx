@@ -2,10 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { usePersonnelManagement } from '@/hooks/usePersonnelManagement';
-import { RANK_OPTIONS, USER_TYPE_OPTIONS, FORM_CONSTRAINTS, PERSONNEL_STATUS_OPTIONS, type PersonnelStatus } from '@/constants/admin';
+import {
+  RANK_OPTIONS,
+  USER_TYPE_OPTIONS,
+  USER_ROLE_OPTIONS,
+  USER_ROLE_LABELS,
+  FORM_CONSTRAINTS,
+  PERSONNEL_STATUS_OPTIONS,
+  type PersonnelStatus,
+} from '@/constants/admin';
 import { formatPhoneForDisplay, normalizePhoneForSearch } from '@/utils/validationUtils';
 import { AuthorizedPersonnel } from '@/types/admin';
 import { UserType } from '@/types/user';
+import { UserRole } from '@/types/equipment';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { Select } from '@/components/ui';
 
@@ -33,13 +42,15 @@ export default function UpdatePersonnel() {
     phoneNumber: string;
     userType: UserType;
     status: PersonnelStatus;
+    approvedRole: UserRole;
   }>({
     firstName: '',
     lastName: '',
     rank: '',
     phoneNumber: '',
     userType: UserType.USER,
-    status: 'active'
+    status: 'active',
+    approvedRole: UserRole.SOLDIER,
   });
 
   // Loading and message state for updates
@@ -60,7 +71,8 @@ export default function UpdatePersonnel() {
         rank: selectedPerson.rank,
         phoneNumber: selectedPerson.phoneNumber,
         userType: selectedPerson.userType || UserType.USER,
-        status: (selectedPerson.status as PersonnelStatus) || 'active'
+        status: (selectedPerson.status as PersonnelStatus) || 'active',
+        approvedRole: (selectedPerson.approvedRole as UserRole) || UserRole.SOLDIER,
       });
     }
   }, [selectedPerson]);
@@ -111,7 +123,8 @@ export default function UpdatePersonnel() {
         rank: selectedPerson.rank,
         phoneNumber: selectedPerson.phoneNumber,
         userType: selectedPerson.userType || UserType.USER,
-        status: (selectedPerson.status as PersonnelStatus) || 'active'
+        status: (selectedPerson.status as PersonnelStatus) || 'active',
+        approvedRole: (selectedPerson.approvedRole as UserRole) || UserRole.SOLDIER,
       });
     }
     setUpdateMessage(null);
@@ -157,6 +170,9 @@ export default function UpdatePersonnel() {
       }
       if (editForm.status !== ((selectedPerson.status as PersonnelStatus) || 'active')) {
         updateData.status = editForm.status;
+      }
+      if (editForm.approvedRole !== ((selectedPerson.approvedRole as UserRole) || UserRole.SOLDIER)) {
+        updateData.approvedRole = editForm.approvedRole;
       }
 
       // Only update if there are changes
@@ -277,6 +293,9 @@ export default function UpdatePersonnel() {
                           <span>📱 {formatPhoneForDisplay(person.phoneNumber)}</span>
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-info-100 text-info-800">
                             {(person.userType || UserType.USER).replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                          </span>
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary-100 text-primary-800">
+                            🎖️ {USER_ROLE_LABELS[(person.approvedRole as UserRole) || UserRole.SOLDIER] || person.approvedRole}
                           </span>
                           {person.registered ? (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-success-100 text-success-800">
@@ -449,6 +468,20 @@ export default function UpdatePersonnel() {
                     ariaLabel={TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_STATUS}
                   />
                 </div>
+
+                {/* Military Role */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    {TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_ROLE} *
+                  </label>
+                  <Select
+                    value={editForm.approvedRole}
+                    onChange={(v) => v && handleFormChange('approvedRole', v)}
+                    options={USER_ROLE_OPTIONS}
+                    disabled={isUpdating}
+                    ariaLabel={TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_ROLE}
+                  />
+                </div>
               </div>
 
               {/* Action Buttons */}
@@ -536,6 +569,15 @@ export default function UpdatePersonnel() {
                       const opt = PERSONNEL_STATUS_OPTIONS.find((s) => s.value === ((selectedPerson.status as PersonnelStatus) || 'active'));
                       return opt ? TEXT_CONSTANTS.ADMIN[opt.labelKey] : selectedPerson.status;
                     })()}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-500">
+                    {TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_ROLE}
+                  </label>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-info-100 text-info-800">
+                    {USER_ROLE_LABELS[(selectedPerson.approvedRole as UserRole) || UserRole.SOLDIER] || selectedPerson.approvedRole}
                   </span>
                 </div>
               </div>

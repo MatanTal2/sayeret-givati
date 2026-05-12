@@ -30,6 +30,8 @@ export interface RosterEntry {
   customStatus?: string;
   /** ISO string when present — milliseconds since epoch on the wire. */
   updatedAtMs?: number;
+  /** True when there is a matching `users` doc (i.e. soldier completed registration). */
+  isRegistered: boolean;
 }
 
 export interface UpdateSoldierStatusInput {
