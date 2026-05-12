@@ -100,7 +100,7 @@ export default function UsersTab() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-center py-12">
-          <RefreshCw className="w-8 h-8 text-primary-600 animate-spin ml-3" />
+          <RefreshCw className="w-8 h-8 text-primary-600 animate-spin me-3" />
           <span className="text-lg text-neutral-600">{TEXT_CONSTANTS.MANAGEMENT.USERS.LOADING_USERS}</span>
         </div>
       </div>
@@ -113,7 +113,7 @@ export default function UsersTab() {
       <div className="space-y-6">
         <div className="bg-danger-50 border border-danger-200 rounded-lg p-6">
           <div className="flex items-center">
-            <AlertCircle className="w-6 h-6 text-danger-600 ml-3" />
+            <AlertCircle className="w-6 h-6 text-danger-600 me-3" />
             <div>
               <h3 className="text-lg font-medium text-danger-800">{TEXT_CONSTANTS.MANAGEMENT.USERS.ERROR_LOADING_TITLE}</h3>
               <p className="text-sm text-danger-600 mt-1">{error}</p>
@@ -139,7 +139,7 @@ export default function UsersTab() {
           className="px-4 py-2 bg-neutral-600 hover:bg-neutral-700 text-white font-medium rounded-lg transition-colors shadow-sm flex items-center"
           disabled={loading}
         >
-          <RefreshCw className={`w-4 h-4 ml-2 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 me-2 ${loading ? 'animate-spin' : ''}`} />
           {TEXT_CONSTANTS.MANAGEMENT.USERS.REFRESH_BUTTON}
         </button>
         <button className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors shadow-sm">
@@ -229,7 +229,7 @@ export default function UsersTab() {
                   <tr key={user.uid} className="hover:bg-neutral-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center ml-3">
+                        <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center me-3">
                           <span className="text-sm font-bold text-primary-600">
                             {getUserInitials(user.fullName)}
                           </span>
@@ -262,7 +262,7 @@ export default function UsersTab() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                      <button className="text-info-600 hover:text-info-900 ml-2">{TEXT_CONSTANTS.MANAGEMENT.USERS.EDIT_ACTION}</button>
+                      <button className="text-info-600 hover:text-info-900 me-2">{TEXT_CONSTANTS.MANAGEMENT.USERS.EDIT_ACTION}</button>
                       <button className="text-danger-600 hover:text-danger-900">{TEXT_CONSTANTS.MANAGEMENT.USERS.DELETE_ACTION}</button>
                     </td>
                   </tr>
@@ -278,7 +278,7 @@ export default function UsersTab() {
         <div className="bg-white rounded-lg border border-neutral-200 p-4">
           <div className="flex items-center">
             <Users className="w-8 h-8 text-info-600" />
-            <div className="mr-4">
+            <div className="ms-4">
               <div className="text-2xl font-bold text-neutral-900">{stats.total}</div>
               <div className="text-sm text-neutral-600">{TEXT_CONSTANTS.MANAGEMENT.USERS.TOTAL_USERS}</div>
             </div>
@@ -289,7 +289,7 @@ export default function UsersTab() {
             <div className="w-8 h-8 bg-success-100 rounded-full flex items-center justify-center">
               <span className="text-success-600 font-bold">✓</span>
             </div>
-            <div className="mr-4">
+            <div className="ms-4">
               <div className="text-2xl font-bold text-success-600">{stats.active}</div>
               <div className="text-sm text-neutral-600">{TEXT_CONSTANTS.MANAGEMENT.USERS.ACTIVE_USERS}</div>
             </div>
@@ -300,7 +300,7 @@ export default function UsersTab() {
             <div className="w-8 h-8 bg-danger-100 rounded-full flex items-center justify-center">
               <span className="text-danger-600 font-bold">×</span>
             </div>
-            <div className="mr-4">
+            <div className="ms-4">
               <div className="text-2xl font-bold text-danger-600">{stats.inactive}</div>
               <div className="text-sm text-neutral-600">{TEXT_CONSTANTS.MANAGEMENT.USERS.INACTIVE_USERS}</div>
             </div>
@@ -311,7 +311,7 @@ export default function UsersTab() {
             <div className="w-8 h-8 bg-warning-100 rounded-full flex items-center justify-center">
               <span className="text-warning-600 font-bold">⏳</span>
             </div>
-            <div className="mr-4">
+            <div className="ms-4">
               <div className="text-2xl font-bold text-warning-600">{stats.pending}</div>
               <div className="text-sm text-neutral-600">{TEXT_CONSTANTS.MANAGEMENT.USERS.TRANSFERRED_USERS}</div>
             </div>

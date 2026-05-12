@@ -274,9 +274,9 @@ export default function StatusPage() {
                     value={nameFilter}
                     onChange={(e) => setNameFilter(e.target.value)}
                     placeholder={TEXT_CONSTANTS.STATUS_PAGE.SEARCH_BY_NAME}
-                    className="w-full border-2 border-neutral-400 rounded-md px-3 py-2 text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder-neutral-600 pl-10"
+                    className="w-full border-2 border-neutral-400 rounded-md px-3 py-2 text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder-neutral-600 ps-10"
                   />
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5 text-neutral-400"
@@ -298,7 +298,7 @@ export default function StatusPage() {
                   <p className="text-lg font-medium text-neutral-800">
                     נבחרו: {filteredSelectedCount} מתוך {filteredTotalCount}
                     {(nameFilter || selectedTeams.length > 0 || selectedStatuses.length > 0) && (
-                      <span className="text-sm text-neutral-600 mr-2">
+                      <span className="text-sm text-neutral-600 ms-2">
                         (סה&quot;כ: {selectedCount} מתוך {totalCount})
                       </span>
                     )}
