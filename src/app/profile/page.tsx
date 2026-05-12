@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthGuard from '@/components/auth/AuthGuard';
 import AppShell from '@/app/components/AppShell';
@@ -18,16 +18,27 @@ import { updateUserProfile } from '@/lib/userProfileService';
  */
 export default function ProfilePage() {
   const { enhancedUser, user, refreshEnhancedUser } = useAuth();
-  // Drop legacy `blob:` URLs left over from the old mock upload; they error on render.
-  const initialProfileImage =
-    enhancedUser?.profileImage && /^https?:\/\//i.test(enhancedUser.profileImage)
-      ? enhancedUser.profileImage
-      : undefined;
-  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(initialProfileImage);
-  const [phoneNumber, setPhoneNumber] = useState<string>(enhancedUser?.phoneNumber || '');
-  const [teamId, setTeamId] = useState<string>(enhancedUser?.teamId || '');
+  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(undefined);
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [teamId, setTeamId] = useState<string>('');
   const [assignmentSaving, setAssignmentSaving] = useState(false);
   const [assignmentMessage, setAssignmentMessage] = useState<string | null>(null);
+
+  // enhancedUser arrives async after AuthContext loads the Firestore profile.
+  // Sync local fields whenever it changes so the page reflects the latest
+  // persisted state across hard refreshes (not just the first render).
+  useEffect(() => {
+    const img = enhancedUser?.profileImage;
+    setProfileImageUrl(img && /^https?:\/\//i.test(img) ? img : undefined);
+  }, [enhancedUser?.profileImage]);
+
+  useEffect(() => {
+    setPhoneNumber(enhancedUser?.phoneNumber || '');
+  }, [enhancedUser?.phoneNumber]);
+
+  useEffect(() => {
+    setTeamId(enhancedUser?.teamId || '');
+  }, [enhancedUser?.teamId]);
 
   // Format date helper
   const formatDate = (date: Date | { toDate: () => Date } | string | null | undefined) => {
