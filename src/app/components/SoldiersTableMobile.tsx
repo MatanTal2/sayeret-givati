@@ -200,7 +200,7 @@ export default function SoldiersTableMobile({
                 onChange={() => onToggleSelection(index)}
                 className="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
               />
-              <span className="text-neutral-700 pr-0.5 font-medium flex-1 inline-flex items-center gap-2">
+              <span className="text-neutral-700 pe-0.5 font-medium flex-1 inline-flex items-center gap-2">
                 <span
                   aria-hidden="true"
                   title={
@@ -214,7 +214,7 @@ export default function SoldiersTableMobile({
                 />
                 {soldier.name}
               </span>
-              <span className="text-neutral-600 ml-3 text-sm">{soldier.platoon}</span>
+              <span className="text-neutral-600 me-3 text-sm">{soldier.platoon}</span>
             
               {/* Status Toggle Icons */}
               <div className="flex bg-neutral-100 rounded-lg p-1">

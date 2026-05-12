@@ -224,10 +224,10 @@ export default function TransferModal({
           <div className="relative" ref={dropdownRef}>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
               {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TRANSFER.TO_USER}
-              <span className="text-red-500 mr-1">*</span>
+              <span className="text-danger-500 ms-1">*</span>
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 start-0 ps-3 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-neutral-400" />
               </div>
               <input
@@ -247,13 +247,13 @@ export default function TransferModal({
                    }
                  }}
                 placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.TRANSFER.TO_USER_PLACEHOLDER}
-                className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
-                  errors.toUserId ? 'border-red-300' : 'border-neutral-300'
+                className={`w-full ps-10 pe-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
+                  errors.toUserId ? 'border-danger-300' : 'border-neutral-300'
                 }`}
                 disabled={isSubmitting}
               />
               {isSearching && (
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <div className="absolute inset-y-0 end-0 pe-3 flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
                 </div>
               )}
@@ -306,7 +306,7 @@ export default function TransferModal({
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
               {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TRANSFER.REASON}
-              <span className="text-red-500 mr-1">*</span>
+              <span className="text-danger-500 ms-1">*</span>
             </label>
             <input
               type="text"
@@ -329,7 +329,7 @@ export default function TransferModal({
               {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TRANSFER.NOTE}
             </label>
             <div className="relative">
-              <div className="absolute top-3 left-3 pointer-events-none">
+              <div className="absolute top-3 start-3 pointer-events-none">
                 <MessageSquare className="h-5 w-5 text-neutral-400" />
               </div>
               <textarea
@@ -337,7 +337,7 @@ export default function TransferModal({
                 onChange={(e) => handleInputChange('note', e.target.value)}
                 placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.TRANSFER.NOTE_PLACEHOLDER}
                 rows={3}
-                className="w-full pl-10 pr-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors resize-none"
+                className="w-full ps-10 pe-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors resize-none"
                 disabled={isSubmitting}
               />
             </div>

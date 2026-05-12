@@ -1,7 +1,15 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
+import {
+  Disclosure,
+  DisclosureButton,
+  DisclosurePanel,
+  Dialog,
+  DialogBackdrop,
+  DialogPanel,
+  DialogTitle,
+} from '@headlessui/react';
 import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
@@ -161,6 +169,9 @@ function PlanTable({
 }: PlanTableProps) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingCancelId, setPendingCancelId] = useState<string | null>(null);
+  const [rejectingPlanId, setRejectingPlanId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectError, setRejectError] = useState<string | null>(null);
 
   const handleAction = async (planId: string, fn: () => Promise<boolean>) => {
     setBusyId(planId);
@@ -171,14 +182,31 @@ function PlanTable({
     }
   };
 
-  const handleReject = async (planId: string) => {
-    const reason = window.prompt(TT.REJECT_PROMPT, '');
-    if (reason === null) return;
-    if (!reason.trim()) {
-      window.alert(TT.REJECT_REASON_REQUIRED);
+  const handleReject = (planId: string) => {
+    setRejectingPlanId(planId);
+    setRejectReason('');
+    setRejectError(null);
+  };
+
+  const closeRejectDialog = () => {
+    if (busyId === rejectingPlanId) return;
+    setRejectingPlanId(null);
+    setRejectReason('');
+    setRejectError(null);
+  };
+
+  const submitReject = async () => {
+    if (!rejectingPlanId) return;
+    const trimmed = rejectReason.trim();
+    if (!trimmed) {
+      setRejectError(TT.REJECT_REASON_REQUIRED);
       return;
     }
-    await handleAction(planId, () => onReject(planId, reason.trim()));
+    const planId = rejectingPlanId;
+    setRejectingPlanId(null);
+    setRejectReason('');
+    setRejectError(null);
+    await handleAction(planId, () => onReject(planId, trimmed));
   };
 
   const handleCancel = (planId: string) => {
@@ -315,6 +343,62 @@ function PlanTable({
         variant="warning"
         useHomePageStyle
       />
+
+      <Dialog
+        open={!!rejectingPlanId}
+        onClose={closeRejectDialog}
+        className="relative z-50"
+      >
+        <DialogBackdrop className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="w-full max-w-md bg-white rounded-xl shadow-2xl border border-neutral-200">
+            <div className="px-6 py-4 border-b border-neutral-200">
+              <DialogTitle className="text-lg font-semibold text-neutral-900">
+                {TT.REJECT_TITLE}
+              </DialogTitle>
+            </div>
+            <div className="p-6 space-y-3">
+              <label htmlFor="reject-reason" className="block text-sm font-medium text-neutral-700">
+                {TT.REJECT_PROMPT}
+              </label>
+              <textarea
+                id="reject-reason"
+                value={rejectReason}
+                onChange={(e) => {
+                  setRejectReason(e.target.value);
+                  if (rejectError) setRejectError(null);
+                }}
+                rows={4}
+                disabled={busyId === rejectingPlanId}
+                placeholder={TT.REJECT_REASON_PLACEHOLDER}
+                className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                autoFocus
+              />
+              {rejectError && (
+                <p className="text-sm text-danger-700" role="alert">
+                  {rejectError}
+                </p>
+              )}
+            </div>
+            <div className="flex justify-end gap-3 p-6 border-t border-neutral-200">
+              <Button
+                variant="secondary"
+                onClick={closeRejectDialog}
+                disabled={busyId === rejectingPlanId}
+              >
+                {TT.REJECT_CANCEL}
+              </Button>
+              <Button
+                variant="danger"
+                onClick={submitReject}
+                disabled={busyId === rejectingPlanId}
+              >
+                {TT.REJECT_SUBMIT}
+              </Button>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
     </div>
   );
 }

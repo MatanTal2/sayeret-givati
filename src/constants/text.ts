@@ -846,6 +846,10 @@ export const TEXT_CONSTANTS = {
         COMPLETE: 'סמן הושלם',
         REJECT_PROMPT: 'נמק את הסיבה לדחייה:',
         REJECT_REASON_REQUIRED: 'יש להזין סיבה לדחייה',
+        REJECT_TITLE: 'דחיית תכנון אימון',
+        REJECT_SUBMIT: 'שלח דחייה',
+        REJECT_CANCEL: 'ביטול',
+        REJECT_REASON_PLACEHOLDER: 'הזן סיבה...',
         CANCEL_CONFIRM: 'לבטל את התכנון?',
         STATUS: {
           PENDING_APPROVAL: 'ממתין לאישור',

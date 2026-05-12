@@ -1,8 +1,12 @@
 # RTL Audit — findings & triage
 
-**Status:** In progress. First batch landed 2026-05-12 on `fix/admin-role-and-status-polish`.
-Full sweep is multi-session (505 physical-class hits across 116 .tsx files); this doc
-tracks the punch list.
+**Status:** In progress. Batches landing one at a time on dedicated branches.
+Full sweep is multi-session; this doc tracks the punch list.
+
+**Hit-count note:** the initial 505-hit count came from a loose grep
+(`pl-|pr-|...` without word boundary, which matched substrings like `pr-imary-`).
+The stricter grep `(\s|"|')(pl-|pr-|ml-|mr-)\d` returns **49 real hits across 21
+files** — much more tractable. Use the stricter form when re-running.
 
 `<html dir="rtl">` is set globally in `src/app/layout.tsx`. CLAUDE.md forbids
 per-component `dir="rtl"`. Despite that, components leak LTR through hardcoded
@@ -36,27 +40,56 @@ Recurring offender: action-row headers that want the primary CTA on the right.
 - `src/app/ammunition/training/page.tsx:56` — `justify-end` → `justify-start`
   on the "תכנן אימון" action row (was pushing the Plus button to the left).
 
+### ✅ Fixed (2026-05-12, batch 2 — `fix/rtl-batch-2-and-no-browser-dialogs`)
+
+- `src/components/equipment/TransferModal.tsx` — 6 hits. Search-input icon
+  positioning converted from `left-0 pl-3` / `right-0 pr-3` to `start-0 ps-3` /
+  `end-0 pe-3`. Textarea icon at `top-3 left-3` → `top-3 start-3`. Input padding
+  flipped to logical (`ps-10 pe-3`). Required-asterisk margins to `ms-1`.
+  Stray `text-red-*` / `border-red-*` swapped for `text-danger-*` /
+  `border-danger-*` tokens while at it.
+- `src/components/management/tabs/UsersTab.tsx` — 9 hits. All `ml-*` on
+  icons → `me-*` (gap toward following text). All `mr-4` on stats-card text
+  blocks → `ms-4` (gap toward preceding icon).
+- `src/app/status/page.tsx` — 3 hits. Search-input padding `pl-10` → `ps-10`;
+  absolute-positioned search icon `left-0 pl-3` → `start-0 ps-3`; counter
+  span margin `mr-2` → `ms-2`.
+- `src/app/components/SoldiersTableMobile.tsx` — 2 hits. Name span padding
+  `pr-0.5` → `pe-0.5`; platoon span margin `ml-3` → `me-3`.
+
 ### 🟡 Quick-win candidates (next batch)
 
-Files with the highest physical-class density that touch user-visible flows.
-Counts are approximate (grep hit-count, not distinct-class-count).
+Re-counted with the stricter grep `(\s|"|')(pl-|pr-|ml-|mr-)\d` — these are
+the remaining real hits, not substring false-positives.
 
 | File | Hits | Notes |
 |------|------|-------|
-| `src/components/equipment/TransferModal.tsx` | 16 | Modal — likely safe to convert in isolation |
-| `src/components/management/tabs/DataManagementTab.tsx` | 17 | Admin tab |
-| `src/components/management/tabs/AuditLogsTab.tsx` | 13 | Admin tab |
-| `src/components/management/tabs/EnforceTransferTab.tsx` | 12 | Admin tab |
-| `src/components/management/tabs/PermissionGrantsTab.tsx` | 12 | Admin tab |
-| `src/components/profile/PhoneNumberUpdate.tsx` | 9 | User-facing |
-| `src/components/ammunition/AmmunitionTemplateForm.tsx` | 9 | Form |
-| `src/components/ammunition/ReportUsageForm.tsx` | 8 | Form |
-| `src/app/components/SoldiersTableMobile.tsx` | 9 | Status page mobile (touched in batch 1 for registered-dot) |
-| `src/app/components/SoldiersTableDesktop.tsx` | 8 | Status page desktop (touched in batch 1) |
+| `src/components/EquipmentTest.tsx` | 5 | Dev/test component — skip unless QA flags |
+| `src/components/registration/AccountDetailsStep.tsx` | 3 | Registration flow |
+| `src/components/management/tabs/DataManagementTab.tsx` | 2 | Admin tab |
+| `src/components/management/tabs/EmailTab.tsx` | 2 | Admin tab |
+| `src/components/management/tabs/PermissionsTab.tsx` | 2 | Admin tab |
+| `src/components/ui/ConfirmationModal.tsx` | 2 | Shared modal — fix once, propagates everywhere |
+| `src/app/components/SearchBar.tsx` | 2 | Top-bar search |
+| `src/components/SimpleUserTest.tsx` | 2 | Dev/test component — skip |
+| `src/components/management/sidebar/SidebarNavigation.tsx` | 1 | Sidebar |
+| `src/components/management/tabs/AuditLogsTab.tsx` | 1 | Admin tab |
+| `src/components/management/tabs/CustomUserSelectionModal.tsx` | 1 | Admin modal |
+| `src/components/management/tabs/EnforceTransferTab.tsx` | 1 | Admin tab |
+| `src/components/auth/LoginModal.tsx` | 1 | Login modal |
+| `src/components/equipment/template-form/FormFieldRequiresDailyCheck.tsx` | 1 | Form field |
+| `src/components/registration/RegistrationDetailsStep.tsx` | 1 | Registration flow |
+| `src/components/ui/FormField.tsx` | 1 | Shared form field |
+| `src/app/components/TextInputWithError.tsx` | 1 | Input wrapper |
 
 Convert each file in isolation; don't bundle. After each conversion, QA the
 affected page on mobile (where misalignment is most visible) and add it to the
 "Fixed" list above with a short note.
+
+**Priority order for next batch:** `ConfirmationModal.tsx` first (shared, fix
+once + propagate), then `LoginModal.tsx` + `SearchBar.tsx` + `AccountDetailsStep.tsx`
+(high-visibility user-facing flows). Admin tabs are low-priority — small hit
+counts, few daily users.
 
 ### 🔴 Intentional `dir="ltr"` (DO NOT REMOVE)
 
@@ -74,7 +107,10 @@ affected page on mobile (where misalignment is most visible) and add it to the
 
 ## Related follow-up (not RTL but found during audit)
 
-- `src/components/ammunition/PlannedTrainingsTable.tsx:175,178` — uses
-  `window.prompt` and `window.alert`. Violates `feedback_no_browser_dialogs`.
-  Replace with the existing in-app `ConfirmationModal` / a new
-  `TextInputModal` (or extend `ConfirmationModal` with an optional input).
+- ~~`src/components/ammunition/PlannedTrainingsTable.tsx:175,178` — uses
+  `window.prompt` and `window.alert`.~~ **DONE 2026-05-12 on
+  `fix/rtl-batch-2-and-no-browser-dialogs`.** Replaced with an inline
+  Headless UI `Dialog` containing a textarea for the rejection reason +
+  inline error rendering for the empty-reason case. New text constants:
+  `REJECT_TITLE`, `REJECT_SUBMIT`, `REJECT_CANCEL`, `REJECT_REASON_PLACEHOLDER`
+  under `FEATURES.AMMUNITION.TRAINING`.
