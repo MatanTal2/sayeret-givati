@@ -17,6 +17,8 @@ Replaces the per-page `Header` component that was removed. Pages opt in by wrapp
 | `subtitle` | `string` | — | Optional one-line description |
 | `showBackArrow` | `boolean` | — | Show back arrow in the top bar (default `false`). Use on deep routes like `/tools/convoy` |
 | `showFab` | `boolean` | — | Show the mobile floating action button (default `true`) |
+| `hidePageHeader` | `boolean` | — | Skip rendering `PageHeader` (default `false`). Use when the page draws its own sub-bar, e.g. embedded-iframe tool pages |
+| `mainClassName` | `string` | — | Override `<main>` class string. Default `flex-1 px-4 sm:px-6 pb-24 lg:pb-12`. Use `flex-1 flex flex-col min-h-0` for full-bleed flex layouts (iframes that should fill remaining height) |
 | `children` | `ReactNode` | ✅ | Page body |
 
 ## Layout

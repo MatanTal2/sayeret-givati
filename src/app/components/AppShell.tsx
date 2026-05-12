@@ -16,6 +16,8 @@ interface AppShellProps {
   subtitle?: string;
   showBackArrow?: boolean;
   showFab?: boolean;
+  hidePageHeader?: boolean;
+  mainClassName?: string;
   children: ReactNode;
 }
 
@@ -24,6 +26,8 @@ export default function AppShell({
   subtitle,
   showBackArrow = false,
   showFab = true,
+  hidePageHeader = false,
+  mainClassName = 'flex-1 px-4 sm:px-6 pb-24 lg:pb-12',
   children,
 }: AppShellProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -59,8 +63,8 @@ export default function AppShell({
           onMobileClose={() => setMobileSidebarOpen(false)}
         />
         <div className="flex-1 min-w-0 flex flex-col">
-          <PageHeader title={title} subtitle={subtitle} />
-          <main className="flex-1 px-4 sm:px-6 pb-24 lg:pb-12">{children}</main>
+          {!hidePageHeader && <PageHeader title={title} subtitle={subtitle} />}
+          <main className={mainClassName}>{children}</main>
         </div>
       </div>
       {showFab && isAuthenticated && <QuickActionFab />}
