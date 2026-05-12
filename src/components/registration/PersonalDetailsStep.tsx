@@ -168,13 +168,22 @@ export default function PersonalDetailsStep({
             </div>
 
             <div className="space-y-1 min-w-0">
+              {/* Native <input type="date"> ignores `placeholder`, so the field
+                  was rendering blank with no hint. Toggle to type="text" while
+                  empty + unfocused so the placeholder is visible; switch back
+                  to type="date" on focus (and keep it on date once a value is
+                  set) so the native picker still works. */}
               <input
-                type="date"
+                type={formData.birthdate ? 'date' : 'text'}
                 dir="ltr"
                 value={formData.birthdate}
+                placeholder={TEXT_CONSTANTS.AUTH.BIRTHDATE_PLACEHOLDER}
+                aria-label={TEXT_CONSTANTS.AUTH.BIRTHDATE}
+                onFocus={(e) => { e.currentTarget.type = 'date'; }}
+                onBlur={(e) => { if (!e.currentTarget.value) e.currentTarget.type = 'text'; }}
                 onChange={(e) => handleInputChange('birthdate', e.target.value)}
                 className={`block w-full h-10 px-3 py-0 border-2 rounded-lg focus:ring-2 outline-none transition-all
-                         text-left text-neutral-800 bg-white text-sm leading-none ${
+                         text-left text-neutral-800 bg-white text-sm leading-none placeholder:text-neutral-400 ${
                   validationErrors.birthdate && formData.birthdate
                     ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
                     : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'

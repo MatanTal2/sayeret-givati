@@ -3,7 +3,7 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>מארגן שיירות האמרים</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #e9ecef; margin: 0; padding: 15px; color: #333; }
@@ -73,6 +73,20 @@
         .toast.success { background: #28a745; }
         .toast.info { background: #17a2b8; }
         .toast.warning { background: #ffc107; color: #333; }
+
+        /* iOS Safari auto-zooms any input/select/textarea below 16px on focus.
+           Bump font-size to 16px on mobile widths to suppress that. !important
+           is needed to win against the inline `font-size: 14px` on a couple of
+           number inputs (lines ~137, ~223). Combined with viewport
+           `maximum-scale=1.0, user-scalable=no` above, the page now stays at
+           the intended mobile size on phones. */
+        @media (max-width: 768px) {
+            input[type="text"],
+            input[type="number"],
+            input[type="date"],
+            select,
+            textarea { font-size: 16px !important; }
+        }
     </style>
 </head>
 <body>
@@ -268,6 +282,23 @@
     </div>
 </div>
 
+<!-- Generic in-page info/error modal. Replaces browser alert() so dialogs
+     stay in the app's visual language. Used for blocking notices that the
+     user must acknowledge (e.g. localStorage write failure when the file is
+     opened from disk). For transient feedback prefer showToast(). -->
+<div id="infoModal" class="modal-overlay" style="z-index: 3000;">
+    <div class="modal-content" style="max-width: 420px;">
+        <div class="modal-header">
+            <h3 id="infoModalTitle">הודעה</h3>
+            <button type="button" onclick="closeInfoModal()" style="background: none; border: none; color: #6c757d; font-size: 24px; cursor: pointer; padding: 0; margin: 0; width: auto; font-weight: bold;">×</button>
+        </div>
+        <div id="infoModalBody" style="white-space: pre-wrap; line-height: 1.5;"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn-add" onclick="closeInfoModal()">סגור</button>
+        </div>
+    </div>
+</div>
+
 <script>
     function showToast(message, type = 'success', duration = 2500) {
         const toast = document.getElementById('toast');
@@ -275,6 +306,61 @@
         toast.className = `toast ${type} show`;
         clearTimeout(toast._timer);
         toast._timer = setTimeout(() => { toast.classList.remove('show'); }, duration);
+    }
+
+    // In-app info modal — replaces browser alert(). Use for blocking
+    // user-acknowledged messages; use showToast() for transient feedback.
+    function showInfoModal(message, title = 'הודעה') {
+        document.getElementById('infoModalTitle').textContent = title;
+        document.getElementById('infoModalBody').textContent = message;
+        // Reset footer to default single "סגור" button (in case it was last
+        // used as a confirm modal — see showConfirmModal below).
+        const footer = document.querySelector('#infoModal .modal-footer');
+        if (footer) footer.innerHTML = `<button type="button" class="btn-add" onclick="closeInfoModal()">סגור</button>`;
+        document.getElementById('infoModal').style.display = 'flex';
+    }
+    function closeInfoModal() {
+        document.getElementById('infoModal').style.display = 'none';
+    }
+
+    // Generic action modal — array of buttons, each {label, onClick, kind}.
+    // kind: 'primary' (default), 'danger', 'neutral'. Used by both the
+    // showConfirmModal helper below and any callsite that needs >2 actions
+    // (e.g. spreadPersonnel's "reset / append / cancel" choice).
+    function showActionModal(message, title, buttons) {
+        document.getElementById('infoModalTitle').textContent = title || 'אישור';
+        document.getElementById('infoModalBody').textContent = message;
+        const footer = document.querySelector('#infoModal .modal-footer');
+        if (footer) {
+            footer.innerHTML = '';
+            buttons.forEach(b => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                if (b.kind === 'danger') btn.className = 'btn-clear';
+                else if (b.kind === 'neutral') { btn.className = 'btn-clear'; btn.style.backgroundColor = '#6c757d'; }
+                else btn.className = 'btn-add';
+                btn.textContent = b.label;
+                btn.onclick = () => { closeInfoModal(); if (b.onClick) b.onClick(); };
+                footer.appendChild(btn);
+            });
+        }
+        document.getElementById('infoModal').style.display = 'flex';
+    }
+
+    // In-app confirm modal — replaces browser confirm(). Two buttons:
+    // confirmLabel (runs onConfirm) and a neutral "ביטול".
+    function showConfirmModal(message, title, confirmLabel, onConfirm) {
+        showActionModal(message, title, [
+            { label: confirmLabel || 'אישור', kind: 'danger', onClick: onConfirm },
+            { label: 'ביטול', kind: 'neutral' }
+        ]);
+    }
+
+    // Offline (file://) localStorage is unreliable on iOS Safari and blocked
+    // by default in Chrome — surface this for the developer in DevTools so
+    // we can diagnose user reports of "templates won't save / delete".
+    if (typeof location !== 'undefined' && location.protocol === 'file:') {
+        console.warn('[convoy tool] Opened via file:// — localStorage may not persist (iOS Safari) or may be blocked (Chrome). Templates won\'t save in those environments. Open via the app for full functionality.');
     }
 
     let currentConvoy = [];
@@ -408,14 +494,21 @@
         catch (e) { return {}; } 
     }
 
-    function saveTemplatesData(data) { 
-        try { 
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); 
+    function saveTemplatesData(data) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
             return true;
-        } catch (e) { 
-            alert("שגיאה! הדפדפן חסם את השמירה לזיכרון."); 
+        } catch (e) {
+            if (location.protocol === 'file:') {
+                showInfoModal(
+                    "⚠️ הקובץ פתוח במצב אופליין (file://) — הדפדפן חוסם שמירה. פתח דרך האפליקציה כדי לערוך תבניות.",
+                    "שמירה נכשלה"
+                );
+            } else {
+                showInfoModal("שגיאה! הדפדפן חסם את השמירה לזיכרון.", "שמירה נכשלה");
+            }
             return false;
-        } 
+        }
     }
 
     function updateTemplatesDropdown() {
@@ -435,64 +528,97 @@
     // שמירה או דריסה של תבנית
     function saveConvoyTemplate() {
         const templateName = document.getElementById('newTemplateName').value.trim();
-        if (!templateName) { alert("אנא הכנס שם עבור התבנית."); return; }
-        if (currentConvoy.length === 0) { alert("סדרן השיירה ריק. הוסף כלים כדי לשמור תבנית שיירה."); return; }
+        if (!templateName) { showInfoModal("אנא הכנס שם עבור התבנית."); return; }
+        if (currentConvoy.length === 0) { showInfoModal("סדרן השיירה ריק. הוסף כלים כדי לשמור תבנית שיירה."); return; }
 
         let templates = getTemplatesData();
-        
-        // אם קיים באותו שם - שאל אם לדרוס
-        if (templates[templateName]) {
-            if (!confirm(`תבנית בשם '${templateName}' כבר קיימת.\nהאם אתה בטוח שברצונך לדרוס אותה עם השיירה המעודכנת?`)) return;
-        }
 
-        templates[templateName] = JSON.parse(JSON.stringify(currentConvoy)); 
-        
-        if(saveTemplatesData(templates)) {
-            // לא מוחקים את השם מתיבת הטקסט כדי שיהיה נוח להמשיך לערוך
-            updateTemplatesDropdown();
-            document.getElementById('savedTemplates').value = templateName;
-            showToast(`✅ השיירה נשמרה כתבנית: '${templateName}'`);
+        const doSave = () => {
+            templates[templateName] = JSON.parse(JSON.stringify(currentConvoy));
+            if (saveTemplatesData(templates)) {
+                updateTemplatesDropdown();
+                document.getElementById('savedTemplates').value = templateName;
+                showToast(`✅ השיירה נשמרה כתבנית: '${templateName}'`);
+            }
+        };
+
+        if (templates[templateName]) {
+            showConfirmModal(
+                `תבנית בשם '${templateName}' כבר קיימת.\nלדרוס אותה עם השיירה המעודכנת?`,
+                'דריסת תבנית',
+                'דרוס',
+                doSave
+            );
+        } else {
+            doSave();
         }
     }
 
     // טעינת תבנית לתוך הסדרן
     function loadConvoyTemplate() {
         const templateName = document.getElementById('savedTemplates').value;
-        if (!templateName) { alert("אנא בחר תבנית מהרשימה."); return; }
-        
+        if (!templateName) { showInfoModal("אנא בחר תבנית מהרשימה."); return; }
+
         let templates = getTemplatesData();
         const data = templates[templateName];
-        
-        if (!data || !Array.isArray(data)) { alert("שגיאה: התבנית פגומה או לא נמצאה."); return; }
+
+        if (!data || !Array.isArray(data)) { showInfoModal("שגיאה: התבנית פגומה או לא נמצאה.", "טעינה נכשלה"); return; }
+
+        const doLoad = () => {
+            currentConvoy = JSON.parse(JSON.stringify(data));
+            document.getElementById('newTemplateName').value = templateName;
+            renderConvoyList();
+            generateConvoyText();
+            showToast(`✅ התבנית '${templateName}' נטענה בהצלחה`, 'info');
+        };
 
         if (currentConvoy.length > 0) {
-            if (!confirm("טעינת תבנית תמחק את השיירה הנוכחית שבסדרן ותחליף אותה בתבנית. האם להמשיך?")) return;
+            showConfirmModal(
+                "טעינת תבנית תמחק את השיירה הנוכחית שבסדרן ותחליף אותה בתבנית. להמשיך?",
+                'טעינת תבנית',
+                'טען',
+                doLoad
+            );
+        } else {
+            doLoad();
         }
-
-        currentConvoy = JSON.parse(JSON.stringify(data));
-        
-        // מעתיק את השם אוטומטית לשדה העריכה למטה, כדי ששמירה חוזרת פשוט תדרוס
-        document.getElementById('newTemplateName').value = templateName;
-        
-        renderConvoyList();
-        generateConvoyText();
-            showToast(`✅ התבנית '${templateName}' נטענה בהצלחה`, 'info');
     }
 
     // מחיקת תבנית שיירה
     function deleteConvoyTemplate() {
         const templateName = document.getElementById('savedTemplates').value;
-        if (!templateName) { alert("אנא בחר תבנית מהרשימה כדי למחוק אותה."); return; }
-        
-        if (confirm(`האם אתה בטוח שברצונך למחוק לחלוטין את התבנית '${templateName}'?\n(הפעולה לא תשפיע על הנתונים שמוצגים כעת במסך)`)) {
-            let templates = getTemplatesData();
-            delete templates[templateName];
-            if(saveTemplatesData(templates)) {
+        if (!templateName) { showInfoModal("אנא בחר תבנית מהרשימה כדי למחוק אותה."); return; }
+
+        showConfirmModal(
+            `האם למחוק לחלוטין את התבנית '${templateName}'?\n(הפעולה לא תשפיע על הנתונים שמוצגים כעת במסך)`,
+            'מחיקת תבנית',
+            'מחק',
+            () => {
+                let templates = getTemplatesData();
+                delete templates[templateName];
+                if (!saveTemplatesData(templates)) return; // saveTemplatesData already surfaced the error
+
+                // Verify the write actually persisted. Some environments
+                // (iOS Safari from Files app, Chrome without
+                // --allow-file-access-from-files) silently drop file://
+                // localStorage writes — the catch above won't fire but the
+                // value won't be there on next read.
+                const persisted = getTemplatesData();
+                if (persisted[templateName] !== undefined) {
+                    showInfoModal(
+                        location.protocol === 'file:'
+                            ? "⚠️ הקובץ פתוח במצב אופליין (file://) — הדפדפן חוסם שמירה. פתח דרך האפליקציה כדי לערוך תבניות."
+                            : "המחיקה לא נשמרה. ייתכן שהדפדפן חוסם את השמירה לזיכרון.",
+                        "מחיקה נכשלה"
+                    );
+                    return;
+                }
+
                 updateTemplatesDropdown();
-                document.getElementById('newTemplateName').value = ""; // מנקה את השדה התחתון
+                document.getElementById('newTemplateName').value = "";
                 showToast(`🗑️ התבנית '${templateName}' נמחקה`, 'warning');
             }
-        }
+        );
     }
 
     // --- הוספת רכב לסדרן השיירה ---
@@ -502,7 +628,7 @@
         const overrideHumveeId = document.getElementById('overrideHumveeId').checked;
         const vType = document.getElementById('vehicleType').value;
 
-        if (!rawHumveeId && !overrideHumveeId) { alert("שגיאה: חובה להזין את מספר/זיהוי הכלי!"); return; }
+        if (!rawHumveeId && !overrideHumveeId) { showInfoModal("שגיאה: חובה להזין את מספר/זיהוי הכלי!", "שגיאה"); return; }
         if (rawGroupName && !rawGroupName.includes("קפסולה")) rawGroupName = "קפסולה " + rawGroupName.replace(/\*/g, '').trim();
         let displayId = rawHumveeId;
         if (displayId && !displayId.includes(vType)) displayId = vType + " " + displayId;
@@ -591,12 +717,12 @@
 
     function toggleVehicle(index) { currentConvoy[index].active = !currentConvoy[index].active; renderConvoyList(); generateConvoyText(); }
     
-    function removeVehicle(index) { 
-        if (confirm("האם להסיר את הרכב מהשיירה?")) { 
-            currentConvoy.splice(index, 1); 
-            renderConvoyList(); 
-            generateConvoyText(); 
-        } 
+    function removeVehicle(index) {
+        showConfirmModal("האם להסיר את הרכב מהשיירה?", 'הסרת רכב', 'הסר', () => {
+            currentConvoy.splice(index, 1);
+            renderConvoyList();
+            generateConvoyText();
+        });
     }
 
     // --- עריכת רכב מתוך הסדרן ---
@@ -738,20 +864,31 @@
         const activeHmmwvs = currentConvoy.filter(v => v.active && v.vehicleType === 'האמר');
         if (activeHmmwvs.length === 0) { showToast('אין האמרים פעילים בשיירה', 'warning'); return; }
 
-        // Check if any vehicle already has passengers — ask override or add
         const hasExistingPassengers = activeHmmwvs.some(v => v.passengers && v.passengers.length > 0);
-        let isOverride = true;
 
         if (hasExistingPassengers) {
-            const choice = confirm('כבר קיימים חבירים משובצים בשיירה.\n\nאישור = איפוס ופיזור מחדש\nביטול = הוספה למקומות הפנויים שנותרו');
-            isOverride = choice;
+            // 3-way modal because the negative action ("append") is itself a
+            // real outcome, not a cancel — we replaced confirm()'s overloaded
+            // OK/Cancel semantics with three explicit, labelled buttons.
+            showActionModal(
+                'כבר קיימים חבירים משובצים בשיירה. איך לפעול?',
+                'פיזור אנשים',
+                [
+                    { label: 'איפוס ופיזור מחדש', kind: 'danger', onClick: () => _runSpread(names, activeHmmwvs, true) },
+                    { label: 'הוסף למקומות הפנויים', kind: 'primary', onClick: () => _runSpread(names, activeHmmwvs, false) },
+                    { label: 'ביטול', kind: 'neutral' }
+                ]
+            );
+        } else {
+            _runSpread(names, activeHmmwvs, true);
         }
+    }
 
+    function _runSpread(names, activeHmmwvs, isOverride) {
         if (isOverride) {
             activeHmmwvs.forEach(v => { v.passengers = []; });
         }
 
-        // Sort: normal first, lowPersonnel last
         const normalVehicles = activeHmmwvs.filter(v => !v.lowPersonnel);
         const lowVehicles = activeHmmwvs.filter(v => v.lowPersonnel);
         const sortedVehicles = [...normalVehicles, ...lowVehicles];
@@ -778,7 +915,6 @@
 
         const leftover = names.slice(nameIndex);
 
-        // Show result
         const resultDiv = document.getElementById('spreadResult');
         resultDiv.style.display = 'block';
 
@@ -787,13 +923,11 @@
             resultDiv.style.border = '1px solid #ffeeba';
             resultDiv.innerHTML = `<strong style="color: #856404;">⚠️ נותרו ${leftover.length} אנשים ללא שיבוץ:</strong><br>` +
                 leftover.map(n => `• ${n}`).join('<br>');
-            // Keep leftover names in the text box
             document.getElementById('personnelList').value = leftover.join('\n');
         } else {
             resultDiv.style.background = '#d4edda';
             resultDiv.style.border = '1px solid #c3e6cb';
             resultDiv.innerHTML = `<strong style="color: #155724;">✅ כל ${names.length} האנשים שובצו בהצלחה!</strong>`;
-            // Clear the list only when all assigned
             document.getElementById('personnelList').value = '';
         }
 
@@ -803,23 +937,28 @@
 
     // --- נקה הכל (תוקן) ---
     function clearAll() {
-        if(confirm("לנקות את כל הנתונים, לאפס את הטופס ולרוקן את סדרן השיירה והטקסט? (פעולה זו לא תמחק את התבניות ששמרת למעלה)")) {
-            currentConvoy = []; 
-            renderConvoyList(); 
-            document.getElementById('outputText').value = ""; 
-            
-            document.getElementById('groupName').value = "";
-            document.getElementById('vehicleType').value = "האמר"; 
-            document.getElementById('humveeId').value = ""; 
-            document.getElementById('overrideHumveeId').checked = false;
-            document.getElementById('commander').value = ""; 
-            document.getElementById('driver').value = ""; 
-            document.getElementById('gunner').value = "";
-            document.getElementById('extra-members').innerHTML = ""; 
-            
-            currentHeavyHeadText = "";
-            updateVehicleUI('main');
-        }
+        showConfirmModal(
+            "לנקות את כל הנתונים, לאפס את הטופס ולרוקן את סדרן השיירה והטקסט? (פעולה זו לא תמחק את התבניות ששמרת למעלה)",
+            'ניקוי נתונים',
+            'נקה הכל',
+            () => {
+                currentConvoy = [];
+                renderConvoyList();
+                document.getElementById('outputText').value = "";
+
+                document.getElementById('groupName').value = "";
+                document.getElementById('vehicleType').value = "האמר";
+                document.getElementById('humveeId').value = "";
+                document.getElementById('overrideHumveeId').checked = false;
+                document.getElementById('commander').value = "";
+                document.getElementById('driver').value = "";
+                document.getElementById('gunner').value = "";
+                document.getElementById('extra-members').innerHTML = "";
+
+                currentHeavyHeadText = "";
+                updateVehicleUI('main');
+            }
+        );
     }
 
     // --- פיזור ידני ---
@@ -917,12 +1056,11 @@
         const v = currentConvoy[idx];
         const remaining = vehicleRemainingSeats(v);
         const selected = manualSpreadState.selectedNames.size;
-        const label = escapeHtml(v.vehicleId || v.vehicleType);
         const atMax = selected >= remaining;
 
         document.getElementById('manualSpreadTitle').textContent = `${v.vehicleId || v.vehicleType} — בחר עד ${remaining} אנשים`;
 
-        let html = `<div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; border-radius: 4px; margin-bottom: 12px; text-align: center; font-weight: bold;">נבחרו <span style="color: ${atMax ? '#dc3545' : '#2b5c8f'};">${selected}/${remaining}</span></div>`;
+        let html = `<div id="manualSpreadCounterWrap" data-remaining="${remaining}" style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; border-radius: 4px; margin-bottom: 12px; text-align: center; font-weight: bold;">נבחרו <span id="manualSpreadCounter" style="color: ${atMax ? '#dc3545' : '#2b5c8f'};">${selected}/${remaining}</span></div>`;
 
         if (manualUnassigned.length === 0) {
             html += `<div style="padding: 15px; text-align: center; color: #6c757d;">אין שמות לשיבוץ</div>`;
@@ -935,7 +1073,7 @@
                     ? 'background: #e9ecef; opacity: 0.5; cursor: not-allowed;'
                     : (isSelected ? 'background: #d4edda; border-color: #c3e6cb;' : 'background: white; cursor: pointer;');
                 html += `
-                    <label style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #dee2e6; border-radius: 4px; ${rowStyle}">
+                    <label data-manual-row="${i}" style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #dee2e6; border-radius: 4px; ${rowStyle}">
                         <input type="checkbox" ${isSelected ? 'checked' : ''} ${disabled ? 'disabled' : ''} onchange="toggleManualName(${i}, this.checked)" style="width: auto; transform: scale(1.3); margin: 0;">
                         <span style="flex: 1; font-size: 15px;">${escapeHtml(name)}</span>
                     </label>
@@ -945,18 +1083,63 @@
         }
 
         document.getElementById('manualSpreadBody').innerHTML = html;
+        renderManualSpreadFooter();
+    }
+
+    function renderManualSpreadFooter() {
+        const selected = manualSpreadState.selectedNames.size;
         document.getElementById('manualSpreadFooter').innerHTML = `
             <button class="btn-copy" type="button" onclick="confirmManualAssign()" ${selected === 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>שבץ (${selected})</button>
             <button class="btn-clear" style="background-color: #6c757d;" type="button" onclick="backToVehicleList()">חזור</button>
         `;
     }
 
+    // Bug fix: when a checkbox is tapped, do NOT re-render the whole list
+    // (innerHTML replacement was resetting scroll position to 0 — terrible UX
+    // on mobile). Update the in-memory set, then patch only the bits that
+    // changed: the selected row's styling, the counter, the at-max state of
+    // every other unchecked row, and the footer button.
     function toggleManualName(nameIndex, checked) {
         const name = manualUnassigned[nameIndex];
         if (!name) return;
         if (checked) manualSpreadState.selectedNames.add(name);
         else manualSpreadState.selectedNames.delete(name);
-        renderManualSpreadBody();
+
+        const counterWrap = document.getElementById('manualSpreadCounterWrap');
+        if (!counterWrap) return; // body was unmounted
+        const remaining = parseInt(counterWrap.dataset.remaining, 10);
+        const selected = manualSpreadState.selectedNames.size;
+        const atMax = selected >= remaining;
+
+        // Counter
+        const counter = document.getElementById('manualSpreadCounter');
+        if (counter) {
+            counter.textContent = `${selected}/${remaining}`;
+            counter.style.color = atMax ? '#dc3545' : '#2b5c8f';
+        }
+
+        // All rows: re-evaluate selected/disabled appearance.
+        // Use querySelectorAll on the persisted body element instead of a full
+        // innerHTML rewrite — this preserves scrollTop on the inner scroller.
+        const rows = document.querySelectorAll('#manualSpreadBody [data-manual-row]');
+        rows.forEach((row) => {
+            const i = parseInt(row.getAttribute('data-manual-row'), 10);
+            const rowName = manualUnassigned[i];
+            const isSelected = manualSpreadState.selectedNames.has(rowName);
+            const disabled = !isSelected && atMax;
+            row.style.cssText = `display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #dee2e6; border-radius: 4px; ${
+                disabled
+                    ? 'background: #e9ecef; opacity: 0.5; cursor: not-allowed;'
+                    : (isSelected ? 'background: #d4edda; border-color: #c3e6cb;' : 'background: white; cursor: pointer;')
+            }`;
+            const cb = row.querySelector('input[type="checkbox"]');
+            if (cb) {
+                cb.disabled = disabled;
+                if (cb.checked !== isSelected) cb.checked = isSelected;
+            }
+        });
+
+        renderManualSpreadFooter();
     }
 
     function backToVehicleList() {

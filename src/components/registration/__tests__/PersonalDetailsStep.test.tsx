@@ -15,9 +15,16 @@ jest.mock('@/utils/validationUtils', () => ({
 jest.mock('@/constants/text', () => ({
   TEXT_CONSTANTS: {
     AUTH: {
+      GENDER: 'מין',
       GENDER_MALE: 'זכר',
       GENDER_FEMALE: 'נקבה',
       GENDER_OTHER: 'אחר',
+      BIRTHDATE: 'תאריך לידה',
+      BIRTHDATE_PLACEHOLDER: 'בחר תאריך לידה',
+    },
+    REGISTRATION_COMPONENTS: {
+      ENTER_FIRST_NAME: 'הזן שם פרטי',
+      ENTER_LAST_NAME: 'הזן שם משפחה',
     },
   },
 }));
