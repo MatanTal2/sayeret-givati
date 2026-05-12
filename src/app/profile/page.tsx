@@ -102,42 +102,44 @@ export default function ProfilePage() {
       >
         <div className="max-w-4xl mx-auto w-full">
           {/* Profile Header */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-            <div className="flex items-center gap-6">
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8 mb-6 sm:mb-8">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               {/* Profile Avatar with Upload */}
               {enhancedUser?.uid && (
-                <ProfileImageUpload
-                  userId={enhancedUser.uid}
-                  currentImageUrl={profileImageUrl}
-                  onImageUpdate={handleImageUpdate}
-                  size="medium"
-                  showInstructions={false}
-                />
+                <div className="shrink-0">
+                  <ProfileImageUpload
+                    userId={enhancedUser.uid}
+                    currentImageUrl={profileImageUrl}
+                    onImageUpdate={handleImageUpdate}
+                    size="medium"
+                    showInstructions={false}
+                  />
+                </div>
               )}
 
               {/* Basic Info */}
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-neutral-900 mb-2">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 mb-1 sm:mb-2 truncate">
                   {getDisplayValue(
-                    enhancedUser?.firstName && enhancedUser?.lastName 
+                    enhancedUser?.firstName && enhancedUser?.lastName
                       ? `${enhancedUser.firstName} ${enhancedUser.lastName}`
                       : undefined,
                     user?.displayName || user?.email?.split('@')[0] || TEXT_CONSTANTS.PROFILE.DEFAULT_USER
                   )}
                 </h1>
-                <p className="text-lg text-neutral-600 mb-1">
+                <p className="text-base sm:text-lg text-neutral-600 mb-1 truncate">
                   {getDisplayValue(enhancedUser?.rank, TEXT_CONSTANTS.PROFILE.NO_RANK)}
                 </p>
-                <p className="text-neutral-500">
+                <p className="text-sm text-neutral-500 truncate">
                   {getDisplayValue(enhancedUser?.email || user?.email)}
                 </p>
               </div>
 
               {/* Status Badge */}
               {enhancedUser?.status && (
-                <div className={`px-4 py-2 rounded-full text-sm font-medium ${
-                  enhancedUser.status === 'active' 
-                    ? 'bg-success-100 text-success-800' 
+                <div className={`shrink-0 ms-auto px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium ${
+                  enhancedUser.status === 'active'
+                    ? 'bg-success-100 text-success-800'
                     : 'bg-neutral-100 text-neutral-800'
                 }`}>
                   {enhancedUser.status === 'active' ? TEXT_CONSTANTS.PROFILE.ACTIVE : TEXT_CONSTANTS.PROFILE.INACTIVE}
