@@ -5,6 +5,7 @@
 import { getAdminDb } from '../admin';
 import { COLLECTIONS } from '../collections';
 import { FieldValue } from 'firebase-admin/firestore';
+import { UserRole } from '@/types/equipment';
 
 interface PersonnelDocData {
   militaryPersonalNumberHash: string;
@@ -14,7 +15,7 @@ interface PersonnelDocData {
   rank: string;
   userType: string;
   registered: boolean;
-  approvedRole: string;
+  approvedRole: UserRole;
   roleStatus: string;
   status: string;
   createdBy: string;

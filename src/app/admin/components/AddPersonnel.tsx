@@ -3,8 +3,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Check, X } from 'lucide-react';
 import { usePersonnelManagement } from '@/hooks/usePersonnelManagement';
-import { RANK_OPTIONS, USER_TYPE_OPTIONS, FORM_CONSTRAINTS } from '@/constants/admin';
+import { RANK_OPTIONS, USER_TYPE_OPTIONS, USER_ROLE_OPTIONS, FORM_CONSTRAINTS } from '@/constants/admin';
 import { UserType } from '@/types/user';
+import { UserRole } from '@/types/equipment';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { Select } from '@/components/ui';
 import { cn } from '@/lib/cn';
@@ -186,6 +187,20 @@ export default function AddPersonnel() {
               options={USER_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
               disabled={inputsDisabled}
               ariaLabel="סוג משתמש"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label htmlFor="approvedRole" className={labelClass}>
+              {TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_ROLE} *
+            </label>
+            <Select
+              id="approvedRole"
+              value={formData.approvedRole ?? UserRole.SOLDIER}
+              onChange={(v) => v && handleInputChange('approvedRole', v)}
+              options={USER_ROLE_OPTIONS}
+              disabled={inputsDisabled}
+              ariaLabel={TEXT_CONSTANTS.ADMIN.UPDATE_FIELD_ROLE}
             />
           </div>
         </div>

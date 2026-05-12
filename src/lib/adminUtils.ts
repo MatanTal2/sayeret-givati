@@ -10,12 +10,14 @@ import {
   PersonnelOperationResult
 } from '@/types/admin';
 import { UserType } from '@/types/user';
+import { UserRole } from '@/types/equipment';
 import {
   ADMIN_CONFIG,
   VALIDATION_PATTERNS,
   VALIDATION_MESSAGES,
   ADMIN_MESSAGES,
-  SECURITY_CONFIG
+  SECURITY_CONFIG,
+  USER_ROLE_VALUES,
 } from '@/constants/admin';
 import { validateUserName } from '@/lib/equipmentValidation';
 
@@ -336,6 +338,7 @@ export class AdminFirestoreService {
       const normalizedPhone = ValidationUtils.toInternationalFormat(formData.phoneNumber);
 
       // Create the authorized personnel document data (timestamps added by server)
+      const approvedRole = formData.approvedRole ?? UserRole.SOLDIER;
       const personnelDoc = {
         militaryPersonalNumberHash: hash,
         phoneNumber: normalizedPhone,
@@ -344,7 +347,7 @@ export class AdminFirestoreService {
         rank: formData.rank.trim(),
         userType: formData.userType || UserType.USER,
         registered: false,
-        approvedRole: 'soldier',
+        approvedRole,
         roleStatus: 'approved',
         status: 'active',
         createdBy: createdBy || 'system_admin'
@@ -367,7 +370,7 @@ export class AdminFirestoreService {
         rank: formData.rank.trim(),
         userType: formData.userType || UserType.USER,
         registered: false,
-        approvedRole: 'soldier',
+        approvedRole,
         roleStatus: 'approved',
         status: 'active',
         joinDate: Timestamp.now(),
@@ -412,6 +415,7 @@ export class AdminFirestoreService {
       phoneNumber?: string;
       userType?: string;
       status?: 'active' | 'inactive' | 'transferred' | 'discharged';
+      approvedRole?: UserRole;
     }
   ): Promise<PersonnelOperationResult> {
     try {
@@ -450,6 +454,12 @@ export class AdminFirestoreService {
         const validStatuses = ['active', 'inactive', 'transferred', 'discharged'];
         if (!validStatuses.includes(updateData.status)) {
           validationErrors.status = 'Invalid status';
+        }
+      }
+
+      if (updateData.approvedRole !== undefined) {
+        if (!USER_ROLE_VALUES.includes(updateData.approvedRole)) {
+          validationErrors.approvedRole = 'Invalid role';
         }
       }
 
@@ -500,7 +510,7 @@ export class AdminFirestoreService {
       // Get current data for sync check and success message
       const currentPersonnel = docSnap.data() as AuthorizedPersonnel;
       const shouldSync = currentPersonnel.registered &&
-        (processedUpdates.firstName || processedUpdates.lastName || processedUpdates.rank || processedUpdates.phoneNumber || processedUpdates.userType || processedUpdates.status);
+        (processedUpdates.firstName || processedUpdates.lastName || processedUpdates.rank || processedUpdates.phoneNumber || processedUpdates.userType || processedUpdates.status || processedUpdates.approvedRole);
 
       // Update via server API route (firebase-admin)
       const updateResponse = await apiFetch('/api/authorized-personnel', {
@@ -613,7 +623,7 @@ export class AdminFirestoreService {
           rank: person.rank.trim(),
           userType: person.userType || 'user',
           registered: false,
-          approvedRole: 'soldier',
+          approvedRole: person.approvedRole ?? UserRole.SOLDIER,
           roleStatus: 'approved',
           status: 'active',
           createdBy: createdBy || 'system_admin',

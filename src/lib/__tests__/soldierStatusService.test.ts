@@ -142,7 +142,7 @@ describe('serverListRoster', () => {
     });
     const out = await serverListRoster();
     expect(out).toEqual([
-      { id: 'hash-a', firstName: 'דוד', lastName: 'לוי', platoon: 'מסייעת', status: 'בית' },
+      { id: 'hash-a', firstName: 'דוד', lastName: 'לוי', platoon: 'מסייעת', status: 'בית', isRegistered: false },
     ]);
   });
 

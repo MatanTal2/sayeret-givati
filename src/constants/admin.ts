@@ -1,5 +1,6 @@
 import { MILITARY_RANKS } from '@/types/admin';
 import { UserType } from '@/types/user';
+import { UserRole } from '@/types/equipment';
 
 // Admin configuration
 export const ADMIN_CONFIG = {
@@ -66,6 +67,30 @@ export const USER_TYPE_OPTIONS = [
   { value: UserType.SYSTEM_MANAGER, label: 'מנהל מערכת' },
   { value: UserType.ADMIN, label: 'אדמין' }
 ];
+
+// Military role (UserRole) — Hebrew label map + dropdown options
+export const USER_ROLE_LABELS: Record<UserRole, string> = {
+  [UserRole.SOLDIER]: 'חייל',
+  [UserRole.TEAM_LEADER]: 'מפקד צוות',
+  [UserRole.SQUAD_LEADER]: 'מפקד כיתה',
+  [UserRole.SERGEANT]: 'סמל',
+  [UserRole.OFFICER]: 'קצין',
+  [UserRole.COMMANDER]: 'מפקד',
+  [UserRole.EQUIPMENT_MANAGER]: 'מנהל ציוד',
+};
+
+export const USER_ROLE_OPTIONS: { value: UserRole; label: string }[] = [
+  { value: UserRole.SOLDIER, label: USER_ROLE_LABELS[UserRole.SOLDIER] },
+  { value: UserRole.TEAM_LEADER, label: USER_ROLE_LABELS[UserRole.TEAM_LEADER] },
+  { value: UserRole.SQUAD_LEADER, label: USER_ROLE_LABELS[UserRole.SQUAD_LEADER] },
+  { value: UserRole.SERGEANT, label: USER_ROLE_LABELS[UserRole.SERGEANT] },
+  { value: UserRole.OFFICER, label: USER_ROLE_LABELS[UserRole.OFFICER] },
+  { value: UserRole.COMMANDER, label: USER_ROLE_LABELS[UserRole.COMMANDER] },
+  { value: UserRole.EQUIPMENT_MANAGER, label: USER_ROLE_LABELS[UserRole.EQUIPMENT_MANAGER] },
+];
+
+// Valid string values for runtime validation (e.g., CSV row parsing)
+export const USER_ROLE_VALUES = USER_ROLE_OPTIONS.map((o) => o.value);
 
 // Service status enum (matches AuthorizedPersonnel.status)
 export const PERSONNEL_STATUSES = ['active', 'inactive', 'transferred', 'discharged'] as const;

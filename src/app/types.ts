@@ -8,4 +8,5 @@ export interface Soldier {
   customStatus?: string;
   notes?: string;
   isSelected: boolean;
+  isRegistered: boolean;
 }

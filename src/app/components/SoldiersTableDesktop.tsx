@@ -200,7 +200,22 @@ export default function SoldiersTableDesktop({
                   />
                 </td>
                 <td className="px-1 py-3 text-neutral-400 text-center">|</td>
-                <td className="px-4 py-3 text-neutral-800 font-medium">{soldier.name}</td>
+                <td className="px-4 py-3 text-neutral-800 font-medium">
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      aria-hidden="true"
+                      title={
+                        soldier.isRegistered
+                          ? TEXT_CONSTANTS.STATUS_PAGE.REGISTERED_TOOLTIP
+                          : TEXT_CONSTANTS.STATUS_PAGE.UNREGISTERED_TOOLTIP
+                      }
+                      className={`inline-block w-2 h-2 rounded-full ${
+                        soldier.isRegistered ? 'bg-success-500' : 'bg-neutral-300'
+                      }`}
+                    />
+                    {soldier.name}
+                  </span>
+                </td>
                 <td className="px-1 py-3 text-neutral-400 text-center">|</td>
                 <td className="px-4 py-3 text-neutral-700">{soldier.platoon}</td>
                 <td className="px-1 py-3 text-neutral-400 text-center">|</td>
