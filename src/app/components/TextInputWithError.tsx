@@ -21,7 +21,7 @@ export default function TextInputWithError({
 }: TextInputWithErrorProps) {
   return (
     <div>
-      <label className="block text-sm font-medium text-neutral-700 mb-1 pr-1.5">
+      <label className="block text-sm font-medium text-neutral-700 mb-1 pe-1.5">
         {label} {required && <span className="text-danger-500">*</span>}
       </label>
       <input 
