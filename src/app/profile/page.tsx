@@ -149,39 +149,39 @@ export default function ProfilePage() {
           {/* Profile Details */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Personal Information */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-neutral-900 mb-6 flex items-center gap-2">
-                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 {TEXT_CONSTANTS.PROFILE.PERSONAL_INFO}
               </h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.FIRST_NAME}</label>
-                  <div className="text-neutral-900">{getDisplayValue(enhancedUser?.firstName)}</div>
+
+              <dl className="divide-y divide-neutral-100 -my-2">
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.FIRST_NAME}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">{getDisplayValue(enhancedUser?.firstName)}</dd>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.LAST_NAME}</label>
-                  <div className="text-neutral-900">{getDisplayValue(enhancedUser?.lastName)}</div>
+
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.LAST_NAME}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">{getDisplayValue(enhancedUser?.lastName)}</dd>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.GENDER}</label>
-                  <div className="text-neutral-900">
-                    {enhancedUser?.gender === 'male' ? TEXT_CONSTANTS.PROFILE.MALE : 
-                     enhancedUser?.gender === 'female' ? TEXT_CONSTANTS.PROFILE.FEMALE : 
+
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.GENDER}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">
+                    {enhancedUser?.gender === 'male' ? TEXT_CONSTANTS.PROFILE.MALE :
+                     enhancedUser?.gender === 'female' ? TEXT_CONSTANTS.PROFILE.FEMALE :
                      getDisplayValue(enhancedUser?.gender)}
-                  </div>
+                  </dd>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.BIRTH_DATE}</label>
-                  <div className="text-neutral-900">{formatDate(enhancedUser?.birthday)}</div>
+
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.BIRTH_DATE}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">{formatDate(enhancedUser?.birthday)}</dd>
                 </div>
-              </div>
+              </dl>
             </div>
 
             {/* Military Information */}
