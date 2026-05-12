@@ -9,7 +9,9 @@ import { ProfileImageUploadProps, ImageUploadState } from '@/types/profile';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import ProfileImageCropper from './ProfileImageCropper';
 
-const MAX_PICK_BYTES = 5 * 1024 * 1024;
+const PRECROP_COMPRESS_THRESHOLD = 4 * 1024 * 1024;
+const PRECROP_MAX_DIMENSION = 2048;
+const PRECROP_MAX_MB = 2;
 const OUTPUT_DIMENSION = 512;
 const MAX_OUTPUT_MB = 0.2;
 
@@ -81,23 +83,30 @@ export default function ProfileImageUpload({
       return;
     }
 
-    if (file.size > MAX_PICK_BYTES) {
-      setUploadState({
-        isUploading: false,
-        error: TEXT_CONSTANTS.PROFILE_COMPONENTS.FILE_SIZE_ERROR,
-        success: false,
-      });
-      return;
-    }
+    setUploadState({ isUploading: true, error: null, success: false });
 
     try {
-      const dataUrl = await readFileAsDataUrl(file);
+      // Camera shots routinely exceed several MB. Shrink the raw bytes
+      // before the cropper materializes a data URL so we never blow the
+      // browser memory or trigger a slow base64 conversion.
+      const sourceFile =
+        file.size > PRECROP_COMPRESS_THRESHOLD
+          ? await imageCompression(file, {
+              maxWidthOrHeight: PRECROP_MAX_DIMENSION,
+              maxSizeMB: PRECROP_MAX_MB,
+              useWebWorker: true,
+            })
+          : file;
+      const dataUrl = await readFileAsDataUrl(sourceFile);
       setUploadState({ isUploading: false, error: null, success: false });
       setPendingImage(dataUrl);
-    } catch {
+    } catch (error) {
       setUploadState({
         isUploading: false,
-        error: TEXT_CONSTANTS.PROFILE_COMPONENTS.UPLOAD_ERROR,
+        error:
+          error instanceof Error
+            ? error.message
+            : TEXT_CONSTANTS.PROFILE_COMPONENTS.UPLOAD_ERROR,
         success: false,
       });
     }
@@ -192,7 +201,7 @@ export default function ProfileImageUpload({
       {size !== 'small' && showInstructions && (
         <div className="mt-2 text-center">
           <p className="text-xs text-neutral-500">לחץ להעלאת תמונה חדשה</p>
-          <p className="text-xs text-neutral-400">JPG, PNG עד 5MB</p>
+          <p className="text-xs text-neutral-400">JPG, PNG, HEIC</p>
         </div>
       )}
 

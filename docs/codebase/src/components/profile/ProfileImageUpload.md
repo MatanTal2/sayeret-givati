@@ -9,13 +9,23 @@
 Profile image picker → circular cropper → resize → Firebase Storage upload. Returns the public download URL via `onImageUpdate`.
 
 Pipeline:
-1. User clicks the avatar (or the hover overlay). Hidden `<input type="file" accept="image/*">` opens.
-2. Validate (must be `image/*`, ≤ 5 MB).
-3. Read file as `data:` URL, mount `ProfileImageCropper` with the data URL.
-4. User drags / zooms (range slider) → on **אישור**, cropper renders the cropped region to a 512×512 canvas, exports as JPEG `Blob` (quality 0.92).
-5. Cropped blob is re-compressed via `browser-image-compression` (`maxWidthOrHeight: 512`, `maxSizeMB: 0.2`, `useWebWorker: true`, forced `image/jpeg`).
-6. Compressed file uploaded to `users/{userId}/profile/{timestamp}.jpg` with `cacheControl: 'public, max-age=31536000, immutable'`.
-7. Download URL persisted via `onImageUpdate`.
+1. User clicks the avatar (or the hover overlay). Hidden `<input type="file" accept="image/*">` opens. On mobile, this surfaces the system camera as a source option.
+2. Validate (must be `image/*`). No hard size cap — see "Camera-shot handling" below.
+3. If raw bytes exceed `PRECROP_COMPRESS_THRESHOLD` (4 MB), pre-compress with `browser-image-compression` (`maxWidthOrHeight: 2048`, `maxSizeMB: 2`) so the cropper doesn't choke on huge camera shots.
+4. Read file as `data:` URL, mount `ProfileImageCropper` with the data URL.
+5. User drags / zooms (range slider) → on **אישור**, cropper renders the cropped region to a 512×512 canvas, exports as JPEG `Blob` (quality 0.92).
+6. Cropped blob is re-compressed via `browser-image-compression` (`maxWidthOrHeight: 512`, `maxSizeMB: 0.2`, `useWebWorker: true`, forced `image/jpeg`).
+7. Compressed file uploaded to `users/{userId}/profile/{timestamp}.jpg` with `cacheControl: 'public, max-age=31536000, immutable'`.
+8. Download URL persisted via `onImageUpdate`.
+
+## Camera-shot handling
+
+The old 5 MB pre-crop reject was killing typical phone-camera uploads — modern cameras routinely produce 6-15 MB JPEGs. Since the final upload is always compressed to 0.2 MB after cropping anyway, the cap was doing no useful work and only failing real users.
+
+Current behavior:
+- No size cap at the pick stage.
+- Files over 4 MB go through a pre-crop compression pass (down to ~2 MB / 2048 px) before being read into the cropper as a data URL. This avoids slow base64 conversion and runaway memory on the cropper canvas.
+- Compression failures (corrupt file, unsupported codec) surface their real error message rather than a generic "upload failed".
 
 The trigger is now the avatar + hover overlay only — the small upload-icon button at the bottom-right of the avatar was removed (bug #6).
 
@@ -63,9 +73,11 @@ Pre-Storage builds (mock upload) wrote `blob:` URLs into the user document. Thos
 
 ## Constants
 
-- `MAX_PICK_BYTES = 5 * 1024 * 1024` — pick-stage size cap (the post-crop file is always far smaller).
+- `PRECROP_COMPRESS_THRESHOLD = 4 * 1024 * 1024` — files above this are pre-compressed before being handed to the cropper.
+- `PRECROP_MAX_DIMENSION = 2048` — pre-compression max edge length.
+- `PRECROP_MAX_MB = 2` — pre-compression target size.
 - `OUTPUT_DIMENSION = 512` — final width/height in pixels.
-- `MAX_OUTPUT_MB = 0.2` — `browser-image-compression` size cap (~200 KB).
+- `MAX_OUTPUT_MB = 0.2` — `browser-image-compression` size cap (~200 KB) for the final upload.
 
 ## Companion components
 

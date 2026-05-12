@@ -198,7 +198,7 @@ export const TEXT_CONSTANTS = {
     BIRTH_DATE: 'תאריך לידה',
     RANK: 'דרגה',
     ROLE: 'תפקיד',
-    JOIN_DATE: 'תאריך כניסה ליחידה',
+    JOIN_DATE: 'תאריך הצטרפות למערכת',
     STATUS: 'סטטוס',
     EMAIL: 'אימייל',
     UNIQUE_ID: 'מזהה ייחודי',

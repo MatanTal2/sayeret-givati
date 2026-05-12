@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { PhoneIcon, CheckIcon, XIcon } from 'lucide-react';
 import { PhoneNumberUpdateProps, PhoneUpdateState, OTPVerificationRequest } from '@/types/profile';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import { formatPhoneForDisplay } from '@/utils/validationUtils';
 
 /**
  * PhoneNumberUpdate component with OTP verification
@@ -25,20 +26,6 @@ export default function PhoneNumberUpdate({
     success: false,
     countdown: 0
   });
-
-  // Format phone number for display as 0XX-XXX-XXXX (Israeli local format)
-  const formatPhoneDisplay = (phone: string) => {
-    if (!phone) return '';
-    const cleaned = phone.replace(/\D/g, '');
-    if (cleaned.startsWith('972')) {
-      const local = `0${cleaned.slice(3)}`;
-      return local.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
-    }
-    if (/^0\d{9}$/.test(cleaned)) {
-      return cleaned.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
-    }
-    return phone;
-  };
 
   // Validate Israeli phone number
   const validatePhoneNumber = (phone: string): boolean => {
@@ -227,7 +214,7 @@ export default function PhoneNumberUpdate({
           <PhoneIcon className="w-5 h-5 text-neutral-400" />
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">מספר טלפון</label>
-            <div className="text-neutral-900">{formatPhoneDisplay(currentPhoneNumber)}</div>
+            <div className="text-neutral-900">{formatPhoneForDisplay(currentPhoneNumber)}</div>
           </div>
         </div>
         <button
@@ -281,7 +268,7 @@ export default function PhoneNumberUpdate({
         <div className="space-y-4">
           <div className="bg-info-50 border border-info-200 rounded-lg p-4">
             <p className="text-sm text-info-800 mb-2">
-              נשלח קוד אימות למספר: {formatPhoneDisplay(newPhoneNumber)}
+              נשלח קוד אימות למספר: {formatPhoneForDisplay(newPhoneNumber)}
             </p>
             <p className="text-xs text-info-600">
               הקוד תקף למשך 5 דקות

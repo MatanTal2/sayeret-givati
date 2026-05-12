@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthGuard from '@/components/auth/AuthGuard';
 import AppShell from '@/app/components/AppShell';
@@ -18,16 +18,27 @@ import { updateUserProfile } from '@/lib/userProfileService';
  */
 export default function ProfilePage() {
   const { enhancedUser, user, refreshEnhancedUser } = useAuth();
-  // Drop legacy `blob:` URLs left over from the old mock upload; they error on render.
-  const initialProfileImage =
-    enhancedUser?.profileImage && /^https?:\/\//i.test(enhancedUser.profileImage)
-      ? enhancedUser.profileImage
-      : undefined;
-  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(initialProfileImage);
-  const [phoneNumber, setPhoneNumber] = useState<string>(enhancedUser?.phoneNumber || '');
-  const [teamId, setTeamId] = useState<string>(enhancedUser?.teamId || '');
+  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(undefined);
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [teamId, setTeamId] = useState<string>('');
   const [assignmentSaving, setAssignmentSaving] = useState(false);
   const [assignmentMessage, setAssignmentMessage] = useState<string | null>(null);
+
+  // enhancedUser arrives async after AuthContext loads the Firestore profile.
+  // Sync local fields whenever it changes so the page reflects the latest
+  // persisted state across hard refreshes (not just the first render).
+  useEffect(() => {
+    const img = enhancedUser?.profileImage;
+    setProfileImageUrl(img && /^https?:\/\//i.test(img) ? img : undefined);
+  }, [enhancedUser?.profileImage]);
+
+  useEffect(() => {
+    setPhoneNumber(enhancedUser?.phoneNumber || '');
+  }, [enhancedUser?.phoneNumber]);
+
+  useEffect(() => {
+    setTeamId(enhancedUser?.teamId || '');
+  }, [enhancedUser?.teamId]);
 
   // Format date helper
   const formatDate = (date: Date | { toDate: () => Date } | string | null | undefined) => {
@@ -102,42 +113,44 @@ export default function ProfilePage() {
       >
         <div className="max-w-4xl mx-auto w-full">
           {/* Profile Header */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-            <div className="flex items-center gap-6">
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8 mb-6 sm:mb-8">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               {/* Profile Avatar with Upload */}
               {enhancedUser?.uid && (
-                <ProfileImageUpload
-                  userId={enhancedUser.uid}
-                  currentImageUrl={profileImageUrl}
-                  onImageUpdate={handleImageUpdate}
-                  size="medium"
-                  showInstructions={false}
-                />
+                <div className="shrink-0">
+                  <ProfileImageUpload
+                    userId={enhancedUser.uid}
+                    currentImageUrl={profileImageUrl}
+                    onImageUpdate={handleImageUpdate}
+                    size="medium"
+                    showInstructions={false}
+                  />
+                </div>
               )}
 
               {/* Basic Info */}
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-neutral-900 mb-2">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 mb-1 sm:mb-2 truncate">
                   {getDisplayValue(
-                    enhancedUser?.firstName && enhancedUser?.lastName 
+                    enhancedUser?.firstName && enhancedUser?.lastName
                       ? `${enhancedUser.firstName} ${enhancedUser.lastName}`
                       : undefined,
                     user?.displayName || user?.email?.split('@')[0] || TEXT_CONSTANTS.PROFILE.DEFAULT_USER
                   )}
                 </h1>
-                <p className="text-lg text-neutral-600 mb-1">
+                <p className="text-base sm:text-lg text-neutral-600 mb-1 truncate">
                   {getDisplayValue(enhancedUser?.rank, TEXT_CONSTANTS.PROFILE.NO_RANK)}
                 </p>
-                <p className="text-neutral-500">
+                <p className="text-sm text-neutral-500 truncate">
                   {getDisplayValue(enhancedUser?.email || user?.email)}
                 </p>
               </div>
 
               {/* Status Badge */}
               {enhancedUser?.status && (
-                <div className={`px-4 py-2 rounded-full text-sm font-medium ${
-                  enhancedUser.status === 'active' 
-                    ? 'bg-success-100 text-success-800' 
+                <div className={`shrink-0 ms-auto px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium ${
+                  enhancedUser.status === 'active'
+                    ? 'bg-success-100 text-success-800'
                     : 'bg-neutral-100 text-neutral-800'
                 }`}>
                   {enhancedUser.status === 'active' ? TEXT_CONSTANTS.PROFILE.ACTIVE : TEXT_CONSTANTS.PROFILE.INACTIVE}
@@ -149,89 +162,89 @@ export default function ProfilePage() {
           {/* Profile Details */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Personal Information */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-neutral-900 mb-6 flex items-center gap-2">
-                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 {TEXT_CONSTANTS.PROFILE.PERSONAL_INFO}
               </h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.FIRST_NAME}</label>
-                  <div className="text-neutral-900">{getDisplayValue(enhancedUser?.firstName)}</div>
+
+              <dl className="divide-y divide-neutral-100 -my-2">
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.FIRST_NAME}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">{getDisplayValue(enhancedUser?.firstName)}</dd>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.LAST_NAME}</label>
-                  <div className="text-neutral-900">{getDisplayValue(enhancedUser?.lastName)}</div>
+
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.LAST_NAME}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">{getDisplayValue(enhancedUser?.lastName)}</dd>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.GENDER}</label>
-                  <div className="text-neutral-900">
-                    {enhancedUser?.gender === 'male' ? TEXT_CONSTANTS.PROFILE.MALE : 
-                     enhancedUser?.gender === 'female' ? TEXT_CONSTANTS.PROFILE.FEMALE : 
+
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.GENDER}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">
+                    {enhancedUser?.gender === 'male' ? TEXT_CONSTANTS.PROFILE.MALE :
+                     enhancedUser?.gender === 'female' ? TEXT_CONSTANTS.PROFILE.FEMALE :
                      getDisplayValue(enhancedUser?.gender)}
-                  </div>
+                  </dd>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.BIRTH_DATE}</label>
-                  <div className="text-neutral-900">{formatDate(enhancedUser?.birthday)}</div>
+
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.BIRTH_DATE}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">{formatDate(enhancedUser?.birthday)}</dd>
                 </div>
-              </div>
+              </dl>
             </div>
 
             {/* Military Information */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-neutral-900 mb-6 flex items-center gap-2">
-                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 {TEXT_CONSTANTS.PROFILE.MILITARY_INFO}
               </h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.RANK}</label>
-                  <div className="text-neutral-900">{getDisplayValue(enhancedUser?.rank)}</div>
+
+              <dl className="divide-y divide-neutral-100 -my-2">
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.RANK}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">{getDisplayValue(enhancedUser?.rank)}</dd>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.ROLE}</label>
-                  <div className="text-neutral-900">
-                    {enhancedUser?.role === UserRole.SOLDIER ? TEXT_CONSTANTS.PROFILE.SOLDIER : 
-                     enhancedUser?.role === UserRole.COMMANDER ? TEXT_CONSTANTS.PROFILE.COMMANDER : 
+
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.ROLE}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">
+                    {enhancedUser?.role === UserRole.SOLDIER ? TEXT_CONSTANTS.PROFILE.SOLDIER :
+                     enhancedUser?.role === UserRole.COMMANDER ? TEXT_CONSTANTS.PROFILE.COMMANDER :
                      enhancedUser?.role === UserRole.OFFICER ? TEXT_CONSTANTS.PROFILE.OFFICER :
                      enhancedUser?.role === UserRole.EQUIPMENT_MANAGER ? TEXT_CONSTANTS.PROFILE.EQUIPMENT_MANAGER :
                      getDisplayValue(enhancedUser?.role ? String(enhancedUser.role) : undefined)}
-                  </div>
+                  </dd>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.JOIN_DATE}</label>
-                  <div className="text-neutral-900">{formatDate(enhancedUser?.joinDate)}</div>
+
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.JOIN_DATE}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">{formatDate(enhancedUser?.joinDate)}</dd>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.STATUS}</label>
-                  <div className="text-neutral-900">
-                    {enhancedUser?.status === 'active' ? TEXT_CONSTANTS.PROFILE.ACTIVE : 
-                     enhancedUser?.status === 'inactive' ? TEXT_CONSTANTS.PROFILE.INACTIVE : 
-                     enhancedUser?.status === 'transferred' ? TEXT_CONSTANTS.PROFILE.TRANSFERRED : 
-                     enhancedUser?.status === 'discharged' ? TEXT_CONSTANTS.PROFILE.DISCHARGED : 
+
+                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
+                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.STATUS}</dt>
+                  <dd className="text-neutral-900 sm:col-span-2">
+                    {enhancedUser?.status === 'active' ? TEXT_CONSTANTS.PROFILE.ACTIVE :
+                     enhancedUser?.status === 'inactive' ? TEXT_CONSTANTS.PROFILE.INACTIVE :
+                     enhancedUser?.status === 'transferred' ? TEXT_CONSTANTS.PROFILE.TRANSFERRED :
+                     enhancedUser?.status === 'discharged' ? TEXT_CONSTANTS.PROFILE.DISCHARGED :
                      getDisplayValue(enhancedUser?.status)}
-                  </div>
+                  </dd>
                 </div>
-              </div>
+              </dl>
             </div>
 
             {/* Team & Unit Assignment */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-neutral-900 mb-6 flex items-center gap-2">
-                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4 flex flex-wrap items-center gap-2">
+                <svg className="w-5 h-5 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6 5.87a4 4 0 108 0 4 4 0 00-8 0z" />
                 </svg>
                 {TEXT_CONSTANTS.ONBOARDING.ASSIGNMENT_TITLE}
@@ -267,9 +280,9 @@ export default function ProfilePage() {
             </div>
 
             {/* Contact Information */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-neutral-900 mb-6 flex items-center gap-2">
-                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4 flex flex-wrap items-center gap-2">
+                <svg className="w-5 h-5 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
                 {TEXT_CONSTANTS.PROFILE.CONTACT_INFO}
@@ -290,9 +303,9 @@ export default function ProfilePage() {
             </div>
 
             {/* System Information */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-neutral-900 mb-6 flex items-center gap-2">
-                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4 flex flex-wrap items-center gap-2">
+                <svg className="w-5 h-5 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 {TEXT_CONSTANTS.PROFILE.SYSTEM_INFO}
