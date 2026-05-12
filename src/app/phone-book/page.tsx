@@ -10,6 +10,7 @@ import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { usePhoneBook } from '@/hooks/usePhoneBook';
 import { UserType } from '@/types/user';
 import type { PhoneBookEntry } from '@/types/phoneBook';
+import { formatPhoneForDisplay } from '@/utils/validationUtils';
 
 const T = TEXT_CONSTANTS.FEATURES.PHONE_BOOK;
 const ROLE_LABEL: Record<UserType, string> = {
@@ -178,7 +179,7 @@ function PhoneBookContent() {
                   <td className="px-3 py-2 text-neutral-700 whitespace-nowrap">
                     {e.phoneNumber ? (
                       <a className="text-primary-600 hover:underline" href={`tel:${e.phoneNumber}`}>
-                        {e.phoneNumber}
+                        {formatPhoneForDisplay(e.phoneNumber)}
                       </a>
                     ) : (
                       <span className="text-neutral-400">—</span>

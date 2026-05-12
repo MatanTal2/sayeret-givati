@@ -360,20 +360,27 @@ export class PhoneUtils {
   }
 
   /**
-   * Format phone number for display (converts +972XXXXXXXXX to 0XX-XXXXXXX)
-   * @param phone - The phone number to format
-   * @returns Formatted phone number for display
+   * Format an Israeli phone number for display as 0XX-XXX-XXXX.
+   * Accepts +972XXXXXXXXX, 972XXXXXXXXX, 0XXXXXXXXX, or pre-formatted
+   * variants with separators. Returns the original string if it does
+   * not match an Israeli pattern (preserves foreign numbers verbatim).
    */
   static formatPhoneForDisplay(phone: string): string {
     if (!phone) return '';
-    
-    // Convert +972XXXXXXXXX to 0XX-XXXXXXX format for display
-    if (phone.startsWith('+972')) {
-      const number = phone.slice(4); // Remove +972
-      return `0${number.slice(0, 2)}-${number.slice(2)}`;
+
+    const cleaned = phone.replace(/\D/g, '');
+    let local: string | null = null;
+
+    if (cleaned.startsWith('972') && cleaned.length === 12) {
+      local = `0${cleaned.slice(3)}`;
+    } else if (/^0\d{9}$/.test(cleaned)) {
+      local = cleaned;
     }
-    
-    // If already in display format or other format, return as is
+
+    if (local && local.length === 10) {
+      return local.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+    }
+
     return phone;
   }
 
