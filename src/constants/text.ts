@@ -882,6 +882,10 @@ export const TEXT_CONSTANTS = {
         ERR_SUBMIT_FAILED: 'שליחת התכנון נכשלה'
       }
     },
+    AMMUNITION_TRAINING: {
+      TITLE: 'אימוני ירי',
+      DESCRIPTION: 'תכנון אימונים, אישור ובקרה על הבטן'
+    },
     PHONE_BOOK: {
       TITLE: 'ספר טלפונים',
       DESCRIPTION: 'אנשי קשר של היחידה',

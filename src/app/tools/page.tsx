@@ -13,7 +13,7 @@ const tools = [
     icon: '🚗',
     href: '/tools/convoy',
     downloadFile: '/tools/hmmwvConvoy.html',
-    color: 'from-emerald-600 to-emerald-800',
+    color: 'from-primary-600 to-primary-800',
   },
   {
     id: 'logistics',
@@ -22,7 +22,7 @@ const tools = [
     icon: '📦',
     href: '/tools/logistics',
     downloadFile: '/tools/logistics.html',
-    color: 'from-purple-600 to-purple-800',
+    color: 'from-primary-600 to-primary-800',
   },
 ];
 
