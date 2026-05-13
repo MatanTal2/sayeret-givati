@@ -26,11 +26,11 @@ export default function DataManagementTab() {
           <table className="min-w-full divide-y divide-neutral-200">
             <thead className="bg-neutral-50">
               <tr>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">טבלה</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">רשומות</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">גודל</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">עדכון אחרון</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">פעולות</th>
+                <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">טבלה</th>
+                <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">רשומות</th>
+                <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">גודל</th>
+                <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">עדכון אחרון</th>
+                <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">פעולות</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-neutral-200">
@@ -41,8 +41,8 @@ export default function DataManagementTab() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">{table.size}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">{table.lastUpdate}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                    <button className="text-info-600 hover:text-info-900 ml-2">ייצא</button>
-                    <button className="text-success-600 hover:text-success-900 ml-2">גבה</button>
+                    <button className="text-info-600 hover:text-info-900 me-2">ייצא</button>
+                    <button className="text-success-600 hover:text-success-900 me-2">גבה</button>
                     <button className="text-orange-600 hover:text-orange-900">נקה</button>
                   </td>
                 </tr>

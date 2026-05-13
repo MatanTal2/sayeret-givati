@@ -154,12 +154,12 @@ export default function AuditLogsTab() {
             <table className="min-w-full divide-y divide-neutral-200">
               <thead className="bg-neutral-50">
                 <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">זמן</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">מבצע</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">פעולה</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">ציוד</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">יעד</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">הערות</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">זמן</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">מבצע</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">פעולה</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">ציוד</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">יעד</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">הערות</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-neutral-200">
@@ -189,7 +189,7 @@ export default function AuditLogsTab() {
           <div className="w-8 h-8 bg-info-100 rounded-full flex items-center justify-center">
             <span className="text-info-600 font-bold">📊</span>
           </div>
-          <div className="mr-4">
+          <div className="ms-4">
             <div className="text-2xl font-bold text-neutral-900">{logs.length}</div>
             <div className="text-sm text-neutral-600">רשומות מוצגות</div>
           </div>

@@ -81,28 +81,63 @@ Recurring offender: action-row headers that want the primary CTA on the right.
 - `src/components/ui/FormField.tsx` — 1 hit. Required-asterisk `mr-1` → `ms-1`.
 - `src/app/components/TextInputWithError.tsx` — 1 hit. Label `pr-1.5` → `pe-1.5`.
 
+### ✅ Fixed (2026-05-13, batch 4 — `fix/rtl-batch-4-registration-and-admin-tabs`)
+
+`RegistrationDetailsStep.tsx` + 8 admin/form components. Audit's strict grep
+(margin-only) listed 11 hits; widened to also catch `text-right`, `border-r-*`,
+`absolute left-*/right-*`, etc. that the strict grep missed. Real fixed count:
+~25 hits across these files.
+
+- `src/components/registration/RegistrationDetailsStep.tsx` — 12 hits. Read-only
+  first/last-name inputs `text-right` → `text-end`; email + password inputs
+  `text-right` → `text-end`; password `pr-12` → `pe-12`; absolute email icon +
+  password eye-toggle `left-3` → `end-3`; six error-message `text-right` →
+  `text-end`; birthdate input `text-right` → `text-end`.
+- `src/components/management/tabs/DataManagementTab.tsx` — 7 hits. Five
+  table-header `text-right` → `text-start`; two action-button `ml-2` → `me-2`.
+- `src/components/management/tabs/EmailTab.tsx` — 3 hits. Two checkbox
+  `ml-2` → `me-2`; one template-card `text-right` → `text-end`.
+- `src/components/management/tabs/PermissionsTab.tsx` — 2 hits. Both checkbox
+  `ml-2` → `me-2`.
+- `src/components/management/sidebar/SidebarNavigation.tsx` — 3 hits. Active-tab
+  indicator `border-r-2` → `border-e-2`; icon-text gap `ml-3` → `me-3`; label
+  `text-right` → `text-start`.
+- `src/components/management/tabs/AuditLogsTab.tsx` — 7 hits. Six table-header
+  `text-right` → `text-start`; stats-card text block `mr-4` → `ms-4`.
+- `src/components/management/tabs/CustomUserSelectionModal.tsx` — 3 hits.
+  Horizontal scroller `pl-4 pr-4` → `ps-4 pe-4`; two absolute fade-edges
+  `left-0` / `right-0` → `end-0` / `start-0` (gradient direction unchanged —
+  site is pure RTL, so visual placement is preserved).
+- `src/components/management/tabs/EnforceTransferTab.tsx` — 7 hits. Six
+  table-header `text-right` → `text-start`; approve-button `ml-2` → `me-2`.
+- `src/components/equipment/template-form/FormFieldRequiresDailyCheck.tsx` — 1
+  hit. Label `mr-2` → `ms-2`.
+
 ### 🟡 Quick-win candidates (next batch)
 
-Remaining real hits after batch 3: **19 hits across 11 files**. Almost all in
-admin tabs (low daily traffic) or dev-only test components.
+Remaining hits surfaced during batch 4 that are out of its scope. Audit's
+margin-only strict grep undercounted these; logical conversion is still
+incomplete in many admin/registration components.
 
-| File | Hits | Notes |
-|------|------|-------|
-| `src/components/EquipmentTest.tsx` | 5 | Dev/test component — skip unless QA flags |
-| `src/components/SimpleUserTest.tsx` | 2 | Dev/test component — skip |
-| `src/components/management/tabs/DataManagementTab.tsx` | 2 | Admin tab |
-| `src/components/management/tabs/EmailTab.tsx` | 2 | Admin tab |
-| `src/components/management/tabs/PermissionsTab.tsx` | 2 | Admin tab |
-| `src/components/management/sidebar/SidebarNavigation.tsx` | 1 | Sidebar |
-| `src/components/management/tabs/AuditLogsTab.tsx` | 1 | Admin tab |
-| `src/components/management/tabs/CustomUserSelectionModal.tsx` | 1 | Admin modal |
-| `src/components/management/tabs/EnforceTransferTab.tsx` | 1 | Admin tab |
-| `src/components/equipment/template-form/FormFieldRequiresDailyCheck.tsx` | 1 | Form field |
-| `src/components/registration/RegistrationDetailsStep.tsx` | 1 | Registration flow |
+| File | Notes |
+|------|-------|
+| `src/components/management/tabs/UsersTab.tsx` | 6 table-header `text-right` (batch 2 fixed margins only). Convert to `text-start`. |
+| `src/components/management/tabs/TemplatesTab.tsx` | `text-right` on disclosure button. |
+| `src/components/management/tabs/PermissionGrantsTab.tsx` | `left-1/2` on toast. |
+| `src/components/management/BulkTemplateImportModal.tsx` | `text-right` table. |
+| `src/components/registration/PersonalDetailsStep.tsx` | 6 `text-right` + 1 `text-left` (date input — exempt; verify). |
+| `src/components/registration/OTPVerificationStep.tsx` | `left-3` icon. |
+| `src/components/registration/RegistrationForm.tsx` | `text-right` + `left-3` icon. |
+| `src/components/registration/RegistrationStepDots.tsx` | `left-1/2` tooltip + `border-l-2 border-r-2 …` triangle. |
+| `src/components/ammunition/AmmunitionInventoryView.tsx` + 4 other `Ammunition*` views | `text-right` tables. |
+| `src/components/equipment/TransferModal.tsx` | 2 `text-right` (search results — batch 2 fixed icons). |
+| `src/components/notifications/NotificationItem.tsx` | `border-r-2` + `left-2` dot. |
+| `src/components/notifications/NotificationBell.tsx` | 2 `-right-1` absolute badges. |
+| `src/components/equipment/EquipmentErrorBoundary.tsx` | `text-left` (English stack trace — likely exempt). |
+| `src/components/EquipmentTest.tsx` + `SimpleUserTest.tsx` | Dev-only — skip. |
 
-**Priority for next batch:** `RegistrationDetailsStep.tsx` (registration flow,
-user-facing); then the admin tabs together (one branch, since they share
-patterns). Test components can stay broken — they are not user-facing.
+`justify-end` on button rows is intentional everywhere it appears (CTAs end-aligned
+in modal footers). Do not flag those.
 
 Pattern for password / email input pairs (codify):
 - Hebrew text-input: `text-end` (not `text-right`)

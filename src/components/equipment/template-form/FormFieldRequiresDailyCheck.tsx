@@ -26,7 +26,7 @@ export default function FormFieldRequiresDailyCheck({
         disabled={disabled}
         className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded"
       />
-      <label htmlFor="requiresDailyStatusCheck" className="mr-2 text-sm text-neutral-700">
+      <label htmlFor="requiresDailyStatusCheck" className="ms-2 text-sm text-neutral-700">
         {TEXT_CONSTANTS.FEATURES.EQUIPMENT.TEMPLATE_FORM.REQUIRES_DAILY_CHECK}
       </label>
     </div>
