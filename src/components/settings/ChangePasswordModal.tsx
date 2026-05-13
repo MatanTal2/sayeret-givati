@@ -9,6 +9,8 @@ import {
 } from '@headlessui/react';
 import { Eye, EyeOff, X } from 'lucide-react';
 import { changePassword, mapFirebaseAuthError } from '@/lib/firebasePhoneAuth';
+import { logCredentialAuditEvent } from '@/lib/credentialAuditClient';
+import { auth } from '@/lib/firebase';
 import { TEXT_CONSTANTS } from '@/constants/text';
 
 interface Props {
@@ -64,6 +66,10 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }: Props)
     setSubmitting(true);
     try {
       await changePassword(current, next);
+      const uid = auth.currentUser?.uid;
+      if (uid) {
+        void logCredentialAuditEvent({ uid, eventType: 'PASSWORD_CHANGED' });
+      }
       onSuccess();
       onClose();
     } catch (err) {
