@@ -17,7 +17,8 @@ When real flows are implemented, wire each action to its own modal or route.
 
 ## Behavior
 
-- Fixed `bottom-5 end-5 z-50`, hidden on `lg:` and up.
+- Fixed `bottom-5 start-5 z-50`, hidden on `lg:` and up. In RTL (the app default) `start` resolves to the visual right edge — placing the FAB under the user's right thumb (the conventional position for right-handed users regardless of text direction).
+- Speed-dial children align with `items-end` so the action chips trail to the visual left away from the FAB.
 - Click outside or `Escape` closes the speed-dial.
 - Plus icon rotates 45° (→ X) when open.
 
