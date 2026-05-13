@@ -30,6 +30,7 @@ export const COLLECTIONS = {
   TRAINING_PLANS: 'trainingPlans',
   PHONE_BOOK: 'phoneBook',
   GUARD_SCHEDULES: 'guardSchedules',
+  CREDENTIAL_AUDIT_LOG: 'credentialAuditLog',
 } as const;
 
 export type CollectionName = typeof COLLECTIONS[keyof typeof COLLECTIONS];
