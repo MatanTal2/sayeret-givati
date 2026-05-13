@@ -31,7 +31,10 @@ interface DocState {
 const collectionStore: Record<string, Record<string, DocState>> = {};
 const writes: Array<{ collection: string; id: string; op: 'set' | 'update' | 'delete'; payload?: Record<string, unknown> }> = [];
 
-const reverseSyncMock = jest.fn(async (_hash: string, _e164: string) => true);
+const reverseSyncMock = jest.fn(async (...args: [string, string]) => {
+  void args;
+  return true;
+});
 
 jest.mock('../authorizedPersonnelService', () => ({
   serverWritePhoneToPersonnel: (...args: [string, string]) => reverseSyncMock(...args),
