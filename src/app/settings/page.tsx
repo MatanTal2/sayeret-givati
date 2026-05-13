@@ -6,16 +6,18 @@ import AuthGuard from '@/components/auth/AuthGuard';
 import AppShell from '@/app/components/AppShell';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
+import ChangePasswordModal from '@/components/settings/ChangePasswordModal';
 import { Select } from '@/components/ui';
-import { 
-  UserIcon, 
-  PhoneIcon, 
-  KeyIcon, 
-  ShieldCheckIcon, 
-  BellIcon, 
-  GlobeIcon, 
-  PaletteIcon, 
-  LockIcon, 
+import { useToast } from '@/components/ui/Toast';
+import {
+  UserIcon,
+  PhoneIcon,
+  KeyIcon,
+  ShieldCheckIcon,
+  BellIcon,
+  GlobeIcon,
+  PaletteIcon,
+  LockIcon,
   TrashIcon,
   MailIcon,
   PackageIcon,
@@ -29,7 +31,9 @@ import {
  */
 export default function SettingsPage() {
   const { enhancedUser } = useAuth();
-  
+  const { showToast } = useToast();
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+
   // TODO: Replace with actual state management when backend is implemented
   const [settings, setSettings] = useState({
     emailNotifications: true,
@@ -145,14 +149,14 @@ export default function SettingsPage() {
                       {TEXT_CONSTANTS.SETTINGS.CHANGE_PASSWORD}
                     </h3>
                     <p className="text-sm text-neutral-500">
-                      {TEXT_CONSTANTS.SETTINGS.COMING_SOON}
+                      {TEXT_CONSTANTS.SETTINGS.CHANGE_PASSWORD_DESCRIPTION}
                     </p>
                   </div>
                 </div>
                 <button
-                  onClick={() => handleButtonClick('changePassword')}
-                  disabled
-                  className="px-4 py-2 text-sm bg-neutral-100 text-neutral-400 rounded-lg cursor-not-allowed"
+                  type="button"
+                  onClick={() => setChangePasswordOpen(true)}
+                  className="btn-primary text-sm"
                 >
                   {TEXT_CONSTANTS.SETTINGS.CHANGE_PASSWORD}
                 </button>
@@ -405,6 +409,12 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+
+        <ChangePasswordModal
+          open={changePasswordOpen}
+          onClose={() => setChangePasswordOpen(false)}
+          onSuccess={() => showToast(TEXT_CONSTANTS.SETTINGS.CHANGE_PASSWORD_SUCCESS, 'success')}
+        />
       </AppShell>
     </AuthGuard>
   );

@@ -3,6 +3,8 @@ import {
   signInWithPhoneNumber,
   EmailAuthProvider,
   linkWithCredential,
+  reauthenticateWithCredential,
+  updatePassword,
   sendEmailVerification,
   sendPasswordResetEmail,
   signOut,
@@ -100,6 +102,43 @@ export async function signOutCurrentUser(): Promise<void> {
   await signOut(auth);
 }
 
+/**
+ * Change the currently signed-in user's password.
+ *
+ * Performs Firebase's required re-authentication with the email+password
+ * credential first (mandatory for sensitive ops), then calls
+ * `updatePassword`. Throws `RequiresRecentLoginError` when re-auth itself
+ * comes back stale (rare — only happens if the session is severely aged).
+ *
+ * Surfaces:
+ * - `auth/wrong-password` / `auth/invalid-credential` from re-auth when the
+ *   current password is wrong.
+ * - `auth/weak-password` from `updatePassword` when the new password fails
+ *   Firebase's minimum-strength check (default: 6 chars).
+ * - `auth/requires-recent-login` if the credential is still considered
+ *   stale after re-auth (mapped to RequiresRecentLoginError).
+ */
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user || !user.email) {
+    throw new Error('No authenticated user with an email provider');
+  }
+  const credential = EmailAuthProvider.credential(user.email, currentPassword);
+  try {
+    await reauthenticateWithCredential(user, credential);
+    await updatePassword(user, newPassword);
+  } catch (error) {
+    const code =
+      error && typeof error === 'object' && 'code' in error
+        ? (error as { code: string }).code
+        : '';
+    if (code === 'auth/requires-recent-login') {
+      throw new RequiresRecentLoginError();
+    }
+    throw error;
+  }
+}
+
 export function mapFirebaseAuthError(error: unknown): string {
   const code =
     error && typeof error === 'object' && 'code' in error
@@ -131,6 +170,10 @@ export function mapFirebaseAuthError(error: unknown): string {
       return TEXT_CONSTANTS.AUTH.WEAK_PASSWORD;
     case 'auth/invalid-email':
       return TEXT_CONSTANTS.AUTH.INVALID_EMAIL;
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':
+    case 'auth/invalid-login-credentials':
+      return TEXT_CONSTANTS.AUTH.WRONG_PASSWORD;
     case 'auth/requires-recent-login':
       return TEXT_CONSTANTS.AUTH.REQUIRES_RECENT_LOGIN;
     default:
