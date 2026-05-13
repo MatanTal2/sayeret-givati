@@ -285,7 +285,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
       render(<RegistrationFormTestWrapper {...mockProps} personalNumber="invalid" />);
       
       const input = screen.getByTestId('personal-number-input');
-      expect(input).toHaveClass('border-red-500');
+      expect(input).toHaveClass('border-danger-500');
     });
 
     it('should disable verify button for invalid input', () => {
@@ -307,7 +307,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
       
       const verifyButton = screen.getByTestId('verify-button');
       expect(verifyButton).not.toBeDisabled();
-      expect(verifyButton).toHaveClass('bg-gradient-to-r', 'from-green-600');
+      expect(verifyButton).toHaveClass('bg-gradient-to-r', 'from-success-600');
     });
 
     it('should not show error message for valid input', () => {
@@ -320,7 +320,7 @@ describe('RegistrationForm Multi-Step Flow', () => {
       render(<RegistrationFormTestWrapper {...mockProps} personalNumber="123456" />);
       
       const verifyButton = screen.getByTestId('verify-button');
-      expect(verifyButton).toHaveClass('from-green-600', 'to-green-700');
+      expect(verifyButton).toHaveClass('from-success-600', 'to-success-700');
     });
   });
 

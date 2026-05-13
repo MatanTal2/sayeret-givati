@@ -1,5 +1,10 @@
 import { AdminFirestoreService, SecurityUtils, ValidationUtils } from '../adminUtils';
 import { getDocs, addDoc, writeBatch, doc } from 'firebase/firestore';
+import { apiFetch } from '@/lib/apiFetch';
+
+jest.mock('@/lib/apiFetch', () => ({
+  apiFetch: jest.fn(),
+}));
 
 // Mock Web Crypto API
 const mockDigest = jest.fn();
@@ -328,11 +333,15 @@ describe('AdminFirestoreService', () => {
       const formatSpy = jest.spyOn(ValidationUtils, 'toInternationalFormat')
         .mockReturnValue('+972501234567');
 
-      // Mock Firebase batch operations
-      const mockCommit = jest.fn().mockResolvedValue(undefined);
-      const mockSet = jest.fn();
-      const mockBatch = { set: mockSet, commit: mockCommit };
-      (writeBatch as jest.Mock).mockReturnValue(mockBatch);
+      // Bulk write now goes through the server route `/api/authorized-personnel/bulk`.
+      // Mock the apiFetch wrapper to return a successful bulk result with no
+      // failed indices — every valid entry should land in `successful`.
+      (apiFetch as jest.Mock).mockResolvedValue({
+        json: async () => ({ success: true, successCount: 1, failedIndices: [] }),
+      });
+      // doc + writeBatch are still imported by the service path; stub them so
+      // any incidental call returns shape-compatible values.
+      (writeBatch as jest.Mock).mockReturnValue({ set: jest.fn(), commit: jest.fn() });
       (doc as jest.Mock).mockReturnValue({ id: 'mock-doc-id' });
 
       const results = await AdminFirestoreService.addAuthorizedPersonnelBulk(personnel);
