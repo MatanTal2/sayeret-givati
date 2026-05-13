@@ -87,11 +87,10 @@ export default function ConfirmationModal({
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 overflow-y-auto"
       onKeyDown={handleKeyDown}
       tabIndex={-1}
-      dir={useHomePageStyle ? "rtl" : "ltr"}
     >
       {/* Backdrop */}
       <div 
@@ -108,7 +107,7 @@ export default function ConfirmationModal({
               <div className={`flex-shrink-0 w-10 h-10 rounded-full ${styles.iconBg} flex items-center justify-center`}>
                 <span className={`${styles.iconColor} text-xl`}>{styles.icon}</span>
               </div>
-              <div className="ml-3">
+              <div className="ms-3">
                 <h3 className="text-lg font-medium text-neutral-900 dark:text-white">
                   {title}
                 </h3>
@@ -167,7 +166,7 @@ export default function ConfirmationModal({
             >
               {isLoading ? (
                 <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2"></div>
                   טוען...
                 </div>
               ) : (

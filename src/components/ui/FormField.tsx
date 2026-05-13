@@ -30,7 +30,7 @@ export default function FormField({
         className="block text-sm font-medium text-neutral-700"
       >
         {label}
-        {required && <span className="text-danger-500 mr-1">*</span>}
+        {required && <span className="text-danger-500 ms-1">*</span>}
       </label>
       
       <div className="relative">

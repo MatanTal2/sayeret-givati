@@ -57,39 +57,59 @@ Recurring offender: action-row headers that want the primary CTA on the right.
 - `src/app/components/SoldiersTableMobile.tsx` — 2 hits. Name span padding
   `pr-0.5` → `pe-0.5`; platoon span margin `ml-3` → `me-3`.
 
+### ✅ Fixed (2026-05-12, batch 3 — `fix/rtl-batch-3-shared-modals`)
+
+- `src/components/ui/ConfirmationModal.tsx` — 2 hits + 1 forbidden per-component
+  `dir`. Removed `dir={useHomePageStyle ? "rtl" : "ltr"}` (CLAUDE.md forbids
+  per-component `dir`; modal inherits from `<html dir="rtl">`). `ml-3` → `ms-3`,
+  spinner `mr-2` → `me-2`.
+- `src/components/auth/LoginModal.tsx` — 4 real hits (the audit had only listed
+  1; found more on inspection). Close button `right-4` → `end-4`; email + password
+  inputs `text-right` → `text-end`, `pr-12` → `pe-12`; absolute-positioned
+  email icon `left-3` → `end-3`; password eye-toggle `left-3` → `end-3`.
+- `src/app/components/SearchBar.tsx` — 2 hits. Input padding `pl-10` → `ps-10`;
+  absolute icon `left-0 pl-3` → `start-0 ps-3`.
+- `src/components/registration/AccountDetailsStep.tsx` — 12 hits (audit had
+  listed 3; tooltip + spinner pile-on). All `text-right` → `text-end`. Email
+  field `pr-12` + `right-3` → `ps-12` + `start-3`. Password field
+  `pl-12 pr-12` → `pe-12 ps-12`; eye-toggle button `left-3` → `end-3`; lock
+  icon `right-3` → `start-3`. Tooltip absolute `right-0` → `start-0`, arrow
+  `right-3` → `start-3`, `border-l-4 border-r-4 border-l-transparent
+  border-r-transparent` → `border-s-4 border-e-4 border-s-transparent
+  border-e-transparent`. Spinner `-ml-1 mr-2` → `-ms-1 me-2`. Stale "Now on
+  Left/Right" comments removed.
+- `src/components/ui/FormField.tsx` — 1 hit. Required-asterisk `mr-1` → `ms-1`.
+- `src/app/components/TextInputWithError.tsx` — 1 hit. Label `pr-1.5` → `pe-1.5`.
+
 ### 🟡 Quick-win candidates (next batch)
 
-Re-counted with the stricter grep `(\s|"|')(pl-|pr-|ml-|mr-)\d` — these are
-the remaining real hits, not substring false-positives.
+Remaining real hits after batch 3: **19 hits across 11 files**. Almost all in
+admin tabs (low daily traffic) or dev-only test components.
 
 | File | Hits | Notes |
 |------|------|-------|
 | `src/components/EquipmentTest.tsx` | 5 | Dev/test component — skip unless QA flags |
-| `src/components/registration/AccountDetailsStep.tsx` | 3 | Registration flow |
+| `src/components/SimpleUserTest.tsx` | 2 | Dev/test component — skip |
 | `src/components/management/tabs/DataManagementTab.tsx` | 2 | Admin tab |
 | `src/components/management/tabs/EmailTab.tsx` | 2 | Admin tab |
 | `src/components/management/tabs/PermissionsTab.tsx` | 2 | Admin tab |
-| `src/components/ui/ConfirmationModal.tsx` | 2 | Shared modal — fix once, propagates everywhere |
-| `src/app/components/SearchBar.tsx` | 2 | Top-bar search |
-| `src/components/SimpleUserTest.tsx` | 2 | Dev/test component — skip |
 | `src/components/management/sidebar/SidebarNavigation.tsx` | 1 | Sidebar |
 | `src/components/management/tabs/AuditLogsTab.tsx` | 1 | Admin tab |
 | `src/components/management/tabs/CustomUserSelectionModal.tsx` | 1 | Admin modal |
 | `src/components/management/tabs/EnforceTransferTab.tsx` | 1 | Admin tab |
-| `src/components/auth/LoginModal.tsx` | 1 | Login modal |
 | `src/components/equipment/template-form/FormFieldRequiresDailyCheck.tsx` | 1 | Form field |
 | `src/components/registration/RegistrationDetailsStep.tsx` | 1 | Registration flow |
-| `src/components/ui/FormField.tsx` | 1 | Shared form field |
-| `src/app/components/TextInputWithError.tsx` | 1 | Input wrapper |
 
-Convert each file in isolation; don't bundle. After each conversion, QA the
-affected page on mobile (where misalignment is most visible) and add it to the
-"Fixed" list above with a short note.
+**Priority for next batch:** `RegistrationDetailsStep.tsx` (registration flow,
+user-facing); then the admin tabs together (one branch, since they share
+patterns). Test components can stay broken — they are not user-facing.
 
-**Priority order for next batch:** `ConfirmationModal.tsx` first (shared, fix
-once + propagate), then `LoginModal.tsx` + `SearchBar.tsx` + `AccountDetailsStep.tsx`
-(high-visibility user-facing flows). Admin tabs are low-priority — small hit
-counts, few daily users.
+Pattern for password / email input pairs (codify):
+- Hebrew text-input: `text-end` (not `text-right`)
+- Reserve space for trailing icon: `pe-12` (not `pr-12`) when icon at `end-3`
+- Reserve space for leading icon: `ps-12` (not `pl-12`) when icon at `start-3`
+- Absolute icon positioning: `start-3` / `end-3` (not `left-3` / `right-3`)
+- Borders: `border-s-*` / `border-e-*` (not `border-l-*` / `border-r-*`)
 
 ### 🔴 Intentional `dir="ltr"` (DO NOT REMOVE)
 

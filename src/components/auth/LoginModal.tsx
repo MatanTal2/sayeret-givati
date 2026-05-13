@@ -74,7 +74,7 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
           {/* Close Button - Top Right */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 z-10 p-2 hover:bg-neutral-100 rounded-full btn-press focus-ring
+            className="absolute top-4 end-4 z-10 p-2 hover:bg-neutral-100 rounded-full btn-press focus-ring
                        text-neutral-400 hover:text-neutral-600 transition-all duration-200"
             disabled={isLoading}
             aria-label={TEXT_CONSTANTS.ARIA_LABELS.CLOSE_MODAL}
@@ -118,14 +118,14 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
                     onChange={handleInputChange}
                     className="w-full px-4 py-3.5 border-2 border-neutral-200 rounded-xl focus:ring-2
                              focus:ring-primary-500 focus:border-primary-500 outline-none transition-all
-                             text-right text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500"
+                             text-end text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500"
                     placeholder={TEXT_CONSTANTS.AUTH.EMAIL_PLACEHOLDER}
                     disabled={isLoading}
                     required
                   />
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  <div className="absolute end-3 top-1/2 transform -translate-y-1/2">
                     <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                             d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                     </svg>
                   </div>
@@ -149,7 +149,7 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
                     onChange={handleInputChange}
                     className="w-full px-4 py-3.5 border-2 border-neutral-200 rounded-xl focus:ring-2
                              focus:ring-primary-500 focus:border-primary-500 outline-none transition-all
-                             text-right text-neutral-800 bg-neutral-50 focus:bg-white pr-12 placeholder-neutral-500"
+                             text-end text-neutral-800 bg-neutral-50 focus:bg-white pe-12 placeholder-neutral-500"
                     placeholder={TEXT_CONSTANTS.AUTH.PASSWORD_PLACEHOLDER}
                     disabled={isLoading}
                     required
@@ -157,7 +157,7 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 
+                    className="absolute end-3 top-1/2 transform -translate-y-1/2
                              text-neutral-400 hover:text-neutral-600 transition-colors p-1 rounded-md
                              focus:outline-none focus:ring-2 focus:ring-primary-300"
                     disabled={isLoading}
