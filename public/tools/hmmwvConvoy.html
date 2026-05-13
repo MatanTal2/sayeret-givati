@@ -525,6 +525,18 @@
         if (templates[currentVal]) select.value = currentVal;
     }
 
+    // Template shape evolution:
+    //   v1: Vehicle[]                           — legacy, treated as includesPersonnel: true
+    //   v2: { vehicles: Vehicle[], includesPersonnel: boolean }
+    // Helper normalizes either shape to { vehicles, includesPersonnel }.
+    function unwrapTemplate(data) {
+        if (Array.isArray(data)) return { vehicles: data, includesPersonnel: true };
+        if (data && Array.isArray(data.vehicles)) {
+            return { vehicles: data.vehicles, includesPersonnel: data.includesPersonnel !== false };
+        }
+        return null;
+    }
+
     // שמירה או דריסה של תבנית
     function saveConvoyTemplate() {
         const templateName = document.getElementById('newTemplateName').value.trim();
@@ -533,13 +545,37 @@
 
         let templates = getTemplatesData();
 
-        const doSave = () => {
-            templates[templateName] = JSON.parse(JSON.stringify(currentConvoy));
+        const hasAnyPassengers = currentConvoy.some(v => Array.isArray(v.passengers) && v.passengers.length > 0);
+
+        const doSave = (includesPersonnel) => {
+            const vehicles = JSON.parse(JSON.stringify(currentConvoy));
+            if (!includesPersonnel) {
+                vehicles.forEach(v => { v.passengers = []; });
+            }
+            templates[templateName] = { vehicles, includesPersonnel };
             if (saveTemplatesData(templates)) {
                 updateTemplatesDropdown();
                 document.getElementById('savedTemplates').value = templateName;
-                showToast(`✅ השיירה נשמרה כתבנית: '${templateName}'`);
+                const suffix = includesPersonnel ? ' (כולל חברים)' : ' (תפקידים בלבד)';
+                showToast(`✅ השיירה נשמרה כתבנית: '${templateName}'${suffix}`);
             }
+        };
+
+        const askPersonnel = () => {
+            // No passengers anywhere — both choices store identical data. Skip
+            // the modal and save directly with includesPersonnel: false (no
+            // passengers to include anyway).
+            if (!hasAnyPassengers) { doSave(false); return; }
+
+            showActionModal(
+                'מה לשמור בתבנית? בחר אחת:',
+                'שמירת תבנית',
+                [
+                    { label: 'שמור תפקידים בלבד', kind: 'primary', onClick: () => doSave(false) },
+                    { label: 'שמור כולל חברים', kind: 'primary', onClick: () => doSave(true) },
+                    { label: 'חזרה', kind: 'neutral' }
+                ]
+            );
         };
 
         if (templates[templateName]) {
@@ -547,10 +583,10 @@
                 `תבנית בשם '${templateName}' כבר קיימת.\nלדרוס אותה עם השיירה המעודכנת?`,
                 'דריסת תבנית',
                 'דרוס',
-                doSave
+                askPersonnel
             );
         } else {
-            doSave();
+            askPersonnel();
         }
     }
 
@@ -560,16 +596,17 @@
         if (!templateName) { showInfoModal("אנא בחר תבנית מהרשימה."); return; }
 
         let templates = getTemplatesData();
-        const data = templates[templateName];
+        const unwrapped = unwrapTemplate(templates[templateName]);
 
-        if (!data || !Array.isArray(data)) { showInfoModal("שגיאה: התבנית פגומה או לא נמצאה.", "טעינה נכשלה"); return; }
+        if (!unwrapped) { showInfoModal("שגיאה: התבנית פגומה או לא נמצאה.", "טעינה נכשלה"); return; }
 
         const doLoad = () => {
-            currentConvoy = JSON.parse(JSON.stringify(data));
+            currentConvoy = JSON.parse(JSON.stringify(unwrapped.vehicles));
             document.getElementById('newTemplateName').value = templateName;
             renderConvoyList();
             generateConvoyText();
-            showToast(`✅ התבנית '${templateName}' נטענה בהצלחה`, 'info');
+            const suffix = unwrapped.includesPersonnel ? '' : ' (תפקידים בלבד — חברים לא נכללו)';
+            showToast(`✅ התבנית '${templateName}' נטענה בהצלחה${suffix}`, 'info');
         };
 
         if (currentConvoy.length > 0) {
