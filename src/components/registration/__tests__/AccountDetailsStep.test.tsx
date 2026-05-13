@@ -107,7 +107,7 @@ describe('AccountDetailsStep', () => {
         expect(screen.getByTestId('email-error')).toHaveTextContent('כתובת אימייל לא תקינה');
       });
       
-      expect(emailInput).toHaveClass('border-red-500');
+      expect(emailInput).toHaveClass('border-danger-500');
     });
 
     it('should have @ icon positioned on the right', () => {
@@ -148,7 +148,7 @@ describe('AccountDetailsStep', () => {
         expect(screen.getByTestId('password-error')).toHaveTextContent('סיסמה חייבת להכיל לפחות 8 תווים');
       });
       
-      expect(passwordInput).toHaveClass('border-red-500');
+      expect(passwordInput).toHaveClass('border-danger-500');
     });
 
     it('should toggle password visibility', async () => {
@@ -253,7 +253,7 @@ describe('AccountDetailsStep', () => {
       await waitFor(() => {
         const tooltipContainer = screen.getByText('דרישות סיסמה:').parentElement;
         expect(tooltipContainer).toHaveClass(
-          'bg-gray-800',
+          'bg-neutral-800',
           'text-white',
           'text-xs',
           'rounded-lg',
@@ -298,7 +298,7 @@ describe('AccountDetailsStep', () => {
       await user.click(consentCheckbox);
       
       await waitFor(() => {
-        expect(consentCheckbox).toHaveClass('border-red-500');
+        expect(consentCheckbox).toHaveClass('border-danger-500');
       });
     });
 

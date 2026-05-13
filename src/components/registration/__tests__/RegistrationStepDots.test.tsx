@@ -38,8 +38,8 @@ describe('RegistrationStepDots Component', () => {
       const dots = document.querySelectorAll('.w-3.h-3.rounded-full');
       const firstDot = dots[0];
       
-      expect(firstDot).toHaveClass('bg-blue-500');
-      expect(firstDot).toHaveClass('ring-2', 'ring-blue-200');
+      expect(firstDot).toHaveClass('bg-info-500');
+      expect(firstDot).toHaveClass('ring-2', 'ring-info-200');
     });
 
     it('should highlight step 2 for otp', () => {
@@ -51,12 +51,12 @@ describe('RegistrationStepDots Component', () => {
       const dots = document.querySelectorAll('.w-3.h-3.rounded-full');
       const secondDot = dots[1];
       
-      expect(secondDot).toHaveClass('bg-blue-500');
+      expect(secondDot).toHaveClass('bg-info-500');
     });
 
     // Skip this test as it has UI class expectations that don't match current implementation
-    it.skip('should highlight step 3 for details - SKIPPED: UI class expectations differ from implementation', () => {
-      render(<RegistrationStepDots currentStep="details" />);
+    it.skip('should highlight step 3 for personal - SKIPPED: completed/active mix differs from current impl', () => {
+      render(<RegistrationStepDots currentStep="personal" />);
       
       const progressbar = screen.getByRole('progressbar');
       expect(progressbar).toHaveAttribute('aria-valuenow', '3');
@@ -65,7 +65,7 @@ describe('RegistrationStepDots Component', () => {
       const thirdDot = dots[2];
       
       // In the details step, step 3 is shown as active/completed (green)
-      expect(thirdDot).toHaveClass('bg-green-500');
+      expect(thirdDot).toHaveClass('bg-success-500');
     });
 
     it('should highlight step 5 for success', () => {
@@ -77,25 +77,25 @@ describe('RegistrationStepDots Component', () => {
       const dots = document.querySelectorAll('.w-3.h-3.rounded-full');
       const fifthDot = dots[4];
       
-      expect(fifthDot).toHaveClass('bg-blue-500');
+      expect(fifthDot).toHaveClass('bg-info-500');
     });
   });
 
   describe('should show completed steps correctly', () => {
     // Skip this test as it has UI class expectations that don't match current implementation
     it.skip('should mark previous steps as completed - SKIPPED: UI class expectations differ from implementation', () => {
-      render(<RegistrationStepDots currentStep="details" />);
+      render(<RegistrationStepDots currentStep="personal" />);
       
       const dots = document.querySelectorAll('.w-3.h-3.rounded-full');
       
       // Steps 1, 2, and 3 should be completed (green) in details step
-      expect(dots[0]).toHaveClass('bg-green-500');
-      expect(dots[1]).toHaveClass('bg-green-500');
-      expect(dots[2]).toHaveClass('bg-green-500');
+      expect(dots[0]).toHaveClass('bg-success-500');
+      expect(dots[1]).toHaveClass('bg-success-500');
+      expect(dots[2]).toHaveClass('bg-success-500');
       
       // Steps 4 and 5 should be upcoming (gray)
-      expect(dots[3]).toHaveClass('bg-gray-300');
-      expect(dots[4]).toHaveClass('bg-gray-300');
+      expect(dots[3]).toHaveClass('bg-neutral-300');
+      expect(dots[4]).toHaveClass('bg-neutral-300');
     });
 
     it('should show completed connectors in green', () => {
@@ -104,12 +104,12 @@ describe('RegistrationStepDots Component', () => {
       const connectors = document.querySelectorAll('.h-0\\.5.w-8');
       
       // First connector should be green (between completed step 1 and active step 2)
-      expect(connectors[0]).toHaveClass('bg-green-500');
+      expect(connectors[0]).toHaveClass('bg-success-500');
       
       // Other connectors should be gray
-      expect(connectors[1]).toHaveClass('bg-gray-300');
-      expect(connectors[2]).toHaveClass('bg-gray-300');
-      expect(connectors[3]).toHaveClass('bg-gray-300');
+      expect(connectors[1]).toHaveClass('bg-neutral-300');
+      expect(connectors[2]).toHaveClass('bg-neutral-300');
+      expect(connectors[3]).toHaveClass('bg-neutral-300');
     });
   });
 
@@ -174,7 +174,7 @@ describe('RegistrationStepDots Component', () => {
       const firstStep = document.querySelector('[role="button"]');
       
       if (firstStep) {
-        firstStep.focus();
+        (firstStep as HTMLElement).focus();
         expect(firstStep).toHaveFocus();
       }
     });
@@ -199,7 +199,7 @@ describe('RegistrationStepDots Component', () => {
 
   describe('edge cases and validation', () => {
     it('should handle all valid step values', () => {
-      const validSteps: RegistrationStep[] = ['personal-number', 'otp', 'details', 'success'];
+      const validSteps: RegistrationStep[] = ['personal-number', 'otp', 'personal', 'account', 'success'];
       
       validSteps.forEach(step => {
         expect(() => {

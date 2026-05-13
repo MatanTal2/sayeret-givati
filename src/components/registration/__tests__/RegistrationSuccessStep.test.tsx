@@ -29,7 +29,7 @@ describe('RegistrationSuccessStep Component', () => {
       render(<RegistrationSuccessStep {...mockProps} />);
       
       // Check for the checkmark icon container
-      const iconContainer = document.querySelector('.w-20.h-20.bg-gradient-to-br.from-green-400.to-green-600');
+      const iconContainer = document.querySelector('.w-20.h-20.bg-gradient-to-br.from-success-400.to-success-600');
       expect(iconContainer).toBeInTheDocument();
       expect(iconContainer).toHaveClass('rounded-full', 'flex', 'items-center', 'justify-center');
       
@@ -55,7 +55,7 @@ describe('RegistrationSuccessStep Component', () => {
       expect(successMessage).toHaveClass(
         'text-2xl',
         'font-bold',
-        'text-gray-900',
+        'text-neutral-900',
         'mb-8'
       );
     });
@@ -86,7 +86,7 @@ describe('RegistrationSuccessStep Component', () => {
     it.skip('should show success icon with gradient background - SKIPPED: UI class expectations differ from implementation', () => {
       render(<RegistrationSuccessStep {...mockProps} />);
       
-      const iconContainer = document.querySelector('.bg-gradient-to-br.from-green-400.to-green-600');
+      const iconContainer = document.querySelector('.bg-gradient-to-br.from-success-400.to-success-600');
       expect(iconContainer).toBeInTheDocument();
       expect(iconContainer).toHaveClass('w-20', 'h-20', 'rounded-full');
     });
@@ -143,8 +143,8 @@ describe('RegistrationSuccessStep Component', () => {
         'transition-all',
         'duration-200',
         'bg-gradient-to-r',
-        'from-green-600',
-        'to-green-700',
+        'from-success-600',
+        'to-success-700',
         'text-white'
       );
     });
@@ -301,11 +301,11 @@ describe('RegistrationSuccessStep Component', () => {
       expect(successMessage).toHaveTextContent('הרשמה בוצעה בהצלחה!');
       
       // Green theme indicates success
-      const iconContainer = document.querySelector('.from-green-400.to-green-600');
+      const iconContainer = document.querySelector('.from-success-400.to-success-600');
       expect(iconContainer).toBeInTheDocument();
       
       const continueButton = screen.getByTestId('continue-button');
-      expect(continueButton).toHaveClass('from-green-600', 'to-green-700');
+      expect(continueButton).toHaveClass('from-success-600', 'to-success-700');
     });
 
     // Skip this test as it has UI class expectations that don't match current implementation
@@ -329,12 +329,12 @@ describe('RegistrationSuccessStep Component', () => {
       render(<RegistrationSuccessStep {...mockProps} />);
       
       // Success icon with green gradient
-      const iconContainer = document.querySelector('.from-green-400.to-green-600');
+      const iconContainer = document.querySelector('.from-success-400.to-success-600');
       expect(iconContainer).toBeInTheDocument();
       
       // Success button with green gradient
       const continueButton = screen.getByTestId('continue-button');
-      expect(continueButton).toHaveClass('from-green-600', 'to-green-700');
+      expect(continueButton).toHaveClass('from-success-600', 'to-success-700');
       
       // White checkmark on green background
       const checkmarkIcon = document.querySelector('.text-white svg');
