@@ -45,6 +45,23 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Phone-change pending reservations — server-only. The client never
+    // reads or writes; the initiate/confirm/cancel routes hold the keys.
+    // Pending docs carry a server-issued nonce that the client must echo
+    // on confirm.
+    match /phoneChangePending/{uid} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // Phone-change rate-limit shadow — server-only. Tracks per-uid
+    // initiate timestamps so the initiate route can enforce a 60s
+    // cool-down without burning SMS quota on retries.
+    match /phoneChangeRateLimit/{uid} {
+      allow read: if false;
+      allow write: if false;
+    }
+
     // Equipment templates — authenticated read
     match /equipmentTemplates/{typeId} {
       allow read: if request.auth != null;

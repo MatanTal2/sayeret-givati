@@ -28,9 +28,11 @@ export async function getActorFromRequest(request: Request): Promise<ApiActor> {
   }
 
   let uid: string;
+  let authTimeMs: number;
   try {
     const decoded = await getAdminAuth().verifyIdToken(idToken, true);
     uid = decoded.uid;
+    authTimeMs = (decoded.auth_time ?? 0) * 1000;
   } catch {
     throw new AuthError('Invalid or expired token', 401);
   }
@@ -42,6 +44,15 @@ export async function getActorFromRequest(request: Request): Promise<ApiActor> {
   const data = snap.data() ?? {};
   if (!data.userType) {
     throw new AuthError('User profile missing userType', 403);
+  }
+
+  // sessionEpoch fence — set by /api/users/phone-change/confirm to the
+  // confirming-device's `auth_time`. Other devices whose tokens were minted
+  // before that epoch are rejected immediately. Custom-claims migration is
+  // a planned follow-up; until then we pay one extra Firestore read here.
+  const sessionEpoch = data.sessionEpoch as number | undefined;
+  if (typeof sessionEpoch === 'number' && authTimeMs > 0 && authTimeMs < sessionEpoch) {
+    throw new AuthError('Session invalidated by a security event — please log in again', 401);
   }
 
   const grants = await getActiveGrants(uid);

@@ -31,6 +31,8 @@ export const COLLECTIONS = {
   PHONE_BOOK: 'phoneBook',
   GUARD_SCHEDULES: 'guardSchedules',
   CREDENTIAL_AUDIT_LOG: 'credentialAuditLog',
+  PHONE_CHANGE_PENDING: 'phoneChangePending',
+  PHONE_CHANGE_RATE_LIMIT: 'phoneChangeRateLimit',
 } as const;
 
 export type CollectionName = typeof COLLECTIONS[keyof typeof COLLECTIONS];
