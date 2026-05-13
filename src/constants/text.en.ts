@@ -48,6 +48,22 @@ export const TEXT_EN = {
     CHANGE_PHONE_RATE_LIMITED: 'Try again in a moment. Only one change per minute is allowed.',
     CHANGE_PHONE_MIRROR_FAILED: 'Saving the new number on the server failed. Try again or contact support.',
     CHANGE_PHONE_GENERIC_ERROR: 'Phone number change failed. Try again.',
+
+    // Delete-account modal (PR-G)
+    DELETE_ACCOUNT_TITLE: 'Delete account',
+    DELETE_ACCOUNT_WARNING_LONG: 'Your account will be flagged for deletion and permanently removed after 30 days. You can cancel within that window. All equipment and ammunition signed to you must be returned before deletion.',
+    DELETE_ACCOUNT_REASON_LABEL: 'Reason (optional)',
+    DELETE_ACCOUNT_REASON_PLACEHOLDER: 'Why are you deleting your account?',
+    DELETE_ACCOUNT_SUBMIT: 'Confirm deletion',
+    DELETE_ACCOUNT_SUBMITTING: 'Requesting deletion...',
+    DELETE_ACCOUNT_SUCCESS: 'Deletion requested. Your account will be removed in 30 days — you can cancel any time from Settings.',
+    DELETE_ACCOUNT_HAS_ASSETS: "Can't delete account — items are still signed to you. Return them first.",
+    DELETE_ACCOUNT_ALREADY_REQUESTED: 'A deletion request is already pending for this account.',
+    DELETE_ACCOUNT_GENERIC_ERROR: 'Deletion request failed. Try again.',
+    DELETE_ACCOUNT_OUTSTANDING_HEADING: 'Outstanding items:',
+    DELETE_ACCOUNT_OUTSTANDING_EQUIPMENT: 'Equipment signed',
+    DELETE_ACCOUNT_OUTSTANDING_AMMUNITION: 'Ammunition signed',
+    DELETE_ACCOUNT_OUTSTANDING_TRANSFERS: 'Open transfer requests',
   },
   PROFILE: {
     PHONE_NUMBER_LABEL: 'Phone number',

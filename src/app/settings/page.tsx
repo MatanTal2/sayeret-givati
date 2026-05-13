@@ -8,6 +8,7 @@ import { TEXT_CONSTANTS } from '@/constants/text';
 import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
 import ChangePasswordModal from '@/components/settings/ChangePasswordModal';
 import ChangePhoneModal from '@/components/settings/ChangePhoneModal';
+import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 import { Select } from '@/components/ui';
 import { useToast } from '@/components/ui/Toast';
 import {
@@ -35,6 +36,7 @@ export default function SettingsPage() {
   const { showToast } = useToast();
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [changePhoneOpen, setChangePhoneOpen] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
 
   // TODO: Replace with actual state management when backend is implemented
   const [settings, setSettings] = useState({
@@ -379,9 +381,9 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => handleButtonClick('deleteAccount')}
-                  disabled
-                  className="px-4 py-2 text-sm bg-danger-200 text-danger-400 rounded-lg cursor-not-allowed"
+                  type="button"
+                  onClick={() => setDeleteAccountOpen(true)}
+                  className="btn-danger text-sm"
                 >
                   {TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT}
                 </button>
@@ -421,6 +423,11 @@ export default function SettingsPage() {
           open={changePhoneOpen}
           onClose={() => setChangePhoneOpen(false)}
           onSuccess={() => showToast(TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_SUCCESS, 'success')}
+        />
+        <DeleteAccountModal
+          open={deleteAccountOpen}
+          onClose={() => setDeleteAccountOpen(false)}
+          onSuccess={() => showToast(TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_SUCCESS, 'success')}
         />
       </AppShell>
     </AuthGuard>

@@ -1283,6 +1283,22 @@ export const TEXT_CONSTANTS = {
     REQUEST_PERMISSION_DESC: 'שלח בקשה למנהל המערכת לקבלת הרשאות נוספות',
     DELETE_ACCOUNT: 'מחק חשבון',
     DELETE_ACCOUNT_WARNING: 'פעולה זו בלתי הפיכה',
+
+    // Delete-account modal (PR-G)
+    DELETE_ACCOUNT_TITLE: 'מחיקת חשבון',
+    DELETE_ACCOUNT_WARNING_LONG: 'החשבון יסומן למחיקה ויימחק לצמיתות לאחר 30 ימים. ניתן לבטל את הבקשה בתוך פרק זמן זה. כל הציוד והתחמושת המוצמדים אליך חייבים להיות מוחזרים לפני המחיקה.',
+    DELETE_ACCOUNT_REASON_LABEL: 'סיבה (לא חובה)',
+    DELETE_ACCOUNT_REASON_PLACEHOLDER: 'מדוע אתה מוחק את החשבון?',
+    DELETE_ACCOUNT_SUBMIT: 'אישור מחיקה',
+    DELETE_ACCOUNT_SUBMITTING: 'מבקש מחיקה...',
+    DELETE_ACCOUNT_SUCCESS: 'בקשת המחיקה התקבלה. החשבון יימחק בעוד 30 ימים — ניתן לבטל בכל עת מההגדרות.',
+    DELETE_ACCOUNT_HAS_ASSETS: 'לא ניתן למחוק את החשבון — נותרו פריטים בחתימתך. החזר אותם תחילה.',
+    DELETE_ACCOUNT_ALREADY_REQUESTED: 'בקשת מחיקה כבר קיימת לחשבון זה.',
+    DELETE_ACCOUNT_GENERIC_ERROR: 'בקשת המחיקה נכשלה. נסה שוב.',
+    DELETE_ACCOUNT_OUTSTANDING_HEADING: 'פריטים פתוחים:',
+    DELETE_ACCOUNT_OUTSTANDING_EQUIPMENT: 'ציוד בחתימה',
+    DELETE_ACCOUNT_OUTSTANDING_AMMUNITION: 'תחמושת בחתימה',
+    DELETE_ACCOUNT_OUTSTANDING_TRANSFERS: 'בקשות העברה פתוחות',
     
     // Placeholders and labels
     COMING_SOON: 'בקרוב',
