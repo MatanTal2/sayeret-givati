@@ -41,6 +41,14 @@ Viewport meta is set to `maximum-scale=1.0, user-scalable=no` to prevent iOS aut
 
 `toggleManualName` patches the DOM in place (counter span text, per-row classes, footer button) instead of calling `innerHTML = ...` on the scrollable body. This preserves `scrollTop` on the inner passenger list — without this fix, every checkbox tap reset scroll to the top, making the list unusable on mobile.
 
+### Personnel-spread selection keyed by row index
+
+`manualSpreadState.selectedIndices` is a `Set<number>` of row indices into `manualUnassigned`, **not** a `Set<string>` of names. Earlier code keyed by name, which made duplicate names in the pasted list toggle together: tapping one row checked every row sharing that name, and `confirmManualAssign` then both over-counted against the vehicle cap (visually) and removed every duplicate from the source list while assigning only one slot. Index keying treats every row as independent.
+
+### Clear personnel list
+
+Above the personnel textarea, a `🗑️ נקה רשימה` button opens an `showConfirmModal` ("נקה" / "ביטול") and, on confirm, empties `personnelList` + hides any `spreadResult` banner + shows a toast. No browser `confirm()` involved.
+
 ### Offline mode caveats (`file://`)
 
 The file is fully self-contained — all HTML/CSS/JS is inline, no external `<link>`/`<script>`, no `fetch`/XHR, no service worker — so it renders correctly when downloaded and opened directly. The known issue is `localStorage` under `file://`:

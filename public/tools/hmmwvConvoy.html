@@ -190,9 +190,10 @@
     <div style="background: #e8f4fd; border: 1px solid #b8daff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
         <label style="font-weight: bold; margin-bottom: 8px; display: block;">הדבק רשימת שמות (שם בכל שורה, עם או בלי בולט):</label>
         <textarea id="personnelList" style="height: 120px; margin-top: 0;" placeholder="• יוסי כהן&#10;• דוד לוי&#10;שרה אבן&#10;..."></textarea>
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
             <button class="btn-add" type="button" onclick="spreadPersonnel()" style="margin: 0; flex: 2;">פזר אנשים לשיירה ↓</button>
             <button class="btn-special" type="button" onclick="openManualSpread()" style="margin: 0; flex: 1;">פזר ידנית</button>
+            <button class="btn-clear" type="button" onclick="clearPersonnelList()" style="margin: 0; background-color: #6c757d; flex: 1;">🗑️ נקה רשימה</button>
         </div>
         <div id="spreadResult" style="display: none; margin-top: 10px; padding: 10px; border-radius: 4px;"></div>
     </div>
@@ -961,8 +962,29 @@
         );
     }
 
+    // --- ניקוי רשימת אנשים ---
+    function clearPersonnelList() {
+        const list = document.getElementById('personnelList').value.trim();
+        if (!list) { showToast('הרשימה כבר ריקה', 'info'); return; }
+        showConfirmModal(
+            'לרוקן את רשימת השמות?',
+            'ניקוי רשימה',
+            'נקה',
+            () => {
+                document.getElementById('personnelList').value = '';
+                document.getElementById('spreadResult').style.display = 'none';
+                showToast('🗑️ הרשימה נוקתה', 'warning');
+            }
+        );
+    }
+
     // --- פיזור ידני ---
-    let manualSpreadState = { screen: 'vehicles', selectedVehicleIndex: null, selectedNames: new Set() };
+    // Selection is keyed by ROW INDEX into manualUnassigned, not by name string.
+    // The previous name-keyed Set caused duplicate names in the pasted list to
+    // all toggle together — tapping one row checked every row sharing that name
+    // and the confirm step then removed every duplicate from the list while
+    // assigning only one slot, exceeding the vehicle's per-row capacity intent.
+    let manualSpreadState = { screen: 'vehicles', selectedVehicleIndex: null, selectedIndices: new Set() };
     let manualUnassigned = [];
 
     function escapeHtml(s) {
@@ -986,7 +1008,7 @@
         if (activeHmmwvs.length === 0) { showToast('אין האמרים פעילים בשיירה', 'warning'); return; }
 
         manualUnassigned = names;
-        manualSpreadState = { screen: 'vehicles', selectedVehicleIndex: null, selectedNames: new Set() };
+        manualSpreadState = { screen: 'vehicles', selectedVehicleIndex: null, selectedIndices: new Set() };
         renderManualSpreadBody();
         document.getElementById('manualSpreadModal').style.display = 'flex';
     }
@@ -1046,7 +1068,7 @@
         const v = currentConvoy[index];
         if (!v || vehicleRemainingSeats(v) === 0) return;
         manualSpreadState.selectedVehicleIndex = index;
-        manualSpreadState.selectedNames = new Set();
+        manualSpreadState.selectedIndices = new Set();
         manualSpreadState.screen = 'passengers';
         renderManualSpreadBody();
     }
@@ -1055,7 +1077,7 @@
         const idx = manualSpreadState.selectedVehicleIndex;
         const v = currentConvoy[idx];
         const remaining = vehicleRemainingSeats(v);
-        const selected = manualSpreadState.selectedNames.size;
+        const selected = manualSpreadState.selectedIndices.size;
         const atMax = selected >= remaining;
 
         document.getElementById('manualSpreadTitle').textContent = `${v.vehicleId || v.vehicleType} — בחר עד ${remaining} אנשים`;
@@ -1067,7 +1089,7 @@
         } else {
             html += `<div style="display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto;">`;
             manualUnassigned.forEach((name, i) => {
-                const isSelected = manualSpreadState.selectedNames.has(name);
+                const isSelected = manualSpreadState.selectedIndices.has(i);
                 const disabled = !isSelected && atMax;
                 const rowStyle = disabled
                     ? 'background: #e9ecef; opacity: 0.5; cursor: not-allowed;'
@@ -1087,7 +1109,7 @@
     }
 
     function renderManualSpreadFooter() {
-        const selected = manualSpreadState.selectedNames.size;
+        const selected = manualSpreadState.selectedIndices.size;
         document.getElementById('manualSpreadFooter').innerHTML = `
             <button class="btn-copy" type="button" onclick="confirmManualAssign()" ${selected === 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>שבץ (${selected})</button>
             <button class="btn-clear" style="background-color: #6c757d;" type="button" onclick="backToVehicleList()">חזור</button>
@@ -1098,17 +1120,17 @@
     // (innerHTML replacement was resetting scroll position to 0 — terrible UX
     // on mobile). Update the in-memory set, then patch only the bits that
     // changed: the selected row's styling, the counter, the at-max state of
-    // every other unchecked row, and the footer button.
+    // every other unchecked row, and the footer button. Keyed by row index
+    // (not name) so duplicate names in the pasted list stay independent.
     function toggleManualName(nameIndex, checked) {
-        const name = manualUnassigned[nameIndex];
-        if (!name) return;
-        if (checked) manualSpreadState.selectedNames.add(name);
-        else manualSpreadState.selectedNames.delete(name);
+        if (!Number.isInteger(nameIndex) || nameIndex < 0 || nameIndex >= manualUnassigned.length) return;
+        if (checked) manualSpreadState.selectedIndices.add(nameIndex);
+        else manualSpreadState.selectedIndices.delete(nameIndex);
 
         const counterWrap = document.getElementById('manualSpreadCounterWrap');
         if (!counterWrap) return; // body was unmounted
         const remaining = parseInt(counterWrap.dataset.remaining, 10);
-        const selected = manualSpreadState.selectedNames.size;
+        const selected = manualSpreadState.selectedIndices.size;
         const atMax = selected >= remaining;
 
         // Counter
@@ -1124,8 +1146,7 @@
         const rows = document.querySelectorAll('#manualSpreadBody [data-manual-row]');
         rows.forEach((row) => {
             const i = parseInt(row.getAttribute('data-manual-row'), 10);
-            const rowName = manualUnassigned[i];
-            const isSelected = manualSpreadState.selectedNames.has(rowName);
+            const isSelected = manualSpreadState.selectedIndices.has(i);
             const disabled = !isSelected && atMax;
             row.style.cssText = `display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #dee2e6; border-radius: 4px; ${
                 disabled
@@ -1144,7 +1165,7 @@
 
     function backToVehicleList() {
         manualSpreadState.selectedVehicleIndex = null;
-        manualSpreadState.selectedNames = new Set();
+        manualSpreadState.selectedIndices = new Set();
         manualSpreadState.screen = 'vehicles';
         renderManualSpreadBody();
     }
@@ -1152,11 +1173,18 @@
     function confirmManualAssign() {
         const idx = manualSpreadState.selectedVehicleIndex;
         const v = currentConvoy[idx];
-        if (!v || manualSpreadState.selectedNames.size === 0) return;
+        if (!v || manualSpreadState.selectedIndices.size === 0) return;
 
-        const toAssign = [...manualSpreadState.selectedNames];
+        // Sort indices so passengers are added in the same order they appear in
+        // the pasted list (not in click order or hash-iteration order).
+        const sortedIndices = [...manualSpreadState.selectedIndices].sort((a, b) => a - b);
+        const toAssign = sortedIndices.map(i => manualUnassigned[i]).filter(n => n);
         v.passengers = [...(v.passengers || []), ...toAssign];
-        manualUnassigned = manualUnassigned.filter(n => !manualSpreadState.selectedNames.has(n));
+
+        // Filter by index so duplicate names in the pasted list are not all
+        // removed when only one row was picked.
+        const pickedSet = manualSpreadState.selectedIndices;
+        manualUnassigned = manualUnassigned.filter((_, i) => !pickedSet.has(i));
 
         document.getElementById('personnelList').value = manualUnassigned.join('\n');
 
