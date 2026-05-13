@@ -51,9 +51,14 @@ The file is fully self-contained — all HTML/CSS/JS is inline, no external `<li
 
 Symptoms: templates won't save, deletes appear to revert on reload. The page logs a `console.warn` when `location.protocol === 'file:'`; `saveTemplatesData` and `deleteConvoyTemplate` show an offline-aware modal explaining the situation. Future improvement (separate PR): add Export/Import JSON buttons to bypass localStorage entirely.
 
+### Template shape (v1 → v2)
+
+`saveConvoyTemplate` writes `{ vehicles: Vehicle[], includesPersonnel: boolean }` under `localStorage["convoyMasterTemplates"][name]`. The pre-existing flat-array shape (`Vehicle[]`) is still accepted on load and treated as `{ vehicles: data, includesPersonnel: true }` via the `unwrapTemplate` helper — older templates remain usable, no migration needed.
+
+When the current convoy has at least one passenger anywhere, `saveConvoyTemplate` opens a 3-button `showActionModal`: `שמור תפקידים בלבד` (strips `v.passengers = []` per vehicle), `שמור כולל חברים` (keeps them verbatim), `חזרה` (abort). When there are no passengers anywhere, the modal is skipped and the save runs directly with `includesPersonnel: false`. If a template already exists under the chosen name, the overwrite-confirm runs first and the personnel choice fires only after the user confirms overwrite. The save toast and the load toast both annotate which mode was used.
+
 ### Open follow-ups
 
-- **Bug 3 (PR-B):** at template save time, ask the user via in-page modal whether to bundle personnel (`חברים`) with the saved vehicles. Two affirmative buttons + return: "שמור תפקידים בלבד", "שמור כולל חברים", "חזרה". Persists `{ vehicles, includesPersonnel }` shape; older templates default to `includesPersonnel: true`.
 - **Bug 4 (separate PR):** offline-mode banner + Export/Import templates as JSON.
 - **Sister tool `logistics.html`** still uses native `alert`/`confirm`/`prompt` — same migration to the in-app modal helpers should be applied. Tracked as a separate sweep.
 
