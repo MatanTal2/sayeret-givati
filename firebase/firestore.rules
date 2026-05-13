@@ -36,6 +36,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Credential audit log — server-only (admin SDK). Client SDK can
+    // neither read nor write. Admin / SYSTEM_MANAGER lookups go through
+    // dedicated API routes (`/api/auth/audit` for writes; future read
+    // routes will gate access via actor.userType).
+    match /credentialAuditLog/{entryId} {
+      allow read: if false;
+      allow write: if false;
+    }
+
     // Equipment templates — authenticated read
     match /equipmentTemplates/{typeId} {
       allow read: if request.auth != null;
