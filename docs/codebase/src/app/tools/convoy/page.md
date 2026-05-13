@@ -41,6 +41,14 @@ Viewport meta is set to `maximum-scale=1.0, user-scalable=no` to prevent iOS aut
 
 `toggleManualName` patches the DOM in place (counter span text, per-row classes, footer button) instead of calling `innerHTML = ...` on the scrollable body. This preserves `scrollTop` on the inner passenger list — without this fix, every checkbox tap reset scroll to the top, making the list unusable on mobile.
 
+### Personnel-spread selection keyed by row index
+
+`manualSpreadState.selectedIndices` is a `Set<number>` of row indices into `manualUnassigned`, **not** a `Set<string>` of names. Earlier code keyed by name, which made duplicate names in the pasted list toggle together: tapping one row checked every row sharing that name, and `confirmManualAssign` then both over-counted against the vehicle cap (visually) and removed every duplicate from the source list while assigning only one slot. Index keying treats every row as independent.
+
+### Clear personnel list
+
+Above the personnel textarea, a `🗑️ נקה רשימה` button opens an `showConfirmModal` ("נקה" / "ביטול") and, on confirm, empties `personnelList` + hides any `spreadResult` banner + shows a toast. No browser `confirm()` involved.
+
 ### Offline mode caveats (`file://`)
 
 The file is fully self-contained — all HTML/CSS/JS is inline, no external `<link>`/`<script>`, no `fetch`/XHR, no service worker — so it renders correctly when downloaded and opened directly. The known issue is `localStorage` under `file://`:
@@ -51,9 +59,14 @@ The file is fully self-contained — all HTML/CSS/JS is inline, no external `<li
 
 Symptoms: templates won't save, deletes appear to revert on reload. The page logs a `console.warn` when `location.protocol === 'file:'`; `saveTemplatesData` and `deleteConvoyTemplate` show an offline-aware modal explaining the situation. Future improvement (separate PR): add Export/Import JSON buttons to bypass localStorage entirely.
 
+### Template shape (v1 → v2)
+
+`saveConvoyTemplate` writes `{ vehicles: Vehicle[], includesPersonnel: boolean }` under `localStorage["convoyMasterTemplates"][name]`. The pre-existing flat-array shape (`Vehicle[]`) is still accepted on load and treated as `{ vehicles: data, includesPersonnel: true }` via the `unwrapTemplate` helper — older templates remain usable, no migration needed.
+
+When the current convoy has at least one passenger anywhere, `saveConvoyTemplate` opens a 3-button `showActionModal`: `שמור תפקידים בלבד` (strips `v.passengers = []` per vehicle), `שמור כולל חברים` (keeps them verbatim), `חזרה` (abort). When there are no passengers anywhere, the modal is skipped and the save runs directly with `includesPersonnel: false`. If a template already exists under the chosen name, the overwrite-confirm runs first and the personnel choice fires only after the user confirms overwrite. The save toast and the load toast both annotate which mode was used.
+
 ### Open follow-ups
 
-- **Bug 3 (PR-B):** at template save time, ask the user via in-page modal whether to bundle personnel (`חברים`) with the saved vehicles. Two affirmative buttons + return: "שמור תפקידים בלבד", "שמור כולל חברים", "חזרה". Persists `{ vehicles, includesPersonnel }` shape; older templates default to `includesPersonnel: true`.
 - **Bug 4 (separate PR):** offline-mode banner + Export/Import templates as JSON.
 - **Sister tool `logistics.html`** still uses native `alert`/`confirm`/`prompt` — same migration to the in-app modal helpers should be applied. Tracked as a separate sweep.
 

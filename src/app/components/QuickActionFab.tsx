@@ -72,7 +72,7 @@ export default function QuickActionFab() {
 
       <div
         ref={containerRef}
-        className="lg:hidden fixed bottom-5 end-5 z-50 flex flex-col items-start gap-3"
+        className="lg:hidden fixed bottom-5 start-5 z-50 flex flex-col items-end gap-3"
       >
         <AnimatePresence>
           {open && (
