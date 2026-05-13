@@ -80,6 +80,7 @@ export const TEXT_CONSTANTS = {
 
     // Account linking errors (linkWithCredential)
     EMAIL_ALREADY_LINKED: 'כתובת האימייל כבר משויכת לחשבון אחר. אנא השתמש באימייל אחר.',
+    PHONE_ALREADY_LINKED: 'מספר הטלפון משויך לחשבון אחר. פנה למנהל המערכת.',
     PROVIDER_ALREADY_LINKED: 'שיטת ההתחברות כבר משויכת לחשבון.',
     WEAK_PASSWORD: 'הסיסמה חלשה מדי. בחר סיסמה חזקה יותר.',
     INVALID_EMAIL: 'כתובת אימייל לא תקינה.',
@@ -1231,6 +1232,27 @@ export const TEXT_CONSTANTS = {
     CHANGE_PASSWORD_SUCCESS: 'הסיסמה עודכנה בהצלחה.',
     SHOW_PASSWORD: 'הצג סיסמה',
     HIDE_PASSWORD: 'הסתר סיסמה',
+
+    // Change-phone modal (PR-C)
+    CHANGE_PHONE_TITLE: 'שינוי מספר טלפון',
+    CHANGE_PHONE_DESCRIPTION: 'אמת את הסיסמה הנוכחית, הזן את המספר החדש ואשר באמצעות קוד SMS.',
+    CHANGE_PHONE_STEP_REAUTH_TITLE: 'אימות סיסמה',
+    CHANGE_PHONE_STEP_NEW_NUMBER_TITLE: 'מספר טלפון חדש',
+    CHANGE_PHONE_STEP_OTP_TITLE: 'הזן קוד SMS',
+    CHANGE_PHONE_NEW_NUMBER_PLACEHOLDER: '+972501234567',
+    CHANGE_PHONE_NEW_NUMBER_LABEL: 'מספר טלפון חדש (פורמט בינלאומי)',
+    CHANGE_PHONE_OTP_LABEL: 'קוד שהתקבל ב-SMS',
+    CHANGE_PHONE_RESEND_OTP: 'שלח קוד מחדש',
+    CHANGE_PHONE_BACK_TO_STEP_NUMBER: 'חזור — שנה מספר',
+    CHANGE_PHONE_SUBMIT_NEW_NUMBER: 'שלח קוד SMS',
+    CHANGE_PHONE_SUBMIT_OTP: 'אשר שינוי מספר',
+    CHANGE_PHONE_SUBMITTING: 'מעדכן...',
+    CHANGE_PHONE_SUCCESS: 'מספר הטלפון עודכן בהצלחה. מכשירים אחרים שלך נותקו.',
+    CHANGE_PHONE_SAME_NUMBER: 'המספר החדש זהה למספר הקיים — אין שינוי לבצע.',
+    CHANGE_PHONE_INVALID_E164: 'מספר טלפון חייב להיות בפורמט בינלאומי (לדוגמה +972501234567).',
+    CHANGE_PHONE_RATE_LIMITED: 'נסה שוב בעוד רגע. אפשר לבקש שינוי פעם בדקה.',
+    CHANGE_PHONE_MIRROR_FAILED: 'עדכון המספר בשרת נכשל. נסה שוב או פנה לתמיכה.',
+    CHANGE_PHONE_GENERIC_ERROR: 'שינוי מספר הטלפון נכשל. נסה שוב.',
     
     // Account Security Section
     ACCOUNT_SECURITY: 'אבטחת חשבון',

@@ -66,6 +66,30 @@ export async function serverSyncPersonnelToUser(
   });
 }
 
+/**
+ * Reverse-sync the user-owned phone change back to the authorized_personnel
+ * roster doc (Q1=a). Narrow scope — only the phoneNumber field, no
+ * status/role/name leak.
+ *
+ * Silent no-op if the personnel doc doesn't exist (legacy users without a
+ * matching roster row). Returns whether a write happened so the caller can
+ * decide to surface a warning.
+ */
+export async function serverWritePhoneToPersonnel(
+  militaryIdHash: string,
+  newPhoneE164: string,
+): Promise<boolean> {
+  const db = getAdminDb();
+  const ref = db.collection(COLLECTIONS.AUTHORIZED_PERSONNEL).doc(militaryIdHash);
+  const snap = await ref.get();
+  if (!snap.exists) return false;
+  await ref.update({
+    phoneNumber: newPhoneE164,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+  return true;
+}
+
 export async function serverDeletePersonnel(personnelId: string): Promise<void> {
   const db = getAdminDb();
   await db.collection(COLLECTIONS.AUTHORIZED_PERSONNEL).doc(personnelId).delete();

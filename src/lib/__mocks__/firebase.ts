@@ -45,6 +45,13 @@ export const linkWithCredential = jest.fn();
 export const signInWithPhoneNumber = jest.fn();
 export const reauthenticateWithCredential = jest.fn();
 export const updatePassword = jest.fn();
+export const updatePhoneNumber = jest.fn();
+
+export const PhoneAuthProvider = {
+  PROVIDER_ID: 'phone',
+  verifyPhoneNumber: jest.fn(),
+  credential: jest.fn((verificationId: string, code: string) => ({ verificationId, code })),
+};
 
 export class RecaptchaVerifier {
   constructor() {}

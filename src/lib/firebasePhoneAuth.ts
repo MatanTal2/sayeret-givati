@@ -2,9 +2,11 @@ import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
   EmailAuthProvider,
+  PhoneAuthProvider,
   linkWithCredential,
   reauthenticateWithCredential,
   updatePassword,
+  updatePhoneNumber,
   sendEmailVerification,
   sendPasswordResetEmail,
   signOut,
@@ -139,6 +141,74 @@ export async function changePassword(currentPassword: string, newPassword: strin
   }
 }
 
+/**
+ * Re-authenticate the current user with their email + password. Used as
+ * the step-up gate before sensitive identity-anchor changes (password,
+ * phone). Required by Firebase before `updatePhoneNumber` because the
+ * phone-update API rejects stale sessions.
+ *
+ * Throws `RequiresRecentLoginError` if the re-auth itself comes back
+ * stale (rare — daily-login users almost always sail through).
+ */
+export async function reauthEmailPassword(currentPassword: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user || !user.email) {
+    throw new Error('No authenticated user with an email provider');
+  }
+  const credential = EmailAuthProvider.credential(user.email, currentPassword);
+  try {
+    await reauthenticateWithCredential(user, credential);
+  } catch (error) {
+    const code =
+      error && typeof error === 'object' && 'code' in error
+        ? (error as { code: string }).code
+        : '';
+    if (code === 'auth/requires-recent-login') {
+      throw new RequiresRecentLoginError();
+    }
+    throw error;
+  }
+}
+
+/**
+ * Kick off Firebase Phone Auth verification for a NEW phone number (the
+ * one the user wants to switch to). Returns the verificationId that the
+ * confirm step uses together with the SMS code.
+ *
+ * Each call consumes a fresh reCAPTCHA token — callers must
+ * `resetRecaptcha()` between attempts to avoid reuse of a stale token.
+ */
+export async function verifyNewPhone(
+  newPhoneE164: string,
+  verifier: RecaptchaVerifier,
+): Promise<string> {
+  const provider = new PhoneAuthProvider(auth);
+  return provider.verifyPhoneNumber(newPhoneE164, verifier);
+}
+
+/**
+ * Apply a verified phone credential to the currently signed-in user.
+ * Updates the underlying Firebase Auth phone identity. The local user
+ * object reflects the new number after `user.reload()`; the next
+ * `getIdToken(true)` mints a token whose `phone_number` claim equals
+ * `newPhoneE164` — that token is the server-side proof.
+ *
+ * Returns the new idToken so the caller can immediately POST it.
+ */
+export async function applyVerifiedPhoneCredential(
+  verificationId: string,
+  smsCode: string,
+): Promise<string> {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('No authenticated user');
+  }
+  const credential = PhoneAuthProvider.credential(verificationId, smsCode);
+  await updatePhoneNumber(user, credential);
+  await user.reload();
+  return user.getIdToken(true);
+}
+
 export function mapFirebaseAuthError(error: unknown): string {
   const code =
     error && typeof error === 'object' && 'code' in error
@@ -162,8 +232,9 @@ export function mapFirebaseAuthError(error: unknown): string {
     case 'auth/network-request-failed':
       return TEXT_CONSTANTS.AUTH.OTP_CONNECTION_ERROR;
     case 'auth/email-already-in-use':
-    case 'auth/credential-already-in-use':
       return TEXT_CONSTANTS.AUTH.EMAIL_ALREADY_LINKED;
+    case 'auth/credential-already-in-use':
+      return TEXT_CONSTANTS.AUTH.PHONE_ALREADY_LINKED;
     case 'auth/provider-already-linked':
       return TEXT_CONSTANTS.AUTH.PROVIDER_ALREADY_LINKED;
     case 'auth/weak-password':

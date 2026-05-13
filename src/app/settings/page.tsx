@@ -7,6 +7,7 @@ import AppShell from '@/app/components/AppShell';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
 import ChangePasswordModal from '@/components/settings/ChangePasswordModal';
+import ChangePhoneModal from '@/components/settings/ChangePhoneModal';
 import { Select } from '@/components/ui';
 import { useToast } from '@/components/ui/Toast';
 import {
@@ -33,6 +34,7 @@ export default function SettingsPage() {
   const { enhancedUser } = useAuth();
   const { showToast } = useToast();
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [changePhoneOpen, setChangePhoneOpen] = useState(false);
 
   // TODO: Replace with actual state management when backend is implemented
   const [settings, setSettings] = useState({
@@ -132,9 +134,9 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => handleButtonClick('updatePhone')}
-                  disabled
-                  className="px-4 py-2 text-sm bg-neutral-100 text-neutral-400 rounded-lg cursor-not-allowed"
+                  type="button"
+                  onClick={() => setChangePhoneOpen(true)}
+                  className="btn-primary text-sm"
                 >
                   עדכן
                 </button>
@@ -414,6 +416,11 @@ export default function SettingsPage() {
           open={changePasswordOpen}
           onClose={() => setChangePasswordOpen(false)}
           onSuccess={() => showToast(TEXT_CONSTANTS.SETTINGS.CHANGE_PASSWORD_SUCCESS, 'success')}
+        />
+        <ChangePhoneModal
+          open={changePhoneOpen}
+          onClose={() => setChangePhoneOpen(false)}
+          onSuccess={() => showToast(TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_SUCCESS, 'success')}
         />
       </AppShell>
     </AuthGuard>
