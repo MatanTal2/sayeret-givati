@@ -100,7 +100,7 @@ export default function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProp
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'tween', duration: 0.25 }}
-              className="fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-strong z-[9999] lg:hidden flex flex-col"
+              className="fixed top-0 end-0 h-full w-80 max-w-[85vw] bg-white shadow-strong z-[9999] lg:hidden flex flex-col"
               aria-label={TEXT_CONSTANTS.ARIA_LABELS.MAIN_MENU}
             >
               <div className="flex justify-between items-center h-14 px-4 border-b border-neutral-200">

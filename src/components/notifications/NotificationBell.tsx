@@ -82,7 +82,7 @@ export default function NotificationBell({ className = '' }: NotificationBellPro
         {/* Unread badge */}
         {hasUnread && (
           <span 
-            className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
+            className="absolute -top-1 -end-1 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
             aria-label={ARIA_LABELS.UNREAD_NOTIFICATIONS}
           >
             {NOTIFICATIONS.UNREAD_COUNT(unreadCount)}
@@ -91,7 +91,7 @@ export default function NotificationBell({ className = '' }: NotificationBellPro
 
         {/* Loading indicator */}
         {isLoading && (
-          <span className="absolute -top-1 -right-1 h-3 w-3 bg-blue-400 rounded-full animate-pulse" />
+          <span className="absolute -top-1 -end-1 h-3 w-3 bg-blue-400 rounded-full animate-pulse" />
         )}
       </button>
 

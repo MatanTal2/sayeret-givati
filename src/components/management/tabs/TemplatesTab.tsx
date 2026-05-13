@@ -297,7 +297,7 @@ export default function TemplatesTab() {
       {({ open }) => (
         <>
           <div className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50">
-            <DisclosureButton className="flex-1 flex items-center gap-2 text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded">
+            <DisclosureButton className="flex-1 flex items-center gap-2 text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded">
               <ChevronDown
                 className={cn(
                   'w-4 h-4 text-neutral-500 transition-transform',

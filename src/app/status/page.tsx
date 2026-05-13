@@ -456,7 +456,7 @@ export default function StatusPage() {
         </div>
 
         {!error && (
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 p-4 shadow-lg">
+          <div className="fixed bottom-0 start-0 end-0 bg-white border-t border-neutral-200 p-4 shadow-lg">
             <div className="max-w-6xl mx-auto">
               <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                 <button

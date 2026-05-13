@@ -97,7 +97,7 @@ export default function HamburgerMenu({
               exit={{ x: '100%' }}
               transition={{ type: 'tween', duration: 0.3 }}
               className={cn(
-                'fixed top-0 right-0 h-full w-80 bg-white shadow-xl z-[9999]',
+                'fixed top-0 end-0 h-full w-80 bg-white shadow-xl z-[9999]',
                 menuClassName
               )}
             >

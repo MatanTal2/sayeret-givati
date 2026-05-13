@@ -209,12 +209,12 @@ export default function UsersTab() {
           <table className="min-w-full divide-y divide-neutral-200">
             <thead className="bg-neutral-50">
               <tr>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.USER_COLUMN}</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_COLUMN}</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.RANK_COLUMN}</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.TEAM_COLUMN}</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_COLUMN}</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.ACTIONS_COLUMN}</th>
+                <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.USER_COLUMN}</th>
+                <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.ROLE_COLUMN}</th>
+                <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.RANK_COLUMN}</th>
+                <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.TEAM_COLUMN}</th>
+                <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.STATUS_COLUMN}</th>
+                <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">{TEXT_CONSTANTS.MANAGEMENT.USERS.ACTIONS_COLUMN}</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-neutral-200">

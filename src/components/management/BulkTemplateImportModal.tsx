@@ -153,7 +153,7 @@ export default function BulkTemplateImportModal<T>({
               </div>
 
               <div className="overflow-x-auto border border-neutral-200 rounded-lg max-h-80">
-                <table className="min-w-full text-right text-xs">
+                <table className="min-w-full text-start text-xs">
                   <thead className="bg-neutral-50 sticky top-0">
                     <tr>
                       <th className="px-3 py-2 text-neutral-600 font-medium">#</th>

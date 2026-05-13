@@ -338,7 +338,7 @@ function TemplatesTable({
         <div className="text-sm text-neutral-500 text-center py-6">אין תבניות</div>
       ) : (
         <div className="overflow-hidden border border-neutral-200 rounded-lg">
-          <table className="min-w-full text-right text-sm">
+          <table className="min-w-full text-start text-sm">
             <thead className="bg-neutral-50">
               <tr>
                 <th className="w-8" />

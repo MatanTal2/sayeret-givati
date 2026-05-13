@@ -249,7 +249,7 @@ export default function AuthButton() {
           {getUserInitials()}
         </span>
         <span 
-          className="font-medium text-base hidden sm:inline select-none text-right"
+          className="font-medium text-base hidden sm:inline select-none text-end"
           style={{ pointerEvents: 'none' }}
         >
           {getDesktopGreeting()}
@@ -281,7 +281,7 @@ export default function AuthButton() {
         >
           <Link
             href="/profile"
-            className="w-full text-right px-4 py-2 text-neutral-900 hover:bg-neutral-100 
+            className="w-full text-start px-4 py-2 text-neutral-900 hover:bg-neutral-100 
                        focus:bg-neutral-100 transition-colors duration-150 flex items-center gap-2 
                        cursor-pointer"
             onClick={handleProfileClick}
@@ -289,12 +289,12 @@ export default function AuthButton() {
             tabIndex={0}
           >
             <UserIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
-            <span className="text-right">{TEXT_CONSTANTS.PROFILE.MY_PROFILE}</span>
+            <span className="text-start">{TEXT_CONSTANTS.PROFILE.MY_PROFILE}</span>
           </Link>
           
           <button
             type="button"
-            className="w-full text-right px-4 py-2 text-neutral-900 hover:bg-neutral-100 
+            className="w-full text-start px-4 py-2 text-neutral-900 hover:bg-neutral-100 
                        focus:bg-neutral-100 transition-colors duration-150 flex items-center gap-2 
                        cursor-pointer"
             onClick={handleSettingsClick}
@@ -302,14 +302,14 @@ export default function AuthButton() {
             tabIndex={0}
           >
             <CogIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
-            <span className="text-right">{TEXT_CONSTANTS.PROFILE.SETTINGS}</span>
+            <span className="text-start">{TEXT_CONSTANTS.PROFILE.SETTINGS}</span>
           </button>
 
           {/* Management menu item - only visible for officer, commander, or admin roles */}
           {hasManagementAccess() && (
             <Link
               href="/management"
-              className="w-full text-right px-4 py-2 text-neutral-900 hover:bg-neutral-100 
+              className="w-full text-start px-4 py-2 text-neutral-900 hover:bg-neutral-100 
                          focus:bg-neutral-100 transition-colors duration-150 flex items-center gap-2 
                          cursor-pointer"
               onClick={() => setIsMenuOpen(false)}
@@ -317,7 +317,7 @@ export default function AuthButton() {
               tabIndex={0}
             >
               <Settings2Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-              <span className="text-right">ניהול</span>
+              <span className="text-start">ניהול</span>
             </Link>
           )}
           
@@ -326,14 +326,14 @@ export default function AuthButton() {
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full text-right px-4 py-2 text-danger-600 hover:bg-danger-50 
-                       focus:bg-danger-50 transition-colors duration-150 flex items-center gap-2 
+            className="w-full text-start px-4 py-2 text-danger-600 hover:bg-danger-50
+                       focus:bg-danger-50 transition-colors duration-150 flex items-center gap-2
                        cursor-pointer"
             role="menuitem"
             tabIndex={0}
           >
             <LogOutIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
-            <span className="text-right">{TEXT_CONSTANTS.BUTTONS.LOGOUT}</span>
+            <span className="text-start">{TEXT_CONSTANTS.BUTTONS.LOGOUT}</span>
           </button>
         </div>
       )}
