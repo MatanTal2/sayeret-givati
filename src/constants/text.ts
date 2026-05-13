@@ -204,6 +204,7 @@ export const TEXT_CONSTANTS = {
     UNIQUE_ID: 'מזהה ייחודי',
     USER_TYPE: 'סוג משתמש',
     TEST_ACCOUNT: 'חשבון בדיקה',
+    PHONE_NUMBER_LABEL: 'מספר טלפון',
     TEAM: 'צוות',
     ENLISTMENT_CYCLE: 'מחזור גיוס',
     ENLISTMENT_CYCLE_PLACEHOLDER: 'YYYY-MM',

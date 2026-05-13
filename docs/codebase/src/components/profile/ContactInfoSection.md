@@ -21,7 +21,9 @@ Renders the "Contact Information" card on `/profile`. Email is read-only. Phone 
 
 Identical to `MilitaryInfoSection`: pencil toggle → input swap → footer Save/Cancel → `updateUserProfile({ address })` → `onSaved()`. The address buffer rehydrates from `user.address` via `useEffect` when not editing.
 
-The phone update flow is NOT gated by the pencil — `<PhoneNumberUpdate>` has its own confirmation UI and remains independently usable whether or not the section is in edit mode.
+## Phone gating
+
+Phone is rendered as plain LTR text outside edit mode. The full `<PhoneNumberUpdate>` sub-component (its own Update button + OTP-style ceremony) only mounts when the section is in edit mode. Rationale: phone is an identity anchor and requires its own re-verification ceremony (the real Firebase `updatePhoneNumber` flow lands in queued Settings PR-C). Folding it into the section Save would create a silent footgun once Settings PR-A (security hotfix) removes `phoneNumber` from `PROFILE_WRITABLE_FIELDS` — the API would silently no-op the phone change. Keeping the sub-flow separate preserves the seam PR-C will land on. See `project_settings_page.md` for the full chain. The section Save/Cancel buttons only persist `address`; phone has its own commit path.
 
 ## Field shape
 

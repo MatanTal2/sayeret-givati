@@ -79,10 +79,23 @@ export default function ContactInfoSection({ user, authEmail, phoneNumber, onPho
           <div className="text-neutral-900">{user.email || authEmail || TEXT_CONSTANTS.PROFILE.NOT_AVAILABLE}</div>
         </div>
 
-        <PhoneNumberUpdate
-          currentPhoneNumber={phoneNumber}
-          onPhoneUpdate={onPhoneUpdate}
-        />
+        {/* Phone is identity-anchor and needs its own re-verification ceremony
+            (real OTP path lands in the queued Settings PR-C). Outside edit
+            mode we render it as plain text — the PhoneNumberUpdate sub-flow
+            (with its own Update button + OTP) only appears when the section
+            is in edit mode. This avoids two competing action surfaces at
+            rest and preserves the seam PR-C will land on. */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.PHONE_NUMBER_LABEL}</label>
+          {editing ? (
+            <PhoneNumberUpdate
+              currentPhoneNumber={phoneNumber}
+              onPhoneUpdate={onPhoneUpdate}
+            />
+          ) : (
+            <div className="text-neutral-900" dir="ltr">{phoneNumber || TEXT_CONSTANTS.PROFILE.NOT_AVAILABLE}</div>
+          )}
+        </div>
 
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.ADDRESS}</label>

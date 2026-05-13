@@ -9,6 +9,7 @@
  */
 export const TEXT_EN = {
   PROFILE: {
+    PHONE_NUMBER_LABEL: 'Phone number',
     TEAM: 'Team',
     ENLISTMENT_CYCLE: 'Enlistment cycle',
     ENLISTMENT_CYCLE_PLACEHOLDER: 'YYYY-MM',
