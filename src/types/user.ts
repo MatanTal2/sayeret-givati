@@ -60,6 +60,15 @@ export interface EnhancedAuthUser {
   // Team assignment (used by equipment scope queries)
   teamId?: string;
 
+  // Enlistment cycle: ISO YYYY-MM (e.g. "2010-03" for March 2010).
+  // Stored as a plain string so it survives Firestore JSON round-trips and
+  // doesn't introduce timezone ambiguity (no day/hour component).
+  enlistmentCycle?: string;
+
+  // Mailing / home address. Free-form text. Used by the phone book Phase 2
+  // categorization (Address/City) when that lands.
+  address?: string;
+
   // Active permission grants (temporary role bumps). Server-loaded only;
   // client-side EnhancedAuthUser instances leave this undefined.
   grants?: ActiveGrant[];
@@ -94,6 +103,8 @@ export interface FirestoreUserProfile {
   profileImage?: string;
   testUser?: boolean;
   teamId?: string;
+  enlistmentCycle?: string;
+  address?: string;
   communicationPreferences?: CommunicationPreferences;
 }
 

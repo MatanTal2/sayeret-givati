@@ -4,29 +4,19 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthGuard from '@/components/auth/AuthGuard';
 import AppShell from '@/app/components/AppShell';
-import { UserRole } from '@/types/equipment';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
-import PhoneNumberUpdate from '@/components/profile/PhoneNumberUpdate';
+import MilitaryInfoSection from '@/components/profile/MilitaryInfoSection';
+import ContactInfoSection from '@/components/profile/ContactInfoSection';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { updateUserProfile } from '@/lib/userProfileService';
 
-/**
- * User Profile Page
- * Displays user information fetched from Firestore
- */
 export default function ProfilePage() {
   const { enhancedUser, user, refreshEnhancedUser } = useAuth();
   const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(undefined);
   const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [teamId, setTeamId] = useState<string>('');
-  const [assignmentSaving, setAssignmentSaving] = useState(false);
-  const [assignmentMessage, setAssignmentMessage] = useState<string | null>(null);
 
-  // enhancedUser arrives async after AuthContext loads the Firestore profile.
-  // Sync local fields whenever it changes so the page reflects the latest
-  // persisted state across hard refreshes (not just the first render).
   useEffect(() => {
     const img = enhancedUser?.profileImage;
     setProfileImageUrl(img && /^https?:\/\//i.test(img) ? img : undefined);
@@ -36,16 +26,9 @@ export default function ProfilePage() {
     setPhoneNumber(enhancedUser?.phoneNumber || '');
   }, [enhancedUser?.phoneNumber]);
 
-  useEffect(() => {
-    setTeamId(enhancedUser?.teamId || '');
-  }, [enhancedUser?.teamId]);
-
-  // Format date helper
   const formatDate = (date: Date | { toDate: () => Date } | string | null | undefined) => {
     if (!date) return TEXT_CONSTANTS.PROFILE.NOT_AVAILABLE;
-    
     try {
-      // Handle Firestore Timestamp
       let jsDate: Date;
       if (typeof date === 'object' && date !== null && 'toDate' in date) {
         jsDate = date.toDate();
@@ -59,12 +42,10 @@ export default function ProfilePage() {
     }
   };
 
-  // Get display values with fallbacks
   const getDisplayValue = (value: string | undefined, fallback: string = TEXT_CONSTANTS.PROFILE.NOT_AVAILABLE) => {
     return value || fallback;
   };
 
-  // Handle profile image update — persists to Firestore via admin API.
   const handleImageUpdate = async (newImageUrl: string) => {
     setProfileImageUrl(newImageUrl);
     if (!enhancedUser) return;
@@ -76,7 +57,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Handle phone number update
   const handlePhoneUpdate = async (newPhoneNumber: string) => {
     setPhoneNumber(newPhoneNumber);
     if (!enhancedUser) return;
@@ -85,23 +65,6 @@ export default function ProfilePage() {
       await refreshEnhancedUser();
     } catch (err) {
       console.error('[profile] failed to save phone', err);
-    }
-  };
-
-  const handleSaveAssignment = async () => {
-    if (!enhancedUser) return;
-    setAssignmentSaving(true);
-    setAssignmentMessage(null);
-    try {
-      await updateUserProfile(enhancedUser.uid, {
-        teamId: teamId.trim(),
-      });
-      await refreshEnhancedUser();
-      setAssignmentMessage(TEXT_CONSTANTS.ONBOARDING.SAVED);
-    } catch {
-      setAssignmentMessage(TEXT_CONSTANTS.ONBOARDING.SAVE_ERROR);
-    } finally {
-      setAssignmentSaving(false);
     }
   };
 
@@ -115,7 +78,6 @@ export default function ProfilePage() {
           {/* Profile Header */}
           <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8 mb-6 sm:mb-8">
             <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-              {/* Profile Avatar with Upload */}
               {enhancedUser?.uid && (
                 <div className="shrink-0">
                   <ProfileImageUpload
@@ -128,7 +90,6 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {/* Basic Info */}
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 mb-1 sm:mb-2 truncate">
                   {getDisplayValue(
@@ -146,7 +107,6 @@ export default function ProfilePage() {
                 </p>
               </div>
 
-              {/* Status Badge */}
               {enhancedUser?.status && (
                 <div className={`shrink-0 ms-auto px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium ${
                   enhancedUser.status === 'active'
@@ -159,9 +119,8 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Profile Details */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Personal Information */}
+            {/* Personal Information (read-only) */}
             <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
               <h2 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
                 <svg className="w-5 h-5 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,12 +134,10 @@ export default function ProfilePage() {
                   <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.FIRST_NAME}</dt>
                   <dd className="text-neutral-900 sm:col-span-2">{getDisplayValue(enhancedUser?.firstName)}</dd>
                 </div>
-
                 <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
                   <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.LAST_NAME}</dt>
                   <dd className="text-neutral-900 sm:col-span-2">{getDisplayValue(enhancedUser?.lastName)}</dd>
                 </div>
-
                 <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
                   <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.GENDER}</dt>
                   <dd className="text-neutral-900 sm:col-span-2">
@@ -189,7 +146,6 @@ export default function ProfilePage() {
                      getDisplayValue(enhancedUser?.gender)}
                   </dd>
                 </div>
-
                 <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
                   <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.BIRTH_DATE}</dt>
                   <dd className="text-neutral-900 sm:col-span-2">{formatDate(enhancedUser?.birthday)}</dd>
@@ -197,112 +153,23 @@ export default function ProfilePage() {
               </dl>
             </div>
 
-            {/* Military Information */}
-            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                {TEXT_CONSTANTS.PROFILE.MILITARY_INFO}
-              </h2>
+            {/* Military Information (editable: team, enlistment cycle) */}
+            {enhancedUser && (
+              <MilitaryInfoSection user={enhancedUser} onSaved={refreshEnhancedUser} />
+            )}
 
-              <dl className="divide-y divide-neutral-100 -my-2">
-                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
-                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.RANK}</dt>
-                  <dd className="text-neutral-900 sm:col-span-2">{getDisplayValue(enhancedUser?.rank)}</dd>
-                </div>
+            {/* Contact Information (editable: address; phone has its own component) */}
+            {enhancedUser && (
+              <ContactInfoSection
+                user={enhancedUser}
+                authEmail={user?.email}
+                phoneNumber={phoneNumber}
+                onPhoneUpdate={handlePhoneUpdate}
+                onSaved={refreshEnhancedUser}
+              />
+            )}
 
-                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
-                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.ROLE}</dt>
-                  <dd className="text-neutral-900 sm:col-span-2">
-                    {enhancedUser?.role === UserRole.SOLDIER ? TEXT_CONSTANTS.PROFILE.SOLDIER :
-                     enhancedUser?.role === UserRole.COMMANDER ? TEXT_CONSTANTS.PROFILE.COMMANDER :
-                     enhancedUser?.role === UserRole.OFFICER ? TEXT_CONSTANTS.PROFILE.OFFICER :
-                     enhancedUser?.role === UserRole.EQUIPMENT_MANAGER ? TEXT_CONSTANTS.PROFILE.EQUIPMENT_MANAGER :
-                     getDisplayValue(enhancedUser?.role ? String(enhancedUser.role) : undefined)}
-                  </dd>
-                </div>
-
-                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
-                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.JOIN_DATE}</dt>
-                  <dd className="text-neutral-900 sm:col-span-2">{formatDate(enhancedUser?.joinDate)}</dd>
-                </div>
-
-                <div className="py-2 sm:grid sm:grid-cols-3 sm:gap-3">
-                  <dt className="text-sm font-medium text-neutral-600">{TEXT_CONSTANTS.PROFILE.STATUS}</dt>
-                  <dd className="text-neutral-900 sm:col-span-2">
-                    {enhancedUser?.status === 'active' ? TEXT_CONSTANTS.PROFILE.ACTIVE :
-                     enhancedUser?.status === 'inactive' ? TEXT_CONSTANTS.PROFILE.INACTIVE :
-                     enhancedUser?.status === 'transferred' ? TEXT_CONSTANTS.PROFILE.TRANSFERRED :
-                     enhancedUser?.status === 'discharged' ? TEXT_CONSTANTS.PROFILE.DISCHARGED :
-                     getDisplayValue(enhancedUser?.status)}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-
-            {/* Team & Unit Assignment */}
-            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4 flex flex-wrap items-center gap-2">
-                <svg className="w-5 h-5 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6 5.87a4 4 0 108 0 4 4 0 00-8 0z" />
-                </svg>
-                {TEXT_CONSTANTS.ONBOARDING.ASSIGNMENT_TITLE}
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="profile-team" className="block text-sm font-medium text-neutral-700 mb-1">
-                    {TEXT_CONSTANTS.ONBOARDING.TEAM_LABEL}
-                  </label>
-                  <input
-                    id="profile-team"
-                    type="text"
-                    value={teamId}
-                    onChange={(e) => setTeamId(e.target.value)}
-                    placeholder={TEXT_CONSTANTS.ONBOARDING.TEAM_PLACEHOLDER}
-                    className="input-base"
-                  />
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleSaveAssignment}
-                    disabled={assignmentSaving}
-                    className="btn-primary"
-                  >
-                    {assignmentSaving ? TEXT_CONSTANTS.ONBOARDING.SAVING : TEXT_CONSTANTS.ONBOARDING.SAVE}
-                  </button>
-                  {assignmentMessage && (
-                    <span className="text-sm text-neutral-600">{assignmentMessage}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Contact Information */}
-            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4 flex flex-wrap items-center gap-2">
-                <svg className="w-5 h-5 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                {TEXT_CONSTANTS.PROFILE.CONTACT_INFO}
-              </h2>
-              
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.EMAIL}</label>
-                  <div className="text-neutral-900">{getDisplayValue(enhancedUser?.email || user?.email)}</div>
-                </div>
-                
-                {/* Phone Number Update Component */}
-                <PhoneNumberUpdate
-                  currentPhoneNumber={phoneNumber}
-                  onPhoneUpdate={handlePhoneUpdate}
-                />
-              </div>
-            </div>
-
-            {/* System Information */}
+            {/* System Information (read-only) */}
             <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
               <h2 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4 flex flex-wrap items-center gap-2">
                 <svg className="w-5 h-5 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -310,13 +177,12 @@ export default function ProfilePage() {
                 </svg>
                 {TEXT_CONSTANTS.PROFILE.SYSTEM_INFO}
               </h2>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.UNIQUE_ID}</label>
                   <div className="text-neutral-900 font-mono text-sm">{getDisplayValue(enhancedUser?.uid || user?.uid)}</div>
                 </div>
-                
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.USER_TYPE}</label>
                   <div className="text-neutral-900">
@@ -324,11 +190,10 @@ export default function ProfilePage() {
                      user?.userType === 'system_manager' ? TEXT_CONSTANTS.PROFILE.SYSTEM_MANAGER :
                      user?.userType === 'manager' ? TEXT_CONSTANTS.PROFILE.MANAGER :
                      user?.userType === 'team_leader' ? TEXT_CONSTANTS.PROFILE.TEAM_LEADER :
-                     user?.userType === 'user' ? TEXT_CONSTANTS.PROFILE.USER : 
+                     user?.userType === 'user' ? TEXT_CONSTANTS.PROFILE.USER :
                      getDisplayValue(user?.userType ? String(user.userType) : undefined)}
                   </div>
                 </div>
-                
                 {enhancedUser?.testUser && (
                   <div>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
@@ -349,7 +214,7 @@ export default function ProfilePage() {
               <div>
                 <h3 className="text-sm font-medium text-info-900 mb-1">{TEXT_CONSTANTS.PROFILE.DATA_SOURCE_TITLE}</h3>
                 <p className="text-sm text-info-700">
-                  {enhancedUser?.firstName ? 
+                  {enhancedUser?.firstName ?
                     TEXT_CONSTANTS.PROFILE.DATA_SOURCE_SYSTEM :
                     TEXT_CONSTANTS.PROFILE.DATA_SOURCE_AUTH
                   }

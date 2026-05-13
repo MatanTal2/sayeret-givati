@@ -125,6 +125,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
               profileImage: firestoreData.profileImage,
               testUser: firestoreData.testUser,
               teamId: firestoreData.teamId,
+              enlistmentCycle: firestoreData.enlistmentCycle,
+              address: firestoreData.address,
               communicationPreferences: firestoreData.communicationPreferences,
               initials: UserDataService.generateInitials(firestoreData)
             };
@@ -286,6 +288,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       profileImage: firestoreData.profileImage,
       testUser: firestoreData.testUser,
       teamId: firestoreData.teamId,
+      enlistmentCycle: firestoreData.enlistmentCycle,
+      address: firestoreData.address,
       communicationPreferences: firestoreData.communicationPreferences,
       initials: UserDataService.generateInitials(firestoreData),
     };

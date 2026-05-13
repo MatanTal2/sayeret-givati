@@ -9,6 +9,8 @@ export interface ProfileUpdates {
   teamId?: string;
   profileImage?: string;
   phoneNumber?: string;
+  enlistmentCycle?: string;
+  address?: string;
 }
 
 export async function updateUserProfile(uid: string, updates: ProfileUpdates): Promise<void> {

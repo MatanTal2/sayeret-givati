@@ -19,6 +19,8 @@ import { FieldValue } from 'firebase-admin/firestore';
 const PROFILE_WRITABLE_FIELDS = [
   'teamId',
   'profileImage',
+  'enlistmentCycle',
+  'address',
 ] as const;
 type ProfileWritableField = (typeof PROFILE_WRITABLE_FIELDS)[number];
 
