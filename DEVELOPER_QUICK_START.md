@@ -65,7 +65,7 @@ npm run lint         # Check code quality
 **Required accounts/services:**
 
 - 🔥 **Firebase**: Database & authentication
-- 📱 **Twilio**: SMS for OTP verification
+- 📱 **Firebase Phone Auth**: SMS OTP for registration + phone-number change
 - 📊 **Google Sheets**: Status reporting (optional)
 
 ## 📋 Pre-commit Checklist

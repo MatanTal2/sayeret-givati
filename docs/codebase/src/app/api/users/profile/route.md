@@ -27,7 +27,7 @@ Body: { uid: string, updates: { teamId?: string, profileImage?: string } }
 
 ## phoneNumber is rejected explicitly (400)
 
-If the request body contains `updates.phoneNumber`, the route returns 400 immediately — BEFORE the actor check, intentionally — with a message pointing at the dedicated phone-change flow (Settings PR-C, not yet shipped). Rationale: phone is an identity anchor and a profile-update PATCH must not be able to rewrite it without OTP re-verification + fresh password re-auth. The explicit 400 is loud-not-silent: a client that mistakenly includes `phoneNumber` learns immediately rather than seeing a 200 with no persisted change.
+If the request body contains `updates.phoneNumber`, the route returns 400 immediately — BEFORE the actor check, intentionally — with a message pointing at the dedicated phone-change flow (`POST /api/users/phone-change/{initiate,confirm,cancel}`, shipped in Settings PR-C). Rationale: phone is an identity anchor and a profile-update PATCH must not be able to rewrite it without OTP re-verification + fresh password re-auth. The explicit 400 is loud-not-silent: a client that mistakenly includes `phoneNumber` learns immediately rather than seeing a 200 with no persisted change.
 
 ## Phone-book write-through
 

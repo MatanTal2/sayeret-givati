@@ -2,10 +2,12 @@ import {
   signInWithPhoneNumber,
   linkWithCredential,
   EmailAuthProvider,
+  PhoneAuthProvider,
   sendEmailVerification,
   sendPasswordResetEmail,
   reauthenticateWithCredential,
   updatePassword,
+  updatePhoneNumber,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import {
@@ -16,6 +18,8 @@ import {
   sendPasswordReset,
   mapFirebaseAuthError,
   changePassword,
+  reauthEmailPassword,
+  applyVerifiedPhoneCredential,
   RequiresRecentLoginError,
 } from '../firebasePhoneAuth';
 
@@ -26,6 +30,8 @@ const mockSendEmailVerification = sendEmailVerification as jest.MockedFunction<t
 const mockSendPasswordReset = sendPasswordResetEmail as jest.MockedFunction<typeof sendPasswordResetEmail>;
 const mockReauthenticate = reauthenticateWithCredential as jest.MockedFunction<typeof reauthenticateWithCredential>;
 const mockUpdatePassword = updatePassword as jest.MockedFunction<typeof updatePassword>;
+const mockUpdatePhoneNumber = updatePhoneNumber as jest.MockedFunction<typeof updatePhoneNumber>;
+const mockPhoneCredential = PhoneAuthProvider.credential as jest.MockedFunction<typeof PhoneAuthProvider.credential>;
 const mockAuth = auth as unknown as { currentUser: unknown };
 
 describe('firebasePhoneAuth', () => {
@@ -110,6 +116,63 @@ describe('firebasePhoneAuth', () => {
     });
   });
 
+  describe('reauthEmailPassword', () => {
+    afterEach(() => {
+      mockAuth.currentUser = null;
+    });
+
+    it('re-authenticates with email + current password', async () => {
+      mockAuth.currentUser = { email: 'a@b.c' };
+      mockCredential.mockReturnValue({ email: 'a@b.c', password: 'pw' } as ReturnType<typeof EmailAuthProvider.credential>);
+      mockReauthenticate.mockResolvedValue({} as Awaited<ReturnType<typeof reauthenticateWithCredential>>);
+
+      await reauthEmailPassword('pw');
+
+      expect(mockCredential).toHaveBeenCalledWith('a@b.c', 'pw');
+      expect(mockReauthenticate).toHaveBeenCalled();
+    });
+
+    it('throws RequiresRecentLoginError when re-auth is stale', async () => {
+      mockAuth.currentUser = { email: 'a@b.c' };
+      mockCredential.mockReturnValue({ email: 'a@b.c', password: 'pw' } as ReturnType<typeof EmailAuthProvider.credential>);
+      mockReauthenticate.mockRejectedValue({ code: 'auth/requires-recent-login' });
+
+      await expect(reauthEmailPassword('pw')).rejects.toBeInstanceOf(RequiresRecentLoginError);
+    });
+
+    it('throws when there is no signed-in user', async () => {
+      mockAuth.currentUser = null;
+      await expect(reauthEmailPassword('pw')).rejects.toThrow(/authenticated/);
+    });
+  });
+
+  describe('applyVerifiedPhoneCredential', () => {
+    afterEach(() => {
+      mockAuth.currentUser = null;
+    });
+
+    it('updates phone, reloads, and returns a fresh idToken', async () => {
+      const getIdToken = jest.fn().mockResolvedValue('fresh-id-token');
+      const reload = jest.fn().mockResolvedValue(undefined);
+      mockAuth.currentUser = { reload, getIdToken };
+      mockPhoneCredential.mockReturnValue({ verificationId: 'v1', code: '123456' } as ReturnType<typeof PhoneAuthProvider.credential>);
+      mockUpdatePhoneNumber.mockResolvedValue(undefined);
+
+      const token = await applyVerifiedPhoneCredential('v1', '123456');
+
+      expect(mockPhoneCredential).toHaveBeenCalledWith('v1', '123456');
+      expect(mockUpdatePhoneNumber).toHaveBeenCalled();
+      expect(reload).toHaveBeenCalled();
+      expect(getIdToken).toHaveBeenCalledWith(true);
+      expect(token).toBe('fresh-id-token');
+    });
+
+    it('throws when there is no signed-in user', async () => {
+      mockAuth.currentUser = null;
+      await expect(applyVerifiedPhoneCredential('v1', '123456')).rejects.toThrow(/authenticated/);
+    });
+  });
+
   describe('mapFirebaseAuthError', () => {
     it.each([
       ['auth/invalid-phone-number', 'מספר טלפון'],
@@ -118,6 +181,7 @@ describe('firebasePhoneAuth', () => {
       ['auth/captcha-check-failed', 'reCAPTCHA'],
       ['auth/too-many-requests', 'יותר מדי'],
       ['auth/email-already-in-use', 'משויכת'],
+      ['auth/credential-already-in-use', 'משויך לחשבון אחר'],
       ['auth/weak-password', 'חלשה'],
       ['auth/invalid-email', 'תקינה'],
       ['auth/wrong-password', 'שגויה'],

@@ -134,7 +134,7 @@ Retention: 1y. NOT enforced in PR-C — Firestore TTL policy or cron job is a fo
 ## Refresh-token revocation + old-phone notification
 
 - `revokeRefreshTokens(uid)` is called server-side after the mirror succeeds. Effect: other devices get a fresh idToken on next refresh attempt that's invalidated; user is forced to re-login on those devices. Current session continues using its in-memory idToken until expiry (~1h).
-- Old-phone SMS notification: NOT in PR-C. Twilio integration not present in the codebase yet. Tracked as follow-up. PR-C does send the standard verification-email notification if `auth/email` provider is linked (no-op for now — explicit "phone changed" email belongs in PR-E notifications).
+- Old-phone SMS notification: NOT in PR-C. No transactional SMS channel exists in the codebase (Twilio was removed during the Firebase Phone Auth migration). Tracked as follow-up — depends on the email/SMS sender pick that lands in PR-E. `updatePhoneNumber` itself triggers zero Firebase notifications (no built-in email or SMS — do not assume one fires).
 
 ## Files affected
 
@@ -182,7 +182,7 @@ Stacked commits inside the PR for review clarity:
 - Rate-limit OTP sends keyed on `(actorUid, destinationPhone, ip)`. (Council "should-have".)
 - `phoneChangePending` cron purge for stale > 24h reservations.
 - `credentialAuditLog` 1y TTL purge job (Q5=a).
-- Twilio old-phone SMS notification (depends on PR-E notification sender pick).
+- Old-phone notification (email + SMS) — depends on PR-E notification sender pick.
 - Auth↔Firestore phone reconciler cron.
 - `auth/credential-already-in-use` → "phone already linked" UX with sign-in offer.
 - Admin force-phone-reset endpoint (Q4=b separate PR with 4-eyes).
