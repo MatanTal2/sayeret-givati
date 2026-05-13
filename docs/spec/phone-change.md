@@ -179,12 +179,12 @@ Stacked commits inside the PR for review clarity:
 
 ## Follow-ups (out of PR-C)
 
-- Rate-limit OTP sends keyed on `(actorUid, destinationPhone, ip)`. (Council "should-have".)
+- Rate-limit OTP sends keyed on `(actorUid, destinationPhone, ip)`. (Council "should-have".) Current uid-only 60s limit already caps SMS at ~60/hour/user; composite key is marginal extra protection — defer until production traffic warrants.
 - `phoneChangePending` cron purge for stale > 24h reservations.
 - `credentialAuditLog` 1y TTL purge job (Q5=a).
 - Old-phone notification (email + SMS) — depends on PR-E notification sender pick.
 - Auth↔Firestore phone reconciler cron.
-- `auth/credential-already-in-use` → "phone already linked" UX with sign-in offer.
+- ~~`auth/credential-already-in-use` → "phone already linked" UX with sign-in offer.~~ Decided against per Council 3 — a soldier should not be invited to take over another account; admin force-reset is the correct path. Text-only `PHONE_ALREADY_LINKED` already shipped in PR-C.
 - Admin force-phone-reset endpoint (Q4=b separate PR with 4-eyes).
-- App Check + reCAPTCHA Enterprise initialization (not present in codebase yet — Council "should-have").
+- ✅ App Check init wired in `src/lib/appCheck.ts` using reCAPTCHA v3 (free tier). Conditional on `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`; no-ops if unset. Enterprise provider swap is a one-line change documented in the doc.
 - `cachedVerifier` reset on Settings-page mount (Council polish).

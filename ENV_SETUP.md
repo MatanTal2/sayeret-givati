@@ -27,6 +27,21 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
 # Add a test phone (with fixed OTP code) for local dev / CI.
 
 # ==============================================
+# 🛡️ Firebase App Check (Optional but recommended)
+# ==============================================
+# When set, the client attaches a reCAPTCHA v3 attestation token to every
+# Firebase request — Firestore, Storage, Phone Auth. Mitigates the SMS-cost
+# amplification vector flagged by the Council on PR-C.
+#
+# 1. Firebase Console → Project → App Check → Apps → Web → reCAPTCHA v3
+# 2. Provision a site key (Google Cloud reCAPTCHA Admin → v3 → "I'm not a robot")
+# 3. Paste below. Leaving this empty disables App Check (a warning logs once).
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY=
+# Optional: set to `true` to print a debug token on dev (paste into Firebase
+# Console → App Check → Debug tokens to whitelist localhost).
+# NEXT_PUBLIC_APP_CHECK_DEBUG=true
+
+# ==============================================
 # 🛠️ DEVELOPMENT SETTINGS
 # ==============================================
 NODE_ENV=development

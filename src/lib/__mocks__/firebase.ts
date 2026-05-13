@@ -67,3 +67,11 @@ export const EmailAuthProvider = {
 
 // firebase/storage
 export const getStorage = () => ({});
+
+// firebase/app-check (no-op for tests — the real SDK requires reCAPTCHA + DOM)
+export const initializeAppCheck = jest.fn(() => ({}));
+export class ReCaptchaV3Provider {
+  constructor(_siteKey: string) {
+    void _siteKey;
+  }
+}
