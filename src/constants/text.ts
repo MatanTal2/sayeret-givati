@@ -204,6 +204,20 @@ export const TEXT_CONSTANTS = {
     UNIQUE_ID: 'מזהה ייחודי',
     USER_TYPE: 'סוג משתמש',
     TEST_ACCOUNT: 'חשבון בדיקה',
+    TEAM: 'צוות',
+    ENLISTMENT_CYCLE: 'מחזור גיוס',
+    ENLISTMENT_CYCLE_PLACEHOLDER: 'YYYY-MM',
+    ADDRESS: 'כתובת',
+    ADDRESS_PLACEHOLDER: 'עיר, רחוב ומספר בית',
+
+    // Section-edit controls
+    EDIT_SECTION: 'ערוך',
+    EDIT_SECTION_ARIA: 'ערוך מקטע',
+    SAVE: 'שמור',
+    CANCEL: 'ביטול',
+    SAVING: 'שומר...',
+    SAVED: 'נשמר בהצלחה',
+    SAVE_ERROR: 'שמירה נכשלה. נסה שוב.',
     
     // Data Source Info
     DATA_SOURCE_TITLE: 'מקור הנתונים',

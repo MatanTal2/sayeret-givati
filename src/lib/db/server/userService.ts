@@ -14,6 +14,8 @@ const PROFILE_WRITABLE_FIELDS = [
   'teamId',
   'profileImage',
   'phoneNumber',
+  'enlistmentCycle',
+  'address',
 ] as const;
 type ProfileWritableField = (typeof PROFILE_WRITABLE_FIELDS)[number];
 
