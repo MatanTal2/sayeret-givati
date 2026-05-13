@@ -43,6 +43,8 @@ export const sendPasswordResetEmail = jest.fn();
 export const sendEmailVerification = jest.fn();
 export const linkWithCredential = jest.fn();
 export const signInWithPhoneNumber = jest.fn();
+export const reauthenticateWithCredential = jest.fn();
+export const updatePassword = jest.fn();
 
 export class RecaptchaVerifier {
   constructor() {}

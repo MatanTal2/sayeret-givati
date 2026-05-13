@@ -83,6 +83,7 @@ export const TEXT_CONSTANTS = {
     PROVIDER_ALREADY_LINKED: 'שיטת ההתחברות כבר משויכת לחשבון.',
     WEAK_PASSWORD: 'הסיסמה חלשה מדי. בחר סיסמה חזקה יותר.',
     INVALID_EMAIL: 'כתובת אימייל לא תקינה.',
+    WRONG_PASSWORD: 'הסיסמה הנוכחית שגויה.',
     REQUIRES_RECENT_LOGIN: 'הפעולה דורשת התחברות מחדש. אנא התחבר ונסה שוב.',
     REGISTRATION_ABANDONED_FALLBACK: 'הרישום בוטל. ייתכן שיהיה צורך לפנות למנהל כדי להסיר את החשבון.',
     OTP_SESSION_EXPIRED: 'תוקף אימות הטלפון פג. חזור לתחילת הרישום ונסה שוב.',
@@ -1215,6 +1216,21 @@ export const TEXT_CONSTANTS = {
     CHANGE_PROFILE_IMAGE: 'שנה תמונת פרופיל',
     UPDATE_PHONE: 'עדכן מספר טלפון',
     CHANGE_PASSWORD: 'שנה סיסמה',
+
+    // Change-password modal
+    CHANGE_PASSWORD_TITLE: 'שינוי סיסמה',
+    CHANGE_PASSWORD_DESCRIPTION: 'לשינוי הסיסמה הזן את הסיסמה הנוכחית ולאחר מכן את הסיסמה החדשה.',
+    CURRENT_PASSWORD: 'סיסמה נוכחית',
+    NEW_PASSWORD: 'סיסמה חדשה',
+    CONFIRM_NEW_PASSWORD: 'אישור סיסמה חדשה',
+    PASSWORDS_MISMATCH: 'הסיסמאות אינן תואמות.',
+    PASSWORD_TOO_SHORT: 'הסיסמה חייבת להיות באורך של 6 תווים לפחות.',
+    PASSWORD_UNCHANGED: 'הסיסמה החדשה חייבת להיות שונה מהנוכחית.',
+    CHANGE_PASSWORD_SUBMIT: 'עדכן סיסמה',
+    CHANGE_PASSWORD_SUBMITTING: 'מעדכן...',
+    CHANGE_PASSWORD_SUCCESS: 'הסיסמה עודכנה בהצלחה.',
+    SHOW_PASSWORD: 'הצג סיסמה',
+    HIDE_PASSWORD: 'הסתר סיסמה',
     
     // Account Security Section
     ACCOUNT_SECURITY: 'אבטחת חשבון',

@@ -18,10 +18,15 @@ Settings page (`/settings`). Provides a comprehensive settings UI covering profi
 |-------|------|---------|
 | `settings` | `{ emailNotifications, equipmentTransferAlerts, language, theme }` | Local toggle state — not persisted |
 | `profileImageUrl` | `string \| undefined` | Profile image optimistic local state |
+| `changePasswordOpen` | `boolean` | Controls visibility of `<ChangePasswordModal>` |
+
+## Wired actions (real backend)
+
+- **Change password** — opens `<ChangePasswordModal>` (`src/components/settings/ChangePasswordModal.tsx`). Re-authenticates via Firebase, then `updatePassword`. Success → toast via `useToast`. Errors mapped through `mapFirebaseAuthError`. See PR-B in `project_settings_page.md`.
 
 ## Known Issues / TODO
 
-- All settings toggles are UI-only. No Firestore write is connected to any toggle or button.
+- Most settings toggles are still UI-only (notifications, language, theme, permission requests, account deletion). Tracked in `project_settings_page.md` PR sequence.
 - `handleToggle` — logs to console, changes local state only.
 - `handleButtonClick` — logs to console, no action.
 - `handleImageUpdate` — does not persist image to Firestore.
