@@ -190,12 +190,12 @@ export default function EnforceTransferTab() {
             <table className="min-w-full divide-y divide-neutral-200">
               <thead className="bg-neutral-50">
                 <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">ציוד</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">מאת</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">אל</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">תאריך</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">סיבה</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">פעולות</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">ציוד</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">מאת</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">אל</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">תאריך</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">סיבה</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">פעולות</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-neutral-200">
@@ -210,7 +210,7 @@ export default function EnforceTransferTab() {
                       <button
                         onClick={() => handleApprove(transfer.id)}
                         disabled={actionInProgress === transfer.id}
-                        className="text-success-600 hover:text-success-900 ml-2 disabled:opacity-50"
+                        className="text-success-600 hover:text-success-900 me-2 disabled:opacity-50"
                       >
                         {actionInProgress === transfer.id ? '...' : 'אשר'}
                       </button>

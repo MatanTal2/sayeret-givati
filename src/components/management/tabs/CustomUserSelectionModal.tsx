@@ -264,7 +264,7 @@ export default function CustomUserSelectionModal({
                 ) : (
                   <div className="relative">
                     {/* Horizontal scrollable container */}
-                    <div className="flex gap-3 overflow-x-auto pb-4 pl-4 pr-4 scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-neutral-100">
+                    <div className="flex gap-3 overflow-x-auto pb-4 ps-4 pe-4 scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-neutral-100">
                       {filteredUsers.map((user) => (
                         <UserChip
                           key={user.uid}
@@ -276,8 +276,8 @@ export default function CustomUserSelectionModal({
                     </div>
                     
                     {/* Fade edges for visual scroll indication */}
-                    <div className="absolute left-0 top-0 bottom-4 w-4 bg-gradient-to-r from-white to-transparent pointer-events-none" />
-                    <div className="absolute right-0 top-0 bottom-4 w-4 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+                    <div className="absolute end-0 top-0 bottom-4 w-4 bg-gradient-to-r from-white to-transparent pointer-events-none" />
+                    <div className="absolute start-0 top-0 bottom-4 w-4 bg-gradient-to-l from-white to-transparent pointer-events-none" />
                   </div>
                 )}
 

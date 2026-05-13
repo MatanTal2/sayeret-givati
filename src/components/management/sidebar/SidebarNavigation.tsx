@@ -57,12 +57,12 @@ export default function SidebarNavigation({
                       'hover:bg-primary-50 hover:text-primary-700',
                       'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
                       isActive
-                        ? 'bg-primary-100 text-primary-700 border-r-2 border-primary-600'
+                        ? 'bg-primary-100 text-primary-700 border-e-2 border-primary-600'
                         : 'text-neutral-700 hover:text-primary-700'
                     )}
                   >
-                    <Icon className="w-5 h-5 ml-3 flex-shrink-0" />
-                    <span className="flex-1 text-right">{tab.label}</span>
+                    <Icon className="w-5 h-5 me-3 flex-shrink-0" />
+                    <span className="flex-1 text-start">{tab.label}</span>
                   </button>
                 );
               })}

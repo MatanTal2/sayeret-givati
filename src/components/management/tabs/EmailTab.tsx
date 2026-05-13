@@ -149,7 +149,7 @@ export default function EmailTab() {
                             setSelectedRoles(selectedRoles.filter(r => r !== userType.value));
                           }
                         }}
-                        className="text-primary-600 focus:ring-primary-500 ml-2"
+                        className="text-primary-600 focus:ring-primary-500 me-2"
                       />
                       <span className="text-sm text-neutral-700">{userType.label}</span>
                     </div>
@@ -174,7 +174,7 @@ export default function EmailTab() {
                             setSelectedTeams(selectedTeams.filter(t => t !== team.value));
                           }
                         }}
-                        className="text-primary-600 focus:ring-primary-500 ml-2"
+                        className="text-primary-600 focus:ring-primary-500 me-2"
                       />
                       <span className="text-sm text-neutral-700">{team.label}</span>
                     </div>
@@ -281,7 +281,7 @@ export default function EmailTab() {
             <button
               key={index}
               onClick={() => handleTemplateSelect(template)}
-              className="p-3 text-right border border-neutral-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-colors"
+              className="p-3 text-end border border-neutral-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-colors"
             >
               <div className="font-medium text-neutral-900 text-sm">{template.title}</div>
               <div className="text-neutral-600 text-xs mt-1">{template.content}</div>

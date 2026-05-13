@@ -40,7 +40,7 @@ export default function PermissionsTab() {
                     <input
                       type="checkbox"
                       checked={role.permissions.includes(permission.id)}
-                      className="text-primary-600 focus:ring-primary-500 ml-2"
+                      className="text-primary-600 focus:ring-primary-500 me-2"
                       readOnly
                     />
                     <span className="text-sm text-neutral-700">{permission.name}</span>
@@ -79,7 +79,7 @@ export default function PermissionsTab() {
                   <div key={permission.id} className="flex items-center">
                     <input
                       type="checkbox"
-                      className="text-primary-600 focus:ring-primary-500 ml-2"
+                      className="text-primary-600 focus:ring-primary-500 me-2"
                     />
                     <span className="text-sm text-neutral-700">{permission.name}</span>
                   </div>
