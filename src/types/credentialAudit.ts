@@ -19,7 +19,10 @@ export type CredentialAuditEventType =
   | 'PHONE_CHANGED'
   | 'EMAIL_CHANGED'
   | 'PHONE_FORCE_RESET'
-  | 'SESSIONS_REVOKED';
+  | 'SESSIONS_REVOKED'
+  | 'ACCOUNT_DELETION_REQUESTED'
+  | 'ACCOUNT_DELETION_CANCELLED'
+  | 'ACCOUNT_DELETED';
 
 export interface CredentialAuditEntry {
   /** Target user whose credential changed. */
