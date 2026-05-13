@@ -64,7 +64,7 @@ export default function AmmunitionReportsList({
 
   return (
     <div className="overflow-x-auto border border-neutral-200 rounded-lg">
-      <table className="min-w-full text-right text-sm">
+      <table className="min-w-full text-start text-sm">
         <thead className="bg-neutral-50">
           <tr>
             <th className="w-8" />

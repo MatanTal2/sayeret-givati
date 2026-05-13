@@ -39,7 +39,7 @@ export default function NotificationItem({ notification }: NotificationItemProps
     <div
       className={`
         p-4 hover:bg-gray-50 cursor-pointer transition-colors relative
-        ${!notification.isRead ? 'bg-blue-50/30 border-r-2 border-blue-500' : ''}
+        ${!notification.isRead ? 'bg-blue-50/30 border-e-2 border-blue-500' : ''}
       `}
       onClick={handleClick}
     >
@@ -125,7 +125,7 @@ export default function NotificationItem({ notification }: NotificationItemProps
 
       {/* Unread indicator */}
       {!notification.isRead && (
-        <div className="absolute top-4 left-2 w-2 h-2 bg-blue-500 rounded-full" />
+        <div className="absolute top-4 end-2 w-2 h-2 bg-blue-500 rounded-full" />
       )}
     </div>
   );

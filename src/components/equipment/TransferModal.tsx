@@ -275,12 +275,12 @@ export default function TransferModal({
                       key={user.uid}
                       type="button"
                       onClick={() => handleUserSelect(user)}
-                      className="w-full px-4 py-3 text-right hover:bg-neutral-50 flex items-center gap-3 border-b border-neutral-100 last:border-b-0"
+                      className="w-full px-4 py-3 text-end hover:bg-neutral-50 flex items-center gap-3 border-b border-neutral-100 last:border-b-0"
                     >
                       <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                         <User className="w-4 h-4 text-primary-600" />
                       </div>
-                      <div className="flex-1 text-right">
+                      <div className="flex-1 text-end">
                         <div className="font-medium text-neutral-900">{user.displayName}</div>
                         <div className="text-sm text-neutral-600">{user.email}</div>
                         {user.rank && (

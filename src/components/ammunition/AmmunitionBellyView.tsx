@@ -105,7 +105,7 @@ export default function AmmunitionBellyView({ plans, onSubmitRestock }: Ammuniti
         </div>
       ) : (
         <div className="overflow-x-auto border border-neutral-200 rounded-lg">
-          <table className="min-w-full text-right text-sm">
+          <table className="min-w-full text-start text-sm">
             <thead className="bg-neutral-50">
               <tr>
                 <th className="px-3 py-2 text-xs font-medium text-neutral-600">{TT.BELLY_COL_TEMPLATE}</th>

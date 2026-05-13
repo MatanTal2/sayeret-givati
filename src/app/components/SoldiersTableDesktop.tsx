@@ -93,9 +93,9 @@ export default function SoldiersTableDesktop({
                 </div>
               </th>
               <th className="px-1 py-3 text-neutral-400">|</th>
-              <th className="px-4 py-3 text-right text-sm font-medium text-neutral-700">{TEXT_CONSTANTS.STATUS_PAGE.NAME}</th>
+              <th className="px-4 py-3 text-start text-sm font-medium text-neutral-700">{TEXT_CONSTANTS.STATUS_PAGE.NAME}</th>
               <th className="px-1 py-3 text-neutral-400">|</th>
-              <th className="px-4 py-3 text-right text-sm font-medium text-neutral-700 relative">
+              <th className="px-4 py-3 text-start text-sm font-medium text-neutral-700 relative">
                 <div className="flex items-center justify-start gap-2">
                   <span>{TEXT_CONSTANTS.STATUS_PAGE.TEAM}</span>
                   <button
@@ -106,7 +106,7 @@ export default function SoldiersTableDesktop({
                   </button>
                 </div>
                 {showTeamFilter && (
-                  <div className="filter-dropdown absolute top-full left-0 mt-1 bg-white border border-neutral-300 rounded-md shadow-lg z-10 min-w-48">
+                  <div className="filter-dropdown absolute top-full start-0 mt-1 bg-white border border-neutral-300 rounded-md shadow-lg z-10 min-w-48">
                     <div className="p-3 max-h-48 overflow-y-auto">
                       <div className="space-y-2">
                         {uniquePlatoons.map(platoon => (
@@ -140,7 +140,7 @@ export default function SoldiersTableDesktop({
                 )}
               </th>
               <th className="px-1 py-3 text-neutral-400">|</th>
-              <th className="px-4 py-3 text-right text-sm font-medium text-neutral-700 relative">
+              <th className="px-4 py-3 text-start text-sm font-medium text-neutral-700 relative">
                 <div className="flex items-center justify-start gap-2">
                   <span>{TEXT_CONSTANTS.STATUS_PAGE.STATUS}</span>
                   <button
@@ -151,7 +151,7 @@ export default function SoldiersTableDesktop({
                   </button>
                 </div>
                 {showStatusFilter && (
-                  <div className="filter-dropdown absolute top-full left-0 mt-1 bg-white border border-neutral-300 rounded-md shadow-lg z-10 min-w-36">
+                  <div className="filter-dropdown absolute top-full start-0 mt-1 bg-white border border-neutral-300 rounded-md shadow-lg z-10 min-w-36">
                     <div className="p-3 max-h-48 overflow-y-auto">
                       <div className="space-y-2">
                         {getAvailableStatuses().map(status => (
@@ -185,7 +185,7 @@ export default function SoldiersTableDesktop({
                 )}
               </th>
               <th className="px-1 py-3 text-neutral-400">|</th>
-              <th className="px-4 py-3 text-right text-sm font-medium text-neutral-700">{TEXT_CONSTANTS.STATUS_PAGE.NOTES}</th>
+              <th className="px-4 py-3 text-start text-sm font-medium text-neutral-700">{TEXT_CONSTANTS.STATUS_PAGE.NOTES}</th>
             </tr>
           </thead>
           <tbody>

@@ -61,7 +61,7 @@ export default function LoggedOutLanding() {
           {/* Feature teasers */}
           <ul className="w-full flex flex-col gap-3 pt-6 border-t border-neutral-200">
             {features.map(({ Icon, label }) => (
-              <li key={label} className="flex items-center gap-3 text-right">
+              <li key={label} className="flex items-center gap-3 text-start">
                 <span className="w-9 h-9 rounded-lg bg-primary-50 text-primary-700 flex items-center justify-center shrink-0">
                   <Icon className="w-4 h-4" aria-hidden="true" />
                 </span>

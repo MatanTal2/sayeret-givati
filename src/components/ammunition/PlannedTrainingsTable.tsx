@@ -229,7 +229,7 @@ function PlanTable({
         <div className="text-sm text-neutral-500 text-center py-8">{emptyMsg}</div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full text-right text-sm">
+          <table className="min-w-full text-start text-sm">
             <thead className="bg-neutral-50">
               <tr>
                 <th className="px-3 py-2 text-xs font-medium text-neutral-600">{TT.COL_DATE}</th>

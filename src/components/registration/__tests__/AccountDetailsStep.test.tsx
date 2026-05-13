@@ -117,7 +117,7 @@ describe('AccountDetailsStep', () => {
       const atIcon = emailContainer?.querySelector('svg');
       
       expect(atIcon).toBeInTheDocument();
-      expect(atIcon?.parentElement).toHaveClass('absolute', 'right-3');
+      expect(atIcon?.parentElement).toHaveClass('absolute', 'start-3');
     });
   });
 
@@ -170,12 +170,12 @@ describe('AccountDetailsStep', () => {
       expect(passwordInput).toHaveAttribute('type', 'password');
     });
 
-    it('should have correct icon positioning (lock right, eye left)', () => {
+    it('should have correct icon positioning (lock start, eye end)', () => {
       render(<AccountDetailsStep {...defaultProps} />);
       
       const passwordContainer = screen.getByTestId('password-input').parentElement;
-      const lockIconContainer = passwordContainer?.querySelector('.absolute.right-3');
-      const eyeIconContainer = passwordContainer?.querySelector('.absolute.left-3');
+      const lockIconContainer = passwordContainer?.querySelector('.absolute.start-3');
+      const eyeIconContainer = passwordContainer?.querySelector('.absolute.end-3');
       
       expect(lockIconContainer).toBeInTheDocument();
       expect(eyeIconContainer).toBeInTheDocument();
@@ -189,7 +189,7 @@ describe('AccountDetailsStep', () => {
       render(<AccountDetailsStep {...defaultProps} />);
       
       const passwordContainer = screen.getByTestId('password-input').parentElement;
-      const lockIconContainer = passwordContainer?.querySelector('.absolute.right-3 .relative');
+      const lockIconContainer = passwordContainer?.querySelector('.absolute.start-3 .relative');
       
       // Hover over lock icon container
       await user.hover(lockIconContainer as Element);
@@ -211,7 +211,7 @@ describe('AccountDetailsStep', () => {
       render(<AccountDetailsStep {...defaultProps} />);
       
       const passwordContainer = screen.getByTestId('password-input').parentElement;
-      const lockIconContainer = passwordContainer?.querySelector('.absolute.right-3 .relative');
+      const lockIconContainer = passwordContainer?.querySelector('.absolute.start-3 .relative');
       
       // Hover to show tooltip
       await user.hover(lockIconContainer as Element);
@@ -233,12 +233,12 @@ describe('AccountDetailsStep', () => {
       render(<AccountDetailsStep {...defaultProps} />);
       
       const passwordContainer = screen.getByTestId('password-input').parentElement;
-      const lockIconContainer = passwordContainer?.querySelector('.absolute.right-3 .relative');
+      const lockIconContainer = passwordContainer?.querySelector('.absolute.start-3 .relative');
       await user.hover(lockIconContainer as Element);
       
       await waitFor(() => {
         const tooltipContainer = screen.getByText('דרישות סיסמה:').parentElement;
-        expect(tooltipContainer).toHaveClass('absolute', 'bottom-full', 'right-0', 'mb-2');
+        expect(tooltipContainer).toHaveClass('absolute', 'bottom-full', 'start-0', 'mb-2');
       });
     });
 
@@ -247,7 +247,7 @@ describe('AccountDetailsStep', () => {
       render(<AccountDetailsStep {...defaultProps} />);
       
       const passwordContainer = screen.getByTestId('password-input').parentElement;
-      const lockIconContainer = passwordContainer?.querySelector('.absolute.right-3 .relative');
+      const lockIconContainer = passwordContainer?.querySelector('.absolute.start-3 .relative');
       await user.hover(lockIconContainer as Element);
       
       await waitFor(() => {
@@ -552,7 +552,7 @@ describe('AccountDetailsStep', () => {
       render(<AccountDetailsStep {...defaultProps} />);
       
       const passwordContainer = screen.getByTestId('password-input').parentElement;
-      const lockIconContainer = passwordContainer?.querySelector('.absolute.right-3 .relative');
+      const lockIconContainer = passwordContainer?.querySelector('.absolute.start-3 .relative');
       
       // Show tooltip
       await user.hover(lockIconContainer as Element);

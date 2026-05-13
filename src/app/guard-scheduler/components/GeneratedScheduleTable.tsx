@@ -96,7 +96,7 @@ export default function GeneratedScheduleTable({
 
       <div className="card-base overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-neutral-50 text-right text-xs uppercase tracking-wide text-neutral-500">
+          <thead className="bg-neutral-50 text-start text-xs uppercase tracking-wide text-neutral-500">
             <tr>
               <th className="px-3 py-2">{T.COL_DAY}</th>
               <th className="px-3 py-2">{T.COL_TIME}</th>

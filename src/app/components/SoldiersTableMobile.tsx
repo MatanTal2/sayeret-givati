@@ -82,7 +82,7 @@ export default function SoldiersTableMobile({
           <div className="relative filter-dropdown border-l border-primary-200">
             <button
               onClick={onTeamFilterToggle}
-              className="w-full h-12 px-4 flex items-center justify-between text-right text-sm font-medium text-primary-800 hover:bg-primary-200 focus:outline-none focus:bg-primary-200 transition-colors"
+              className="w-full h-12 px-4 flex items-center justify-between text-start text-sm font-medium text-primary-800 hover:bg-primary-200 focus:outline-none focus:bg-primary-200 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-primary-700">{TEXT_CONSTANTS.STATUS_PAGE.TEAM_LABEL}</span>
@@ -98,7 +98,7 @@ export default function SoldiersTableMobile({
               <ChevronDown className={`h-5 w-5 text-primary-700 transition-transform duration-200 ${showTeamFilter ? 'rotate-180' : ''}`} />
             </button>
             {showTeamFilter && (
-              <div className="filter-dropdown absolute top-full left-0 right-0 bg-white border border-neutral-200 rounded-b-md shadow-lg z-20">
+              <div className="filter-dropdown absolute top-full start-0 end-0 bg-white border border-neutral-200 rounded-b-md shadow-lg z-20">
                 <div className="p-3 max-h-48 overflow-y-auto">
                   <div className="space-y-2">
                     {uniquePlatoons.map(platoon => (
@@ -136,7 +136,7 @@ export default function SoldiersTableMobile({
           <div className="relative filter-dropdown border-r border-primary-200">
             <button
               onClick={onStatusFilterToggle}
-              className="w-full h-12 px-4 flex items-center justify-between text-right text-sm font-medium text-primary-800 hover:bg-primary-200 focus:outline-none focus:bg-primary-200 transition-colors"
+              className="w-full h-12 px-4 flex items-center justify-between text-start text-sm font-medium text-primary-800 hover:bg-primary-200 focus:outline-none focus:bg-primary-200 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-primary-700">{TEXT_CONSTANTS.STATUS_PAGE.STATUS_LABEL}</span>
@@ -152,7 +152,7 @@ export default function SoldiersTableMobile({
               <ChevronDown className={`h-5 w-5 text-primary-700 transition-transform duration-200 ${showStatusFilter ? 'rotate-180' : ''}`} />
             </button>
             {showStatusFilter && (
-              <div className="filter-dropdown absolute top-full left-0 right-0 bg-white border border-neutral-200 rounded-b-md shadow-lg z-20">
+              <div className="filter-dropdown absolute top-full start-0 end-0 bg-white border border-neutral-200 rounded-b-md shadow-lg z-20">
                 <div className="p-3 max-h-48 overflow-y-auto">
                   <div className="space-y-2">
                     {getAvailableStatuses().map(status => (

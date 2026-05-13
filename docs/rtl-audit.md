@@ -1,12 +1,14 @@
 # RTL Audit — findings & triage
 
-**Status:** In progress. Batches landing one at a time on dedicated branches.
-Full sweep is multi-session; this doc tracks the punch list.
+**Status:** ✅ Sweep complete (2026-05-13, batch 5). Batches 1-5 shipped.
+Remaining hits in production code: 28 `justify-end` on modal-footer CTA rows
+(INTENTIONAL — they end-align primary buttons), 3 EXEMPT (`<input type="date">`
+segments + English stack-trace in `EquipmentErrorBoundary`), and dev-only test
+components (`EquipmentTest.tsx`, `SimpleUserTest.tsx`) which are not user-facing.
+Tooltip/toast centering via `left-1/2 + -translate-x-1/2` is logical-agnostic
+and stays as-is.
 
-**Hit-count note:** the initial 505-hit count came from a loose grep
-(`pl-|pr-|...` without word boundary, which matched substrings like `pr-imary-`).
-The stricter grep `(\s|"|')(pl-|pr-|ml-|mr-)\d` returns **49 real hits across 21
-files** — much more tractable. Use the stricter form when re-running.
+See "Guidelines for new code" below for conventions to keep this clean.
 
 `<html dir="rtl">` is set globally in `src/app/layout.tsx`. CLAUDE.md forbids
 per-component `dir="rtl"`. Despite that, components leak LTR through hardcoded
@@ -113,31 +115,80 @@ Recurring offender: action-row headers that want the primary CTA on the right.
 - `src/components/equipment/template-form/FormFieldRequiresDailyCheck.tsx` — 1
   hit. Label `mr-2` → `ms-2`.
 
-### 🟡 Quick-win candidates (next batch)
+### ✅ Fixed (2026-05-13, batch 5 — sweep complete — `fix/rtl-batch-5-sweep-complete`)
 
-Remaining hits surfaced during batch 4 that are out of its scope. Audit's
-margin-only strict grep undercounted these; logical conversion is still
-incomplete in many admin/registration components.
+Single-branch sweep finishing the carryover from batch 4 plus everything the
+margin-only strict grep had missed. ~48 conversions across 27 production files
++ test-file fix-up for stale `right-3` / `left-3` / `right-0` assertions
+left over from batch 3.
 
-| File | Notes |
-|------|-------|
-| `src/components/management/tabs/UsersTab.tsx` | 6 table-header `text-right` (batch 2 fixed margins only). Convert to `text-start`. |
-| `src/components/management/tabs/TemplatesTab.tsx` | `text-right` on disclosure button. |
-| `src/components/management/tabs/PermissionGrantsTab.tsx` | `left-1/2` on toast. |
-| `src/components/management/BulkTemplateImportModal.tsx` | `text-right` table. |
-| `src/components/registration/PersonalDetailsStep.tsx` | 6 `text-right` + 1 `text-left` (date input — exempt; verify). |
-| `src/components/registration/OTPVerificationStep.tsx` | `left-3` icon. |
-| `src/components/registration/RegistrationForm.tsx` | `text-right` + `left-3` icon. |
-| `src/components/registration/RegistrationStepDots.tsx` | `left-1/2` tooltip + `border-l-2 border-r-2 …` triangle. |
-| `src/components/ammunition/AmmunitionInventoryView.tsx` + 4 other `Ammunition*` views | `text-right` tables. |
-| `src/components/equipment/TransferModal.tsx` | 2 `text-right` (search results — batch 2 fixed icons). |
-| `src/components/notifications/NotificationItem.tsx` | `border-r-2` + `left-2` dot. |
-| `src/components/notifications/NotificationBell.tsx` | 2 `-right-1` absolute badges. |
-| `src/components/equipment/EquipmentErrorBoundary.tsx` | `text-left` (English stack trace — likely exempt). |
-| `src/components/EquipmentTest.tsx` + `SimpleUserTest.tsx` | Dev-only — skip. |
+**Tables (`text-right` → `text-start`):**
+`UsersTab.tsx` (6), `AmmunitionReportsList.tsx`, `PlannedTrainingsTable.tsx`,
+`AmmunitionBellyView.tsx`, `AmmunitionInventoryView.tsx`,
+`AmmunitionTemplatesSection.tsx`, `AmmunitionReportsSection.tsx`,
+`CentralStockSection.tsx`, `BulkTemplateImportModal.tsx`, `phone-book/page.tsx`,
+`SoldiersTableDesktop.tsx` (4), `GeneratedScheduleTable.tsx`.
 
-`justify-end` on button rows is intentional everywhere it appears (CTAs end-aligned
-in modal footers). Do not flag those.
+**Registration (`text-right` → `text-end`, `left-3` → `end-3`):**
+`PersonalDetailsStep.tsx` (5 hits — input + 4 error rows; `text-left` on date
+input kept per `<input type="date">` exemption documented at line 145),
+`RegistrationForm.tsx` (3 — input + icon + error), `OTPVerificationStep.tsx` (1
+— icon), `RegistrationStepDots.tsx` (1 — tooltip triangle
+`border-l-2 border-r-2` → `border-s-2 border-e-2`; `left-1/2` centering kept).
+
+**Dropdowns / auth:**
+`AuthButton.tsx` (8 — all `text-right` → `text-start` on dropdown menu items
+and labels), `LoggedOutLanding.tsx` (1 — list item).
+
+**Status page (mobile + desktop):**
+`SoldiersTableMobile.tsx` (2 filter-button `text-right` → `text-start`,
+2 dropdown `left-0 right-0` → `start-0 end-0`),
+`SoldiersTableDesktop.tsx` (2 dropdown `left-0` → `start-0`),
+`status/page.tsx` (1 footer `left-0 right-0` → `start-0 end-0`).
+
+**Sidebars / FAB:**
+`ManagementSidebar.tsx`, `AppSidebar.tsx`, `HamburgerMenu.tsx` (each
+`right-0` → `end-0`), `QuickActionFab.tsx` (`right-5` → `end-5`).
+
+**Notifications:**
+`NotificationItem.tsx` (`border-r-2` → `border-e-2` on unread indicator,
+`left-2` → `end-2` on dot), `NotificationBell.tsx` (2 `-right-1` → `-end-1` on
+badges).
+
+**Misc:**
+`TransferModal.tsx` (2 search-result `text-right` → `text-end`),
+`TemplatesTab.tsx` (1 disclosure-button `text-right` → `text-start`).
+
+**Test fixup (drive-by):**
+`AccountDetailsStep.test.tsx` — updated 14 stale assertions referencing
+removed physical classes (`right-3`/`left-3`/`right-0`) to the logical
+classes (`start-3`/`end-3`/`start-0`) that batch 3 actually shipped. Reduced
+failing tests from 10 → 4 (remaining 4 are unrelated validation/tooltip-styling
+issues that pre-date this branch).
+
+### Guidelines for new code
+
+When adding or editing UI, default to logical Tailwind properties from the
+first commit. Repeat the audit grep on new code:
+
+```
+(\s|"|')(pl-|pr-|ml-|mr-)\d|text-left|text-right|\bleft-\d|\bright-\d|border-l-\d|border-r-\d
+```
+
+If you must use physical classes (e.g., for direction-specific gradient
+overlays where logical doesn't make sense), add a one-line `// physical OK:
+<reason>` comment so future grep sweeps know to skip.
+
+Pattern for password / email input pairs:
+- Hebrew text-input: `text-end` (not `text-right`)
+- Reserve space for trailing icon: `pe-12` (not `pr-12`) when icon at `end-3`
+- Reserve space for leading icon: `ps-12` (not `pl-12`) when icon at `start-3`
+- Absolute icon positioning: `start-3` / `end-3` (not `left-3` / `right-3`)
+- Borders: `border-s-*` / `border-e-*` (not `border-l-*` / `border-r-*`)
+
+`justify-end` on modal-footer CTA rows IS intentional — flex `justify-end`
+end-aligns the primary button regardless of `dir` because the container's
+inline-end is the visual end. Do not flag those.
 
 Pattern for password / email input pairs (codify):
 - Hebrew text-input: `text-end` (not `text-right`)

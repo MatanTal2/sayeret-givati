@@ -311,7 +311,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
                 value={personalNumber}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                         text-right text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 ${
+                         text-end text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 ${
                   validationError && personalNumber
                     ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
                     : 'border-neutral-200 focus:border-primary-500 focus:ring-primary-500'
@@ -320,7 +320,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
                 maxLength={7}
                 data-testid="personal-number-input"
               />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+              <div className="absolute end-3 top-1/2 transform -translate-y-1/2">
                 <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 114 0v2m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
@@ -330,7 +330,7 @@ export default function RegistrationForm({ personalNumber, setPersonalNumber, on
 
             {validationError && personalNumber && (
               <p
-                className="text-sm text-danger-600 text-right px-1"
+                className="text-sm text-danger-600 text-end px-1"
                 data-testid="personal-number-error"
               >
                 {validationError}
