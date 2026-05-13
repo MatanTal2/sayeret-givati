@@ -8,10 +8,15 @@ import { serverUpsertPhoneBookFromUser } from '@/lib/db/server/phoneBookService'
 
 /**
  * PATCH /api/users/profile
- * Body: { uid: string, updates: { teamId?, profileImage?, phoneNumber? } }
+ * Body: { uid: string, updates: { teamId?, profileImage? } }
  *
  * Caller must be authenticated (bearer token). Only the user themselves, or
  * an ADMIN / SYSTEM_MANAGER, may update a profile.
+ *
+ * `phoneNumber` is explicitly rejected with 400 — phone changes MUST go
+ * through the dedicated phone-change route (queued as Settings PR-C) that
+ * requires fresh password re-auth + a Firebase Auth credential proof. See
+ * `project_settings_page.md` Council synthesis for the threat model.
  */
 export async function PATCH(request: Request) {
   try {
@@ -25,6 +30,15 @@ export async function PATCH(request: Request) {
     if (!body?.updates || typeof body.updates !== 'object') {
       return NextResponse.json({ success: false, error: 'updates object is required' }, { status: 400 });
     }
+    if ('phoneNumber' in body.updates) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'phoneNumber cannot be updated via this endpoint — use the dedicated phone-change flow (Settings PR-C, not yet shipped). This guard prevents identity-anchor changes without OTP re-verification.',
+        },
+        { status: 400 }
+      );
+    }
     const isElevated =
       actor.userType === UserType.ADMIN || actor.userType === UserType.SYSTEM_MANAGER;
     if (body.uid !== actor.uid && !isElevated) {
@@ -35,9 +49,10 @@ export async function PATCH(request: Request) {
     }
     await serverUpdateUserProfile(body.uid, body.updates);
 
-    // Write-through to phone book when phone-relevant fields change.
+    // Write-through to phone book when phone-book-relevant fields change.
+    // phoneNumber is excluded above; the phone-change route will trigger its
+    // own write-through once landed.
     const touchesPhoneBook =
-      body.updates.phoneNumber !== undefined ||
       body.updates.teamId !== undefined ||
       body.updates.profileImage !== undefined;
     if (touchesPhoneBook) {
