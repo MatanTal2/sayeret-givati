@@ -37,7 +37,13 @@ export default function ManagementSidebar({
   useScrollLock(isOpen && isMobile);
   return (
     <div className={cn(
-      'fixed inset-y-0 end-0 z-50 w-80 bg-white shadow-2xl transform transition-all duration-500 ease-out',
+      // `start-0` anchors to inline-start (visual right in RTL) on the
+      // mobile fixed layout; the lg breakpoint switches to `relative`,
+      // where the inset has no effect and the sidebar flows naturally on
+      // the inline-start side of the management grid. `translate-x-full`
+      // is physical — pushes the panel visually right (off-screen) when
+      // closed.
+      'fixed inset-y-0 start-0 z-50 w-80 bg-white shadow-2xl transform transition-all duration-500 ease-out',
       'lg:relative lg:translate-x-0 lg:w-72 lg:shadow-lg lg:duration-0',
       isOpen ? 'translate-x-0 shadow-2xl' : 'translate-x-full shadow-none'
     )}>
