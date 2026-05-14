@@ -32,9 +32,11 @@ enterOtp — 6-digit code input
   ↓
   applyVerifiedPhoneCredential (Firebase updatePhoneNumber + force-refresh idToken)
   ↓
-  POST /api/users/phone-change/confirm (server validates + mirrors)
+  POST /api/users/phone-change/confirm (server validates + mirrors + sessionEpoch fence)
   ↓
-success toast → modal closes
+success — green confirmation card + optional manual "sign out other devices now" CTA
+  ↓ Done (or X / backdrop)
+onSuccess() fires → modal closes
 ```
 
 A "חזור — שנה מספר" link in `enterOtp` resets back to `enterNumber` and invalidates the prior `verificationId` so a new SMS can be requested with a different number.
@@ -67,5 +69,5 @@ Hebrew strings live in `TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_*`. English mirrors
 ## Deferred polish (out of PR-C)
 
 - ~~Pre-flight explainer card listing the prerequisites before step 1.~~ ✅ Shipped 2026-05-14 on `feat/phone-change-preflight` — new `preflight` step lists SMS, password reauth, other-device logout, and rate limit before the reauth step. Bullets keyed under `CHANGE_PHONE_PREFLIGHT_*`.
-- "Sign out other devices now" explicit CTA in the success state. (sessionEpoch fence already cuts them on next API call — the CTA would just confirm it visually.)
+- ~~"Sign out other devices now" explicit CTA in the success state.~~ ✅ Shipped 2026-05-14 on `feat/phone-change-sign-out-cta` — new `success` step with green confirmation card + a manual "Sign out other devices now" button that hits `/api/users/sessions/revoke` directly (idempotent bump on top of the `sessionEpoch` fence the confirm route already stamped). On revoke success the button collapses to a "✓ Other devices signed out" badge. `closeAndCleanup` fires `onSuccess()` when dismissed from the success step so the parent toast still surfaces if the user X-closes instead of clicking Done. Strings keyed under `CHANGE_PHONE_SUCCESS_*` + `CHANGE_PHONE_SIGN_OUT_NOW_*`.
 - Old-phone notification (email + SMS) — blocked on PR-E channel pick.

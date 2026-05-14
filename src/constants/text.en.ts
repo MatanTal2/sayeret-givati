@@ -52,6 +52,13 @@ export const TEXT_EN = {
     CHANGE_PHONE_SUBMIT_OTP: 'Confirm phone change',
     CHANGE_PHONE_SUBMITTING: 'Updating...',
     CHANGE_PHONE_SUCCESS: 'Phone number updated. Your other devices were signed out.',
+    CHANGE_PHONE_SUCCESS_TITLE: 'Phone number updated',
+    CHANGE_PHONE_SUCCESS_BODY:
+      'The new number is saved. Your other devices will be signed out automatically on their next request to the server.',
+    CHANGE_PHONE_SIGN_OUT_NOW_BUTTON: 'Sign out other devices now',
+    CHANGE_PHONE_SIGN_OUT_NOW_SUBMITTING: 'Signing out...',
+    CHANGE_PHONE_SIGN_OUT_NOW_DONE: 'Other devices signed out ✓',
+    CHANGE_PHONE_SUCCESS_DONE: 'Done',
     CHANGE_PHONE_SAME_NUMBER: 'The new number matches the existing one — nothing to change.',
     CHANGE_PHONE_INVALID_E164: 'Phone number must be in international format (e.g. +972501234567).',
     CHANGE_PHONE_RATE_LIMITED: 'Try again in a moment. Only one change per minute is allowed.',
