@@ -76,6 +76,11 @@ export interface EnhancedAuthUser {
   // Communication preferences
   communicationPreferences?: CommunicationPreferences;
 
+  // Account-deletion soft-delete marker (PR-G). Present iff the user has
+  // requested deletion and the 30d retention window hasn't elapsed (or
+  // they haven't cancelled). Drives the in-app pending-deletion banner.
+  deletionRequestedAt?: Timestamp;
+
   // Computed fields
   initials?: string;
 }
@@ -106,6 +111,10 @@ export interface FirestoreUserProfile {
   enlistmentCycle?: string;
   address?: string;
   communicationPreferences?: CommunicationPreferences;
+  /** PR-G soft-delete marker. Mirrored to {@link EnhancedAuthUser.deletionRequestedAt}. */
+  deletionRequestedAt?: Timestamp;
+  /** Optional free-text reason captured at delete-request time. */
+  deletionReason?: string;
 }
 
 /**
