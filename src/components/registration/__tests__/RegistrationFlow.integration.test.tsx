@@ -52,6 +52,11 @@ jest.mock('@/constants/text', () => ({
       CLOSE_MODAL: 'סגור חלון',
     },
     COMPANY_NAME: 'צה"ל - חטיבת גבעתי',
+    REGISTRATION_COMPONENTS: {
+      BACK_TO_LOGIN: 'חזרה להתחברות',
+      ENTER_FIRST_NAME: 'הזן שם פרטי',
+      ENTER_LAST_NAME: 'הזן שם משפחה',
+    },
   },
 }));
 
@@ -75,10 +80,11 @@ const mockValidateBirthdate = validateBirthdate as jest.MockedFunction<typeof va
 const mockValidateConsent = validateConsent as jest.MockedFunction<typeof validateConsent>;
 const mockMaskPhoneNumber = maskPhoneNumber as jest.MockedFunction<typeof maskPhoneNumber>;
 
-// SKIPPED 2026-05-13: integration test reaches into the details step's gender
-// field via `selectOptions`, which no longer works since Select migrated to
-// Headless UI Listbox. Tracked in memory: project_test_rewrites.
-describe.skip('Registration Flow Integration Tests', () => {
+// Listbox-affected tests inside this suite are individually `it.skip`'d with
+// their own reasons (async OTP flow, redundant with component tests). The
+// describe itself was re-enabled 2026-05-14 after the Listbox migration
+// rewrite — see `project_test_rewrites`.
+describe('Registration Flow Integration Tests', () => {
   const mockProps = {
     isOpen: true,
     onClose: jest.fn(),

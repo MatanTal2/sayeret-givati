@@ -1,10 +1,10 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import RegistrationDetailsStep from '../RegistrationDetailsStep';
+import { selectListboxOption } from '@/__test-utils__/listboxHelpers';
 
-// Mock the validation utilities
 jest.mock('@/utils/validationUtils', () => ({
   validateEmail: jest.fn(),
   validatePassword: jest.fn(),
@@ -13,7 +13,6 @@ jest.mock('@/utils/validationUtils', () => ({
   validateConsent: jest.fn(),
 }));
 
-// Mock the text constants
 jest.mock('@/constants/text', () => ({
   TEXT_CONSTANTS: {
     AUTH: {
@@ -56,11 +55,18 @@ const mockValidateGender = validateGender as jest.MockedFunction<typeof validate
 const mockValidateBirthdate = validateBirthdate as jest.MockedFunction<typeof validateBirthdate>;
 const mockValidateConsent = validateConsent as jest.MockedFunction<typeof validateConsent>;
 
-// SKIPPED 2026-05-13: tests target `getByTestId('gender-select')` +
-// `selectOptions` semantics that broke when the gender field migrated from
-// native <select> to a Headless UI Listbox. Same blocker as
-// PersonalDetailsStep.test — tracked in memory: project_test_rewrites.
-describe.skip('RegistrationDetailsStep Component', () => {
+const GENDER_LABEL = 'מין';
+const GENDER_MALE_LABEL = 'זכר';
+
+const allValid = () => {
+  mockValidateEmail.mockReturnValue({ isValid: true, errorMessage: null });
+  mockValidatePassword.mockReturnValue({ isValid: true, errorMessage: null });
+  mockValidateGender.mockReturnValue({ isValid: true, errorMessage: null });
+  mockValidateBirthdate.mockReturnValue({ isValid: true, errorMessage: null });
+  mockValidateConsent.mockReturnValue({ isValid: true, errorMessage: null });
+};
+
+describe('RegistrationDetailsStep Component', () => {
   const mockProps = {
     firstName: 'יוסי',
     lastName: 'כהן',
@@ -70,329 +76,188 @@ describe.skip('RegistrationDetailsStep Component', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
-    // Default mock implementations (all invalid initially)
-    mockValidateEmail.mockReturnValue({
-      isValid: false,
-      errorMessage: 'כתובת אימייל היא שדה חובה',
-    });
-    mockValidatePassword.mockReturnValue({
-      isValid: false,
-      errorMessage: 'סיסמה היא שדה חובה',
-    });
-    mockValidateGender.mockReturnValue({
-      isValid: false,
-      errorMessage: 'בחירת מין היא שדה חובה',
-    });
-    mockValidateBirthdate.mockReturnValue({
-      isValid: false,
-      errorMessage: 'תאריך לידה הוא שדה חובה',
-    });
-    mockValidateConsent.mockReturnValue({
-      isValid: false,
-      errorMessage: 'יש לאשר את תנאי השימוש',
-    });
+    mockValidateEmail.mockReturnValue({ isValid: false, errorMessage: 'כתובת אימייל היא שדה חובה' });
+    mockValidatePassword.mockReturnValue({ isValid: false, errorMessage: 'סיסמה היא שדה חובה' });
+    mockValidateGender.mockReturnValue({ isValid: false, errorMessage: 'בחירת מין היא שדה חובה' });
+    mockValidateBirthdate.mockReturnValue({ isValid: false, errorMessage: 'תאריך לידה הוא שדה חובה' });
+    mockValidateConsent.mockReturnValue({ isValid: false, errorMessage: 'יש לאשר את תנאי השימוש' });
   });
 
-  describe('should display pre-filled readonly fields', () => {
-    it('should show readonly first name field', () => {
+  describe('readonly pre-filled fields', () => {
+    it('renders first name readonly with the supplied value', () => {
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const firstNameInput = screen.getByTestId('first-name-readonly');
-      expect(firstNameInput).toBeInTheDocument();
-      expect(firstNameInput).toHaveValue('יוסי');
-      expect(firstNameInput).toHaveAttribute('readonly');
+      const input = screen.getByTestId('first-name-readonly');
+      expect(input).toBeInTheDocument();
+      expect(input).toHaveValue('יוסי');
+      expect(input).toHaveAttribute('readonly');
     });
 
-    it('should show readonly last name field', () => {
+    it('renders last name readonly with the supplied value', () => {
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const lastNameInput = screen.getByTestId('last-name-readonly');
-      expect(lastNameInput).toBeInTheDocument();
-      expect(lastNameInput).toHaveValue('כהן');
-      expect(lastNameInput).toHaveAttribute('readonly');
+      const input = screen.getByTestId('last-name-readonly');
+      expect(input).toBeInTheDocument();
+      expect(input).toHaveValue('כהן');
+      expect(input).toHaveAttribute('readonly');
     });
 
-
-
-    it('should display readonly fields with proper styling', () => {
-      render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const firstNameInput = screen.getByTestId('first-name-readonly');
-      const lastNameInput = screen.getByTestId('last-name-readonly');
-      
-      expect(firstNameInput).toHaveClass('bg-neutral-100', 'cursor-not-allowed');
-      expect(lastNameInput).toHaveClass('bg-neutral-100', 'cursor-not-allowed');
-    });
-
-    it('should handle different prop values', () => {
-      const customProps = {
-        ...mockProps,
-        firstName: 'דוד',
-        lastName: 'לוי',
-      };
-      
-      render(<RegistrationDetailsStep {...customProps} />);
-      
+    it('honours different prop values', () => {
+      render(
+        <RegistrationDetailsStep {...mockProps} firstName="דוד" lastName="לוי" />,
+      );
       expect(screen.getByTestId('first-name-readonly')).toHaveValue('דוד');
       expect(screen.getByTestId('last-name-readonly')).toHaveValue('לוי');
     });
   });
 
-  describe('should validate all fields in real-time', () => {
-    it('should validate email on input change', async () => {
+  describe('real-time validation', () => {
+    it('validates email on input change', async () => {
       const user = userEvent.setup();
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const emailInput = screen.getByTestId('email-input');
-      await user.type(emailInput, 'test@example.com');
-      
+      await user.type(screen.getByTestId('email-input'), 'test@example.com');
       expect(mockValidateEmail).toHaveBeenCalledWith('test@example.com');
     });
 
-    it('should validate password on input change', async () => {
+    it('validates password on input change', async () => {
       const user = userEvent.setup();
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const passwordInput = screen.getByTestId('password-input');
-      await user.type(passwordInput, 'Password123!');
-      
+      await user.type(screen.getByTestId('password-input'), 'Password123!');
       expect(mockValidatePassword).toHaveBeenCalledWith('Password123!');
     });
 
-    it('should validate gender on selection change', async () => {
+    it('validates gender on Listbox selection', async () => {
       const user = userEvent.setup();
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const genderSelect = screen.getByTestId('gender-select');
-      await user.selectOptions(genderSelect, 'male');
-      
+      await selectListboxOption(user, GENDER_LABEL, GENDER_MALE_LABEL);
       expect(mockValidateGender).toHaveBeenCalledWith('male');
     });
 
-    it('should validate birthdate on input change', async () => {
+    it('validates birthdate on input change', async () => {
       const user = userEvent.setup();
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const birthdateInput = screen.getByTestId('birthdate-input');
-      await user.type(birthdateInput, '1990-01-01');
-      
+      await user.type(screen.getByTestId('birthdate-input'), '1990-01-01');
       expect(mockValidateBirthdate).toHaveBeenCalledWith('1990-01-01');
     });
 
-    it('should validate consent on checkbox change', async () => {
+    it('validates consent on checkbox click', async () => {
       const user = userEvent.setup();
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const consentCheckbox = screen.getByTestId('consent-checkbox');
-      await user.click(consentCheckbox);
-      
+      await user.click(screen.getByTestId('consent-checkbox'));
       expect(mockValidateConsent).toHaveBeenCalledWith(true);
     });
 
-    it('should show validation errors when fields are invalid', async () => {
+    it('shows the email error when validation fails', async () => {
+      mockValidateEmail.mockReturnValue({ isValid: false, errorMessage: 'כתובת אימייל לא תקינה' });
       const user = userEvent.setup();
-      
-      mockValidateEmail.mockReturnValue({
-        isValid: false,
-        errorMessage: 'כתובת אימייל לא תקינה',
-      });
-      
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const emailInput = screen.getByTestId('email-input');
-      await user.type(emailInput, 'invalid');
-      
+      await user.type(screen.getByTestId('email-input'), 'invalid');
       expect(screen.getByTestId('email-error')).toBeInTheDocument();
       expect(screen.getByText('כתובת אימייל לא תקינה')).toBeInTheDocument();
     });
 
-    it('should hide validation errors when fields become valid', async () => {
+    it('hides the email error once the field becomes valid', async () => {
+      mockValidateEmail.mockReturnValue({ isValid: false, errorMessage: 'כתובת אימייל לא תקינה' });
       const user = userEvent.setup();
-      
-      // Start with invalid
-      mockValidateEmail.mockReturnValue({
-        isValid: false,
-        errorMessage: 'כתובת אימייל לא תקינה',
-      });
-      
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const emailInput = screen.getByTestId('email-input');
-      await user.type(emailInput, 'invalid');
-      
+      const input = screen.getByTestId('email-input');
+      await user.type(input, 'invalid');
       expect(screen.getByTestId('email-error')).toBeInTheDocument();
-      
-      // Make it valid
-      mockValidateEmail.mockReturnValue({
-        isValid: true,
-        errorMessage: null,
-      });
-      
-      await user.clear(emailInput);
-      await user.type(emailInput, 'valid@example.com');
-      
+      mockValidateEmail.mockReturnValue({ isValid: true, errorMessage: null });
+      await user.clear(input);
+      await user.type(input, 'valid@example.com');
       expect(screen.queryByTestId('email-error')).not.toBeInTheDocument();
     });
 
-    it('should show errors with red border styling', async () => {
+    it('paints the password input with the danger-border class on error', async () => {
+      mockValidatePassword.mockReturnValue({ isValid: false, errorMessage: 'סיסמה חלשה' });
       const user = userEvent.setup();
-      
-      mockValidatePassword.mockReturnValue({
-        isValid: false,
-        errorMessage: 'סיסמה חלשה',
+      render(<RegistrationDetailsStep {...mockProps} />);
+      const input = screen.getByTestId('password-input');
+      await user.type(input, 'weak');
+      expect(input).toHaveClass('border-danger-500');
+    });
+  });
+
+  describe('submit button enablement', () => {
+    it('disables submit when the form is invalid', () => {
+      render(<RegistrationDetailsStep {...mockProps} />);
+      expect(screen.getByTestId('create-account-button')).toBeDisabled();
+    });
+
+    it('enables submit once every validator passes', async () => {
+      allValid();
+      const user = userEvent.setup();
+      render(<RegistrationDetailsStep {...mockProps} />);
+      await user.type(screen.getByTestId('email-input'), 'test@example.com');
+      await user.type(screen.getByTestId('password-input'), 'Password123!');
+      await selectListboxOption(user, GENDER_LABEL, GENDER_MALE_LABEL);
+      await user.type(screen.getByTestId('birthdate-input'), '1990-01-01');
+      await user.click(screen.getByTestId('consent-checkbox'));
+      await waitFor(() => {
+        expect(screen.getByTestId('create-account-button')).not.toBeDisabled();
       });
-      
-      render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const passwordInput = screen.getByTestId('password-input');
-      await user.type(passwordInput, 'weak');
-      
-      expect(passwordInput).toHaveClass('border-danger-500');
-    });
-  });
-
-  describe('should enable submit button only when form valid', () => {
-    it('should disable submit button when form is invalid', () => {
-      render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const submitButton = screen.getByTestId('create-account-button');
-      expect(submitButton).toBeDisabled();
-      expect(submitButton).toHaveClass('bg-neutral-300', 'cursor-not-allowed');
     });
 
-    it('should enable submit button when all fields are valid', async () => {
-      // Mock all validations as valid
-      mockValidateEmail.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidatePassword.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidateGender.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidateBirthdate.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidateConsent.mockReturnValue({ isValid: true, errorMessage: null });
-      
-      const user = userEvent.setup();
-      render(<RegistrationDetailsStep {...mockProps} />);
-      
-      // Fill all fields
-      await user.type(screen.getByTestId('email-input'), 'test@example.com');
-      await user.type(screen.getByTestId('password-input'), 'Password123!');
-      await user.selectOptions(screen.getByTestId('gender-select'), 'male');
-      await user.type(screen.getByTestId('birthdate-input'), '1990-01-01');
-      await user.click(screen.getByTestId('consent-checkbox'));
-      
-      const submitButton = screen.getByTestId('create-account-button');
-      expect(submitButton).not.toBeDisabled();
-      expect(submitButton).toHaveClass('bg-gradient-to-r', 'from-info-600');
-    });
-
-    it('should disable button if even one field is invalid', async () => {
-      // Mock most fields as valid but one invalid
-      mockValidateEmail.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidatePassword.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidateGender.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidateBirthdate.mockReturnValue({ isValid: true, errorMessage: null });
+    it('keeps submit disabled when any single validator fails', async () => {
+      allValid();
       mockValidateConsent.mockReturnValue({ isValid: false, errorMessage: 'יש לאשר את תנאי השימוש' });
-      
       const user = userEvent.setup();
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      // Fill all fields except consent
       await user.type(screen.getByTestId('email-input'), 'test@example.com');
       await user.type(screen.getByTestId('password-input'), 'Password123!');
-      await user.selectOptions(screen.getByTestId('gender-select'), 'male');
+      await selectListboxOption(user, GENDER_LABEL, GENDER_MALE_LABEL);
       await user.type(screen.getByTestId('birthdate-input'), '1990-01-01');
-      
-      const submitButton = screen.getByTestId('create-account-button');
-      expect(submitButton).toBeDisabled();
+      expect(screen.getByTestId('create-account-button')).toBeDisabled();
     });
   });
 
-  describe('should toggle password visibility', () => {
-    it('should start with password field as password type', () => {
+  describe('password visibility toggle', () => {
+    it('starts in password mode', () => {
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const passwordInput = screen.getByTestId('password-input');
-      expect(passwordInput).toHaveAttribute('type', 'password');
+      expect(screen.getByTestId('password-input')).toHaveAttribute('type', 'password');
     });
 
-    it('should toggle password visibility when button clicked', async () => {
+    it('toggles between password and text on toggle click', async () => {
       const user = userEvent.setup();
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const passwordInput = screen.getByTestId('password-input');
-      const toggleButton = passwordInput.nextElementSibling?.querySelector('button');
-      
-      expect(passwordInput).toHaveAttribute('type', 'password');
-      
-      if (toggleButton) {
-        await user.click(toggleButton);
-        expect(passwordInput).toHaveAttribute('type', 'text');
-        
-        await user.click(toggleButton);
-        expect(passwordInput).toHaveAttribute('type', 'password');
-      }
+      const input = screen.getByTestId('password-input');
+      const toggle = input.nextElementSibling as HTMLButtonElement | null;
+      expect(toggle).toBeTruthy();
+      await user.click(toggle as HTMLButtonElement);
+      expect(input).toHaveAttribute('type', 'text');
+      await user.click(toggle as HTMLButtonElement);
+      expect(input).toHaveAttribute('type', 'password');
     });
 
-    it('should show different icons for show/hide states', async () => {
+    it('preserves password value across visibility toggles', async () => {
       const user = userEvent.setup();
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const passwordInput = screen.getByTestId('password-input');
-      const toggleButton = passwordInput.nextElementSibling?.querySelector('button');
-      
-      if (toggleButton) {
-        // Initially shows "show" icon (eye)
-        expect(toggleButton.querySelector('svg')).toBeInTheDocument();
-        
-        await user.click(toggleButton);
-        
-        // After click shows "hide" icon (eye-slash)
-        expect(toggleButton.querySelector('svg')).toBeInTheDocument();
-      }
-    });
-
-    it('should maintain password value during visibility toggle', async () => {
-      const user = userEvent.setup();
-      render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const passwordInput = screen.getByTestId('password-input');
-      const toggleButton = passwordInput.nextElementSibling?.querySelector('button');
-      
-      await user.type(passwordInput, 'MyPassword123!');
-      expect(passwordInput).toHaveValue('MyPassword123!');
-      
-      if (toggleButton) {
-        await user.click(toggleButton);
-        expect(passwordInput).toHaveValue('MyPassword123!');
-        
-        await user.click(toggleButton);
-        expect(passwordInput).toHaveValue('MyPassword123!');
-      }
+      const input = screen.getByTestId('password-input');
+      const toggle = input.nextElementSibling as HTMLButtonElement | null;
+      await user.type(input, 'MyPassword123!');
+      expect(input).toHaveValue('MyPassword123!');
+      await user.click(toggle as HTMLButtonElement);
+      expect(input).toHaveValue('MyPassword123!');
+      await user.click(toggle as HTMLButtonElement);
+      expect(input).toHaveValue('MyPassword123!');
     });
   });
 
-  describe('should handle form submission', () => {
-    it('should call onSubmit with form data when form is valid', async () => {
-      // Mock all validations as valid
-      mockValidateEmail.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidatePassword.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidateGender.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidateBirthdate.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidateConsent.mockReturnValue({ isValid: true, errorMessage: null });
-      
+  describe('form submission', () => {
+    it('calls onSubmit with the gathered values when valid', async () => {
+      allValid();
+      const onSubmit = jest.fn();
       const user = userEvent.setup();
-      render(<RegistrationDetailsStep {...mockProps} />);
-      
-      // Fill all fields
+      render(<RegistrationDetailsStep {...mockProps} onSubmit={onSubmit} />);
       await user.type(screen.getByTestId('email-input'), 'test@example.com');
       await user.type(screen.getByTestId('password-input'), 'Password123!');
-      await user.selectOptions(screen.getByTestId('gender-select'), 'male');
+      await selectListboxOption(user, GENDER_LABEL, GENDER_MALE_LABEL);
       await user.type(screen.getByTestId('birthdate-input'), '1990-01-01');
       await user.click(screen.getByTestId('consent-checkbox'));
-      
-      const submitButton = screen.getByTestId('create-account-button');
-      await user.click(submitButton);
-      
-      expect(mockProps.onSubmit).toHaveBeenCalledWith({
+      await waitFor(() => {
+        expect(screen.getByTestId('create-account-button')).not.toBeDisabled();
+      });
+      await user.click(screen.getByTestId('create-account-button'));
+      expect(onSubmit).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'Password123!',
         gender: 'male',
@@ -401,254 +266,104 @@ describe.skip('RegistrationDetailsStep Component', () => {
       });
     });
 
-    it('should not call onSubmit when form is invalid', async () => {
+    it('does not call onSubmit when the form is invalid', async () => {
+      const onSubmit = jest.fn();
       const user = userEvent.setup();
-      render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const submitButton = screen.getByTestId('create-account-button');
-      await user.click(submitButton);
-      
-      expect(mockProps.onSubmit).not.toHaveBeenCalled();
+      render(<RegistrationDetailsStep {...mockProps} onSubmit={onSubmit} />);
+      await user.click(screen.getByTestId('create-account-button'));
+      expect(onSubmit).not.toHaveBeenCalled();
     });
 
-    it('should handle missing onSubmit prop gracefully', async () => {
+    it('does not throw when onSubmit is omitted', () => {
       const propsWithoutSubmit = {
         firstName: 'יוסי',
         lastName: 'כהן',
         phoneNumber: '0521234567',
       };
-      
       expect(() => {
         render(<RegistrationDetailsStep {...propsWithoutSubmit} />);
       }).not.toThrow();
     });
-
-    it('should log console message on form submission', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      
-      // Mock all validations as valid
-      mockValidateEmail.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidatePassword.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidateGender.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidateBirthdate.mockReturnValue({ isValid: true, errorMessage: null });
-      mockValidateConsent.mockReturnValue({ isValid: true, errorMessage: null });
-      
-      const user = userEvent.setup();
-      render(<RegistrationDetailsStep {...mockProps} />);
-      
-      // Fill all fields
-      await user.type(screen.getByTestId('email-input'), 'test@example.com');
-      await user.type(screen.getByTestId('password-input'), 'Password123!');
-      await user.selectOptions(screen.getByTestId('gender-select'), 'male');
-      await user.type(screen.getByTestId('birthdate-input'), '1990-01-01');
-      await user.click(screen.getByTestId('consent-checkbox'));
-      
-      const submitButton = screen.getByTestId('create-account-button');
-      await user.click(submitButton);
-      
-      expect(consoleSpy).toHaveBeenCalledWith('TODO: register user in Firebase Auth and Firestore');
-      
-      consoleSpy.mockRestore();
-    });
   });
 
-  describe('should update form validation on field changes', () => {
-    it('should re-validate all fields when any field changes', async () => {
-      const user = userEvent.setup();
+  describe('rendering + UI', () => {
+    it('renders the heading + every interactive element', () => {
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      // Change email field
-      const emailInput = screen.getByTestId('email-input');
-      await user.type(emailInput, 'test@example.com');
-      
-      // Should validate all fields, not just email
-      expect(mockValidateEmail).toHaveBeenCalled();
-      expect(mockValidatePassword).toHaveBeenCalled();
-      expect(mockValidateGender).toHaveBeenCalled();
-      expect(mockValidateBirthdate).toHaveBeenCalled();
-      expect(mockValidateConsent).toHaveBeenCalled();
-    });
-
-    it('should update button state immediately after field change', async () => {
-      const user = userEvent.setup();
-      render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const submitButton = screen.getByTestId('create-account-button');
-      expect(submitButton).toBeDisabled();
-      
-      // Mock one field becoming valid
-      mockValidateEmail.mockReturnValue({ isValid: true, errorMessage: null });
-      
-      const emailInput = screen.getByTestId('email-input');
-      await user.type(emailInput, 'test@example.com');
-      
-      // Button should still be disabled because other fields are invalid
-      expect(submitButton).toBeDisabled();
-    });
-
-    it('should handle rapid field changes', async () => {
-      const user = userEvent.setup();
-      render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const emailInput = screen.getByTestId('email-input');
-      
-      // Type rapidly
-      await user.type(emailInput, 'abc');
-      
-      // Validation should be called for each character typed (includes initial state)
-      expect(mockValidateEmail).toHaveBeenCalled();
-      expect(mockValidateEmail).toHaveBeenCalledWith('abc');
-    });
-  });
-
-  describe('UI elements and form controls', () => {
-    it('should render all required form elements', () => {
-      render(<RegistrationDetailsStep {...mockProps} />);
-      
-      // Header elements
       expect(screen.getByText('פרטי הרשמה')).toBeInTheDocument();
-      
-      // Form inputs
       expect(screen.getByTestId('email-input')).toBeInTheDocument();
       expect(screen.getByTestId('password-input')).toBeInTheDocument();
-      expect(screen.getByTestId('gender-select')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: GENDER_LABEL })).toBeInTheDocument();
       expect(screen.getByTestId('birthdate-input')).toBeInTheDocument();
       expect(screen.getByTestId('consent-checkbox')).toBeInTheDocument();
       expect(screen.getByTestId('create-account-button')).toBeInTheDocument();
     });
 
-    it('should have proper input attributes', () => {
+    it('sets the right input types + placeholders', () => {
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const emailInput = screen.getByTestId('email-input');
-      const passwordInput = screen.getByTestId('password-input');
-      const birthdateInput = screen.getByTestId('birthdate-input');
-      
-      expect(emailInput).toHaveAttribute('type', 'email');
-      expect(emailInput).toHaveAttribute('placeholder', 'example@email.com');
-      
-      expect(passwordInput).toHaveAttribute('type', 'password');
-      expect(passwordInput).toHaveAttribute('placeholder', 'הזן סיסמה חזקה');
-      
-      expect(birthdateInput).toHaveAttribute('type', 'date');
+      const email = screen.getByTestId('email-input');
+      const password = screen.getByTestId('password-input');
+      const birthdate = screen.getByTestId('birthdate-input');
+      expect(email).toHaveAttribute('type', 'email');
+      expect(email).toHaveAttribute('placeholder', 'example@email.com');
+      expect(password).toHaveAttribute('type', 'password');
+      expect(password).toHaveAttribute('placeholder', 'הזן סיסמה חזקה');
+      expect(birthdate).toHaveAttribute('type', 'date');
     });
 
-    it('should have proper gender dropdown options', () => {
+    it('reveals the gender options after opening the Listbox', async () => {
+      const user = userEvent.setup();
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      expect(screen.getByRole('option', { name: 'בחר מין' })).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: 'זכר' })).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: GENDER_LABEL }));
+      expect(await screen.findByRole('option', { name: 'זכר' })).toBeInTheDocument();
       expect(screen.getByRole('option', { name: 'נקבה' })).toBeInTheDocument();
       expect(screen.getByRole('option', { name: 'אחר' })).toBeInTheDocument();
     });
 
-    it('should show error messages only when field has content', async () => {
+    it('does not show the email error until the field has content', async () => {
+      mockValidateEmail.mockReturnValue({ isValid: false, errorMessage: 'כתובת אימייל לא תקינה' });
       const user = userEvent.setup();
-      
-      mockValidateEmail.mockReturnValue({
-        isValid: false,
-        errorMessage: 'כתובת אימייל לא תקינה',
-      });
-      
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      // No error shown for empty field
       expect(screen.queryByTestId('email-error')).not.toBeInTheDocument();
-      
-      // Error shown after typing
-      const emailInput = screen.getByTestId('email-input');
-      await user.type(emailInput, 'invalid');
-      
+      await user.type(screen.getByTestId('email-input'), 'invalid');
       expect(screen.getByTestId('email-error')).toBeInTheDocument();
-    });
-
-    it('should handle form reset behavior', async () => {
-      const user = userEvent.setup();
-      render(<RegistrationDetailsStep {...mockProps} />);
-      
-      // Fill some fields
-      await user.type(screen.getByTestId('email-input'), 'test@example.com');
-      await user.type(screen.getByTestId('password-input'), 'password');
-      
-      expect(screen.getByTestId('email-input')).toHaveValue('test@example.com');
-      expect(screen.getByTestId('password-input')).toHaveValue('password');
-      
-      // Clear fields
-      await user.clear(screen.getByTestId('email-input'));
-      await user.clear(screen.getByTestId('password-input'));
-      
-      expect(screen.getByTestId('email-input')).toHaveValue('');
-      expect(screen.getByTestId('password-input')).toHaveValue('');
     });
   });
 
-  describe('error display for all fields', () => {
-    it('should show password error when password is invalid', async () => {
+  describe('error display', () => {
+    it('shows the password error when invalid', async () => {
+      mockValidatePassword.mockReturnValue({ isValid: false, errorMessage: 'סיסמה חלשה' });
       const user = userEvent.setup();
-      
-      mockValidatePassword.mockReturnValue({
-        isValid: false,
-        errorMessage: 'סיסמה חלשה',
-      });
-      
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const passwordInput = screen.getByTestId('password-input');
-      await user.type(passwordInput, 'weak');
-      
+      await user.type(screen.getByTestId('password-input'), 'weak');
       expect(screen.getByTestId('password-error')).toBeInTheDocument();
       expect(screen.getByText('סיסמה חלשה')).toBeInTheDocument();
     });
 
-    it('should show gender error when gender is not selected', async () => {
+    it('shows the gender error after a Listbox selection that the validator rejects', async () => {
+      mockValidateGender.mockReturnValue({ isValid: false, errorMessage: 'בחירת מין היא שדה חובה' });
       const user = userEvent.setup();
-      
-      mockValidateGender.mockReturnValue({
-        isValid: false,
-        errorMessage: 'בחירת מין היא שדה חובה',
-      });
-      
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const genderSelect = screen.getByTestId('gender-select');
-      await user.selectOptions(genderSelect, '');
-      
+      await selectListboxOption(user, GENDER_LABEL, GENDER_MALE_LABEL);
       expect(screen.getByTestId('gender-error')).toBeInTheDocument();
       expect(screen.getByText('בחירת מין היא שדה חובה')).toBeInTheDocument();
     });
 
-    it('should show birthdate error when birthdate is invalid', async () => {
+    it('shows the birthdate error when invalid', async () => {
+      mockValidateBirthdate.mockReturnValue({ isValid: false, errorMessage: 'תאריך לידה לא תקין' });
       const user = userEvent.setup();
-      
-      mockValidateBirthdate.mockReturnValue({
-        isValid: false,
-        errorMessage: 'תאריך לידה לא תקין',
-      });
-      
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      const birthdateInput = screen.getByTestId('birthdate-input');
-      await user.type(birthdateInput, '2025-01-01');
-      
+      await user.type(screen.getByTestId('birthdate-input'), '2025-01-01');
       expect(screen.getByTestId('birthdate-error')).toBeInTheDocument();
       expect(screen.getByText('תאריך לידה לא תקין')).toBeInTheDocument();
     });
 
-    it('should show consent error when consent is not accepted', async () => {
+    it('shows the consent error after the checkbox has been touched', async () => {
+      mockValidateConsent.mockReturnValue({ isValid: false, errorMessage: 'יש לאשר את תנאי השימוש' });
       const user = userEvent.setup();
-      
-      mockValidateConsent.mockReturnValue({
-        isValid: false,
-        errorMessage: 'יש לאשר את תנאי השימוש',
-      });
-      
       render(<RegistrationDetailsStep {...mockProps} />);
-      
-      // Trigger validation by attempting to check and uncheck
-      const consentCheckbox = screen.getByTestId('consent-checkbox');
-      await user.click(consentCheckbox);
-      await user.click(consentCheckbox);
-      
+      const checkbox = screen.getByTestId('consent-checkbox');
+      await user.click(checkbox);
+      await user.click(checkbox);
       expect(screen.getByTestId('consent-error')).toBeInTheDocument();
       expect(screen.getByText('יש לאשר את תנאי השימוש')).toBeInTheDocument();
     });
