@@ -7,6 +7,7 @@ import type { SystemConfig } from '@/types/ammunition';
 export interface SystemConfigSavePayload {
   ammoNotificationRecipientUserId?: string;
   teams?: string[];
+  roundOpen?: boolean;
 }
 
 export interface UseSystemConfigReturn {

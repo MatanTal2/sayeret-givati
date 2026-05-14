@@ -7,6 +7,7 @@ import { COLLECTIONS } from '../collections';
 import { FieldValue, Timestamp, type DocumentData, type UpdateData } from 'firebase-admin/firestore';
 import { serverCreateActionLog } from './actionsLogService';
 import { serverCreateNotification } from './notificationService';
+import { serverGetSystemConfig } from './systemConfigService';
 import {
   EquipmentStatus,
   ActionType,
@@ -379,4 +380,115 @@ export async function serverRetireEquipment(
   }
 
   return outcome;
+}
+
+// -----------------------------------------------------------------------------
+// Storage — send to / pull from. End-of-round retention; user keeps logical
+// ownership across the gap. Pull-from-storage gated by SystemConfig.roundOpen.
+// -----------------------------------------------------------------------------
+
+interface StorageInput {
+  equipmentId: string;
+  actorId: string;
+  actorName: string;
+}
+
+export async function serverSendToStorage(input: StorageInput): Promise<void> {
+  const db = getAdminDb();
+  const equipmentRef = db.collection(COLLECTIONS.EQUIPMENT).doc(input.equipmentId);
+
+  await db.runTransaction(async (transaction) => {
+    const doc = await transaction.get(equipmentRef);
+    if (!doc.exists) throw new Error('Equipment not found');
+    const equipment = doc.data()!;
+
+    if (equipment.currentHolderId !== input.actorId) {
+      throw new Error('Only the current holder may send the item to storage');
+    }
+    if (equipment.status !== EquipmentStatus.AVAILABLE) {
+      throw new Error('Only AVAILABLE items can be sent to storage');
+    }
+
+    const now = Timestamp.now();
+    const historyEntry = {
+      action: 'stored',
+      holder: equipment.currentHolder,
+      location: equipment.location,
+      notes: `Sent to storage by ${input.actorName}`,
+      timestamp: now,
+      updatedBy: input.actorId,
+    };
+    transaction.update(equipmentRef, {
+      status: EquipmentStatus.STORED,
+      trackingHistory: [...(equipment.trackingHistory || []), historyEntry],
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  });
+
+  try {
+    const eq = (await equipmentRef.get()).data()!;
+    await serverCreateActionLog({
+      actionType: ActionType.STORED,
+      equipmentId: eq.id || input.equipmentId,
+      equipmentDocId: input.equipmentId,
+      equipmentName: eq.productName,
+      actorId: input.actorId,
+      actorName: input.actorName,
+    });
+  } catch (e) {
+    console.error('[Server] Failed to log storage action:', e);
+  }
+}
+
+export async function serverPullFromStorage(input: StorageInput): Promise<void> {
+  const db = getAdminDb();
+  const equipmentRef = db.collection(COLLECTIONS.EQUIPMENT).doc(input.equipmentId);
+
+  // SystemConfig fetched outside the transaction — read-only flag, OK if eventually consistent.
+  const config = await serverGetSystemConfig();
+  if (!config?.roundOpen) {
+    throw new Error('Round is closed — items cannot be pulled from storage');
+  }
+
+  await db.runTransaction(async (transaction) => {
+    const doc = await transaction.get(equipmentRef);
+    if (!doc.exists) throw new Error('Equipment not found');
+    const equipment = doc.data()!;
+
+    if (equipment.currentHolderId !== input.actorId) {
+      throw new Error('Only the current holder may pull the item from storage');
+    }
+    if (equipment.status !== EquipmentStatus.STORED) {
+      throw new Error('Only STORED items can be pulled from storage');
+    }
+
+    const now = Timestamp.now();
+    const historyEntry = {
+      action: 'reissued',
+      holder: equipment.currentHolder,
+      location: equipment.location,
+      notes: `Pulled from storage by ${input.actorName}`,
+      timestamp: now,
+      updatedBy: input.actorId,
+    };
+    transaction.update(equipmentRef, {
+      status: EquipmentStatus.AVAILABLE,
+      trackingHistory: [...(equipment.trackingHistory || []), historyEntry],
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  });
+
+  try {
+    const eq = (await equipmentRef.get()).data()!;
+    await serverCreateActionLog({
+      actionType: ActionType.REISSUED,
+      equipmentId: eq.id || input.equipmentId,
+      equipmentDocId: input.equipmentId,
+      equipmentName: eq.productName,
+      actorId: input.actorId,
+      actorName: input.actorName,
+    });
+  } catch (e) {
+    console.error('[Server] Failed to log reissue action:', e);
+  }
 }

@@ -25,6 +25,7 @@
  */
 
 import type { Equipment } from '@/types/equipment';
+import { EquipmentStatus } from '@/types/equipment';
 import type { EnhancedAuthUser } from '@/types/user';
 import { UserType } from '@/types/user';
 import type { ActiveGrant } from '@/types/permissionGrant';
@@ -186,6 +187,30 @@ export function canBulkOps(user: EnhancedAuthUser): boolean {
 
 export function canApproveRetirementOversight(user: EnhancedAuthUser): boolean {
   return isManagerOrAbove(user);
+}
+
+// ---------- Exchange ----------
+
+export function canRequestExchange(ctx: EquipmentActionContext): boolean {
+  return isHolder(ctx) && ctx.equipment.status === EquipmentStatus.AVAILABLE;
+}
+
+export function canApproveExchange(ctx: EquipmentActionContext): boolean {
+  return isSigner(ctx) && ctx.equipment.status === EquipmentStatus.EXCHANGE_REQUESTED;
+}
+
+export function canReplaceByAnother(ctx: EquipmentActionContext): boolean {
+  return isSigner(ctx) && ctx.equipment.status === EquipmentStatus.AVAILABLE;
+}
+
+// ---------- Storage ----------
+
+export function canSendToStorage(ctx: EquipmentActionContext): boolean {
+  return isHolder(ctx) && ctx.equipment.status === EquipmentStatus.AVAILABLE;
+}
+
+export function canPullFromStorage(ctx: EquipmentActionContext): boolean {
+  return isHolder(ctx) && ctx.equipment.status === EquipmentStatus.STORED;
 }
 
 // ---------- Templates ----------

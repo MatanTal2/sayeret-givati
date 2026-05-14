@@ -7,6 +7,7 @@ import { COLLECTIONS } from '../collections';
 import { FieldValue } from 'firebase-admin/firestore';
 import { serverCreateActionLog } from './actionsLogService';
 import { serverCreateNotification, serverCreateBatchNotifications } from './notificationService';
+import { EquipmentStatus } from '@/types/equipment';
 
 interface CreateTransferInput {
   equipmentDocId: string;
@@ -33,6 +34,13 @@ export async function serverCreateTransferRequest(input: CreateTransferInput): P
     }
 
     const equipment = equipmentDoc.data()!;
+
+    if (equipment.status === EquipmentStatus.STORED) {
+      throw new Error('Cannot transfer a stored item — pull it from storage first');
+    }
+    if (equipment.status === EquipmentStatus.EXCHANGE_REQUESTED) {
+      throw new Error('Cannot transfer an item pending exchange approval');
+    }
 
     // Create transfer request
     const now = new Date();

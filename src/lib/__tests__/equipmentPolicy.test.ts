@@ -13,6 +13,11 @@ import {
   canReviewTemplate,
   canTransfer,
   canView,
+  canRequestExchange,
+  canApproveExchange,
+  canReplaceByAnother,
+  canSendToStorage,
+  canPullFromStorage,
   isAdmin,
   isHolder,
   isInTeam,
@@ -282,5 +287,60 @@ describe('equipmentPolicy — misc', () => {
   it('canAddEquipment is always true for authenticated users', () => {
     expect(canAddEquipment(makeUser({ userType: UserType.USER }))).toBe(true);
     expect(canAddEquipment(makeUser({ userType: UserType.ADMIN }))).toBe(true);
+  });
+});
+
+describe('equipmentPolicy — exchange + storage', () => {
+  const holder = makeUser({ uid: 'holder-uid' });
+  const signer = makeUser({ uid: 'signer-uid' });
+  const stranger = makeUser({ uid: 'stranger-uid' });
+  const baseEquipment = makeEquipment({
+    currentHolderId: 'holder-uid',
+    signedById: 'signer-uid',
+    currentHolder: 'Holder',
+    signedBy: 'Signer',
+    status: EquipmentStatus.AVAILABLE,
+  });
+
+  it('canRequestExchange: holder + AVAILABLE only', () => {
+    expect(canRequestExchange({ user: holder, equipment: baseEquipment })).toBe(true);
+    expect(canRequestExchange({ user: signer, equipment: baseEquipment })).toBe(false);
+    expect(canRequestExchange({
+      user: holder,
+      equipment: { ...baseEquipment, status: EquipmentStatus.EXCHANGE_REQUESTED },
+    })).toBe(false);
+  });
+
+  it('canApproveExchange: signer + EXCHANGE_REQUESTED only', () => {
+    const pending = { ...baseEquipment, status: EquipmentStatus.EXCHANGE_REQUESTED };
+    expect(canApproveExchange({ user: signer, equipment: pending })).toBe(true);
+    expect(canApproveExchange({ user: holder, equipment: pending })).toBe(false);
+    expect(canApproveExchange({ user: signer, equipment: baseEquipment })).toBe(false);
+  });
+
+  it('canReplaceByAnother: signer + AVAILABLE only', () => {
+    expect(canReplaceByAnother({ user: signer, equipment: baseEquipment })).toBe(true);
+    expect(canReplaceByAnother({ user: holder, equipment: baseEquipment })).toBe(false);
+    expect(canReplaceByAnother({
+      user: signer,
+      equipment: { ...baseEquipment, status: EquipmentStatus.EXCHANGE_REQUESTED },
+    })).toBe(false);
+  });
+
+  it('canSendToStorage: holder + AVAILABLE only', () => {
+    expect(canSendToStorage({ user: holder, equipment: baseEquipment })).toBe(true);
+    expect(canSendToStorage({ user: signer, equipment: baseEquipment })).toBe(false);
+    expect(canSendToStorage({
+      user: holder,
+      equipment: { ...baseEquipment, status: EquipmentStatus.STORED },
+    })).toBe(false);
+    expect(canSendToStorage({ user: stranger, equipment: baseEquipment })).toBe(false);
+  });
+
+  it('canPullFromStorage: holder + STORED only', () => {
+    const stored = { ...baseEquipment, status: EquipmentStatus.STORED };
+    expect(canPullFromStorage({ user: holder, equipment: stored })).toBe(true);
+    expect(canPullFromStorage({ user: signer, equipment: stored })).toBe(false);
+    expect(canPullFromStorage({ user: holder, equipment: baseEquipment })).toBe(false);
   });
 });

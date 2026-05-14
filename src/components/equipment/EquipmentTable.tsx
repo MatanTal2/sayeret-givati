@@ -27,6 +27,8 @@ interface EquipmentTableProps {
   onToggleSelectAllVisible: () => void;
   onRowAction: (item: Equipment, action: EquipmentRowAction) => void;
   emptyMessage: string;
+  /** Gates pull-from-storage in row actions. */
+  roundOpen?: boolean;
 }
 
 export default function EquipmentTable({
@@ -37,6 +39,7 @@ export default function EquipmentTable({
   onToggleSelectAllVisible,
   onRowAction,
   emptyMessage,
+  roundOpen,
 }: EquipmentTableProps) {
   const [sortField, setSortField] = useState<SortField>('lastReportUpdate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
@@ -95,6 +98,7 @@ export default function EquipmentTable({
             onAction={(action) => onRowAction(item, action)}
             categoryName={categoryName}
             subcategoryName={subcategoryName}
+            roundOpen={roundOpen}
           />
         ))}
       </ul>
@@ -182,6 +186,7 @@ interface EquipmentRowProps {
   onAction: (action: EquipmentRowAction) => void;
   categoryName: (id: string) => string | null;
   subcategoryName: (id: string) => string | null;
+  roundOpen?: boolean;
 }
 
 function EquipmentRow({
@@ -194,6 +199,7 @@ function EquipmentRow({
   onAction,
   categoryName,
   subcategoryName,
+  roundOpen,
 }: EquipmentRowProps) {
   const dimmed = item.signedById === user.uid && item.currentHolderId !== user.uid;
   const stale = isStale(item.lastReportUpdate);
@@ -241,7 +247,7 @@ function EquipmentRow({
           )}
         </div>
         <div onClick={(e) => e.stopPropagation()}>
-          <EquipmentRowActions equipment={item} user={user} onAction={onAction} />
+          <EquipmentRowActions equipment={item} user={user} roundOpen={roundOpen} onAction={onAction} />
         </div>
       </div>
       {expanded && (
@@ -264,6 +270,8 @@ function StatusDot({ status }: { status: EquipmentStatus }) {
     [EquipmentStatus.SECURITY]: 'bg-info-500',
     [EquipmentStatus.REPAIR]: 'bg-danger-500',
     [EquipmentStatus.LOST]: 'bg-danger-700',
+    [EquipmentStatus.EXCHANGE_REQUESTED]: 'bg-warning-500',
+    [EquipmentStatus.STORED]: 'bg-info-500',
     [EquipmentStatus.RETIRED]: 'bg-neutral-400',
   };
   const titleMap: Record<EquipmentStatus, string> = {
@@ -272,7 +280,9 @@ function StatusDot({ status }: { status: EquipmentStatus }) {
     [EquipmentStatus.SECURITY]: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_SECURITY,
     [EquipmentStatus.REPAIR]: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_REPAIR,
     [EquipmentStatus.LOST]: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_LOST,
-    [EquipmentStatus.RETIRED]: 'הוחזר',
+    [EquipmentStatus.EXCHANGE_REQUESTED]: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_EXCHANGE_REQUESTED,
+    [EquipmentStatus.STORED]: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_STORED,
+    [EquipmentStatus.RETIRED]: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_RETIRED,
   };
   return (
     <span
@@ -391,10 +401,12 @@ function statusOrder(s: EquipmentStatus): number {
   const order: Record<EquipmentStatus, number> = {
     [EquipmentStatus.AVAILABLE]: 0,
     [EquipmentStatus.PENDING_TRANSFER]: 1,
-    [EquipmentStatus.SECURITY]: 2,
-    [EquipmentStatus.REPAIR]: 3,
-    [EquipmentStatus.LOST]: 4,
-    [EquipmentStatus.RETIRED]: 5,
+    [EquipmentStatus.EXCHANGE_REQUESTED]: 2,
+    [EquipmentStatus.SECURITY]: 3,
+    [EquipmentStatus.REPAIR]: 4,
+    [EquipmentStatus.STORED]: 5,
+    [EquipmentStatus.LOST]: 6,
+    [EquipmentStatus.RETIRED]: 7,
   };
   return order[s] ?? 99;
 }

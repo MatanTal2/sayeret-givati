@@ -17,6 +17,7 @@ export const COLLECTIONS = {
   USEFUL_LINKS: 'useful_links',
   UNIT_MEDIA: 'unit_media',
   RETIREMENT_REQUESTS: 'retirementRequests',
+  EXCHANGE_REQUESTS: 'exchangeRequests',
   REPORT_REQUESTS: 'reportRequests',
   EQUIPMENT_DRAFTS: 'equipmentDrafts',
   AMMUNITION_TEMPLATES: 'ammunitionTemplates',

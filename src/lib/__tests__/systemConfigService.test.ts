@@ -62,6 +62,16 @@ describe('systemConfigService.validateSystemConfigPayload', () => {
     expect(() => validateSystemConfigPayload(null)).toThrow(/payload is required/);
     expect(() => validateSystemConfigPayload('nope')).toThrow(/payload is required/);
   });
+
+  it('accepts a boolean roundOpen', () => {
+    expect(validateSystemConfigPayload({ roundOpen: true })).toEqual({ roundOpen: true });
+    expect(validateSystemConfigPayload({ roundOpen: false })).toEqual({ roundOpen: false });
+  });
+
+  it('throws when roundOpen is not a boolean', () => {
+    expect(() => validateSystemConfigPayload({ roundOpen: 'true' })).toThrow(/roundOpen must be a boolean/);
+    expect(() => validateSystemConfigPayload({ roundOpen: 1 })).toThrow(/roundOpen must be a boolean/);
+  });
 });
 
 describe('systemConfigService — admin DB reach (proves validation passed)', () => {

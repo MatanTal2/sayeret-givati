@@ -15,7 +15,15 @@ will gain more fields as the Ammunition feature lands.
 |--------|---------|
 | `serverGetSystemConfig` | Returns the `main` doc or `null` if it doesn't exist yet. |
 | `serverUpdateSystemConfig` | `set(..., { merge: true })` on `main`. Stamps `updatedAt` (server timestamp) + `updatedBy`. |
-| `validateSystemConfigPayload` | Pure validator — rejects non-object, type-checks `ammoNotificationRecipientUserId`, coerces null/undefined/'' to empty string for clearing. |
+| `validateSystemConfigPayload` | Pure validator — rejects non-object, type-checks `ammoNotificationRecipientUserId` / `teams` / `roundOpen`. |
+
+## Fields
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `ammoNotificationRecipientUserId` | `string` | Additional fan-out target for ammunition reports. Empty = no extra recipient. |
+| `teams` | `string[]` | Canonical team list. Dedup/trim on validate. |
+| `roundOpen` | `boolean` | Gates pull-from-storage on `equipment` items in `STORED` status. When false (or unset), `serverPullFromStorage` throws. Toggled from `SystemConfigTab.tsx`. |
 
 ## Firebase Operations
 
@@ -25,7 +33,8 @@ will gain more fields as the Ammunition feature lands.
 
 - Doc id is hardcoded to `main` — there is exactly one system-config document.
 - Caller (API route) is responsible for the admin gate; the service trusts its
-  caller. Permission check lives in `src/app/api/system-config/route.ts`.
+  caller. Permission check lives in `src/app/api/system-config/route.ts`; the
+  route accepts ADMIN / SYSTEM_MANAGER / MANAGER for `PUT`.
 - Empty string for `ammoNotificationRecipientUserId` is the "cleared" state and
   is valid. Phase 4's notification fan-out treats empty/missing as "no extra
   recipient" and skips the manager fan-out.
