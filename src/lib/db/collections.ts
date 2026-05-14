@@ -34,6 +34,8 @@ export const COLLECTIONS = {
   CREDENTIAL_AUDIT_LOG: 'credentialAuditLog',
   PHONE_CHANGE_PENDING: 'phoneChangePending',
   PHONE_CHANGE_RATE_LIMIT: 'phoneChangeRateLimit',
+  LOGISTICS_TEMPLATES: 'logisticsTemplates',
+  LOGISTICS_ITEMS: 'logisticsItems',
 } as const;
 
 export type CollectionName = typeof COLLECTIONS[keyof typeof COLLECTIONS];

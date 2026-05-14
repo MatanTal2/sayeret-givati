@@ -2,7 +2,7 @@
  * Hook for managing tab configuration and filtering based on permissions
  */
 import { useMemo } from 'react';
-import { Users, Shield, ArrowRightLeft, Settings, Database, UserCheck, Mail, Layers, Package, Zap, Archive, BellRing, Crosshair, KeyRound, Tags } from 'lucide-react';
+import { Users, Shield, ArrowRightLeft, Settings, Database, UserCheck, Mail, Layers, Package, Zap, Archive, BellRing, Crosshair, KeyRound, Tags, Boxes } from 'lucide-react';
 import { MANAGEMENT } from '@/constants/text';
 import { useManagementAccess } from './useManagementAccess';
 import { useAuth } from '@/contexts/AuthContext';
@@ -76,10 +76,10 @@ const ALL_MANAGEMENT_TABS: ManagementTab[] = [
     category: 'equipment'
   },
   {
-    id: 'equipment-creation',
-    label: MANAGEMENT.TABS.EQUIPMENT_CREATION,
-    icon: Package,
-    description: MANAGEMENT.TAB_DESCRIPTIONS.EQUIPMENT_CREATION,
+    id: 'logistics-templates',
+    label: MANAGEMENT.TABS.LOGISTICS_TEMPLATES,
+    icon: Boxes,
+    description: MANAGEMENT.TAB_DESCRIPTIONS.LOGISTICS_TEMPLATES,
     category: 'equipment',
     requiresTemplatePermission: true
   },
@@ -178,7 +178,7 @@ export function useManagementTabs(): UseManagementTabsReturn {
           return permissions.canManageTemplates || isTeamLeader;
         case 'categories':
           return permissions.canManageTemplates;
-        case 'equipment-creation':
+        case 'logistics-templates':
           return permissions.canManageTemplates;
         case 'force-ops':
           // TL+ in any team scope can run force-ops; canForceTransfer per-item is enforced inside the tab.
