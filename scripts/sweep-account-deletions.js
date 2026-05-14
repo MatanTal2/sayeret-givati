@@ -25,91 +25,22 @@
  *   4) Firestore tombstone (deletedAt, PII scrub, displayName='Deleted User')
  *   5) Append `ACCOUNT_DELETED` row to credentialAuditLog
  */
-const admin = require('firebase-admin');
-const { readFileSync } = require('fs');
-const path = require('path');
+const { initAdmin, parseSharedArgs } = require('./_shared/initAdmin');
 
 const RETENTION_DAYS = 30;
 const DEFAULT_LIMIT = 25;
-const PROD_PROJECT_ID = 'sayeret-givati-1983';
 
-function loadEnvLocal() {
-  try {
-    const file = readFileSync(path.resolve(process.cwd(), '.env.local'), 'utf8');
-    for (const line of file.split(/\r?\n/)) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) continue;
-      const eq = trimmed.indexOf('=');
-      if (eq < 0) continue;
-      const key = trimmed.slice(0, eq).trim();
-      let value = trimmed.slice(eq + 1).trim();
-      if (
-        (value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'"))
-      ) {
-        value = value.slice(1, -1);
-      }
-      if (!(key in process.env)) process.env[key] = value;
-    }
-  } catch {
-    /* .env.local missing — fall through */
-  }
-}
-
-function parseServiceAccount(raw) {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    /* fall through to base64 */
-  }
-  try {
-    const decoded = Buffer.from(raw, 'base64').toString('utf8');
-    return JSON.parse(decoded);
-  } catch (e) {
-    throw new Error(
-      `GOOGLE_SERVICE_ACCOUNT_JSON is neither plain JSON nor base64-encoded JSON: ${e.message}`,
-    );
-  }
-}
-
-loadEnvLocal();
-
-const args = process.argv.slice(2);
-const dryRun = args.includes('--dry-run');
-const limitIdx = args.indexOf('--limit');
-const rawLimit = limitIdx >= 0 ? Number(args[limitIdx + 1]) : DEFAULT_LIMIT;
+const args = parseSharedArgs(process.argv.slice(2));
+const dryRun = args.dryRun;
+const rawLimit = args.valueOf('limit') !== undefined ? Number(args.valueOf('limit')) : DEFAULT_LIMIT;
 const limit = Math.max(1, Math.min(100, Number.isFinite(rawLimit) ? rawLimit : DEFAULT_LIMIT));
-const uidIdx = args.indexOf('--uid');
-const onlyUid = uidIdx >= 0 ? args[uidIdx + 1] : null;
+const onlyUid = args.valueOf('uid') || null;
 
-const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-if (!projectId) {
-  console.error('Missing NEXT_PUBLIC_FIREBASE_PROJECT_ID in .env.local');
-  process.exit(1);
-}
-if (projectId !== PROD_PROJECT_ID) {
-  console.error(
-    `[sweep-account-deletions] refused: project ${projectId} is not the prod project (${PROD_PROJECT_ID}). Aborting.`,
-  );
-  process.exit(1);
-}
-
-const saRaw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
-if (!saRaw) {
-  console.error('Missing GOOGLE_SERVICE_ACCOUNT_JSON in .env.local');
-  process.exit(1);
-}
-let saJson;
-try {
-  saJson = parseServiceAccount(saRaw);
-} catch (e) {
-  console.error(e.message);
-  process.exit(1);
-}
-
-admin.initializeApp({ credential: admin.credential.cert(saJson), projectId });
-const db = admin.firestore();
-const auth = admin.auth();
+const { admin, db, auth } = initAdmin({
+  projectId: args.projectId,
+  requireProdProject: true,
+  scriptName: 'sweep-account-deletions',
+});
 
 const COLLECTIONS = {
   USERS: 'users',
