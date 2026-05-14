@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { type EquipmentType } from '@/types/equipment';
 import CameraCapture from '@/components/camera/CameraCapture';
+import { Select } from '@/components/ui';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { type WizardItemDraft, createEmptyItem } from './types';
 
 interface Props {
@@ -71,6 +73,11 @@ interface ItemEditorProps {
 
 function ItemEditor({ template, item, index, total, showHeader, onChange, onRemove }: ItemEditorProps) {
   const labels = TEXT_CONSTANTS.FEATURES.EQUIPMENT.WIZARD;
+  const { config: systemConfig } = useSystemConfig();
+  const teamOptions = useMemo(
+    () => (systemConfig?.teams ?? []).map((t) => ({ value: t, label: t })),
+    [systemConfig?.teams],
+  );
   const [previewUrl, setPreviewUrl] = useState<string | null>(() =>
     item.photoBlob ? URL.createObjectURL(item.photoBlob) : null,
   );
@@ -177,6 +184,32 @@ function ItemEditor({ template, item, index, total, showHeader, onChange, onRemo
           rows={2}
           className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500"
         />
+      </div>
+
+      <div className="space-y-2">
+        <label className="flex items-start gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={item.teamLabel !== null}
+            onChange={(e) =>
+              onChange({ teamLabel: e.target.checked ? (teamOptions[0]?.value ?? '') : null })
+            }
+            className="mt-0.5 w-4 h-4 text-primary-600 rounded focus:ring-2 focus:ring-primary-500"
+          />
+          <span>
+            <span className="block text-xs font-medium text-neutral-700">{labels.TEAM_LABEL_CHECKBOX}</span>
+            <span className="block text-[11px] text-neutral-500">{labels.TEAM_LABEL_HINT}</span>
+          </span>
+        </label>
+        {item.teamLabel !== null && (
+          <Select
+            value={item.teamLabel || null}
+            onChange={(v) => onChange({ teamLabel: v ?? '' })}
+            options={teamOptions}
+            placeholder={labels.TEAM_LABEL_PLACEHOLDER}
+            ariaLabel={labels.TEAM_LABEL_CHECKBOX}
+          />
+        )}
       </div>
     </div>
   );

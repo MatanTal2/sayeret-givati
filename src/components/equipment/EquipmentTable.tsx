@@ -241,6 +241,11 @@ function EquipmentRow({
                 צ
               </span>
             )}
+            {item.teamLabel && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary-100 text-primary-700 flex-shrink-0">
+                {item.teamLabel}
+              </span>
+            )}
           </div>
           {serial && (
             <div className="text-xs text-neutral-500 truncate">צ: {serial}</div>

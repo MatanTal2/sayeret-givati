@@ -168,6 +168,7 @@ export default function AddEquipmentWizard({
           notes: draft.notes || undefined,
           requiresDailyStatusCheck: state.template.requiresDailyStatusCheck,
           hasSerialNumber: state.template.requiresSerialNumber,
+          teamLabel: draft.teamLabel?.trim() || undefined,
         });
       }
 
