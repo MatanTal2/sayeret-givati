@@ -23,7 +23,8 @@ Modal dialog that lets a signed-in user change their account password. Mounted b
 4. Helper performs `reauthenticateWithCredential(EmailAuthProvider.credential(email, current))` then `updatePassword(user, new)`.
 5. On any error, `mapFirebaseAuthError` translates to a Hebrew message rendered inline (`role="alert"`).
 6. On success, fire-and-forget call to `logCredentialAuditEvent({ uid, eventType: 'PASSWORD_CHANGED' })` records the event in `credentialAuditLog`. Audit failure never blocks success — the client wrapper swallows network errors.
-7. Modal calls `onSuccess()` and closes.
+7. If the "Sign out other devices" checkbox is checked (default: on), fire-and-forget `revokeOtherSessions()` (`src/lib/sessionsClient.ts`) bumps `users.sessionEpoch`. Every other device with this user signed in dies on its next API hit. Failure is silent — the password change already succeeded; the user can see the resulting `SESSIONS_REVOKED` row in Account Activity.
+8. Modal calls `onSuccess()` and closes.
 
 ## Error surfaces
 

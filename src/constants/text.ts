@@ -1284,6 +1284,8 @@ export const TEXT_CONSTANTS = {
     CHANGE_PASSWORD_SUBMIT: 'עדכן סיסמה',
     CHANGE_PASSWORD_SUBMITTING: 'מעדכן...',
     CHANGE_PASSWORD_SUCCESS: 'הסיסמה עודכנה בהצלחה.',
+    CHANGE_PASSWORD_SIGN_OUT_OTHERS:
+      'נתק מכשירים אחרים אחרי שינוי הסיסמה (מומלץ).',
     SHOW_PASSWORD: 'הצג סיסמה',
     HIDE_PASSWORD: 'הסתר סיסמה',
 
