@@ -14,10 +14,10 @@
     - **Why this matters:** Warning is correct in prod, but in local dev the env var is intentionally absent. Right now every dev hits it on every admin reload — noise that hides real warnings. Should be a dev-only `console.info` or gated on `process.env.NODE_ENV !== 'development'`, OR loud only when running on a non-localhost host.
     - **Fix sketch:** In `ensureAppCheckInitialized`, when site key is missing AND `process.env.NODE_ENV === 'development'`, downgrade to a single `console.info('[appCheck] disabled in dev; set NEXT_PUBLIC_RECAPTCHA_SITE_KEY for parity testing')` and suppress the longer warning. Keep the loud warning for production builds.
 
-20. **Admin management tabs have no overflow indicator**
-    - **Repro:** Open `/management` on a narrow viewport (or any width where the tab strip overflows). Only the first 2-3 tabs are visible. Nothing in the UI signals that more tabs exist beyond what's rendered.
-    - **Why this matters:** Users miss whole admin features (System Config, Permissions, Templates, etc.). They scroll horizontally only if they discover it accidentally.
-    - **Fix scope:** Keep the horizontal scroll (don't switch to dropdown — user likes the tab strip). Need a discoverability signal: shadow fade on the trailing edge, or chevron buttons that scroll the strip programmatically, or a small "X more" indicator on the trailing edge. **Council needed** to pick the minimal-noise approach.
+20. ~~**Admin management tabs have no overflow indicator**~~
+    - **FIXED (2026-05-14 on `fix/admin-tabs-overflow-indicator`):** root cause was *vertical* overflow on the management sidebar nav, not horizontal as originally described. `ManagementSidebar` root lacked `flex flex-col`, so `SidebarNavigation`'s `flex-1` was dead and the 14-tab list silently clipped on short viewports.
+    - **Fix:** `ManagementSidebar.tsx` root now `flex flex-col`. `SidebarNavigation.tsx` wraps the `<nav>` in a `relative flex-1 min-h-0` container; `<nav>` is `overflow-y-auto`. Top + bottom `aria-hidden` gradient overlays (`from-white to-transparent` / mirror) fade in only when `scrollTop > 4` or content extends below the viewport. `ResizeObserver` + `scroll` listener keep the overlay state in sync.
+    - **Council outcome:** all 3 agents (shadow-fade / chevron-buttons / "+N more" badge) converged on shadow-fade as the right primary signal — lowest LOC, decorative (`aria-hidden`), RTL-safe (top/bottom is logical-neutral), survives resize without stale state.
 
 21. **Admin UsersTab table not mobile-friendly**
     - **Repro:** `/management` → "Manage Users" tab on a narrow viewport. Table is 6 columns (User+email | Role | Rank | Team | Status | Actions). On mobile the role + email columns sit far to the side; user must horizontally scroll the whole page to read them.
