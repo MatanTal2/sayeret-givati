@@ -97,7 +97,11 @@ export default function HamburgerMenu({
               exit={{ x: '100%' }}
               transition={{ type: 'tween', duration: 0.3 }}
               className={cn(
-                'fixed top-0 end-0 h-full w-80 bg-white shadow-xl z-[9999]',
+                // `start-0` anchors to inline-start = visual right in RTL,
+                // same side as the hamburger trigger. Framer Motion's `x`
+                // is physical, so `100%` translates visually right (off-
+                // screen) before settling.
+                'fixed top-0 start-0 h-full w-80 bg-white shadow-xl z-[9999]',
                 menuClassName
               )}
             >
