@@ -22,11 +22,11 @@ Modals (portal-style, not nested under AppShell): AddEquipmentWizard, ReportModa
 
 ## Filters
 
-`FilterBar` shows three controls in a 4-col grid (search spans 2):
+`FilterBar` follows the phone-book layout pattern: full-width search input on top, two filter dropdowns (status + category) in a `grid-cols-2` row beneath. The two dropdowns stay side-by-side at every breakpoint.
 
-- search — substring match on serial id, product name, holder, category, location
+- search — substring match on serial id, product name, holder, resolved category name (via `useCategoryLookup`), location
 - status — `EquipmentStatus | null` via shared `Select`
-- category — `string | null`, options derived live from the visible `equipment` list (sorted with `localeCompare('he')`), so the dropdown only shows categories that actually appear in the currently-scoped data. `'all'` is represented as `null` to the Select and reset by the clear button.
+- category — `string | null` (the categoryId stored on `Equipment.category`). The dropdown is keyed by id but labelled with the human-readable name resolved through `useCategoryLookup` (which loads the categories tree once and exposes O(1) id→name lookup). Options are limited to category ids actually present in the currently-scoped equipment, sorted by resolved name with `localeCompare('he')`. `'all'` is represented as `null` to the Select and reset by the clear button. If a category id can't be resolved (deactivated or missing), the id itself is used as the fallback label.
 
 ## Scope handling
 

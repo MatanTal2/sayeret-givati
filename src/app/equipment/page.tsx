@@ -28,6 +28,7 @@ import PersonalAmmunitionSection from '@/components/equipment/PersonalAmmunition
 import TeamAmmunitionSection from '@/components/equipment/TeamAmmunitionSection';
 import { Select } from '@/components/ui';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
+import { useCategoryLookup } from '@/hooks/useCategoryLookup';
 import {
   requestExchange,
   approveExchangeRequest,
@@ -93,6 +94,7 @@ function EquipmentPageContent() {
   const [submitting, setSubmitting] = useState(false);
   const { config: systemConfig } = useSystemConfig();
   const roundOpen = !!systemConfig?.roundOpen;
+  const { categoryName } = useCategoryLookup();
 
   // Auto-open wizard when notification deep-links here
   useEffect(() => {
@@ -102,13 +104,15 @@ function EquipmentPageContent() {
   }, [resumeTemplate, resumeDraft, activeModal]);
 
   const categoryOptions = useMemo(() => {
-    const set = new Set<string>();
+    const ids = new Set<string>();
     for (const it of equipment) {
       const c = (it.category ?? '').trim();
-      if (c) set.add(c);
+      if (c) ids.add(c);
     }
-    return Array.from(set).sort((a, b) => a.localeCompare(b, 'he'));
-  }, [equipment]);
+    return Array.from(ids)
+      .map((id) => ({ value: id, label: categoryName(id) ?? id }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'he'));
+  }, [equipment, categoryName]);
 
   const filtered = useMemo(() => {
     return equipment.filter((it) => {
@@ -116,17 +120,18 @@ function EquipmentPageContent() {
       if (categoryFilter !== 'all' && it.category !== categoryFilter) return false;
       if (searchTerm) {
         const q = searchTerm.toLowerCase();
+        const resolvedCategory = (categoryName(it.category) ?? it.category).toLowerCase();
         const hit =
           it.id.toLowerCase().includes(q) ||
           it.productName.toLowerCase().includes(q) ||
           it.currentHolder.toLowerCase().includes(q) ||
-          it.category.toLowerCase().includes(q) ||
+          resolvedCategory.includes(q) ||
           (it.location ?? '').toLowerCase().includes(q);
         if (!hit) return false;
       }
       return true;
     });
-  }, [equipment, statusFilter, categoryFilter, searchTerm]);
+  }, [equipment, statusFilter, categoryFilter, searchTerm, categoryName]);
 
   const closeModal = () => {
     setActiveModal(null);
@@ -419,11 +424,11 @@ function FilterBar({
   onStatusChange: (s: EquipmentStatus | 'all') => void;
   categoryFilter: string | 'all';
   onCategoryChange: (c: string | 'all') => void;
-  categoryOptions: string[];
+  categoryOptions: { value: string; label: string }[];
 }) {
   return (
-    <div className="bg-white rounded-b-xl border-x border-b border-neutral-200 p-3 mb-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
-      <div className="sm:col-span-2 relative">
+    <div className="bg-white rounded-b-xl border-x border-b border-neutral-200 p-3 mb-4 space-y-2">
+      <div className="relative">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
         <input
           type="search"
@@ -433,28 +438,30 @@ function FilterBar({
           className="w-full ps-9 pe-3 py-2 text-sm border border-neutral-200 rounded-lg bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-primary-500"
         />
       </div>
-      <Select
-        value={statusFilter === 'all' ? null : statusFilter}
-        onChange={(v) => onStatusChange(v === null ? 'all' : (v as EquipmentStatus))}
-        options={[
-          { value: EquipmentStatus.AVAILABLE, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.AVAILABLE },
-          { value: EquipmentStatus.SECURITY, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.SECURITY },
-          { value: EquipmentStatus.REPAIR, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.REPAIR },
-          { value: EquipmentStatus.LOST, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.LOST },
-          { value: EquipmentStatus.PENDING_TRANSFER, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.PENDING_TRANSFER },
-        ]}
-        placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}
-        clearable
-        ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}
-      />
-      <Select
-        value={categoryFilter === 'all' ? null : categoryFilter}
-        onChange={(v) => onCategoryChange(v === null ? 'all' : (v as string))}
-        options={categoryOptions.map((c) => ({ value: c, label: c }))}
-        placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_CATEGORIES}
-        clearable
-        ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_CATEGORIES}
-      />
+      <div className="grid grid-cols-2 gap-2">
+        <Select
+          value={statusFilter === 'all' ? null : statusFilter}
+          onChange={(v) => onStatusChange(v === null ? 'all' : (v as EquipmentStatus))}
+          options={[
+            { value: EquipmentStatus.AVAILABLE, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.AVAILABLE },
+            { value: EquipmentStatus.SECURITY, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.SECURITY },
+            { value: EquipmentStatus.REPAIR, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.REPAIR },
+            { value: EquipmentStatus.LOST, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.LOST },
+            { value: EquipmentStatus.PENDING_TRANSFER, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.PENDING_TRANSFER },
+          ]}
+          placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}
+          clearable
+          ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}
+        />
+        <Select
+          value={categoryFilter === 'all' ? null : categoryFilter}
+          onChange={(v) => onCategoryChange(v === null ? 'all' : (v as string))}
+          options={categoryOptions}
+          placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_CATEGORIES}
+          clearable
+          ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_CATEGORIES}
+        />
+      </div>
     </div>
   );
 }
