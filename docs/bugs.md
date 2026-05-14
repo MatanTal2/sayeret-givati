@@ -19,10 +19,11 @@
     - **Why this matters:** Users miss whole admin features (System Config, Permissions, Templates, etc.). They scroll horizontally only if they discover it accidentally.
     - **Fix scope:** Keep the horizontal scroll (don't switch to dropdown — user likes the tab strip). Need a discoverability signal: shadow fade on the trailing edge, or chevron buttons that scroll the strip programmatically, or a small "X more" indicator on the trailing edge. **Council needed** to pick the minimal-noise approach.
 
-21. **Admin UsersTab table not mobile-friendly**
-    - **Repro:** `/management` → "Manage Users" tab on a narrow viewport. Table is 6 columns (User+email | Role | Rank | Team | Status | Actions). On mobile the role + email columns sit far to the side; user must horizontally scroll the whole page to read them.
-    - **Fix scope:** Switch to the same mobile-priority pattern as `EquipmentTable` — fixed-height vertically scrolling container, each row is compact (Name + indicator dot + minimal status), clicking the row expands to reveal email, role, rank, team, actions. Phone column should also be added (data missing today; pull from `users.phoneNumber` ∪ `authorized_personnel.phoneNumber` when registered=false).
-    - **Council needed** for the registered-vs-unregistered indicator badge (minimal-noise design).
+21. ~~**Admin UsersTab table not mobile-friendly**~~
+    - **FIXED (2026-05-14 on `feat/users-tab-expandable-mobile-friendly`):** rewrote `UsersTab.tsx` to a list of expandable cards mirroring `EquipmentTable`. Compact card shows status dot + initials + name + pending-registration badge + role; click to expand reveals email / rank / role / team / phone / status / actions. Container is `max-h-[28rem] overflow-y-auto` so the section keeps the page short.
+    - New hook `src/hooks/useUsersAndPersonnel.ts` merges `users` ∪ `authorized_personnel` keyed by `militaryPersonalNumberHash`, so unregistered soldiers appear in the list. Phone falls back from `users.phoneNumber` to `authorized_personnel.phoneNumber`. The legacy `useUsers` hook stays unchanged for `EmailTab` / `CustomUserSelectionModal` / ammunition consumers (they need email-able registered-only rows).
+    - Phone rendered via existing `formatPhoneForDisplay`.
+    - **Council outcome (4 agents — name-side dot / leading icon glyph / row tint / suffix text-badge):** 3/4 converged on **asymmetric** rendering (no signal on registered rows, show signal only on unregistered). Picked variant: text-badge "ממתין" via the existing `VIEW_PENDING_BADGE` constant — reuses bug #4's vocabulary, self-describing (no SR-only fallback needed), matches the "צ" inline-tag precedent in `EquipmentTable`.
 
 22. **Manage Equipment Templates list has no category grouping**
     - **Repro:** `/management` → "Equipment Templates" tab. Templates render as a flat list. Hard to scan; users see hundreds of items mixed across categories.
