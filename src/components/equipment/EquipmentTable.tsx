@@ -27,6 +27,8 @@ interface EquipmentTableProps {
   onToggleSelectAllVisible: () => void;
   onRowAction: (item: Equipment, action: EquipmentRowAction) => void;
   emptyMessage: string;
+  /** Gates pull-from-storage in row actions. */
+  roundOpen?: boolean;
 }
 
 export default function EquipmentTable({
@@ -37,6 +39,7 @@ export default function EquipmentTable({
   onToggleSelectAllVisible,
   onRowAction,
   emptyMessage,
+  roundOpen,
 }: EquipmentTableProps) {
   const [sortField, setSortField] = useState<SortField>('lastReportUpdate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
@@ -95,6 +98,7 @@ export default function EquipmentTable({
             onAction={(action) => onRowAction(item, action)}
             categoryName={categoryName}
             subcategoryName={subcategoryName}
+            roundOpen={roundOpen}
           />
         ))}
       </ul>
@@ -182,6 +186,7 @@ interface EquipmentRowProps {
   onAction: (action: EquipmentRowAction) => void;
   categoryName: (id: string) => string | null;
   subcategoryName: (id: string) => string | null;
+  roundOpen?: boolean;
 }
 
 function EquipmentRow({
@@ -194,6 +199,7 @@ function EquipmentRow({
   onAction,
   categoryName,
   subcategoryName,
+  roundOpen,
 }: EquipmentRowProps) {
   const dimmed = item.signedById === user.uid && item.currentHolderId !== user.uid;
   const stale = isStale(item.lastReportUpdate);
@@ -241,7 +247,7 @@ function EquipmentRow({
           )}
         </div>
         <div onClick={(e) => e.stopPropagation()}>
-          <EquipmentRowActions equipment={item} user={user} onAction={onAction} />
+          <EquipmentRowActions equipment={item} user={user} roundOpen={roundOpen} onAction={onAction} />
         </div>
       </div>
       {expanded && (

@@ -18,11 +18,25 @@ import AddEquipmentWizard from '@/components/equipment/AddEquipmentWizard';
 import ReportModal from '@/components/equipment/ReportModal';
 import ReturnModal from '@/components/equipment/ReturnModal';
 import TransferModal from '@/components/equipment/TransferModal';
+import ExchangeRequestModal from '@/components/equipment/ExchangeRequestModal';
+import ApproveExchangeModal from '@/components/equipment/ApproveExchangeModal';
+import RejectExchangeModal from '@/components/equipment/RejectExchangeModal';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import ActionHistoryPanel from '@/components/equipment/ActionHistoryPanel';
 import { type Equipment, EquipmentStatus } from '@/types/equipment';
 import PersonalAmmunitionSection from '@/components/equipment/PersonalAmmunitionSection';
 import TeamAmmunitionSection from '@/components/equipment/TeamAmmunitionSection';
 import { Select } from '@/components/ui';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
+import {
+  requestExchange,
+  approveExchangeRequest,
+  rejectExchangeRequest,
+  replaceByAnother,
+  sendToStorage,
+  pullFromStorage,
+  findPendingExchangeRequest,
+} from '@/lib/equipmentExchangeClient';
 
 type ActiveModal =
   | { kind: 'wizard' }
@@ -30,6 +44,12 @@ type ActiveModal =
   | { kind: 'return'; equipment: Equipment }
   | { kind: 'transfer'; equipment: Equipment }
   | { kind: 'history'; equipment: Equipment }
+  | { kind: 'request-exchange'; equipment: Equipment }
+  | { kind: 'approve-exchange'; equipment: Equipment; requestId: string }
+  | { kind: 'reject-exchange'; equipment: Equipment; requestId: string }
+  | { kind: 'replace-by-another'; equipment: Equipment }
+  | { kind: 'send-to-storage'; equipment: Equipment }
+  | { kind: 'pull-from-storage'; equipment: Equipment }
   | null;
 
 export default function EquipmentPage() {
@@ -69,6 +89,9 @@ function EquipmentPageContent() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<EquipmentStatus | 'all'>('all');
+  const [submitting, setSubmitting] = useState(false);
+  const { config: systemConfig } = useSystemConfig();
+  const roundOpen = !!systemConfig?.roundOpen;
 
   // Auto-open wizard when notification deep-links here
   useEffect(() => {
@@ -101,12 +124,38 @@ function EquipmentPageContent() {
     }
   };
 
-  const handleRowAction = (item: Equipment, action: EquipmentRowAction) => {
+  const handleRowAction = async (item: Equipment, action: EquipmentRowAction) => {
     switch (action) {
       case 'report':   setActiveModal({ kind: 'report', equipment: item }); break;
       case 'transfer': setActiveModal({ kind: 'transfer', equipment: item }); break;
       case 'return':   setActiveModal({ kind: 'return', equipment: item }); break;
       case 'history':  setActiveModal({ kind: 'history', equipment: item }); break;
+      case 'request-exchange':
+        setActiveModal({ kind: 'request-exchange', equipment: item });
+        break;
+      case 'replace-by-another':
+        setActiveModal({ kind: 'replace-by-another', equipment: item });
+        break;
+      case 'send-to-storage':
+        setActiveModal({ kind: 'send-to-storage', equipment: item });
+        break;
+      case 'pull-from-storage':
+        setActiveModal({ kind: 'pull-from-storage', equipment: item });
+        break;
+      case 'approve-exchange':
+      case 'reject-exchange': {
+        const res = await findPendingExchangeRequest(item.id);
+        if (!res.success || !res.requestId) {
+          alert(res.success ? 'לא נמצאה בקשת החלפה ממתינה' : res.error);
+          return;
+        }
+        setActiveModal({
+          kind: action === 'approve-exchange' ? 'approve-exchange' : 'reject-exchange',
+          equipment: item,
+          requestId: res.requestId,
+        });
+        break;
+      }
     }
   };
 
@@ -178,6 +227,7 @@ function EquipmentPageContent() {
           onToggleSelectAllVisible={toggleSelectAllVisible}
           onRowAction={handleRowAction}
           emptyMessage={emptyMessageFor(scope)}
+          roundOpen={roundOpen}
         />
       )}
 
@@ -229,6 +279,97 @@ function EquipmentPageContent() {
       )}
       {activeModal?.kind === 'history' && (
         <ActionHistoryPanel equipment={activeModal.equipment} onClose={closeModal} />
+      )}
+      {activeModal?.kind === 'request-exchange' && (
+        <ExchangeRequestModal
+          equipment={activeModal.equipment}
+          onClose={closeModal}
+          onSubmit={async (reason) => {
+            const res = await requestExchange(activeModal.equipment.id, reason);
+            if (res.success) { refreshEquipment(); }
+            return { success: res.success, error: res.success ? undefined : res.error };
+          }}
+        />
+      )}
+      {activeModal?.kind === 'approve-exchange' && (
+        <ApproveExchangeModal
+          equipment={activeModal.equipment}
+          onClose={closeModal}
+          onSubmit={async (newSerial, note) => {
+            const res = await approveExchangeRequest(activeModal.requestId, newSerial, note);
+            if (res.success) { refreshEquipment(); }
+            return { success: res.success, error: res.success ? undefined : res.error };
+          }}
+        />
+      )}
+      {activeModal?.kind === 'reject-exchange' && (
+        <RejectExchangeModal
+          equipment={activeModal.equipment}
+          onClose={closeModal}
+          onSubmit={async (reason) => {
+            const res = await rejectExchangeRequest(activeModal.requestId, reason);
+            if (res.success) { refreshEquipment(); }
+            return { success: res.success, error: res.success ? undefined : res.error };
+          }}
+        />
+      )}
+      {activeModal?.kind === 'replace-by-another' && (
+        <ApproveExchangeModal
+          equipment={activeModal.equipment}
+          isReplaceByAnother
+          onClose={closeModal}
+          onSubmit={async (newSerial, note) => {
+            const res = await replaceByAnother(activeModal.equipment.id, newSerial, note);
+            if (res.success) { refreshEquipment(); }
+            return { success: res.success, error: res.success ? undefined : res.error };
+          }}
+        />
+      )}
+      {activeModal?.kind === 'send-to-storage' && (
+        <ConfirmationModal
+          isOpen
+          variant="info"
+          title={TEXT_CONSTANTS.FEATURES.EQUIPMENT.STORAGE.SEND_TITLE}
+          message={TEXT_CONSTANTS.FEATURES.EQUIPMENT.STORAGE.SEND_DESCRIPTION}
+          confirmText={TEXT_CONSTANTS.FEATURES.EQUIPMENT.STORAGE.SEND_SUBMIT}
+          cancelText={TEXT_CONSTANTS.FEATURES.EQUIPMENT.EXCHANGE.CANCEL}
+          isLoading={submitting}
+          onCancel={() => !submitting && closeModal()}
+          onConfirm={async () => {
+            setSubmitting(true);
+            const res = await sendToStorage(activeModal.equipment.id);
+            setSubmitting(false);
+            if (res.success) {
+              refreshEquipment();
+              closeModal();
+            } else {
+              alert(res.error);
+            }
+          }}
+        />
+      )}
+      {activeModal?.kind === 'pull-from-storage' && (
+        <ConfirmationModal
+          isOpen
+          variant="info"
+          title={TEXT_CONSTANTS.FEATURES.EQUIPMENT.STORAGE.PULL_TITLE}
+          message={TEXT_CONSTANTS.FEATURES.EQUIPMENT.STORAGE.PULL_DESCRIPTION}
+          confirmText={TEXT_CONSTANTS.FEATURES.EQUIPMENT.STORAGE.PULL_SUBMIT}
+          cancelText={TEXT_CONSTANTS.FEATURES.EQUIPMENT.EXCHANGE.CANCEL}
+          isLoading={submitting}
+          onCancel={() => !submitting && closeModal()}
+          onConfirm={async () => {
+            setSubmitting(true);
+            const res = await pullFromStorage(activeModal.equipment.id);
+            setSubmitting(false);
+            if (res.success) {
+              refreshEquipment();
+              closeModal();
+            } else {
+              alert(res.error);
+            }
+          }}
+        />
       )}
     </div>
   );
