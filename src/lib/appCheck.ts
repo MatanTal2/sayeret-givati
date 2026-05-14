@@ -42,11 +42,15 @@ export function ensureAppCheckInitialized(): AppCheck | null {
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
   if (!siteKey) {
     if (!warnedMissingKey) {
-      console.warn(
-        '[appCheck] NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not set — App Check is disabled. ' +
-          'Phone Auth and Firestore traffic will not carry an attestation token. ' +
-          'See ENV_SETUP.md for the provisioning steps.',
-      );
+      if (process.env.NODE_ENV === 'development') {
+        console.info('[appCheck] disabled (no NEXT_PUBLIC_RECAPTCHA_SITE_KEY in dev)');
+      } else {
+        console.warn(
+          '[appCheck] NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not set — App Check is disabled. ' +
+            'Phone Auth and Firestore traffic will not carry an attestation token. ' +
+            'See ENV_SETUP.md for the provisioning steps.',
+        );
+      }
       warnedMissingKey = true;
     }
     return null;
