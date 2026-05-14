@@ -13,6 +13,7 @@ Additional tools page (`/tools`). Grid of standalone HTML tools — each opens i
 |----|-------|-------|----------|
 | `convoy` | מארגן שיירות | `/tools/convoy` | `/tools/hmmwvConvoy.html` |
 | `logistics` | דרישות מל״מ | `/tools/logistics` | `/tools/logistics.html` |
+| `guard-scheduler` | מחולל שמירות | `/tools/guard-scheduler` | `/tools/guard-scheduler.html` |
 
 ## Design
 
