@@ -32,12 +32,11 @@
       - Reuse `formatPhoneForDisplay` from the existing utility for phone rendering.
     - **Reference fix:** bug #21 (`feat/users-tab-expandable-mobile-friendly`, 2026-05-14).
 
-28. **Phone book filters stack vertically instead of using horizontal space** *(phone book)*
-    - **Repro:** Phone Book → look at the filter bar. The search input and both dropdown filters are stacked one above the other, eating vertical space and making the page feel cramped.
-    - **Expected layout:**
-      - **Row 1:** name search input (full width).
-      - **Row 2:** both dropdown filters side-by-side (split the row 50/50, or whatever sizing the existing `Select` components prefer with `flex-1`).
-    - **Likely fix surface:** the filters container in `src/app/phone-book/page.tsx`. Wrap the search in its own row; wrap both dropdowns in a `flex gap-3` row beneath it. On mobile (`sm:`-down) keep them stacked vertically if needed to avoid cramped Selects.
+28. ~~**Phone book filters stack vertically instead of using horizontal space**~~ *(phone book)*
+    - **FIXED (2026-05-14 on `fix/bug-batch-2026-05-14-pt3`):** `src/app/phone-book/page.tsx` filter container restructured from a single `grid-cols-1 sm:grid-cols-3` row into:
+      - **Row 1:** full-width search input.
+      - **Row 2:** `grid-cols-1 sm:grid-cols-2` holding the team and role `Select`s side-by-side on `sm`+; stacked on mobile so the touch targets don't get cramped.
+    - Outer wrapper switched to `space-y-2` so the two rows breathe.
 
 29. **Phone book list overflows page height — need in-container scroll** *(phone book)*
     - **Repro:** Phone Book with enough rows to scroll. The whole **page** scrolls instead of just the list inside its container, so the filter bar and page header scroll off-screen as the user moves down the list.

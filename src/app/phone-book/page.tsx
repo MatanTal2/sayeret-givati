@@ -105,8 +105,8 @@ function PhoneBookContent() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <div className="sm:col-span-1 relative">
+      <div className="space-y-2">
+        <div className="relative">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
           <input
             type="search"
@@ -116,22 +116,24 @@ function PhoneBookContent() {
             className="w-full ps-9 pe-3 py-2 text-sm border border-neutral-200 rounded-lg bg-white focus:ring-2 focus:ring-primary-500"
           />
         </div>
-        <Select
-          value={team}
-          onChange={(v) => setTeam(v)}
-          options={teamOptions}
-          placeholder={T.FILTER_TEAM_ALL}
-          clearable
-          ariaLabel={T.FILTER_TEAM}
-        />
-        <Select<UserType>
-          value={role}
-          onChange={(v) => setRole(v)}
-          options={roleOptions}
-          placeholder={T.FILTER_ROLE_ALL}
-          clearable
-          ariaLabel={T.FILTER_ROLE}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <Select
+            value={team}
+            onChange={(v) => setTeam(v)}
+            options={teamOptions}
+            placeholder={T.FILTER_TEAM_ALL}
+            clearable
+            ariaLabel={T.FILTER_TEAM}
+          />
+          <Select<UserType>
+            value={role}
+            onChange={(v) => setRole(v)}
+            options={roleOptions}
+            placeholder={T.FILTER_ROLE_ALL}
+            clearable
+            ariaLabel={T.FILTER_ROLE}
+          />
+        </div>
       </div>
 
       <div className="flex items-center justify-between gap-2">
