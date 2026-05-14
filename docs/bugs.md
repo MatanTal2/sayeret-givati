@@ -3,16 +3,8 @@
 
 ## Open
 
-19. **App Check init warning floods console on localhost (admin route)**
-    - **Repro:** `npm run dev` → navigate to `/management`. Console emits the warning below on every page load:
-      ```
-      [appCheck] NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not set — App Check is disabled.
-      Phone Auth and Firestore traffic will not carry an attestation token.
-      See ENV_SETUP.md for the provisioning steps.
-      ```
-      Origin: `src/lib/appCheck.ts:45` → called from `src/lib/firebase.ts:28` on first import.
-    - **Why this matters:** Warning is correct in prod, but in local dev the env var is intentionally absent. Right now every dev hits it on every admin reload — noise that hides real warnings. Should be a dev-only `console.info` or gated on `process.env.NODE_ENV !== 'development'`, OR loud only when running on a non-localhost host.
-    - **Fix sketch:** In `ensureAppCheckInitialized`, when site key is missing AND `process.env.NODE_ENV === 'development'`, downgrade to a single `console.info('[appCheck] disabled in dev; set NEXT_PUBLIC_RECAPTCHA_SITE_KEY for parity testing')` and suppress the longer warning. Keep the loud warning for production builds.
+19. ~~**App Check init warning floods console on localhost (admin route)**~~
+    - **FIXED (2026-05-14 on `fix/appcheck-dev-warning-noise`):** `ensureAppCheckInitialized` (`src/lib/appCheck.ts:43`) now branches on `process.env.NODE_ENV`. Dev emits a single-line `console.info('[appCheck] disabled (no NEXT_PUBLIC_RECAPTCHA_SITE_KEY in dev)')`; prod / preview keep the original multi-line `console.warn`. Still gated by `warnedMissingKey` so it logs at most once per page load.
 
 20. **Admin management tabs have no overflow indicator**
     - **Repro:** Open `/management` on a narrow viewport (or any width where the tab strip overflows). Only the first 2-3 tabs are visible. Nothing in the UI signals that more tabs exist beyond what's rendered.

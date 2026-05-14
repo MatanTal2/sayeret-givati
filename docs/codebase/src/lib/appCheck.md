@@ -11,7 +11,9 @@ Initialize Firebase App Check on the client. App Check attaches a per-request re
 
 `ensureAppCheckInitialized()` runs once per page load, idempotent. SSR-safe: no-ops on the server side. Fires only when `window` is defined AND `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` is set.
 
-If the env var is missing, the function logs a single warning and returns `null`. The app keeps working — Firebase calls just travel without an attestation token until the operator provisions a site key. This lets the codebase ship App Check incrementally without breaking any dev environment that hasn't been provisioned.
+If the env var is missing, the function logs once and returns `null`. The app keeps working — Firebase calls just travel without an attestation token until the operator provisions a site key. This lets the codebase ship App Check incrementally without breaking any dev environment that hasn't been provisioned.
+
+**Log level depends on environment.** Production / preview builds emit a multi-line `console.warn` so the missing key is loud. `NODE_ENV === 'development'` emits a single-line `console.info` instead, because dev workstations are intentionally unprovisioned (bug #19 — the loud warn drowned out other dev-time signals on every `/management` reload).
 
 ## Wired from `firebase.ts`
 
