@@ -1292,6 +1292,13 @@ export const TEXT_CONSTANTS = {
     // Change-phone modal (PR-C)
     CHANGE_PHONE_TITLE: 'שינוי מספר טלפון',
     CHANGE_PHONE_DESCRIPTION: 'אמת את הסיסמה הנוכחית, הזן את המספר החדש ואשר באמצעות קוד SMS.',
+    CHANGE_PHONE_STEP_PREFLIGHT_TITLE: 'לפני שמתחילים',
+    CHANGE_PHONE_PREFLIGHT_INTRO: 'שינוי מספר הטלפון משפיע על האבטחה של החשבון. שים לב:',
+    CHANGE_PHONE_PREFLIGHT_BULLET_SMS: 'יישלח קוד אימות במסרון למספר החדש.',
+    CHANGE_PHONE_PREFLIGHT_BULLET_REAUTH: 'תידרש סיסמת החשבון הנוכחית.',
+    CHANGE_PHONE_PREFLIGHT_BULLET_SESSIONS: 'מכשירים אחרים שלך יתנתקו ויידרשו להתחבר מחדש.',
+    CHANGE_PHONE_PREFLIGHT_BULLET_RATE_LIMIT: 'ניתן לבקש שינוי פעם בדקה.',
+    CHANGE_PHONE_PREFLIGHT_START: 'התחל שינוי מספר',
     CHANGE_PHONE_STEP_REAUTH_TITLE: 'אימות סיסמה',
     CHANGE_PHONE_STEP_NEW_NUMBER_TITLE: 'מספר טלפון חדש',
     CHANGE_PHONE_STEP_OTP_TITLE: 'הזן קוד SMS',

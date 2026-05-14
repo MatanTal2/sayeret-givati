@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Three-step modal that lets a signed-in user change their phone number. Mounted by `/settings` and opened when the user clicks the "עדכן" button next to the phone row.
+Four-step modal that lets a signed-in user change their phone number. Mounted by `/settings` and opened when the user clicks the "עדכן" button next to the phone row.
 
 ## Props
 
@@ -20,6 +20,8 @@ Three-step modal that lets a signed-in user change their phone number. Mounted b
 ```
 idle (modal closed)
   ↓ open
+preflight — explainer card (SMS, reauth, other-devices logout, rate limit)
+  ↓ "התחל שינוי מספר"
 reauth — current password input
   ↓ reauth succeeds
 enterNumber — new phone E.164 input + reset reCAPTCHA + send OTP
@@ -64,6 +66,6 @@ Hebrew strings live in `TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_*`. English mirrors
 
 ## Deferred polish (out of PR-C)
 
-- Pre-flight explainer card listing the three prerequisites before step 1.
+- ~~Pre-flight explainer card listing the prerequisites before step 1.~~ ✅ Shipped 2026-05-14 on `feat/phone-change-preflight` — new `preflight` step lists SMS, password reauth, other-device logout, and rate limit before the reauth step. Bullets keyed under `CHANGE_PHONE_PREFLIGHT_*`.
 - "Sign out other devices now" explicit CTA in the success state. (sessionEpoch fence already cuts them on next API call — the CTA would just confirm it visually.)
 - Old-phone notification (email + SMS) — blocked on PR-E channel pick.
