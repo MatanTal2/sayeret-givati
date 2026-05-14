@@ -85,7 +85,11 @@ export interface Equipment {
   qrCode?: string; // QR code for quick scanning
   requiresDailyStatusCheck?: boolean; // Whether this equipment requires daily status checks (inherited from template)
   hasSerialNumber?: boolean; // True iff template.requiresSerialNumber. When false, `id` is auto-generated and must NOT be displayed as a צ. Optional for back-compat with pre-flag docs (use !== false to treat unknown as serialized).
-  
+
+  // Exchange lifecycle linkage. Set when an item is created via exchange or replaced by exchange.
+  predecessorDocId?: string; // Doc ID of the item this one replaces (set on the new doc created via exchange).
+  successorDocId?: string;   // Doc ID of the item that replaced this one (set on the old doc when it's retired via exchange).
+
   // Audit Trail
   trackingHistory: EquipmentHistoryEntry[]; // Array of transfer/action records
   
@@ -138,7 +142,9 @@ export enum EquipmentStatus {
   REPAIR = 'repair',
   LOST = 'lost',
   PENDING_TRANSFER = 'pending_transfer',
-  RETIRED = 'retired' // Returned to army; excluded from active equipment lists
+  EXCHANGE_REQUESTED = 'exchange_requested', // Holder requested swap; awaits signer approval. Transitions to AVAILABLE on reject, or to RETIRED on approve (with successorDocId set).
+  STORED = 'stored', // End-of-round storage. Skipped from daily checks; transfers blocked. Pull-from-storage gated by SystemConfig.roundOpen.
+  RETIRED = 'retired' // Returned to army; excluded from active equipment lists. May carry successorDocId when retired via exchange.
 }
 
 export enum EquipmentCondition {
@@ -405,6 +411,16 @@ export enum ActionType {
   RETIREMENT_APPROVED = 'retirement_approved',
   RETIREMENT_REJECTED = 'retirement_rejected',
 
+  // Exchange (broken-item swap, distinct from REPAIR)
+  EXCHANGE_REQUESTED = 'exchange_requested',
+  EXCHANGE_APPROVED = 'exchange_approved',
+  EXCHANGE_REJECTED = 'exchange_rejected',
+  EXCHANGE_COMPLETED = 'exchange_completed',
+
+  // Storage (end-of-round retention)
+  STORED = 'stored',
+  REISSUED = 'reissued',
+
   // Report / daily check
   REPORT_SUBMITTED = 'report_submitted',
   REPORT_REQUESTED = 'report_requested',
@@ -494,6 +510,36 @@ export interface RetirementRequestDoc {
 }
 
 export enum RetirementRequestStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  CANCELLED = 'cancelled'
+}
+
+// Exchange Request Collection Types
+// Created when a holder marks their item broken and needs a physical swap.
+// Two paths land in the same doc shape:
+//  1. Holder requests → signer approves with a new serial (request stays in flight while status=PENDING).
+//  2. Signer-direct "replace by another" → doc is written with status=APPROVED and initiatedBySigner=true.
+export interface ExchangeRequestDoc {
+  id: string;
+  equipmentId: string;          // Old item display serial / ID
+  equipmentDocId: string;       // Old item Firestore document ID
+  equipmentName: string;
+  holderUserId: string;         // Requester; must equal equipment.currentHolderId at request time
+  holderUserName: string;
+  signerUserId: string;         // Approver; must equal equipment.signedById at request time
+  signerUserName: string;
+  reason: string;
+  newEquipmentDocId?: string;   // Set on approve — points to the new doc created with predecessorDocId
+  newSerialNumber?: string;     // Convenience copy of new doc's serial (display)
+  initiatedBySigner?: boolean;  // True for the "replace by another" direct path
+  status: ExchangeRequestStatus;
+  statusHistory: TransferStatusHistoryEntry[];
+  createdAt: Timestamp;
+}
+
+export enum ExchangeRequestStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected',

@@ -137,6 +137,12 @@ export interface SystemConfig {
   id: string;
   ammoNotificationRecipientUserId?: string;
   teams?: string[];
+  /**
+   * Gates pull-from-storage on equipment items in EquipmentStatus.STORED.
+   * False (or unset) → users cannot reissue a stored item to themselves.
+   * Toggled by admin / system manager / manager from SystemConfigTab.
+   */
+  roundOpen?: boolean;
   updatedAt: Timestamp;
   updatedBy: string;
 }
