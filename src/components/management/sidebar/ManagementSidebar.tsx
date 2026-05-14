@@ -42,8 +42,10 @@ export default function ManagementSidebar({
       // where the inset has no effect and the sidebar flows naturally on
       // the inline-start side of the management grid. `translate-x-full`
       // is physical — pushes the panel visually right (off-screen) when
-      // closed.
-      'fixed inset-y-0 start-0 z-50 w-80 bg-white shadow-2xl transform transition-all duration-500 ease-out',
+      // closed. `flex flex-col` activates `flex-1 min-h-0` on the
+      // navigation so the tab list can scroll independently when the
+      // 14-tab content exceeds viewport height (bug #20).
+      'fixed inset-y-0 start-0 z-50 w-80 bg-white shadow-2xl transform transition-all duration-500 ease-out flex flex-col',
       'lg:relative lg:translate-x-0 lg:w-72 lg:shadow-lg lg:duration-0',
       isOpen ? 'translate-x-0 shadow-2xl' : 'translate-x-full shadow-none'
     )}>
