@@ -56,8 +56,8 @@ const state: QueryState = {
 };
 
 const queryChain = () => ({
-  where: (_field: string, _op: string, _value: unknown) => queryChain(),
-  orderBy: (_field: string, _direction: string) => queryChain(),
+  where: () => queryChain(),
+  orderBy: () => queryChain(),
   limit: (n: number) => {
     state.limits.push(n);
     return {
