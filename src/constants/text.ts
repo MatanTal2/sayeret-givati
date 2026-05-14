@@ -1311,6 +1311,13 @@ export const TEXT_CONSTANTS = {
     CHANGE_PHONE_SUBMIT_OTP: 'אשר שינוי מספר',
     CHANGE_PHONE_SUBMITTING: 'מעדכן...',
     CHANGE_PHONE_SUCCESS: 'מספר הטלפון עודכן בהצלחה. מכשירים אחרים שלך נותקו.',
+    CHANGE_PHONE_SUCCESS_TITLE: 'מספר הטלפון עודכן',
+    CHANGE_PHONE_SUCCESS_BODY:
+      'המספר החדש נשמר. מכשירים אחרים שלך ינותקו אוטומטית בפעולה הבאה שלהם מול השרת.',
+    CHANGE_PHONE_SIGN_OUT_NOW_BUTTON: 'נתק מכשירים אחרים עכשיו',
+    CHANGE_PHONE_SIGN_OUT_NOW_SUBMITTING: 'מנתק...',
+    CHANGE_PHONE_SIGN_OUT_NOW_DONE: 'מכשירים אחרים נותקו ✓',
+    CHANGE_PHONE_SUCCESS_DONE: 'סיום',
     CHANGE_PHONE_SAME_NUMBER: 'המספר החדש זהה למספר הקיים — אין שינוי לבצע.',
     CHANGE_PHONE_INVALID_E164: 'מספר טלפון חייב להיות בפורמט בינלאומי (לדוגמה +972501234567).',
     CHANGE_PHONE_RATE_LIMITED: 'נסה שוב בעוד רגע. אפשר לבקש שינוי פעם בדקה.',

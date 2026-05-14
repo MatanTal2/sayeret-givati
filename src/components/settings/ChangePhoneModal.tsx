@@ -7,7 +7,7 @@ import {
   DialogPanel,
   DialogTitle,
 } from '@headlessui/react';
-import { Eye, EyeOff, X, ArrowRight, ShieldAlert } from 'lucide-react';
+import { Eye, EyeOff, X, ArrowRight, ShieldAlert, CheckCircle2, LogOut } from 'lucide-react';
 import {
   reauthEmailPassword,
   verifyNewPhone,
@@ -22,6 +22,7 @@ import {
   confirmPhoneChange,
   cancelPhoneChange,
 } from '@/lib/phoneChangeClient';
+import { revokeOtherSessions } from '@/lib/sessionsClient';
 import { TEXT_CONSTANTS } from '@/constants/text';
 
 const RECAPTCHA_CONTAINER_ID = 'change-phone-recaptcha';
@@ -33,7 +34,9 @@ interface Props {
   onSuccess: () => void;
 }
 
-type Step = 'preflight' | 'reauth' | 'enterNumber' | 'enterOtp';
+type Step = 'preflight' | 'reauth' | 'enterNumber' | 'enterOtp' | 'success';
+
+type RevokeState = 'idle' | 'submitting' | 'done' | 'error';
 
 export default function ChangePhoneModal({ open, onClose, onSuccess }: Props) {
   const [step, setStep] = useState<Step>('preflight');
@@ -45,6 +48,8 @@ export default function ChangePhoneModal({ open, onClose, onSuccess }: Props) {
   const [pendingNonce, setPendingNonce] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [revokeState, setRevokeState] = useState<RevokeState>('idle');
+  const [revokeError, setRevokeError] = useState<string | null>(null);
 
   const hasPendingRef = useRef(false);
 
@@ -59,6 +64,8 @@ export default function ChangePhoneModal({ open, onClose, onSuccess }: Props) {
       setPendingNonce(null);
       setSubmitting(false);
       setError(null);
+      setRevokeState('idle');
+      setRevokeError(null);
       hasPendingRef.current = false;
       // Council recommendation: reset reCAPTCHA on mount. The module-level
       // cachedVerifier survives across React mounts; if registration ran
@@ -72,6 +79,12 @@ export default function ChangePhoneModal({ open, onClose, onSuccess }: Props) {
     if (hasPendingRef.current) {
       void cancelPhoneChange();
       hasPendingRef.current = false;
+    }
+    // On the success step the phone change already committed; closing via
+    // X / backdrop should still fire the parent's success callback so the
+    // toast surfaces. Pre-success closures stay cancel-only.
+    if (step === 'success') {
+      onSuccess();
     }
     onClose();
   };
@@ -167,13 +180,35 @@ export default function ChangePhoneModal({ open, onClose, onSuccess }: Props) {
       }
 
       hasPendingRef.current = false;
-      onSuccess();
-      onClose();
+      setStep('success');
     } catch (err) {
       setError(mapFirebaseAuthError(err));
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Success-state revoke. Server already bumped `users.sessionEpoch` to
+  // `auth_time` during phone-change confirm, so other devices were already
+  // fenced. Hitting `/api/users/sessions/revoke` here bumps the epoch a
+  // second time — idempotent in effect, but gives the user an explicit
+  // affordance + visual ack instead of trusting the silent server-side fence.
+  const onRevokeOthersNow = async () => {
+    if (revokeState === 'submitting' || revokeState === 'done') return;
+    setRevokeError(null);
+    setRevokeState('submitting');
+    const result = await revokeOtherSessions();
+    if (result.success) {
+      setRevokeState('done');
+    } else {
+      setRevokeState('error');
+      setRevokeError(result.error || TEXT_CONSTANTS.SETTINGS.REVOKE_SESSIONS_ERROR);
+    }
+  };
+
+  const finishSuccess = () => {
+    onSuccess();
+    onClose();
   };
 
   const goBackToNumberStep = () => {
@@ -357,6 +392,57 @@ export default function ChangePhoneModal({ open, onClose, onSuccess }: Props) {
                 submittingLabel={TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_SUBMITTING}
               />
             </form>
+          )}
+
+          {step === 'success' && (
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 p-3 bg-success-50 border border-success-200 rounded-lg">
+                <CheckCircle2 className="w-5 h-5 text-success-700 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="text-sm text-success-900">
+                  <p className="font-medium">
+                    {TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_SUCCESS_TITLE}
+                  </p>
+                  <p className="mt-1 text-success-800">
+                    {TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_SUCCESS_BODY}
+                  </p>
+                </div>
+              </div>
+
+              {revokeState === 'done' ? (
+                <div
+                  className="flex items-center gap-2 text-sm text-success-700 bg-success-50 border border-success-200 rounded-lg px-3 py-2"
+                  role="status"
+                >
+                  <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+                  {TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_SIGN_OUT_NOW_DONE}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onRevokeOthersNow}
+                  disabled={revokeState === 'submitting'}
+                  className="btn-secondary w-full text-sm flex items-center justify-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" aria-hidden="true" />
+                  {revokeState === 'submitting'
+                    ? TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_SIGN_OUT_NOW_SUBMITTING
+                    : TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_SIGN_OUT_NOW_BUTTON}
+                </button>
+              )}
+              {revokeState === 'error' && revokeError && (
+                <ErrorBox message={revokeError} />
+              )}
+
+              <div className="flex items-center justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={finishSuccess}
+                  className="btn-primary"
+                >
+                  {TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_SUCCESS_DONE}
+                </button>
+              </div>
+            </div>
           )}
 
           <div id={RECAPTCHA_CONTAINER_ID} />
