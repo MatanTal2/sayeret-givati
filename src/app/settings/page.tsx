@@ -9,6 +9,7 @@ import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
 import ChangePasswordModal from '@/components/settings/ChangePasswordModal';
 import ChangePhoneModal from '@/components/settings/ChangePhoneModal';
 import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
+import AccountActivitySection from '@/components/settings/AccountActivitySection';
 import { cancelAccountDeletion } from '@/lib/accountDeletionClient';
 import { readProfileImageCache, writeProfileImageCache } from '@/lib/profileImageCache';
 import { computeDaysLeft } from '@/components/settings/PendingDeletionBanner';
@@ -231,6 +232,9 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+
+          {/* Account Activity (credential audit log) */}
+          <AccountActivitySection />
 
           {/* Notifications Section */}
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">

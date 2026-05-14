@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getActorOrError } from '@/lib/db/server/auth';
-import { writeCredentialAuditEvent } from '@/lib/db/server/credentialAuditService';
+import {
+  writeCredentialAuditEvent,
+  listCredentialAuditForUser,
+} from '@/lib/db/server/credentialAuditService';
 import { UserType } from '@/types/user';
 import type { CredentialAuditEventType } from '@/types/credentialAudit';
 
@@ -80,6 +83,61 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error('[API] auth/audit POST failed:', message);
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
+  }
+}
+
+const MAX_LIMIT = 100;
+const DEFAULT_LIMIT = 25;
+
+/**
+ * GET /api/auth/audit?uid=<uid>&limit=<n>
+ *
+ * Returns the credential audit entries for the actor (default) or for a
+ * different uid when the actor is ADMIN / SYSTEM_MANAGER. Bearer-token
+ * authenticated. Newest first. `limit` clamped to [1, 100], defaults to 25.
+ *
+ * Response shape: `{ success: true, entries: CredentialAuditEntry[] }`.
+ * `ip` and `userAgent` are intentionally surfaced to the user themselves —
+ * the point of the "your account activity" view is to make those visible
+ * so the user can spot foreign logins / device anomalies.
+ */
+export async function GET(request: Request) {
+  try {
+    const actorOrError = await getActorOrError(request);
+    if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
+
+    const url = new URL(request.url);
+    const targetUid = url.searchParams.get('uid') || actor.uid;
+
+    const isElevated =
+      actor.userType === UserType.ADMIN || actor.userType === UserType.SYSTEM_MANAGER;
+    if (targetUid !== actor.uid && !isElevated) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: cannot read audit for another user' },
+        { status: 403 },
+      );
+    }
+
+    const rawLimit = url.searchParams.get('limit');
+    let limit = DEFAULT_LIMIT;
+    if (rawLimit !== null) {
+      const parsed = Number.parseInt(rawLimit, 10);
+      if (!Number.isFinite(parsed) || parsed < 1) {
+        return NextResponse.json(
+          { success: false, error: 'limit must be a positive integer' },
+          { status: 400 },
+        );
+      }
+      limit = Math.min(parsed, MAX_LIMIT);
+    }
+
+    const entries = await listCredentialAuditForUser(targetUid, limit);
+    return NextResponse.json({ success: true, entries });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[API] auth/audit GET failed:', message);
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

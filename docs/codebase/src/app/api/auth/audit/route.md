@@ -1,11 +1,15 @@
-# POST /api/auth/audit
+# /api/auth/audit
 
 **File:** `src/app/api/auth/audit/route.ts`
-**Status:** Active (Settings PR-D)
+**Status:** Active (Settings PR-D + Account Activity follow-up)
 
 ## Purpose
 
-Single entry point for clients to log a credential-change event to `credentialAuditLog`. Backed by `writeCredentialAuditEvent` in `credentialAuditService.ts`.
+Entry point for the credential audit log. POST appends an event; GET reads recent events. Both are backed by `credentialAuditService.ts` (admin SDK; client reads are denied at the Firestore rules layer).
+
+# POST /api/auth/audit
+
+Logs a credential-change event to `credentialAuditLog`. Backed by `writeCredentialAuditEvent` in `credentialAuditService.ts`.
 
 ## Request
 
@@ -35,8 +39,42 @@ The route captures IP + User-Agent from the request headers — the client canno
 - 403 — caller is not the target and not elevated.
 - 500 — write failure.
 
+# GET /api/auth/audit
+
+Returns recent audit entries for the caller (default) or any user (when elevated). Backed by `listCredentialAuditForUser`.
+
+## Request
+
+```
+GET /api/auth/audit?uid=<uid>&limit=<n>
+Authorization: Bearer <idToken>
+```
+
+Both query params are optional. `uid` defaults to the actor; `limit` defaults to 25 and is clamped server-side to a max of 100. Response shape:
+
+```
+{ success: true, entries: Array<CredentialAuditEntry & { id: string }> }
+```
+
+Entries include `ip` and `userAgent` so the user can recognise unfamiliar devices in the Account Activity section. Plaintext old/new phone numbers are never returned — only SHA-256 hashes via `metadata`.
+
+## Authorization
+
+- Bearer token required via `getActorOrError`.
+- Caller reads their OWN audit log by default.
+- ADMIN / SYSTEM_MANAGER may pass `?uid=<other>` to read another user's log.
+- Non-elevated cross-uid → 403.
+
+## Failure modes
+
+- 400 — `limit` is not a positive integer.
+- 401 — missing or invalid bearer token.
+- 403 — caller is not the target and not elevated.
+- 500 — read failure.
+
 ## Related
 
 - Service: `src/lib/db/server/credentialAuditService.ts`
-- Client wrapper: `src/lib/credentialAuditClient.ts`
+- Client wrapper: `src/lib/credentialAuditClient.ts` (`logCredentialAuditEvent` + `fetchCredentialAuditLog`)
+- UI surface: `src/components/settings/AccountActivitySection.tsx`
 - Settings PR plan: `project_settings_page.md` PR-D.
