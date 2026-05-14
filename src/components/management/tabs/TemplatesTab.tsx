@@ -401,27 +401,102 @@ export default function TemplatesTab() {
     );
   };
 
+  /**
+   * Group templates by their category ID. Returns sorted buckets so the
+   * outer Disclosure list reads alphabetically by resolved category name
+   * (Hebrew locale). Unresolved category IDs sort last under a fixed
+   * sentinel label.
+   *
+   * Two-level Disclosure layout (bug #22, option 1): outer Disclosure per
+   * category collapses to a header "{name} ({count})"; expanding reveals
+   * the existing per-template Disclosure rows via `renderRow`.
+   */
+  const groupByCategory = (items: EquipmentType[]): Array<{
+    key: string;
+    label: React.ReactNode;
+    items: EquipmentType[];
+  }> => {
+    const UNKNOWN = '__unknown__';
+    const buckets = new Map<string, EquipmentType[]>();
+    for (const t of items) {
+      const key = t.category || UNKNOWN;
+      const arr = buckets.get(key);
+      if (arr) arr.push(t);
+      else buckets.set(key, [t]);
+    }
+    const entries = Array.from(buckets.entries()).map(([key, list]) => {
+      if (key === UNKNOWN) {
+        return {
+          key,
+          label: <span className="text-warning-700">ללא קטגוריה</span>,
+          items: list,
+          sortName: '￿',
+        };
+      }
+      const resolved = categoryName(key);
+      return {
+        key,
+        label: resolved ?? (
+          <span className="text-warning-700" title="קטגוריה לא נמצאה">{key}</span>
+        ),
+        items: list,
+        sortName: resolved ?? key,
+      };
+    });
+    entries.sort((a, b) => a.sortName.localeCompare(b.sortName, 'he'));
+    return entries.map(({ key, label, items: list }) => ({ key, label, items: list }));
+  };
+
+  const renderCategoryGroup = (
+    group: { key: string; label: React.ReactNode; items: EquipmentType[] },
+    actions: (t: EquipmentType) => React.ReactNode,
+  ) => (
+    <Disclosure key={group.key} as="li" className="border-b border-neutral-200 last:border-b-0">
+      {({ open }) => (
+        <>
+          <DisclosureButton className="w-full flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 text-start">
+            <ChevronDown
+              className={cn(
+                'w-4 h-4 text-neutral-500 transition-transform',
+                open && 'rotate-180',
+              )}
+              aria-hidden="true"
+            />
+            <span className="text-sm font-semibold text-neutral-900 flex-1">{group.label}</span>
+            <span className="text-xs text-neutral-500">({group.items.length})</span>
+          </DisclosureButton>
+          <DisclosurePanel as="ul" className="divide-y divide-neutral-200 bg-white border-t border-neutral-200">
+            {group.items.map((t) => renderRow(t, actions(t)))}
+          </DisclosurePanel>
+        </>
+      )}
+    </Disclosure>
+  );
+
   const section = (
     title: string,
     items: EquipmentType[],
     actions: (t: EquipmentType) => React.ReactNode,
     emptyMessage: string
-  ) => (
-    <Card padding="sm" className="overflow-hidden">
-      <div className="px-4 py-3 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between">
-        <h4 className="text-md font-semibold text-neutral-900">
-          {title} <span className="text-neutral-500 text-sm">({items.length})</span>
-        </h4>
-      </div>
-      {items.length === 0 ? (
-        <div className="p-6 text-center text-sm text-neutral-500">{emptyMessage}</div>
-      ) : (
-        <ul className="divide-y divide-neutral-200">
-          {items.map((t) => renderRow(t, actions(t)))}
-        </ul>
-      )}
-    </Card>
-  );
+  ) => {
+    const groups = items.length > 0 ? groupByCategory(items) : [];
+    return (
+      <Card padding="sm" className="overflow-hidden">
+        <div className="px-4 py-3 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between">
+          <h4 className="text-md font-semibold text-neutral-900">
+            {title} <span className="text-neutral-500 text-sm">({items.length})</span>
+          </h4>
+        </div>
+        {items.length === 0 ? (
+          <div className="p-6 text-center text-sm text-neutral-500">{emptyMessage}</div>
+        ) : (
+          <ul className="divide-y divide-neutral-200">
+            {groups.map((g) => renderCategoryGroup(g, actions))}
+          </ul>
+        )}
+      </Card>
+    );
+  };
 
   // Modal wrapper
   const modal = (title: string, content: React.ReactNode) => (
