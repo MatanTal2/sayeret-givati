@@ -3,6 +3,32 @@
 
 ## Open
 
+23. **Mobile zoom-in on text-input focus inside modal sticks after modal close (UX)**
+    - **Repro:** mobile / touch device, any route with an input-bearing modal. Easiest to reproduce on Equipment → pick item → action menu → "Replace with different item" — the replace modal is taller than the "request exchange" modal, so its inputs force the viewport to zoom further on focus. iOS Safari / Android Chrome auto-zoom whenever a focused input's computed font-size is `< 16px`. The browser does NOT zoom back out on blur, and after the modal closes the whole site stays scaled in.
+    - **Why this matters:** every modal-input interaction degrades the rest of the session — the page chrome (navigation, FAB, status row, header) all sit zoomed-in until the user manually pinch-zooms back. Compounds across taps.
+    - **Two viable mitigations (Council needed to pick):**
+      - **(a) Prevent** the zoom by guaranteeing `font-size ≥ 16px` on every input/textarea/select inside `.modal-overlay`, OR temporarily setting `<meta name="viewport" content="...maximum-scale=1">` while a modal is open. Trade-off: `maximum-scale=1` blocks user-initiated pinch zoom while open (a11y concern); the font-size fix is purely additive but requires an audit pass across every input control.
+      - **(b) Restore** zoom on modal close by resetting `document.documentElement` scroll / viewport. Trade-off: there's no clean cross-browser API for "reset zoom"; relies on hacks (toggling viewport meta tag, `window.scrollTo`).
+    - **Action:** spawn a Council (3 parallel reviewers: a11y / iOS-Safari behaviour / cross-browser viewport semantics) to converge on (a) vs (b) before coding. Document the picked approach in `docs/spec/` and apply globally via `globals.css` or a shared `useModalViewport()` hook.
+    - **Sample route to reproduce:** `/equipment` → expand any row → `⋮` → "החלף בפריט אחר" → focus the search input. Compare with `/equipment` → same row → "בקשת החלפה" — both modals share the input pattern but the bigger one triggers a noticeably stronger zoom.
+
+24. **Ammunition list shows "צ:" label for items with no serial number**
+    - **Repro:** Ammunition page. Items whose template has `requiresSerialNumber === false` (the auto-generated UUID id case) render the inline `[צ: <uuid>]` tag — same precedent that bug #18 fixed for the *photo* field on non-serialized items, but the `צ:` label was missed for ammo.
+    - **Expected:** when the item has no real serial number, hide both the `צ:` label *and* the value. Don't show "צ: 7af3-...-bc9d" — show nothing in that slot. Mirrors the equipment-domain fix from bugs #18 / #16 / #15 where non-serialized items stop pretending to have a serial.
+    - **Likely fix surface:** the ammo list renderer that resolves `item.id` / `item.serialNumber` to the inline `[צ: ...]` chip. Gate the chip on `hasSerialNumber === true` (and backfill the flag on ammo items the same way `backfill-equipment-has-serial.js` did for equipment, if ammo docs don't already carry it).
+
+25. **Stored / returned-to-army items still appear in the active list with full action set**
+    - **Repro:** Equipment page. Items in `STORED` (`STATUS_STORED` from PR #76) and items returned to army (the "return" action that flips status to `RETIRED`) currently sit in the same list as active holdings and expose the full action menu.
+    - **Expected behaviour:**
+      - **Returned-to-army (`RETIRED`)**: leaves the active list entirely. Should move to a history / archived list — same pattern as the ammunition "used" / consumed flow that drops items into a separate greyed list. Only action surfaced from there: **View history**. Not pickable for transfer / report / replace / return.
+      - **Stored (`STORED`)**: stays visible but the action menu collapses to **View history** + a new **משוך** ("pull back / un-store") action that moves the item back into the holder's active list. No transfer / report / replace / re-store while in this state.
+    - **Why this matters:** users see "active" rows for items that aren't theirs anymore, leading to confused transfers and miscounts on the status page.
+    - **Likely fix surface:**
+      - `EquipmentRowActions.tsx` — gate the action set by `status`. Returned/retired rows render only history. Stored rows render history + un-store.
+      - `useEquipment` (or equivalent list hook) — partition active vs archived by `status`. Two list buckets, same as ammo. Active list filters out `RETIRED`; archived view shows them read-only.
+      - New action: `pullBackFromStorage` (RPC + audit row). Inverts the storage transition from PR #76 — moves the item back to the holder and clears the storage location.
+      - Spec at `docs/spec/equipment-exchange-and-storage.md` — extend with the partitioning + un-store action.
+
 19. ~~**App Check init warning floods console on localhost (admin route)**~~
     - **FIXED (2026-05-14 on `fix/appcheck-dev-warning-noise`):** `ensureAppCheckInitialized` (`src/lib/appCheck.ts:43`) now branches on `process.env.NODE_ENV`. Dev emits a single-line `console.info('[appCheck] disabled (no NEXT_PUBLIC_RECAPTCHA_SITE_KEY in dev)')`; prod / preview keep the original multi-line `console.warn`. Still gated by `warnedMissingKey` so it logs at most once per page load.
 
