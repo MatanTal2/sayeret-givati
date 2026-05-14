@@ -58,5 +58,5 @@ None directly. Data comes from Google Sheets API (`/api/sheets`). Caching via `l
 - Name filter is debounced 300ms via `useEffect` + `setTimeout`.
 - Report generation uses `soldierUtils.ts` helpers.
 - WhatsApp sharing uses `navigator.clipboard` + `window.open('https://wa.me/')`.
-- Uses both `SoldiersTableDesktop` and `SoldiersTableMobile` — responsive switching via CSS breakpoints.
+- Uses both `SoldiersTableDesktop` and `SoldiersTableMobile` — responsive switching via CSS breakpoints. Both render a phone column (desktop) / phone row (mobile) with a `tel:` link formatted via `formatPhoneForDisplay`. Em-dash when the soldier has no phone on either roster source.
 - `mapRawStatusToStructured` / `mapStructuredStatusToRaw` from `statusUtils.ts` handle the Google Sheets ↔ UI status format conversion.

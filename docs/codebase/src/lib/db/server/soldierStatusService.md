@@ -80,11 +80,17 @@ history row carries no `updatedByName`.
 
 `serverListRoster` is intentionally an in-memory three-collection read:
 
-1. Seed rows from `authorized_personnel` (firstName, lastName, default platoon, `isRegistered: false`).
-2. Override / add rows from `users`, preferring user-side firstName/lastName/teamId and flipping `isRegistered: true`.
+1. Seed rows from `authorized_personnel` (firstName, lastName, phoneNumber, default platoon, `isRegistered: false`).
+2. Override / add rows from `users`, preferring user-side firstName/lastName/teamId/phoneNumber (the registered soldier maintains it themselves) and flipping `isRegistered: true`.
 3. Apply each soldier's `soldierStatus` overlay — status, customStatus, updatedAt.
 
 The `isRegistered` flag flows out via `RosterEntry → Soldier` and drives the registered/unregistered dot rendered before the soldier name on both desktop and mobile status tables.
+
+`phoneNumber` is sourced with the same precedence: `users.phoneNumber` wins
+when present, falling back to `authorized_personnel.phoneNumber`. The field
+is left undefined when neither source carries one; the UI renders an em-dash
+in that case. Formatting (Israeli local 0xx-xxx-xxxx) happens in the table
+component via `formatPhoneForDisplay`.
 
 Defaults:
 - Missing `teamId` on the user → `'מסייעת'` (matches the legacy sheet default).

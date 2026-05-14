@@ -5,6 +5,7 @@ import { Soldier } from '../../types';
 import { getAvailableStatuses } from '@/lib/statusUtils';
 import SelectAllCheckbox from './SelectAllCheckbox';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import { formatPhoneForDisplay } from '@/utils/validationUtils';
 
 interface SoldiersTableDesktopProps {
   soldiers: Soldier[];
@@ -76,6 +77,8 @@ export default function SoldiersTableDesktop({
             <col className="w-4" />
             <col className="w-28" />
             <col className="w-4" />
+            <col className="w-32" />
+            <col className="w-4" />
             <col className={hasOtherStatus ? "w-48" : "w-36"} />
             <col className="w-4" />
             <col className={hasOtherStatus ? "w-56" : ""} />
@@ -138,6 +141,10 @@ export default function SoldiersTableDesktop({
                     </div>
                   </div>
                 )}
+              </th>
+              <th className="px-1 py-3 text-neutral-400">|</th>
+              <th className="px-4 py-3 text-start text-sm font-medium text-neutral-700">
+                {TEXT_CONSTANTS.STATUS_PAGE.PHONE}
               </th>
               <th className="px-1 py-3 text-neutral-400">|</th>
               <th className="px-4 py-3 text-start text-sm font-medium text-neutral-700 relative">
@@ -218,6 +225,19 @@ export default function SoldiersTableDesktop({
                 </td>
                 <td className="px-1 py-3 text-neutral-400 text-center">|</td>
                 <td className="px-4 py-3 text-neutral-700">{soldier.platoon}</td>
+                <td className="px-1 py-3 text-neutral-400 text-center">|</td>
+                <td className="px-4 py-3 text-neutral-700 whitespace-nowrap">
+                  {soldier.phoneNumber ? (
+                    <a
+                      href={`tel:${soldier.phoneNumber}`}
+                      className="text-primary-600 hover:underline"
+                    >
+                      {formatPhoneForDisplay(soldier.phoneNumber)}
+                    </a>
+                  ) : (
+                    <span className="text-neutral-400">{TEXT_CONSTANTS.STATUS_PAGE.NO_PHONE}</span>
+                  )}
+                </td>
                 <td className="px-1 py-3 text-neutral-400 text-center">|</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">

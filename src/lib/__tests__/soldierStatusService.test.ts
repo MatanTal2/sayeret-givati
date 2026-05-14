@@ -203,6 +203,55 @@ describe('serverListRoster', () => {
     });
   });
 
+  it('exposes phoneNumber from authorized_personnel when no user is registered', async () => {
+    store.set('authorized_personnel/hash-a', {
+      id: 'hash-a',
+      data: { firstName: 'A', lastName: 'A', phoneNumber: '0501234567' },
+    });
+    const out = await serverListRoster();
+    expect(out[0].phoneNumber).toBe('0501234567');
+  });
+
+  it('prefers users.phoneNumber over authorized_personnel.phoneNumber', async () => {
+    store.set('authorized_personnel/hash-a', {
+      id: 'hash-a',
+      data: { firstName: 'A', lastName: 'A', phoneNumber: '0500000000' },
+    });
+    store.set('users/uid-1', {
+      id: 'uid-1',
+      data: {
+        militaryPersonalNumberHash: 'hash-a',
+        firstName: 'A',
+        lastName: 'A',
+        phoneNumber: '0501111111',
+      },
+    });
+    const out = await serverListRoster();
+    expect(out[0].phoneNumber).toBe('0501111111');
+  });
+
+  it('falls back to authorized_personnel.phoneNumber when the user has none', async () => {
+    store.set('authorized_personnel/hash-a', {
+      id: 'hash-a',
+      data: { firstName: 'A', lastName: 'A', phoneNumber: '0500000000' },
+    });
+    store.set('users/uid-1', {
+      id: 'uid-1',
+      data: { militaryPersonalNumberHash: 'hash-a', firstName: 'A', lastName: 'A' },
+    });
+    const out = await serverListRoster();
+    expect(out[0].phoneNumber).toBe('0500000000');
+  });
+
+  it('omits phoneNumber when neither source carries one', async () => {
+    store.set('authorized_personnel/hash-a', {
+      id: 'hash-a',
+      data: { firstName: 'A', lastName: 'A' },
+    });
+    const out = await serverListRoster();
+    expect(out[0].phoneNumber).toBeUndefined();
+  });
+
   it('sorts roster by Hebrew full name', async () => {
     store.set('authorized_personnel/h2', {
       id: 'h2',

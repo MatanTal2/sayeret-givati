@@ -25,6 +25,7 @@ function rosterToSoldier(entry: RosterEntry): Soldier {
     customStatus: entry.customStatus,
     isSelected: false,
     isRegistered: entry.isRegistered ?? false,
+    phoneNumber: entry.phoneNumber,
   };
 }
 
