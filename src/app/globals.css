@@ -212,3 +212,19 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ─── Prevent iOS Safari / Android Chrome focus-zoom on form controls ──────
+   Mobile browsers auto-zoom whenever a focused input/textarea/select has a
+   computed font-size < 16px, and they never zoom back out on blur — the
+   whole page chrome stays scaled in. Bug #23 (docs/bugs.md).
+   Gated on `pointer: coarse` so desktop layouts keep their compact form
+   controls; only touch viewports get the 16px floor. Checkbox/radio/file
+   inputs are excluded since they don't trigger the zoom and the size bump
+   would distort their hit-box. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
