@@ -9,8 +9,19 @@
  *
  * Roster source: union of `users` (registered profiles, preferred for display)
  * and `authorized_personnel` (admin-managed, fills in non-registered soldiers).
- * Status doc fields are limited to `{ status, customStatus?, updatedAt }`;
- * audit fields and per-soldier history are intentionally deferred.
+ *
+ * Audit fields and a `history/{autoId}` subcollection (added 2026-05-14):
+ *  - The current doc carries `updatedBy` (uid of writer) and optional
+ *    `updatedByName` (display name resolved from `users/{uid}` at write time).
+ *  - Every status mutation also appends a row to
+ *    `soldierStatus/{hash}/history/{autoId}` with the new value, who wrote it,
+ *    and the previous value (so the history is self-contained — no need to
+ *    cross-reference adjacent rows to know what changed).
+ *
+ * Race-condition note: writes are sequential (read prior doc → write current
+ * → append history) rather than transactional. The roster is small and the
+ * mutation cadence is low, so the risk of two concurrent PUTs interleaving is
+ * negligible. Revisit if traffic grows.
  */
 import { getAdminDb } from '../admin';
 import { COLLECTIONS } from '../collections';
@@ -49,6 +60,12 @@ interface StatusDocLite {
   updatedAt?: Timestamp;
 }
 
+export interface SoldierStatusActor {
+  uid: string;
+  /** Pre-resolved display name; falls through to a users-collection lookup if absent. */
+  displayName?: string;
+}
+
 /**
  * Build the joined roster: users ∪ authorized_personnel, deduped by hash,
  * preferring `users` for display fields when both exist. Each entry is
@@ -71,8 +88,6 @@ export async function serverListRoster(): Promise<RosterEntry[]> {
     statusByHash.set(doc.id, doc.data() as StatusDocLite);
   }
 
-  // Hash → roster row. Personnel collection seeds the row first so users can
-  // override display fields below.
   const rowByHash = new Map<string, RosterEntry>();
 
   for (const doc of personnelSnap.docs) {
@@ -106,7 +121,6 @@ export async function serverListRoster(): Promise<RosterEntry[]> {
     });
   }
 
-  // Apply status overlay last so it survives the user→personnel merge above.
   for (const [hash, row] of rowByHash.entries()) {
     const status = statusByHash.get(hash);
     if (!status) continue;
@@ -125,14 +139,42 @@ export async function serverListRoster(): Promise<RosterEntry[]> {
   });
 }
 
+async function resolveActorDisplayName(
+  db: ReturnType<typeof getAdminDb>,
+  actor: SoldierStatusActor,
+): Promise<string | null> {
+  if (actor.displayName && actor.displayName.trim()) {
+    return actor.displayName.trim();
+  }
+  try {
+    const snap = await db.collection(COLLECTIONS.USERS).doc(actor.uid).get();
+    if (!snap.exists) return null;
+    const data = snap.data() as UserDocLite | undefined;
+    const name = `${data?.firstName ?? ''} ${data?.lastName ?? ''}`.trim();
+    return name || null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Upsert `soldierStatus/{hash}` with the new status. Validates input shape and
  * (best-effort) verifies the soldier exists in the roster sources, so we don't
  * silently create orphan status docs for unknown hashes.
+ *
+ * Audit + history (added 2026-05-14): the current doc gains `updatedBy` (uid)
+ * and optional `updatedByName` (display name). A new entry is appended to
+ * `soldierStatus/{hash}/history/{autoId}` with the new state, the writer, and
+ * the previous state, so the audit trail is queryable without diffing
+ * adjacent rows.
+ *
+ * `actor` is optional only for backward compatibility with the existing tests
+ * that pre-date the audit work. New callers should always pass it.
  */
 export async function serverUpdateSoldierStatus(
   hashedId: string,
-  input: UpdateSoldierStatusInput
+  input: UpdateSoldierStatusInput,
+  actor?: SoldierStatusActor,
 ): Promise<void> {
   if (!hashedId || typeof hashedId !== 'string') {
     throw new SoldierStatusValidationError('id is required');
@@ -159,6 +201,14 @@ export async function serverUpdateSoldierStatus(
   }
 
   const ref = db.collection(COLLECTIONS.SOLDIER_STATUS).doc(hashedId);
+
+  // Capture the prior state before we overwrite it — the history row needs
+  // both the new and the previous values so it's self-describing.
+  const priorSnap = await ref.get();
+  const prior = priorSnap.exists ? (priorSnap.data() as StatusDocLite) : null;
+
+  const actorName = actor ? await resolveActorDisplayName(db, actor) : null;
+
   const data: Record<string, unknown> = {
     status: normalized.status,
     updatedAt: FieldValue.serverTimestamp(),
@@ -166,8 +216,32 @@ export async function serverUpdateSoldierStatus(
   if (normalized.customStatus !== undefined) {
     data.customStatus = normalized.customStatus;
   } else {
-    // Clear any stale customStatus from a previous 'אחר' entry.
     data.customStatus = FieldValue.delete();
   }
+  if (actor) {
+    data.updatedBy = actor.uid;
+    if (actorName) {
+      data.updatedByName = actorName;
+    } else {
+      // Clear any stale display name resolved from an earlier write.
+      data.updatedByName = FieldValue.delete();
+    }
+  }
   await ref.set(data, { merge: true });
+
+  if (actor) {
+    const historyEntry: Record<string, unknown> = {
+      status: normalized.status,
+      updatedAt: FieldValue.serverTimestamp(),
+      updatedBy: actor.uid,
+    };
+    if (normalized.customStatus !== undefined) {
+      historyEntry.customStatus = normalized.customStatus;
+    }
+    if (actorName) historyEntry.updatedByName = actorName;
+    if (prior?.status) historyEntry.previousStatus = prior.status;
+    if (prior?.customStatus) historyEntry.previousCustomStatus = prior.customStatus;
+
+    await ref.collection('history').doc().set(historyEntry);
+  }
 }

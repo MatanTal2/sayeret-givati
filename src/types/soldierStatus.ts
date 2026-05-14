@@ -17,6 +17,27 @@ export interface SoldierStatusDoc {
   status: SoldierStatus;
   customStatus?: string;
   updatedAt: Timestamp;
+  /** Audit: uid of the user who wrote this status (added 2026-05-14). */
+  updatedBy?: string;
+  /** Audit: display name of the writer at write time, best-effort joined from `users/{uid}`. */
+  updatedByName?: string;
+}
+
+/**
+ * Stored shape of a `soldierStatus/{hash}/history/{autoId}` document.
+ * Append-only audit log; one entry per status mutation. The current doc
+ * mirrors the latest entry, so the history collection answers "who and
+ * when" questions for past states.
+ */
+export interface SoldierStatusHistoryEntry {
+  status: SoldierStatus;
+  customStatus?: string;
+  updatedAt: Timestamp;
+  updatedBy: string;
+  updatedByName?: string;
+  /** Status that was overwritten by this entry. Absent on the first ever write. */
+  previousStatus?: SoldierStatus;
+  previousCustomStatus?: string;
 }
 
 /** Joined roster row returned by GET /api/soldier-status. */

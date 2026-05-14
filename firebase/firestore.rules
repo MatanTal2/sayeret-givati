@@ -203,6 +203,16 @@ service cloud.firestore {
     match /soldierStatus/{soldierId} {
       allow read: if request.auth != null;
       allow write: if false;
+
+      // History subcollection — append-only audit trail written by the
+      // /api/soldier-status PUT route via the admin SDK. Authenticated
+      // users can read it (so a future GET /api/soldier-status/[id]/history
+      // can hydrate from the client SDK if desired); writes go through
+      // the admin SDK only.
+      match /history/{historyId} {
+        allow read: if request.auth != null;
+        allow write: if false;
+      }
     }
 
     // Training plans — authenticated read; writes server-only via /api/training-plans.
