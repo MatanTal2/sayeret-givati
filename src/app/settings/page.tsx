@@ -156,6 +156,7 @@ export default function SettingsPage() {
       <AppShell
         title={TEXT_CONSTANTS.SETTINGS.PAGE_TITLE}
         subtitle={TEXT_CONSTANTS.SETTINGS.PAGE_SUBTITLE}
+        mainClassName="px-4 sm:px-6 pb-12"
       >
         <div className="max-w-4xl mx-auto w-full">
           {/* Profile Settings Section */}
@@ -329,8 +330,9 @@ export default function SettingsPage() {
 
           {/* Danger Zone — destructive, irreversible actions. Visually
               separated from the rest of the settings to make accidental
-              clicks less likely. */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-danger-200">
+              clicks less likely. No bottom margin — it's the last card so
+              the extra gap was wasted whitespace under the section list. */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-danger-200">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-danger-100 rounded-lg">
                 <AlertTriangleIcon className="w-5 h-5 text-danger-600" />
