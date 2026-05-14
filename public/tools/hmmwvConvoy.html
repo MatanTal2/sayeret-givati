@@ -187,13 +187,16 @@
 
     <!-- Personnel Spread Section -->
     <div class="section-title" style="color:#2b5c8f;">👥 פיזור אנשים לשיירה</div>
-    <div style="background: #e8f4fd; border: 1px solid #b8daff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+    <div style="position: relative; background: #e8f4fd; border: 1px solid #b8daff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+        <button type="button" onclick="clearPersonnelList()" aria-label="נקה רשימה" title="נקה רשימה"
+            style="position: absolute; top: 6px; left: 6px; background: #dc3545; color: white; border: none; border-radius: 4px; padding: 2px 8px; font-size: 12px; line-height: 1.4; cursor: pointer; margin: 0;">
+            🗑️ נקה
+        </button>
         <label style="font-weight: bold; margin-bottom: 8px; display: block;">הדבק רשימת שמות (שם בכל שורה, עם או בלי בולט):</label>
         <textarea id="personnelList" style="height: 120px; margin-top: 0;" placeholder="• יוסי כהן&#10;• דוד לוי&#10;שרה אבן&#10;..."></textarea>
         <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
             <button class="btn-add" type="button" onclick="spreadPersonnel()" style="margin: 0; flex: 2;">פזר אנשים לשיירה ↓</button>
             <button class="btn-special" type="button" onclick="openManualSpread()" style="margin: 0; flex: 1;">פזר ידנית</button>
-            <button class="btn-clear" type="button" onclick="clearPersonnelList()" style="margin: 0; background-color: #6c757d; flex: 1;">🗑️ נקה רשימה</button>
         </div>
         <div id="spreadResult" style="display: none; margin-top: 10px; padding: 10px; border-radius: 4px;"></div>
     </div>
