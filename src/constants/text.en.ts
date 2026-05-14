@@ -33,6 +33,13 @@ export const TEXT_EN = {
     // Change-phone modal (PR-C)
     CHANGE_PHONE_TITLE: 'Change phone number',
     CHANGE_PHONE_DESCRIPTION: 'Re-enter your password, type the new number, then confirm with the SMS code.',
+    CHANGE_PHONE_STEP_PREFLIGHT_TITLE: 'Before you start',
+    CHANGE_PHONE_PREFLIGHT_INTRO: 'Changing your phone number affects your account security. Please note:',
+    CHANGE_PHONE_PREFLIGHT_BULLET_SMS: 'An SMS verification code will be sent to the new number.',
+    CHANGE_PHONE_PREFLIGHT_BULLET_REAUTH: 'Your current account password will be required.',
+    CHANGE_PHONE_PREFLIGHT_BULLET_SESSIONS: 'Your other devices will be signed out and need to log in again.',
+    CHANGE_PHONE_PREFLIGHT_BULLET_RATE_LIMIT: 'You can request one change per minute.',
+    CHANGE_PHONE_PREFLIGHT_START: 'Start phone change',
     CHANGE_PHONE_STEP_REAUTH_TITLE: 'Confirm password',
     CHANGE_PHONE_STEP_NEW_NUMBER_TITLE: 'New phone number',
     CHANGE_PHONE_STEP_OTP_TITLE: 'Enter SMS code',

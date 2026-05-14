@@ -7,7 +7,7 @@ import {
   DialogPanel,
   DialogTitle,
 } from '@headlessui/react';
-import { Eye, EyeOff, X, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, X, ArrowRight, ShieldAlert } from 'lucide-react';
 import {
   reauthEmailPassword,
   verifyNewPhone,
@@ -33,10 +33,10 @@ interface Props {
   onSuccess: () => void;
 }
 
-type Step = 'reauth' | 'enterNumber' | 'enterOtp';
+type Step = 'preflight' | 'reauth' | 'enterNumber' | 'enterOtp';
 
 export default function ChangePhoneModal({ open, onClose, onSuccess }: Props) {
-  const [step, setStep] = useState<Step>('reauth');
+  const [step, setStep] = useState<Step>('preflight');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [newPhone, setNewPhone] = useState('');
@@ -50,7 +50,7 @@ export default function ChangePhoneModal({ open, onClose, onSuccess }: Props) {
 
   useEffect(() => {
     if (open) {
-      setStep('reauth');
+      setStep('preflight');
       setPassword('');
       setShowPassword(false);
       setNewPhone('');
@@ -206,6 +206,44 @@ export default function ChangePhoneModal({ open, onClose, onSuccess }: Props) {
           <p className="text-sm text-neutral-600 mb-5">
             {TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_DESCRIPTION}
           </p>
+
+          {step === 'preflight' && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-neutral-700">
+                {TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_STEP_PREFLIGHT_TITLE}
+              </h3>
+              <div className="flex items-start gap-3 p-3 bg-warning-50 border border-warning-200 rounded-lg">
+                <ShieldAlert className="w-5 h-5 text-warning-700 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="text-sm text-warning-900">
+                  <p className="mb-2 font-medium">
+                    {TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_PREFLIGHT_INTRO}
+                  </p>
+                  <ul className="list-disc list-inside space-y-1 text-warning-800">
+                    <li>{TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_PREFLIGHT_BULLET_SMS}</li>
+                    <li>{TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_PREFLIGHT_BULLET_REAUTH}</li>
+                    <li>{TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_PREFLIGHT_BULLET_SESSIONS}</li>
+                    <li>{TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_PREFLIGHT_BULLET_RATE_LIMIT}</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={closeAndCleanup}
+                  className="btn-ghost"
+                >
+                  {TEXT_CONSTANTS.SETTINGS.CANCEL}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep('reauth')}
+                  className="btn-primary"
+                >
+                  {TEXT_CONSTANTS.SETTINGS.CHANGE_PHONE_PREFLIGHT_START}
+                </button>
+              </div>
+            </div>
+          )}
 
           {step === 'reauth' && (
             <form onSubmit={onReauthSubmit} className="space-y-4">
