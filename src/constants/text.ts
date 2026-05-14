@@ -637,6 +637,7 @@ export const TEXT_CONSTANTS = {
         EMPTY: 'אין היסטוריה זמינה',
         LOADING: 'טוען היסטוריה...',
         CLOSE: 'סגור',
+        PREDECESSOR_BADGE: 'מהיסטוריית הפריט הקודם',
       },
       WIZARD: {
         TITLE: 'הוספת ציוד חדש',
