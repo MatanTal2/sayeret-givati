@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import { Select } from '@/components/ui';
 import { cn } from '@/lib/cn';
+import { TEXT_CONSTANTS } from '@/constants/text';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserType } from '@/types/user';
 import { useLogisticsItems } from '@/hooks/useLogisticsItems';
@@ -97,7 +98,7 @@ export default function LogisticsInventoryPage() {
             className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-300 text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
           >
             <Plus className="w-4 h-4" />
-            הוסף פריט
+            {TEXT_CONSTANTS.FEATURES.LOGISTICS.ADD_ITEM}
           </button>
         )}
       </div>
@@ -108,36 +109,38 @@ export default function LogisticsInventoryPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-neutral-200 p-3 mb-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
-        <div className="sm:col-span-2 relative">
+      <div className="bg-white rounded-xl border border-neutral-200 p-3 mb-4 space-y-2">
+        <div className="relative">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
           <input
             type="search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="חיפוש שם, קטגוריה, מיקום או מחזיק..."
+            placeholder={TEXT_CONSTANTS.FEATURES.LOGISTICS.SEARCH_PLACEHOLDER}
             className="w-full ps-9 pe-3 py-2 text-sm border border-neutral-200 rounded-lg bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-primary-500"
           />
         </div>
-        <Select
-          value={categoryFilter === 'all' ? null : categoryFilter}
-          onChange={(v) => {
-            setCategoryFilter(v === null ? 'all' : (v as string));
-            setSubcategoryFilter('all');
-          }}
-          options={categoryOptions.map((c) => ({ value: c, label: c }))}
-          placeholder="כל הקטגוריות"
-          clearable
-          ariaLabel="סינון לפי קטגוריה"
-        />
-        <Select
-          value={subcategoryFilter === 'all' ? null : subcategoryFilter}
-          onChange={(v) => setSubcategoryFilter(v === null ? 'all' : (v as string))}
-          options={subcategoryOptions.map((c) => ({ value: c, label: c }))}
-          placeholder="כל תתי-הקטגוריות"
-          clearable
-          ariaLabel="סינון לפי תת-קטגוריה"
-        />
+        <div className="grid grid-cols-2 gap-2">
+          <Select
+            value={categoryFilter === 'all' ? null : categoryFilter}
+            onChange={(v) => {
+              setCategoryFilter(v === null ? 'all' : (v as string));
+              setSubcategoryFilter('all');
+            }}
+            options={categoryOptions.map((c) => ({ value: c, label: c }))}
+            placeholder={TEXT_CONSTANTS.FEATURES.LOGISTICS.ALL_CATEGORIES}
+            clearable
+            ariaLabel={TEXT_CONSTANTS.FEATURES.LOGISTICS.FILTER_BY_CATEGORY}
+          />
+          <Select
+            value={subcategoryFilter === 'all' ? null : subcategoryFilter}
+            onChange={(v) => setSubcategoryFilter(v === null ? 'all' : (v as string))}
+            options={subcategoryOptions.map((c) => ({ value: c, label: c }))}
+            placeholder={TEXT_CONSTANTS.FEATURES.LOGISTICS.ALL_SUBCATEGORIES}
+            clearable
+            ariaLabel={TEXT_CONSTANTS.FEATURES.LOGISTICS.FILTER_BY_SUBCATEGORY}
+          />
+        </div>
       </div>
 
       {error && (
