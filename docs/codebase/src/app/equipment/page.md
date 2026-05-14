@@ -13,12 +13,20 @@ AuthGuard
       EquipmentPageContent
         ├ PageHeader  (+ הוסף ציוד button → opens AddEquipmentWizard)
         ├ EquipmentTabs (Self / Team / All — All gated by manager+)
-        ├ FilterBar    (search + status filter)
+        ├ FilterBar    (search + status filter + category filter)
         ├ EquipmentTable (or loading / error / empty state)
         └ BulkActionBar (sticky, surfaces when rows selected)
 ```
 
 Modals (portal-style, not nested under AppShell): AddEquipmentWizard, ReportModal, ReturnModal, TransferModal, ActionHistoryPanel.
+
+## Filters
+
+`FilterBar` shows three controls in a 4-col grid (search spans 2):
+
+- search — substring match on serial id, product name, holder, category, location
+- status — `EquipmentStatus | null` via shared `Select`
+- category — `string | null`, options derived live from the visible `equipment` list (sorted with `localeCompare('he')`), so the dropdown only shows categories that actually appear in the currently-scoped data. `'all'` is represented as `null` to the Select and reset by the clear button.
 
 ## Scope handling
 

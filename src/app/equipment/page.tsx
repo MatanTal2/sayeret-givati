@@ -89,6 +89,7 @@ function EquipmentPageContent() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<EquipmentStatus | 'all'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string | 'all'>('all');
   const [submitting, setSubmitting] = useState(false);
   const { config: systemConfig } = useSystemConfig();
   const roundOpen = !!systemConfig?.roundOpen;
@@ -100,9 +101,19 @@ function EquipmentPageContent() {
     }
   }, [resumeTemplate, resumeDraft, activeModal]);
 
+  const categoryOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const it of equipment) {
+      const c = (it.category ?? '').trim();
+      if (c) set.add(c);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'he'));
+  }, [equipment]);
+
   const filtered = useMemo(() => {
     return equipment.filter((it) => {
       if (statusFilter !== 'all' && it.status !== statusFilter) return false;
+      if (categoryFilter !== 'all' && it.category !== categoryFilter) return false;
       if (searchTerm) {
         const q = searchTerm.toLowerCase();
         const hit =
@@ -115,7 +126,7 @@ function EquipmentPageContent() {
       }
       return true;
     });
-  }, [equipment, statusFilter, searchTerm]);
+  }, [equipment, statusFilter, categoryFilter, searchTerm]);
 
   const closeModal = () => {
     setActiveModal(null);
@@ -212,6 +223,9 @@ function EquipmentPageContent() {
         onSearch={setSearchTerm}
         statusFilter={statusFilter}
         onStatusChange={setStatusFilter}
+        categoryFilter={categoryFilter}
+        onCategoryChange={setCategoryFilter}
+        categoryOptions={categoryOptions}
       />
 
       {loading && equipment.length === 0 ? (
@@ -395,14 +409,20 @@ function FilterBar({
   onSearch,
   statusFilter,
   onStatusChange,
+  categoryFilter,
+  onCategoryChange,
+  categoryOptions,
 }: {
   searchTerm: string;
   onSearch: (s: string) => void;
   statusFilter: EquipmentStatus | 'all';
   onStatusChange: (s: EquipmentStatus | 'all') => void;
+  categoryFilter: string | 'all';
+  onCategoryChange: (c: string | 'all') => void;
+  categoryOptions: string[];
 }) {
   return (
-    <div className="bg-white rounded-b-xl border-x border-b border-neutral-200 p-3 mb-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+    <div className="bg-white rounded-b-xl border-x border-b border-neutral-200 p-3 mb-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
       <div className="sm:col-span-2 relative">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
         <input
@@ -426,6 +446,14 @@ function FilterBar({
         placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}
         clearable
         ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}
+      />
+      <Select
+        value={categoryFilter === 'all' ? null : categoryFilter}
+        onChange={(v) => onCategoryChange(v === null ? 'all' : (v as string))}
+        options={categoryOptions.map((c) => ({ value: c, label: c }))}
+        placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_CATEGORIES}
+        clearable
+        ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_CATEGORIES}
       />
     </div>
   );
