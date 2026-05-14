@@ -35,6 +35,23 @@ on the **right** (start of reading). Use `justify-start` in that case.
 
 Recurring offender: action-row headers that want the primary CTA on the right.
 
+### Slide-out drawer gotcha — `end-0` + `translate-x` mismatch
+
+CSS logical inset (`end-0`, `start-0`) IS direction-aware, but CSS transforms
+(`translate-x`, Framer Motion's `x`) are **physical** — `translateX(100%)`
+always moves the element 100% of its width to the visual right regardless of
+`dir`. The combination `end-0` + `x: '100%'` slides a drawer to the visual
+left in RTL, away from the hamburger trigger on the right.
+
+For a drawer that opens from the same side as the hamburger button (Hebrew
+default — top-right trigger), use `start-0` + `x: '100%'` so the panel anchors
+on the inline-start (visual right in RTL) and the off-screen state is to the
+visual right of the viewport. Document the physical-vs-logical mix in a
+comment so the next reader doesn't "fix" it.
+
+Recurring offender: mobile sidebar drawers using Framer Motion or a static
+`translate-x-full` toggle.
+
 ## Status
 
 ### ✅ Fixed (2026-05-12, batch 1)
@@ -165,6 +182,24 @@ removed physical classes (`right-3`/`left-3`/`right-0`) to the logical
 classes (`start-3`/`end-3`/`start-0`) that batch 3 actually shipped. Reduced
 failing tests from 10 → 4 (remaining 4 are unrelated validation/tooltip-styling
 issues that pre-date this branch).
+
+### ✅ Fixed (2026-05-14 — `fix/rtl-mobile-menu-clings-to-left`)
+
+Post-audit regression spotted in production: mobile hamburger drawers were
+sliding to the visual **left** in RTL instead of right (away from the
+hamburger trigger). Root cause is documented above in the "Slide-out drawer
+gotcha" — the `end-0` + `translate-x: 100%` combo mismatches logical inset
+with physical transform.
+
+- `src/app/components/AppSidebar.tsx` — primary mobile drawer used by every
+  `AppShell`-wrapped page. `end-0` → `start-0`.
+- `src/components/management/sidebar/ManagementSidebar.tsx` — `/management`
+  page sidebar (uses `lg:relative` to switch to inline layout above the
+  breakpoint, so the inset only applies on mobile). `end-0` → `start-0`.
+- `src/components/ui/HamburgerMenu.tsx` — legacy drawer with no remaining
+  callers in `src/`, fixed for consistency in case it's revived.
+
+All three carry an inline comment explaining the physical-vs-logical mix.
 
 ### Guidelines for new code
 
