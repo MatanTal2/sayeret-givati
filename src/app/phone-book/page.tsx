@@ -118,7 +118,7 @@ function PhoneBookContent() {
             className="w-full ps-9 pe-3 py-2 text-sm border border-neutral-200 rounded-lg bg-white focus:ring-2 focus:ring-primary-500"
           />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <Select
             value={team}
             onChange={(v) => setTeam(v)}
@@ -167,7 +167,7 @@ function PhoneBookContent() {
         </div>
       ) : (
         <div className="border border-neutral-200 rounded-lg bg-white overflow-hidden">
-          <ul className="divide-y divide-neutral-100 max-h-[calc(100vh-20rem)] overflow-y-auto">
+          <ul className="divide-y divide-neutral-100 max-h-72 overflow-y-auto">
             {filtered.map((e) => (
               <PhoneBookRow
                 key={e.id}
