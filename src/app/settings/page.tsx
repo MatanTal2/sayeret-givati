@@ -10,6 +10,7 @@ import ChangePasswordModal from '@/components/settings/ChangePasswordModal';
 import ChangePhoneModal from '@/components/settings/ChangePhoneModal';
 import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 import AccountActivitySection from '@/components/settings/AccountActivitySection';
+import RevokeSessionsRow from '@/components/settings/RevokeSessionsRow';
 import { cancelAccountDeletion } from '@/lib/accountDeletionClient';
 import { readProfileImageCache, writeProfileImageCache } from '@/lib/profileImageCache';
 import { computeDaysLeft } from '@/components/settings/PendingDeletionBanner';
@@ -218,18 +219,21 @@ export default function SettingsPage() {
               </h2>
             </div>
 
-            <div className="p-4 border border-neutral-200 rounded-xl">
-              <div className="flex items-center gap-4">
-                <PhoneIcon className="w-5 h-5 text-neutral-400" />
-                <div>
-                  <h3 className="font-medium text-neutral-900">
-                    {TEXT_CONSTANTS.SETTINGS.LINKED_PHONE}
-                  </h3>
-                  <p className="text-sm text-neutral-500">
-                    {TEXT_CONSTANTS.SETTINGS.PHONE_NUMBER} {mockPhoneNumber}
-                  </p>
+            <div className="space-y-4">
+              <div className="p-4 border border-neutral-200 rounded-xl">
+                <div className="flex items-center gap-4">
+                  <PhoneIcon className="w-5 h-5 text-neutral-400" />
+                  <div>
+                    <h3 className="font-medium text-neutral-900">
+                      {TEXT_CONSTANTS.SETTINGS.LINKED_PHONE}
+                    </h3>
+                    <p className="text-sm text-neutral-500">
+                      {TEXT_CONSTANTS.SETTINGS.PHONE_NUMBER} {mockPhoneNumber}
+                    </p>
+                  </div>
                 </div>
               </div>
+              <RevokeSessionsRow />
             </div>
           </div>
 

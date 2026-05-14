@@ -1313,6 +1313,19 @@ export const TEXT_CONSTANTS = {
     LINKED_PHONE: 'טלפון מקושר',
     PHONE_NUMBER: 'מספר טלפון:',
 
+    // Revoke other sessions
+    REVOKE_SESSIONS: 'התנתק ממכשירים אחרים',
+    REVOKE_SESSIONS_DESCRIPTION:
+      'מנתק את כל הסשנים האחרים שלך — כל מכשיר אחר יידרש להתחבר מחדש. המכשיר הנוכחי יישאר מחובר.',
+    REVOKE_SESSIONS_CONFIRM_TITLE: 'לנתק מכשירים אחרים?',
+    REVOKE_SESSIONS_CONFIRM_BODY:
+      'מכשירים אחרים שמחוברים עם החשבון שלך יידרשו להתחבר מחדש. פעולה זו נכנסת לתוקף מיידית.',
+    REVOKE_SESSIONS_CONFIRM_SUBMIT: 'נתק מכשירים אחרים',
+    REVOKE_SESSIONS_CANCEL: 'ביטול',
+    REVOKE_SESSIONS_SUBMITTING: 'מנתק...',
+    REVOKE_SESSIONS_SUCCESS: 'המכשירים האחרים נותקו. הם יתבקשו להתחבר מחדש.',
+    REVOKE_SESSIONS_ERROR: 'הניתוק נכשל. נסה שוב.',
+
     // Account Activity Section — credential audit log surfaced to the user
     ACCOUNT_ACTIVITY: 'פעילות חשבון',
     ACCOUNT_ACTIVITY_DESCRIPTION:
