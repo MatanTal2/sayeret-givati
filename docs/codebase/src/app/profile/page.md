@@ -15,7 +15,7 @@ User profile page (`/profile`). Displays the authenticated user's personal and m
 
 | State | Type | Purpose |
 |-------|------|---------|
-| `profileImageUrl` | `string \| undefined` | Local mirror of `enhancedUser.profileImage`, synced via `useEffect` whenever the source changes |
+| `profileImageUrl` | `string \| undefined` | Local mirror of `enhancedUser.profileImage`. Initial value seeded from `readProfileImageCache(user.uid)` so the avatar paints on reload before Firestore returns. `useEffect` revalidates against `enhancedUser.profileImage` and writes back to the cache. |
 | `phoneNumber` | `string` | Local mirror of `enhancedUser.phoneNumber`, synced via `useEffect`; passed into `ContactInfoSection` |
 
 All other editable state (teamId, enlistmentCycle, address) lives inside the dedicated section components (`MilitaryInfoSection`, `ContactInfoSection`).
@@ -52,5 +52,5 @@ Uses `date-fns` with `he` locale. Handles both `Date` objects and Firestore `Tim
 ## Related queued work
 
 - Image editor v2 (pan + wider zoom + group-photo focus) — still queued.
-- Profile image localStorage cache — still queued.
+- ~~Profile image localStorage cache~~ — shipped. See `docs/codebase/src/lib/profileImageCache.md`.
 - Soldier qualifications + personal logistics — blocked on 6 open product Qs (see `project_soldier_qualifications`).

@@ -17,7 +17,7 @@ Settings page (`/settings`). Provides a comprehensive settings UI covering profi
 | State | Type | Purpose |
 |-------|------|---------|
 | `settings` | `{ emailNotifications, equipmentTransferAlerts, language, theme }` | Local toggle state — not persisted |
-| `profileImageUrl` | `string \| undefined` | Profile image optimistic local state |
+| `profileImageUrl` | `string \| undefined` | Profile image optimistic local state. Seeded from `readProfileImageCache(enhancedUser.uid)` to paint instantly on reload; `useEffect` revalidates against `enhancedUser.profileImage` and writes back. See `docs/codebase/src/lib/profileImageCache.md`. |
 | `changePasswordOpen` | `boolean` | Controls visibility of `<ChangePasswordModal>` |
 
 ## Wired actions (real backend)

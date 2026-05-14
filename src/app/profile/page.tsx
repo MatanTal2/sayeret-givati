@@ -11,16 +11,24 @@ import MilitaryInfoSection from '@/components/profile/MilitaryInfoSection';
 import ContactInfoSection from '@/components/profile/ContactInfoSection';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { updateUserProfile } from '@/lib/userProfileService';
+import { readProfileImageCache, writeProfileImageCache } from '@/lib/profileImageCache';
 
 export default function ProfilePage() {
   const { enhancedUser, user, refreshEnhancedUser } = useAuth();
-  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(undefined);
+  // Seed from localStorage so the avatar paints instantly on reload, before
+  // Firestore returns enhancedUser.profileImage. Stale-while-revalidate: the
+  // effect below overwrites once the authoritative value arrives.
+  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(() =>
+    readProfileImageCache(user?.uid)
+  );
   const [phoneNumber, setPhoneNumber] = useState<string>('');
 
   useEffect(() => {
     const img = enhancedUser?.profileImage;
-    setProfileImageUrl(img && /^https?:\/\//i.test(img) ? img : undefined);
-  }, [enhancedUser?.profileImage]);
+    const resolved = img && /^https?:\/\//i.test(img) ? img : undefined;
+    setProfileImageUrl(resolved);
+    writeProfileImageCache(enhancedUser?.uid, resolved);
+  }, [enhancedUser?.profileImage, enhancedUser?.uid]);
 
   useEffect(() => {
     setPhoneNumber(enhancedUser?.phoneNumber || '');
@@ -49,6 +57,7 @@ export default function ProfilePage() {
   const handleImageUpdate = async (newImageUrl: string) => {
     setProfileImageUrl(newImageUrl);
     if (!enhancedUser) return;
+    writeProfileImageCache(enhancedUser.uid, newImageUrl);
     try {
       await updateUserProfile(enhancedUser.uid, { profileImage: newImageUrl });
       await refreshEnhancedUser();

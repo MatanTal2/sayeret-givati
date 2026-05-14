@@ -41,6 +41,10 @@ Global authentication state provider. Wraps Firebase Auth with Firestore user pr
 - **Auth:** `signInWithEmailAndPassword`, `signOut`, `onAuthStateChanged`
 - **Read:** `UserDataService.fetchUserDataByUid` — enriches auth user with Firestore profile
 
+## Side effects
+
+- `logout()` calls `clearProfileImageCache(auth.currentUser?.uid)` before `signOut` so the next user signing in on the same device does not see the previous user's avatar painted from localStorage. See `docs/codebase/src/lib/profileImageCache.md`.
+
 ## Known Issues
 
 - Console.log statements left in.

@@ -8,6 +8,7 @@ import { ADMIN_CONFIG, ADMIN_MESSAGES } from '@/constants/admin';
 import { UserDataService } from '@/lib/userDataService';
 import { EnhancedAuthUser, UserType } from '@/types/user';
 import { isRegistrationInProgress } from '@/lib/registrationFlowFlag';
+import { clearProfileImageCache } from '@/lib/profileImageCache';
 
 // Types
 export interface AuthUser {
@@ -244,6 +245,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = async (): Promise<void> => {
     try {
       setIsLoading(true);
+      clearProfileImageCache(auth.currentUser?.uid);
       await signOut(auth);
       setUser(null);
       setShowAuthModal(false);
