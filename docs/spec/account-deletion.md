@@ -83,8 +83,25 @@ All three added to the `ALLOWED_EVENT_TYPES` allowlist in `/api/auth/audit`.
 - **`FirestoreUserProfile` + `EnhancedAuthUser`** — both gained the optional `deletionRequestedAt: Timestamp` field, surfaced through both `AuthContext` write sites (onAuthStateChanged initial load + `refreshEnhancedUser`).
 - **Outstanding-assets shortcut links** — `DeleteAccountModal`'s blocked-by-assets breakdown now renders each row as a Headless UI–free `<Link>` to `/equipment` (equipment + transfers) or `/ammunition`. Clicking dismisses the modal so the user lands on the asset page directly.
 
+### Shipped on `feat/account-deletion-cron` (2026-05-14)
+
+- **Hard-delete sweep service** — `serverSweepAccountDeletions({ dryRun, batchLimit, onlyUid? })` in `src/lib/db/server/accountDeletionService.ts`. Iterates `users.deletionRequestedAt < now-30d`, per-uid try/catch with aggregate result. Order: stamp `deletionStartedAt` (resume sentinel) → `Auth.deleteUser` (swallows `auth/user-not-found`) → Firestore tombstone (`deletedAt`, `displayName='Deleted User'`, scrub `email/phoneNumber/profileImage/address/communicationPreferences/firstName/lastName`) → `writeCredentialAuditEvent('ACCOUNT_DELETED')`. Audit-write failures are logged but do not fail the candidate (the delete is irreversible).
+- **Cron route** `POST /api/cron/sweep-account-deletions` — gated by `Authorization: Bearer ${CRON_SECRET}` via timing-safe equality. Refuses with 503 outside the prod project (`NEXT_PUBLIC_FIREBASE_PROJECT_ID !== 'sayeret-givati-1983'`). Query flags: `?dryRun=true`, `?limit=N` (1..100, default 25).
+- **Operator script** `scripts/sweep-account-deletions.js` — plain Node (mirrors `backfill-phone-book.js`). Flags: `--dry-run`, `--limit N`, `--uid <uid>`. Refuses to run outside prod project ID.
+- **`vercel.json`** — daily 03:00 UTC cron at `/api/cron/sweep-account-deletions`.
+- **Idempotency**: filter (`deletionRequestedAt < cutoff`) + client-side `deletedAt != null` skip + the `auth/user-not-found` swallow on Auth.deleteUser → a re-run after a partial failure resumes cleanly without double-deleting.
+- **Asset re-check**: `countOutstandingAssetsForUser` runs per-candidate inside the sweep. If the user re-acquired equipment/ammo during the retention window the sweep skips them (does NOT auto-retire). Matches Q3=a from the original scoping.
+- **Tests**: 9 new sweep tests covering all skip reasons, dry-run, happy path, `auth/user-not-found` swallow, non-recoverable Auth error, audit-write tolerance. Mocks `getAdminAuth().deleteUser` + `writeCredentialAuditEvent` directly.
+
+### Operator runbook (first activation)
+
+1. Generate the secret: `openssl rand -hex 32` → store in Vercel project env as `CRON_SECRET` (production only).
+2. Dry-run via script locally to inspect candidates: `node scripts/sweep-account-deletions.js --dry-run`.
+3. Canary one real delete: `node scripts/sweep-account-deletions.js --uid <known-eligible-uid> --limit 1`.
+4. Flip cron on by merging this branch — Vercel picks up `vercel.json` and schedules the first tick at 03:00 UTC.
+5. Watch the first scheduled run in Vercel function logs (`[cron/sweep] candidate` + `[cron/sweep] done`).
+
 ### Still deferred
 
-- **Hard-delete script** at `deletionRequestedAt + 30d` — manual first run, then a cron. Auth user delete via Admin SDK `auth.deleteUser` + `users.displayName` → "Deleted User" + `users.deletedAt` stamp. Council needed on safety (cross-system irreversible write needs canary + audit) before scheduling; deferring keeps this PR small.
-- **Hard-delete audit row** with the `ACCOUNT_DELETED` event (already in the allowlist).
+- **Slack / email alert** when `result.errors.length > 0`. Out of scope for this PR; route logs surface in Vercel Functions log already.
 - **Admin force-delete endpoint** if/when Q4 reopens.
