@@ -13,12 +13,13 @@ const MAIN_DOC_ID = 'main';
 
 export type SystemConfigUpdatableFields = Pick<
   SystemConfig,
-  'ammoNotificationRecipientUserId' | 'teams'
+  'ammoNotificationRecipientUserId' | 'teams' | 'roundOpen'
 >;
 
 export interface SystemConfigPayload {
   ammoNotificationRecipientUserId?: string;
   teams?: string[];
+  roundOpen?: boolean;
 }
 
 export async function serverGetSystemConfig(): Promise<SystemConfig | null> {
@@ -66,6 +67,14 @@ export function validateSystemConfigPayload(payload: unknown): SystemConfigPaylo
       if (!normalized.includes(trimmed)) normalized.push(trimmed);
     }
     out.teams = normalized;
+  }
+
+  if ('roundOpen' in p) {
+    const v = p.roundOpen;
+    if (typeof v !== 'boolean') {
+      throw new Error('roundOpen must be a boolean');
+    }
+    out.roundOpen = v;
   }
 
   return out;

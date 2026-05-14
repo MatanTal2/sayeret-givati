@@ -7,8 +7,12 @@ import {
 import { getActorOrError } from '@/lib/db/server/auth';
 import { UserType } from '@/types/user';
 
-function isSystemAdmin(userType: UserType): boolean {
-  return userType === UserType.ADMIN || userType === UserType.SYSTEM_MANAGER;
+function canEditSystemConfig(userType: UserType): boolean {
+  return (
+    userType === UserType.ADMIN ||
+    userType === UserType.SYSTEM_MANAGER ||
+    userType === UserType.MANAGER
+  );
 }
 
 export async function GET(request: Request) {
@@ -31,9 +35,9 @@ export async function PUT(request: Request) {
     const actor = actorOrError;
     const input = await request.json();
 
-    if (!isSystemAdmin(actor.userType)) {
+    if (!canEditSystemConfig(actor.userType)) {
       return NextResponse.json(
-        { success: false, error: 'Forbidden: only admin or system manager may update system config' },
+        { success: false, error: 'Forbidden: only admin, system manager, or manager may update system config' },
         { status: 403 }
       );
     }
