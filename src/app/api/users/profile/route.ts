@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { serverUpdateUserProfile } from '@/lib/db/server/userService';
+import { serverUpdateUserProfile, InvalidProfileUpdateError } from '@/lib/db/server/userService';
 import { getActorOrError } from '@/lib/db/server/auth';
 import { getAdminDb } from '@/lib/db/admin';
 import { COLLECTIONS } from '@/lib/db/collections';
@@ -8,7 +8,7 @@ import { serverUpsertPhoneBookFromUser } from '@/lib/db/server/phoneBookService'
 
 /**
  * PATCH /api/users/profile
- * Body: { uid: string, updates: { teamId?, profileImage? } }
+ * Body: { uid: string, updates: { teamId?, profileImage?, enlistmentCycle?, address?, communicationPreferences? } }
  *
  * Caller must be authenticated (bearer token). Only the user themselves, or
  * an ADMIN / SYSTEM_MANAGER, may update a profile.
@@ -47,7 +47,7 @@ export async function PATCH(request: Request) {
         { status: 403 }
       );
     }
-    await serverUpdateUserProfile(body.uid, body.updates);
+    await serverUpdateUserProfile(body.uid, body.updates, actor.uid);
 
     // Write-through to phone book when phone-book-relevant fields change.
     // phoneNumber is excluded above; the phone-change route will trigger its
@@ -75,6 +75,9 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof InvalidProfileUpdateError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    }
     const message = error instanceof Error ? error.message : String(error);
     console.error('[API] users/profile PATCH failed:', message);
     return NextResponse.json({ success: false, error: message }, { status: 500 });

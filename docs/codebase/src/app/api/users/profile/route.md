@@ -12,7 +12,22 @@ Server-side write endpoint for a user's editable profile fields. Backed by `fire
 ```
 PATCH /api/users/profile
 Authorization: Bearer <idToken>
-Body: { uid: string, updates: { teamId?: string, profileImage?: string } }
+Body: {
+  uid: string,
+  updates: {
+    teamId?: string,
+    profileImage?: string,
+    enlistmentCycle?: string,
+    address?: string,
+    communicationPreferences?: {
+      emailNotifications?: boolean,
+      equipmentTransferAlerts?: boolean,
+      systemUpdates?: boolean,
+      schedulingAlerts?: boolean,
+      emergencyNotifications?: boolean
+    }
+  }
+}
 ```
 
 ## Authorization
@@ -23,7 +38,17 @@ Body: { uid: string, updates: { teamId?: string, profileImage?: string } }
 
 ## Field allowlist
 
-`PROFILE_WRITABLE_FIELDS` in `src/lib/db/server/userService.ts` is the single source of truth. Currently: `teamId`, `profileImage`. Unknown keys are silently dropped at the service layer.
+`STRING_FIELDS` + `communicationPreferences` in `src/lib/db/server/userService.ts` is the single source of truth. Currently writable string fields: `teamId`, `profileImage`, `enlistmentCycle`, `address`. Unknown top-level keys are silently dropped at the service layer.
+
+### `communicationPreferences` shape validation
+
+The service rejects (`InvalidProfileUpdateError` → 400) when:
+
+- the payload is not a plain object,
+- it contains a key outside the boolean allowlist (`emailNotifications`, `equipmentTransferAlerts`, `systemUpdates`, `schedulingAlerts`, `emergencyNotifications`),
+- any value is not a boolean.
+
+Writes use **dotted field paths** (`communicationPreferences.emailNotifications: false`) so a partial patch only touches the toggled key — sibling flags on the doc survive. The service also stamps `communicationPreferences.lastUpdated` (server time) and `communicationPreferences.updatedBy` (the actor uid, defaulting to the subject uid).
 
 ## phoneNumber is rejected explicitly (400)
 
@@ -35,7 +60,7 @@ After a successful profile write, the route re-reads `users/{uid}` and calls `se
 
 ## Failure modes
 
-- 400 — missing `uid`, missing `updates` object, or `phoneNumber` present.
+- 400 — missing `uid`, missing `updates` object, `phoneNumber` present, or `communicationPreferences` shape invalid.
 - 403 — caller is not the user and not elevated.
 - 500 — Firestore failure during write or phone-book upsert.
 

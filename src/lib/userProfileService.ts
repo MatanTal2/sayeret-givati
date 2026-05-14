@@ -4,6 +4,14 @@
  */
 
 import { apiFetch } from '@/lib/apiFetch';
+import type { CommunicationPreferences } from '@/types/user';
+
+export type CommunicationPreferencesPatch = Partial<
+  Pick<
+    CommunicationPreferences,
+    'emailNotifications' | 'equipmentTransferAlerts' | 'systemUpdates' | 'schedulingAlerts' | 'emergencyNotifications'
+  >
+>;
 
 export interface ProfileUpdates {
   teamId?: string;
@@ -11,6 +19,7 @@ export interface ProfileUpdates {
   phoneNumber?: string;
   enlistmentCycle?: string;
   address?: string;
+  communicationPreferences?: CommunicationPreferencesPatch;
 }
 
 export async function updateUserProfile(uid: string, updates: ProfileUpdates): Promise<void> {
