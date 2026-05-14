@@ -85,7 +85,7 @@ export default function EquipmentTable({
         selectedCount={Array.from(selectedIds).filter((id) => sorted.some((s) => s.id === id)).length}
       />
 
-      <ul className="space-y-2">
+      <ul className="space-y-2 max-h-72 overflow-y-auto pe-1">
         {sorted.map((item) => (
           <EquipmentRow
             key={item.id}
