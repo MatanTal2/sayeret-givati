@@ -24,6 +24,15 @@ const tools = [
     downloadFile: '/tools/logistics.html',
     color: 'from-primary-600 to-primary-800',
   },
+  {
+    id: 'guard-scheduler',
+    title: 'מחולל שמירות',
+    description: 'בניית לוח שמירות חכם — עמדות, משתתפים ואלגוריתם הוגן. עובד אופליין, שומר עד 5 רשימות במכשיר',
+    icon: '🛡️',
+    href: '/tools/guard-scheduler',
+    downloadFile: '/tools/guard-scheduler.html',
+    color: 'from-primary-600 to-primary-800',
+  },
 ];
 
 export default function ToolsPage() {
