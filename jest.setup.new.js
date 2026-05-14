@@ -38,12 +38,17 @@ const localStorageMock = {
 }
 global.localStorage = localStorageMock
 
-// Mock navigator.clipboard
-Object.assign(navigator, {
-  clipboard: {
-    writeText: jest.fn(),
-  },
-})
+// Mock navigator.clipboard. Guarded — the @jest-environment node tests
+// (cron/API routes) run before jsdom is installed, and older CI Node
+// versions don't expose `navigator` as a global. Skip silently there;
+// those tests never touch clipboard anyway.
+if (typeof navigator !== 'undefined') {
+  Object.assign(navigator, {
+    clipboard: {
+      writeText: jest.fn(),
+    },
+  })
+}
 
 // Mock window.alert
 global.alert = jest.fn()
