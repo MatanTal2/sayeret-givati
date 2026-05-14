@@ -167,7 +167,7 @@ function PhoneBookContent() {
         </div>
       ) : (
         <div className="border border-neutral-200 rounded-lg bg-white overflow-hidden">
-          <ul className="divide-y divide-neutral-100">
+          <ul className="divide-y divide-neutral-100 max-h-[calc(100vh-20rem)] overflow-y-auto">
             {filtered.map((e) => (
               <PhoneBookRow
                 key={e.id}

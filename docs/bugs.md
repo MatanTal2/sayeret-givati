@@ -36,11 +36,8 @@
       - **Row 2:** `grid-cols-1 sm:grid-cols-2` holding the team and role `Select`s side-by-side on `sm`+; stacked on mobile so the touch targets don't get cramped.
     - Outer wrapper switched to `space-y-2` so the two rows breathe.
 
-29. **Phone book list overflows page height — need in-container scroll** *(phone book)*
-    - **Repro:** Phone Book with enough rows to scroll. The whole **page** scrolls instead of just the list inside its container, so the filter bar and page header scroll off-screen as the user moves down the list.
-    - **Expected behaviour:** the list container takes the remaining viewport height and scrolls internally (`max-h-[...] overflow-y-auto`), keeping filters + header pinned. Same pattern bug #21 used (`max-h-[28rem] overflow-y-auto` on `UsersTab`).
-    - **Why this matters here specifically:** the phone-book page only renders this one list — there is no other content the user could need to scroll to. Page scroll is wasted, in-container scroll matches user intent.
-    - **Likely fix surface:** the list wrapper in `src/app/phone-book/page.tsx`. Pick the height bound: `max-h-[calc(100vh-Npx)]` for "fill remaining viewport" or `max-h-[36rem]` for "give the page some breathing room below the list". Match the visual treatment used by `UsersTab` so the patterns stay consistent.
+29. ~~**Phone book list overflows page height — need in-container scroll**~~ *(phone book)*
+    - **FIXED (2026-05-14 on `fix/bug-batch-2026-05-14-pt3`):** the phone-book `<ul>` got `max-h-[calc(100vh-20rem)] overflow-y-auto` so the list scrolls inside its own container while the header, filter bar, and "total / refresh" row stay pinned. Picked the viewport-relative bound (rather than a fixed `max-h-[28rem]`) because the phone book is the entire screen — fill the available height, only show a scrollbar when the list overflows.
 
 25. **Stored / returned-to-army items still appear in the active list with full action set**
     - **Repro:** Equipment page. Items in `STORED` (`STATUS_STORED` from PR #76) and items returned to army (the "return" action that flips status to `RETIRED`) currently sit in the same list as active holdings and expose the full action menu.
