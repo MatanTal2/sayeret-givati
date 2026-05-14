@@ -23,6 +23,7 @@ Settings page (`/settings`). Provides a comprehensive settings UI covering profi
 ## Wired actions (real backend)
 
 - **Change password** — opens `<ChangePasswordModal>` (`src/components/settings/ChangePasswordModal.tsx`). Re-authenticates via Firebase, then `updatePassword`. Success → toast via `useToast`. Errors mapped through `mapFirebaseAuthError`. See PR-B in `project_settings_page.md`.
+- **Account activity** — `<AccountActivitySection>` renders a collapsible read of the user's `credentialAuditLog` via `GET /api/auth/audit`. Shows event kind, timestamp, actor (self / admin), IP, and User-Agent. See `docs/codebase/src/components/settings/AccountActivitySection.md`.
 
 ## Known Issues / TODO
 

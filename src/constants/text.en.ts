@@ -64,6 +64,28 @@ export const TEXT_EN = {
     DELETE_ACCOUNT_OUTSTANDING_EQUIPMENT: 'Equipment signed',
     DELETE_ACCOUNT_OUTSTANDING_AMMUNITION: 'Ammunition signed',
     DELETE_ACCOUNT_OUTSTANDING_TRANSFERS: 'Open transfer requests',
+
+    // Account Activity Section — credential audit log surfaced to the user
+    ACCOUNT_ACTIVITY: 'Account activity',
+    ACCOUNT_ACTIVITY_DESCRIPTION:
+      'Recent security events on your account — password, phone, and account-deletion changes. If anything looks unfamiliar, contact a system administrator.',
+    ACCOUNT_ACTIVITY_EMPTY: 'No security events yet.',
+    ACCOUNT_ACTIVITY_LOADING: 'Loading activity...',
+    ACCOUNT_ACTIVITY_ERROR: 'Failed to load activity.',
+    ACCOUNT_ACTIVITY_RETRY: 'Try again',
+    ACCOUNT_ACTIVITY_REFRESH: 'Refresh',
+    ACCOUNT_ACTIVITY_IP: 'IP address',
+    ACCOUNT_ACTIVITY_DEVICE: 'Device',
+    ACCOUNT_ACTIVITY_ACTOR_SELF: 'by you',
+    ACCOUNT_ACTIVITY_ACTOR_ADMIN: 'by a system administrator',
+    ACCOUNT_EVENT_PASSWORD_CHANGED: 'Password changed',
+    ACCOUNT_EVENT_PHONE_CHANGED: 'Phone number changed',
+    ACCOUNT_EVENT_EMAIL_CHANGED: 'Email address changed',
+    ACCOUNT_EVENT_PHONE_FORCE_RESET: 'Phone number reset by admin',
+    ACCOUNT_EVENT_SESSIONS_REVOKED: 'Sessions revoked',
+    ACCOUNT_EVENT_ACCOUNT_DELETION_REQUESTED: 'Account deletion requested',
+    ACCOUNT_EVENT_ACCOUNT_DELETION_CANCELLED: 'Account deletion cancelled',
+    ACCOUNT_EVENT_ACCOUNT_DELETED: 'Account deleted',
   },
   EQUIPMENT: {
     STATUS_AVAILABLE: 'Available',

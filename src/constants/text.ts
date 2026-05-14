@@ -1312,6 +1312,28 @@ export const TEXT_CONSTANTS = {
     ACCOUNT_SECURITY: 'אבטחת חשבון',
     LINKED_PHONE: 'טלפון מקושר',
     PHONE_NUMBER: 'מספר טלפון:',
+
+    // Account Activity Section — credential audit log surfaced to the user
+    ACCOUNT_ACTIVITY: 'פעילות חשבון',
+    ACCOUNT_ACTIVITY_DESCRIPTION:
+      'אירועי אבטחה אחרונים בחשבונך — שינויי סיסמה, טלפון, מחיקת חשבון. אם משהו נראה לא מוכר, פנה למנהל מערכת.',
+    ACCOUNT_ACTIVITY_EMPTY: 'אין אירועי אבטחה עדיין.',
+    ACCOUNT_ACTIVITY_LOADING: 'טוען פעילות...',
+    ACCOUNT_ACTIVITY_ERROR: 'טעינת הפעילות נכשלה.',
+    ACCOUNT_ACTIVITY_RETRY: 'נסה שוב',
+    ACCOUNT_ACTIVITY_REFRESH: 'רענן',
+    ACCOUNT_ACTIVITY_IP: 'כתובת IP',
+    ACCOUNT_ACTIVITY_DEVICE: 'מכשיר',
+    ACCOUNT_ACTIVITY_ACTOR_SELF: 'על ידך',
+    ACCOUNT_ACTIVITY_ACTOR_ADMIN: 'על ידי מנהל מערכת',
+    ACCOUNT_EVENT_PASSWORD_CHANGED: 'הסיסמה שונתה',
+    ACCOUNT_EVENT_PHONE_CHANGED: 'מספר הטלפון שונה',
+    ACCOUNT_EVENT_EMAIL_CHANGED: 'כתובת המייל שונתה',
+    ACCOUNT_EVENT_PHONE_FORCE_RESET: 'מספר הטלפון אופס על ידי מנהל',
+    ACCOUNT_EVENT_SESSIONS_REVOKED: 'הסשנים נותקו',
+    ACCOUNT_EVENT_ACCOUNT_DELETION_REQUESTED: 'נשלחה בקשת מחיקת חשבון',
+    ACCOUNT_EVENT_ACCOUNT_DELETION_CANCELLED: 'בקשת מחיקת חשבון בוטלה',
+    ACCOUNT_EVENT_ACCOUNT_DELETED: 'החשבון נמחק',
     
     // Notifications Section
     NOTIFICATIONS: 'התראות',
