@@ -220,11 +220,16 @@
    Gated on `pointer: coarse` so desktop layouts keep their compact form
    controls; only touch viewports get the 16px floor. Checkbox/radio/file
    inputs are excluded since they don't trigger the zoom and the size bump
-   would distort their hit-box. */
+   would distort their hit-box.
+   `!important` is required because Tailwind's `text-sm` / `text-xs` utility
+   classes have higher CSS specificity (0,1,0) than a bare `textarea`
+   selector (0,0,1) and would otherwise override the 16px floor. The
+   override is scoped to the exact controls that trigger the zoom, on the
+   exact viewports that need it, so the blast radius is contained. */
 @media (pointer: coarse) {
   input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]),
   textarea,
   select {
-    font-size: 16px;
+    font-size: 16px !important;
   }
 }
