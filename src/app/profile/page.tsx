@@ -66,17 +66,6 @@ export default function ProfilePage() {
     }
   };
 
-  const handlePhoneUpdate = async (newPhoneNumber: string) => {
-    setPhoneNumber(newPhoneNumber);
-    if (!enhancedUser) return;
-    try {
-      await updateUserProfile(enhancedUser.uid, { phoneNumber: newPhoneNumber });
-      await refreshEnhancedUser();
-    } catch (err) {
-      console.error('[profile] failed to save phone', err);
-    }
-  };
-
   return (
     <AuthGuard>
       <AppShell
@@ -173,7 +162,6 @@ export default function ProfilePage() {
                 user={enhancedUser}
                 authEmail={user?.email}
                 phoneNumber={phoneNumber}
-                onPhoneUpdate={handlePhoneUpdate}
                 onSaved={refreshEnhancedUser}
               />
             )}

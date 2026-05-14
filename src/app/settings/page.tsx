@@ -15,7 +15,6 @@ import NotificationToggleRow from '@/components/settings/NotificationToggleRow';
 import { cancelAccountDeletion } from '@/lib/accountDeletionClient';
 import { readProfileImageCache, writeProfileImageCache } from '@/lib/profileImageCache';
 import { computeDaysLeft } from '@/components/settings/PendingDeletionBanner';
-import { Select } from '@/components/ui';
 import { useToast } from '@/components/ui/Toast';
 import { updateUserProfile } from '@/lib/userProfileService';
 import type { Timestamp } from 'firebase/firestore';
@@ -31,12 +30,11 @@ import {
   KeyIcon,
   ShieldCheckIcon,
   BellIcon,
-  GlobeIcon,
-  PaletteIcon,
   LockIcon,
   TrashIcon,
   MailIcon,
   PackageIcon,
+  AlertTriangleIcon,
   ChevronRightIcon
 } from 'lucide-react';
 
@@ -87,10 +85,6 @@ export default function SettingsPage() {
       NOTIF_DEFAULTS.equipmentTransferAlerts,
   }));
   const [savingPref, setSavingPref] = useState<NotifPrefKey | null>(null);
-  const [settings, setSettings] = useState({
-    language: 'hebrew',
-    theme: 'light'
-  });
 
   // Profile image state. Drop legacy blob: URLs from the old mock — they error on render.
   // Seed from localStorage so the avatar paints instantly on reload (Firestore
@@ -124,9 +118,7 @@ export default function SettingsPage() {
     enhancedUser?.communicationPreferences?.equipmentTransferAlerts,
   ]);
 
-  // TODO: Replace with actual data when backend is implemented
-  const mockPhoneNumber = enhancedUser?.phoneNumber || '+972-50-123-4567';
-  const mockPendingTransfers = 3; // Placeholder for notification badge
+  const userPhoneNumber = enhancedUser?.phoneNumber || '—';
 
   const handleNotifToggle = async (key: NotifPrefKey) => {
     if (savingPref || !enhancedUser?.uid) return;
@@ -149,17 +141,11 @@ export default function SettingsPage() {
     }
   };
 
-  const handleButtonClick = (action: string) => {
-    // TODO: Implement actual actions when backend is ready
-    console.log(`${action} clicked - UI only, no backend action`);
-  };
-
-  // Handle profile image update
+  // Handle profile image update — Firestore persistence already happens inside
+  // ProfileImageUpload's own upload pipeline; we just sync local + cache.
   const handleImageUpdate = (newImageUrl: string) => {
     setProfileImageUrl(newImageUrl);
     writeProfileImageCache(enhancedUser?.uid, newImageUrl);
-    // TODO: Update image in Firestore
-    console.log('Profile image updated in settings:', newImageUrl);
   };
 
   return (
@@ -201,12 +187,16 @@ export default function SettingsPage() {
                     </p>
                   </div>
                 </div>
-                <div className="text-sm text-success-600 bg-success-50 px-3 py-1 rounded-full">
-                  ✅ פעיל
-                </div>
+                <span className="inline-flex items-center gap-1 text-xs text-success-700 bg-success-50 border border-success-200 px-2.5 py-1 rounded-full whitespace-nowrap">
+                  <span aria-hidden>✓</span>
+                  <span>פעיל</span>
+                </span>
               </div>
 
-              {/* Update Phone Number */}
+              {/* Update Phone Number — single canonical edit surface for the
+                  user's phone. The duplicated read-only "Linked Phone" row
+                  that used to live in Account Security was removed, since
+                  the phone value is already shown right here. */}
               <div className="flex items-center justify-between p-4 border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors">
                 <div className="flex items-center gap-4">
                   <PhoneIcon className="w-5 h-5 text-neutral-400" />
@@ -214,15 +204,15 @@ export default function SettingsPage() {
                     <h3 className="font-medium text-neutral-900">
                       {TEXT_CONSTANTS.SETTINGS.UPDATE_PHONE}
                     </h3>
-                    <p className="text-sm text-neutral-500">
-                      {mockPhoneNumber}
+                    <p className="text-sm text-neutral-500" dir="ltr">
+                      {userPhoneNumber}
                     </p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setChangePhoneOpen(true)}
-                  className="btn-primary text-sm"
+                  className="btn-primary text-sm min-w-[5rem]"
                 >
                   עדכן
                 </button>
@@ -244,9 +234,9 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={() => setChangePasswordOpen(true)}
-                  className="btn-primary text-sm"
+                  className="btn-primary text-sm min-w-[5rem]"
                 >
-                  {TEXT_CONSTANTS.SETTINGS.CHANGE_PASSWORD}
+                  {TEXT_CONSTANTS.SETTINGS.CHANGE_PASSWORD_BTN_SHORT}
                 </button>
               </div>
             </div>
@@ -264,19 +254,6 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="p-4 border border-neutral-200 rounded-xl">
-                <div className="flex items-center gap-4">
-                  <PhoneIcon className="w-5 h-5 text-neutral-400" />
-                  <div>
-                    <h3 className="font-medium text-neutral-900">
-                      {TEXT_CONSTANTS.SETTINGS.LINKED_PHONE}
-                    </h3>
-                    <p className="text-sm text-neutral-500">
-                      {TEXT_CONSTANTS.SETTINGS.PHONE_NUMBER} {mockPhoneNumber}
-                    </p>
-                  </div>
-                </div>
-              </div>
               <RevokeSessionsRow />
             </div>
           </div>
@@ -318,79 +295,17 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Language & Display Section */}
+          {/* Language & Display section removed — i18n + theming (PR-F) is
+              still pending. Both selects were `disabled` and gave the wrong
+              signal that a choice was possible. Section will return once
+              the language toggle is wired. */}
+
+          {/* Permissions — keep request-permission entry. Delete-account
+              moves into its own "איזור מסוכן" section below. */}
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <GlobeIcon className="w-5 h-5 text-orange-600" />
-              </div>
-              <h2 className="text-xl font-bold text-neutral-900">
-                {TEXT_CONSTANTS.SETTINGS.LANGUAGE_DISPLAY}
-              </h2>
-            </div>
-
-            <div className="space-y-4">
-              {/* Language Selector */}
-              <div className="flex items-center justify-between p-4 border border-neutral-200 rounded-xl">
-                <div className="flex items-center gap-4">
-                  <GlobeIcon className="w-5 h-5 text-neutral-400" />
-                  <div>
-                    <h3 className="font-medium text-neutral-900">
-                      {TEXT_CONSTANTS.SETTINGS.LANGUAGE_SELECTOR}
-                    </h3>
-                    <p className="text-sm text-neutral-500">
-                      {settings.language === 'hebrew' ? TEXT_CONSTANTS.SETTINGS.LANGUAGE_HEBREW : TEXT_CONSTANTS.SETTINGS.LANGUAGE_ENGLISH}
-                    </p>
-                  </div>
-                </div>
-                <div className="min-w-[10rem]">
-                  <Select
-                    value={settings.language}
-                    onChange={(v) => v && setSettings(prev => ({ ...prev, language: v }))}
-                    options={[
-                      { value: 'hebrew', label: TEXT_CONSTANTS.SETTINGS.LANGUAGE_HEBREW },
-                      { value: 'english', label: TEXT_CONSTANTS.SETTINGS.LANGUAGE_ENGLISH },
-                    ]}
-                    disabled
-                    ariaLabel={TEXT_CONSTANTS.SETTINGS.LANGUAGE_HEBREW}
-                  />
-                </div>
-              </div>
-
-              {/* Theme Switcher */}
-              <div className="flex items-center justify-between p-4 border border-neutral-200 rounded-xl">
-                <div className="flex items-center gap-4">
-                  <PaletteIcon className="w-5 h-5 text-neutral-400" />
-                  <div>
-                    <h3 className="font-medium text-neutral-900">
-                      {TEXT_CONSTANTS.SETTINGS.THEME_SWITCHER}
-                    </h3>
-                    <p className="text-sm text-neutral-500">
-                      {settings.theme === 'light' ? TEXT_CONSTANTS.SETTINGS.THEME_LIGHT : TEXT_CONSTANTS.SETTINGS.THEME_DARK}
-                    </p>
-                  </div>
-                </div>
-                <div className="min-w-[10rem]">
-                  <Select
-                    value={settings.theme}
-                    onChange={(v) => v && setSettings(prev => ({ ...prev, theme: v }))}
-                    options={[
-                      { value: 'light', label: TEXT_CONSTANTS.SETTINGS.THEME_LIGHT },
-                      { value: 'dark', label: TEXT_CONSTANTS.SETTINGS.THEME_DARK },
-                    ]}
-                    disabled
-                    ariaLabel={TEXT_CONSTANTS.SETTINGS.THEME_SWITCHER}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Privacy & Permissions Section */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-danger-100 rounded-lg">
-                <LockIcon className="w-5 h-5 text-danger-600" />
+              <div className="p-2 bg-primary-100 rounded-lg">
+                <LockIcon className="w-5 h-5 text-primary-600" />
               </div>
               <h2 className="text-xl font-bold text-neutral-900">
                 {TEXT_CONSTANTS.SETTINGS.PRIVACY_PERMISSIONS}
@@ -398,8 +313,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-4">
-              {/* Request Permission */}
-              <div className="flex items-center justify-between p-4 border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors">
+              <div className="flex items-center justify-between p-4 border border-neutral-200 rounded-xl">
                 <div className="flex items-center gap-4">
                   <LockIcon className="w-5 h-5 text-neutral-400" />
                   <div>
@@ -412,77 +326,71 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => handleButtonClick('requestPermission')}
+                  type="button"
                   disabled
-                  className="px-4 py-2 text-sm bg-neutral-100 text-neutral-400 rounded-lg cursor-not-allowed flex items-center gap-2"
+                  className="px-4 py-2 text-sm bg-neutral-100 text-neutral-400 rounded-lg cursor-not-allowed flex items-center gap-2 min-w-[5rem]"
                 >
                   {TEXT_CONSTANTS.SETTINGS.REQUEST_PERMISSION}
                   <ChevronRightIcon className="w-4 h-4" />
                 </button>
               </div>
-
-              {/* Delete Account — swaps to cancel-deletion button when a request is pending. */}
-              <div className="flex items-center justify-between p-4 border border-danger-200 rounded-xl bg-danger-50">
-                <div className="flex items-center gap-4">
-                  <TrashIcon className="w-5 h-5 text-danger-500" />
-                  <div>
-                    <h3 className="font-medium text-danger-900">
-                      {hasPendingDeletion
-                        ? TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_PENDING_TITLE
-                        : TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT}
-                    </h3>
-                    <p className="text-sm text-danger-600">
-                      {hasPendingDeletion
-                        ? TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_PENDING_DAYS_LEFT(
-                            daysUntilHardDelete(enhancedUser?.deletionRequestedAt),
-                          )
-                        : TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_WARNING}
-                    </p>
-                  </div>
-                </div>
-                {hasPendingDeletion ? (
-                  <button
-                    type="button"
-                    onClick={handleCancelDeletion}
-                    disabled={cancellingDeletion}
-                    className="btn-ghost text-sm border border-danger-300 text-danger-700"
-                  >
-                    {cancellingDeletion
-                      ? TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_CANCELLING
-                      : TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_CANCEL_BUTTON}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setDeleteAccountOpen(true)}
-                    className="btn-danger text-sm"
-                  >
-                    {TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT}
-                  </button>
-                )}
-              </div>
             </div>
           </div>
 
-          {/* TODO: Equipment Transfer Notifications Info Box */}
-          <div className="bg-info-50 rounded-2xl p-6 border border-info-200">
-            <div className="flex items-start gap-4">
-              <div className="p-2 bg-info-100 rounded-lg">
-                <PackageIcon className="w-5 h-5 text-info-600" />
+          {/* Danger Zone — destructive, irreversible actions. Visually
+              separated from the rest of the settings to make accidental
+              clicks less likely. */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-danger-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-danger-100 rounded-lg">
+                <AlertTriangleIcon className="w-5 h-5 text-danger-600" />
               </div>
-              <div className="flex-1">
-                <h3 className="font-medium text-info-900 mb-2">
-                  {TEXT_CONSTANTS.SETTINGS.TRANSFER_REQUESTS}
-                </h3>
-                <p className="text-sm text-info-700 mb-4">
-                  כרגע יש {mockPendingTransfers} בקשות העברת ציוד ממתינות לטיפול. 
-                  כאשר המערכת תהיה מוכנה, תוכל לקבל התראות אוטומטיות על בקשות אלו.
-                </p>
-                <div className="flex items-center gap-2 text-sm text-info-600">
-                  <BellIcon className="w-4 h-4" />
-                  <span>התראות יופעלו בעדכון עתידי</span>
+              <h2 className="text-xl font-bold text-danger-700">
+                {TEXT_CONSTANTS.SETTINGS.DANGER_ZONE}
+              </h2>
+            </div>
+            <p className="text-sm text-neutral-600 mb-6 ps-1">
+              {TEXT_CONSTANTS.SETTINGS.DANGER_ZONE_DESCRIPTION}
+            </p>
+
+            <div className="flex items-center justify-between p-4 border border-danger-200 rounded-xl bg-danger-50">
+              <div className="flex items-center gap-4">
+                <TrashIcon className="w-5 h-5 text-danger-500" />
+                <div>
+                  <h3 className="font-medium text-danger-900">
+                    {hasPendingDeletion
+                      ? TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_PENDING_TITLE
+                      : TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT}
+                  </h3>
+                  <p className="text-sm text-danger-600">
+                    {hasPendingDeletion
+                      ? TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_PENDING_DAYS_LEFT(
+                          daysUntilHardDelete(enhancedUser?.deletionRequestedAt),
+                        )
+                      : TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_WARNING}
+                  </p>
                 </div>
               </div>
+              {hasPendingDeletion ? (
+                <button
+                  type="button"
+                  onClick={handleCancelDeletion}
+                  disabled={cancellingDeletion}
+                  className="btn-ghost text-sm border border-danger-300 text-danger-700 min-w-[5rem]"
+                >
+                  {cancellingDeletion
+                    ? TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_CANCELLING
+                    : TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_CANCEL_BUTTON}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setDeleteAccountOpen(true)}
+                  className="btn-danger text-sm min-w-[5rem]"
+                >
+                  {TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_BTN_SHORT}
+                </button>
+              )}
             </div>
           </div>
         </div>

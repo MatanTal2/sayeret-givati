@@ -58,9 +58,9 @@ export default function RevokeSessionsRow() {
         <button
           type="button"
           onClick={() => setConfirmOpen(true)}
-          className="btn-primary text-sm"
+          className="btn-primary text-sm min-w-[5rem]"
         >
-          {TEXT_CONSTANTS.SETTINGS.REVOKE_SESSIONS}
+          {TEXT_CONSTANTS.SETTINGS.REVOKE_SESSIONS_BTN_SHORT}
         </button>
       </div>
 
