@@ -79,6 +79,8 @@ export default function AmmunitionInventorySection() {
       {showAdd && (
         <AddInventoryModal
           templates={templates}
+          stock={stock}
+          items={items}
           allowHolderPicker
           onClose={() => setShowAdd(false)}
           onSubmitStock={async (payload) => upsertStock(payload)}

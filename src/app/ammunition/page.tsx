@@ -270,6 +270,8 @@ function AmmunitionPageContent() {
       {showAdd && (
         <AddInventoryModal
           templates={templates}
+          stock={stock}
+          items={items}
           allowHolderPicker={isManagerOrTL}
           onClose={() => setShowAdd(false)}
           onSubmitStock={async (payload) => upsertStock(payload)}
