@@ -11,6 +11,8 @@ import { UserType } from '@/types/user';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { AMMUNITION_SUBCATEGORIES, isBruceLike } from '@/lib/ammunition/subcategories';
 import type {
+  AmmunitionItem,
+  AmmunitionStock,
   AmmunitionSubcategory,
   AmmunitionType,
   BruceState,
@@ -27,6 +29,11 @@ const BRUCE_STATES: BruceState[] = ['FULL', 'MORE_THAN_HALF', 'LESS_THAN_HALF', 
 
 export interface AddInventoryModalProps {
   templates: AmmunitionType[];
+  /** Existing stock across the visible scope. Used to gate the template picker
+   *  to templates that already have inventory somewhere — same idea as the
+   *  report-usage form. Mandatory once the check is wired up. */
+  stock: AmmunitionStock[];
+  items: AmmunitionItem[];
   onClose: () => void;
   onSubmitStock: (payload: UpsertStockPayload) => Promise<boolean>;
   onSubmitItem: (payload: CreateSerialItemPayload) => Promise<boolean>;
@@ -41,6 +48,8 @@ type HolderChoice =
 
 export default function AddInventoryModal({
   templates,
+  stock,
+  items,
   onClose,
   onSubmitStock,
   onSubmitItem,
@@ -58,18 +67,31 @@ export default function AddInventoryModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Templates that already have inventory somewhere in the system (UNIT, any
+  // user, or any team). Adding to a USER/TEAM holder only makes sense if the
+  // template exists in stock somewhere — same gating idea ReportUsageForm
+  // uses on the reporter's own holdings. Templates with zero inventory anywhere
+  // must be seeded into UNIT first (via central-stock flow).
+  const templatesWithInventory = useMemo(() => {
+    const ids = new Set<string>();
+    for (const s of stock) {
+      if ((s.bruceCount ?? 0) > 0 || (s.quantity ?? 0) > 0) ids.add(s.templateId);
+    }
+    for (const i of items) ids.add(i.templateId);
+    return ids;
+  }, [stock, items]);
+
   const selectableTemplates = useMemo(() => {
     if (!enhancedUser) return [];
-    if (
+    const roleFiltered =
       enhancedUser.userType === UserType.ADMIN ||
       enhancedUser.userType === UserType.SYSTEM_MANAGER ||
       enhancedUser.userType === UserType.MANAGER ||
       enhancedUser.userType === UserType.TEAM_LEADER
-    ) {
-      return templates;
-    }
-    return templates.filter((t) => t.allocation === 'USER' || t.allocation === 'BOTH');
-  }, [templates, enhancedUser]);
+        ? templates
+        : templates.filter((t) => t.allocation === 'USER' || t.allocation === 'BOTH');
+    return roleFiltered.filter((t) => templatesWithInventory.has(t.id));
+  }, [templates, enhancedUser, templatesWithInventory]);
 
   const filteredTemplates = useMemo(() => {
     if (!subcategory) return [];
@@ -234,6 +256,11 @@ export default function AddInventoryModal({
               clearable
               ariaLabel="פריט"
             />
+            {subcategory && filteredTemplates.length === 0 && (
+              <p className="mt-1 text-xs text-neutral-500">
+                אין פריטים זמינים במלאי בתת-קטגוריה זו. ניתן להוסיף רק פריטים שכבר קיימים במלאי המערכת.
+              </p>
+            )}
           </div>
 
           {allowHolderPicker && isManagerOrTL && (
