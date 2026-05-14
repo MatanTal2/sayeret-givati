@@ -156,7 +156,6 @@ export default function SettingsPage() {
       <AppShell
         title={TEXT_CONSTANTS.SETTINGS.PAGE_TITLE}
         subtitle={TEXT_CONSTANTS.SETTINGS.PAGE_SUBTITLE}
-        mainClassName="px-4 sm:px-6 pb-12"
       >
         <div className="max-w-4xl mx-auto w-full">
           {/* Profile Settings Section */}

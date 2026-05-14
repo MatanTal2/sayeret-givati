@@ -28,7 +28,7 @@ export default function AppShell({
   showBackArrow = false,
   showFab = true,
   hidePageHeader = false,
-  mainClassName = 'flex-1 px-4 sm:px-6 pb-24 lg:pb-12',
+  mainClassName = 'flex-1 px-4 sm:px-6 pb-12 lg:pb-8',
   children,
 }: AppShellProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
