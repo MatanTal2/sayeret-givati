@@ -37,6 +37,14 @@ notification email, "system info" block, "perform backup now" / "reset
 settings" buttons — were not persisted and not on the Phase 1 spec. They are
 removed; reintroduce them with real backing if that work returns.
 
+## Round-activation toggle
+
+Headless UI `<Switch>` bound to `roundOpen`. The thumb is **absolutely
+positioned** with the logical `start-1` (off) / `start-6` (on) properties —
+the previous `flex + translate-x-*` pattern pushed the thumb out of the pill
+in RTL because `translate-x` is physical. Same fix applied earlier to
+`NotificationToggleRow`.
+
 ## Open
 
 - The ammunition recipient is the only field today. Subsequent phases may add

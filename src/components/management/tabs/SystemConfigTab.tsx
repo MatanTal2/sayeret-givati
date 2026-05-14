@@ -142,14 +142,14 @@ export default function SystemConfigTab() {
             checked={roundOpen}
             onChange={setRoundOpen}
             className={cn(
-              'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+              'relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
               roundOpen ? 'bg-success-500' : 'bg-neutral-300'
             )}
           >
             <span
               className={cn(
-                'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                roundOpen ? 'translate-x-6' : 'translate-x-1'
+                'absolute top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-white shadow-sm transition-all',
+                roundOpen ? 'start-6' : 'start-1'
               )}
             />
           </Switch>
