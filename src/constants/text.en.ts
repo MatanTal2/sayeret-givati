@@ -25,6 +25,8 @@ export const TEXT_EN = {
     CHANGE_PASSWORD_SUBMIT: 'Update password',
     CHANGE_PASSWORD_SUBMITTING: 'Updating...',
     CHANGE_PASSWORD_SUCCESS: 'Password updated successfully.',
+    CHANGE_PASSWORD_SIGN_OUT_OTHERS:
+      'Sign out other devices after the password change (recommended).',
     SHOW_PASSWORD: 'Show password',
     HIDE_PASSWORD: 'Hide password',
 

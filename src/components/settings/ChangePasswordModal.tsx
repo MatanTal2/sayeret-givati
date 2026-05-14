@@ -10,6 +10,7 @@ import {
 import { Eye, EyeOff, X } from 'lucide-react';
 import { changePassword, mapFirebaseAuthError } from '@/lib/firebasePhoneAuth';
 import { logCredentialAuditEvent } from '@/lib/credentialAuditClient';
+import { revokeOtherSessions } from '@/lib/sessionsClient';
 import { auth } from '@/lib/firebase';
 import { TEXT_CONSTANTS } from '@/constants/text';
 
@@ -30,6 +31,7 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }: Props)
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [signOutOthers, setSignOutOthers] = useState(true);
 
   // Reset all form state whenever the modal re-opens. Avoids leaking the
   // previous attempt's inputs back into a fresh open.
@@ -43,6 +45,7 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }: Props)
       setShowConfirm(false);
       setError(null);
       setSubmitting(false);
+      setSignOutOthers(true);
     }
   }, [open]);
 
@@ -69,6 +72,13 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }: Props)
       const uid = auth.currentUser?.uid;
       if (uid) {
         void logCredentialAuditEvent({ uid, eventType: 'PASSWORD_CHANGED' });
+      }
+      if (signOutOthers) {
+        // Fire-and-forget. revokeOtherSessions never throws — it captures
+        // the error in its response. We don't surface the failure here
+        // because the password change already succeeded; the audit
+        // section will reflect whether SESSIONS_REVOKED actually wrote.
+        void revokeOtherSessions();
       }
       onSuccess();
       onClose();
@@ -135,6 +145,19 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }: Props)
               autoComplete="new-password"
               disabled={submitting}
             />
+
+            <label className="flex items-start gap-2 text-sm text-neutral-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={signOutOthers}
+                onChange={(e) => setSignOutOthers(e.target.checked)}
+                disabled={submitting}
+                className="mt-0.5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+              />
+              <span>
+                {TEXT_CONSTANTS.SETTINGS.CHANGE_PASSWORD_SIGN_OUT_OTHERS}
+              </span>
+            </label>
 
             {error && (
               <div className="text-sm text-danger-700 bg-danger-50 border border-danger-200 rounded-lg px-3 py-2" role="alert">
