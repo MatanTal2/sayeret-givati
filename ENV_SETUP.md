@@ -42,6 +42,18 @@ NEXT_PUBLIC_RECAPTCHA_SITE_KEY=
 # NEXT_PUBLIC_APP_CHECK_DEBUG=true
 
 # ==============================================
+# ⏰ Vercel Cron — hard-delete account sweep
+# ==============================================
+# The /api/cron/sweep-account-deletions route reads this header on every
+# invocation: Authorization: Bearer ${CRON_SECRET}. Vercel auto-injects the
+# header when `vercel.json` declares the cron — set the variable in the
+# Vercel project env (NOT in local .env.local; production-only).
+#
+# Generate: `openssl rand -hex 32`
+# Storage: Vercel Project Settings → Environment Variables → Production only
+# CRON_SECRET=
+
+# ==============================================
 # 🛠️ DEVELOPMENT SETTINGS
 # ==============================================
 NODE_ENV=development
