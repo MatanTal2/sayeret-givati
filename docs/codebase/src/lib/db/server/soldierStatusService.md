@@ -17,7 +17,7 @@ doc-id lookup, no extra index needed.
 | Export | Purpose |
 |--------|---------|
 | `serverListRoster()` | Joins `users` ∪ `authorized_personnel`, deduplicates by hash (preferring `users` for display fields), and overlays each soldier's current status. Sorted by Hebrew full name. |
-| `serverUpdateSoldierStatus(hashedId, input)` | Upserts `soldierStatus/{hashedId}`. Validates the status enum, the `customStatus` presence rule, and that the hashed id matches at least one row in `users` or `authorized_personnel`. |
+| `serverUpdateSoldierStatus(hashedId, input, actor?)` | Upserts `soldierStatus/{hashedId}`. Validates the status enum, the `customStatus` presence rule, and that the hashed id matches at least one row in `users` or `authorized_personnel`. When `actor` is supplied, also stamps audit fields and appends a row to the `history` subcollection. |
 | `SoldierStatusValidationError` | Named error with `status` (400 or 404) for API routes to map cleanly. |
 
 ## Firebase Operations
@@ -34,11 +34,35 @@ soldierStatus/{militaryPersonalNumberHash}
   status: 'בית' | 'משמר' | 'אחר'
   customStatus?: string   // present iff status === 'אחר'
   updatedAt: Timestamp    // server timestamp
+  updatedBy?: string      // uid of writer (added 2026-05-14)
+  updatedByName?: string  // best-effort display name resolved from users/{uid}
 ```
 
-Audit fields (`updatedBy`, `updatedByName`) and per-soldier history are
-intentionally deferred — see project memory `project_status_route_migration`
-and the deferred-follow-ups section of the migration plan.
+### History subcollection (added 2026-05-14)
+
+```
+soldierStatus/{hash}/history/{autoId}
+  status: SoldierStatus
+  customStatus?: string
+  updatedAt: Timestamp
+  updatedBy: string
+  updatedByName?: string
+  previousStatus?: SoldierStatus    // absent on the first ever write
+  previousCustomStatus?: string
+```
+
+Append-only audit log; one entry per status mutation. The current doc mirrors
+the latest entry, so the history collection answers "who and when" questions
+for past states. Writes are sequential (read prior doc → write current →
+append history) rather than transactional — the roster is small and the
+mutation cadence is low, so the risk of two concurrent PUTs interleaving is
+negligible.
+
+`actor.displayName` is preferred when supplied (the `/api/soldier-status/[id]`
+route passes `ApiActor.displayName`); otherwise the service joins
+`users/{actor.uid}` for `firstName + lastName`. When neither resolves, the
+current doc clears any stale `updatedByName` via `FieldValue.delete()` and the
+history row carries no `updatedByName`.
 
 ## Validation rules baked into `serverUpdateSoldierStatus`
 

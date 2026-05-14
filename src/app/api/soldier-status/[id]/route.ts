@@ -16,8 +16,10 @@ interface PutBody {
  *
  * Bearer-gated. Any authenticated user can update a soldier's status. The id
  * in the URL is the soldier's militaryPersonalNumberHash (matches
- * authorized_personnel doc-id). Audit fields are intentionally NOT persisted
- * — deferred until the audit scope is decided.
+ * authorized_personnel doc-id). The actor's uid is captured on the status
+ * doc (`updatedBy`) and an audit row is appended to
+ * `soldierStatus/{id}/history/{autoId}` — see `soldierStatusService` for
+ * field shapes.
  */
 export async function PUT(
   request: Request,
@@ -26,6 +28,7 @@ export async function PUT(
   try {
     const actorOrError = await getActorOrError(request);
     if (actorOrError instanceof NextResponse) return actorOrError;
+    const actor = actorOrError;
 
     const { id } = await params;
     if (!id) {
@@ -43,10 +46,14 @@ export async function PUT(
       );
     }
 
-    await serverUpdateSoldierStatus(id, {
-      status: body.status as SoldierStatus,
-      ...(typeof body.customStatus === 'string' ? { customStatus: body.customStatus } : {}),
-    });
+    await serverUpdateSoldierStatus(
+      id,
+      {
+        status: body.status as SoldierStatus,
+        ...(typeof body.customStatus === 'string' ? { customStatus: body.customStatus } : {}),
+      },
+      { uid: actor.uid, displayName: actor.displayName },
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

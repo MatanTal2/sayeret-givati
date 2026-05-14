@@ -77,37 +77,47 @@ function buildAdminDb() {
     return api;
   }
 
+  let autoIdCounter = 0;
+
+  function buildCollection(name: string) {
+    return {
+      doc(id?: string) {
+        const generatedId = id ?? `auto-${++autoIdCounter}`;
+        const fullKey = `${name}/${generatedId}`;
+        return {
+          id: generatedId,
+          async get() {
+            const rec = store.get(fullKey);
+            return {
+              exists: !!rec,
+              id: generatedId,
+              data: () => rec?.data ?? {},
+            };
+          },
+          async set(data: Record<string, unknown>, options?: { merge?: boolean }) {
+            const cur = store.get(fullKey);
+            const merged: Record<string, unknown> = options?.merge && cur ? { ...cur.data } : {};
+            for (const [k, v] of Object.entries(data)) {
+              if (v === 'DELETE_SENTINEL') {
+                delete merged[k];
+              } else {
+                merged[k] = v;
+              }
+            }
+            store.set(fullKey, { id: generatedId, data: merged });
+          },
+          collection(subName: string) {
+            return buildCollection(`${fullKey}/${subName}`);
+          },
+        };
+      },
+      ...makeQuery(name),
+    };
+  }
+
   return {
     collection(name: string) {
-      return {
-        doc(id: string) {
-          const fullKey = `${name}/${id}`;
-          return {
-            id,
-            async get() {
-              const rec = store.get(fullKey);
-              return {
-                exists: !!rec,
-                id,
-                data: () => rec?.data ?? {},
-              };
-            },
-            async set(data: Record<string, unknown>, options?: { merge?: boolean }) {
-              const cur = store.get(fullKey);
-              const merged: Record<string, unknown> = options?.merge && cur ? { ...cur.data } : {};
-              for (const [k, v] of Object.entries(data)) {
-                if (v === 'DELETE_SENTINEL') {
-                  delete merged[k];
-                } else {
-                  merged[k] = v;
-                }
-              }
-              store.set(fullKey, { id, data: merged });
-            },
-          };
-        },
-        ...makeQuery(name),
-      };
+      return buildCollection(name);
     },
   };
 }
@@ -271,5 +281,99 @@ describe('serverUpdateSoldierStatus', () => {
     const stored = store.get('soldierStatus/hash-a')!.data;
     expect(stored.status).toBe('בית');
     expect(stored.customStatus).toBeUndefined();
+  });
+
+  describe('audit fields + history subcollection', () => {
+    function historyEntries() {
+      return [...store.entries()]
+        .filter(([key]) => key.startsWith('soldierStatus/hash-a/history/'))
+        .map(([, rec]) => rec.data);
+    }
+
+    it('does not stamp updatedBy when actor is omitted (legacy callers)', async () => {
+      await serverUpdateSoldierStatus('hash-a', { status: 'בית' });
+      const stored = store.get('soldierStatus/hash-a')!.data;
+      expect(stored.updatedBy).toBeUndefined();
+      expect(historyEntries()).toHaveLength(0);
+    });
+
+    it('stamps updatedBy + uses actor.displayName when provided', async () => {
+      await serverUpdateSoldierStatus(
+        'hash-a',
+        { status: 'משמר' },
+        { uid: 'uid-99', displayName: 'אבי כהן' },
+      );
+      const stored = store.get('soldierStatus/hash-a')!.data;
+      expect(stored.updatedBy).toBe('uid-99');
+      expect(stored.updatedByName).toBe('אבי כהן');
+    });
+
+    it('resolves updatedByName from users/{uid} when displayName is omitted', async () => {
+      store.set('users/uid-99', {
+        id: 'uid-99',
+        data: { firstName: 'דנה', lastName: 'לוי' },
+      });
+      await serverUpdateSoldierStatus(
+        'hash-a',
+        { status: 'בית' },
+        { uid: 'uid-99' },
+      );
+      const stored = store.get('soldierStatus/hash-a')!.data;
+      expect(stored.updatedByName).toBe('דנה לוי');
+    });
+
+    it('appends a history row carrying writer + previous values', async () => {
+      // first write — no previous state
+      await serverUpdateSoldierStatus(
+        'hash-a',
+        { status: 'בית' },
+        { uid: 'uid-1', displayName: 'A' },
+      );
+      let history = historyEntries();
+      expect(history).toHaveLength(1);
+      expect(history[0]).toMatchObject({
+        status: 'בית',
+        updatedBy: 'uid-1',
+        updatedByName: 'A',
+      });
+      expect(history[0].previousStatus).toBeUndefined();
+
+      // second write — previous state populated
+      await serverUpdateSoldierStatus(
+        'hash-a',
+        { status: 'אחר', customStatus: 'קורס' },
+        { uid: 'uid-2', displayName: 'B' },
+      );
+      history = historyEntries();
+      expect(history).toHaveLength(2);
+      expect(history[1]).toMatchObject({
+        status: 'אחר',
+        customStatus: 'קורס',
+        updatedBy: 'uid-2',
+        updatedByName: 'B',
+        previousStatus: 'בית',
+      });
+      expect(history[1].previousCustomStatus).toBeUndefined();
+    });
+
+    it('clears updatedByName when actor has no resolvable name', async () => {
+      // First write with a name in place.
+      await serverUpdateSoldierStatus(
+        'hash-a',
+        { status: 'בית' },
+        { uid: 'uid-1', displayName: 'אבי' },
+      );
+      expect(store.get('soldierStatus/hash-a')!.data.updatedByName).toBe('אבי');
+
+      // Second write with anonymous actor — should clear the stale name.
+      await serverUpdateSoldierStatus(
+        'hash-a',
+        { status: 'משמר' },
+        { uid: 'uid-2' },
+      );
+      const stored = store.get('soldierStatus/hash-a')!.data;
+      expect(stored.updatedByName).toBeUndefined();
+      expect(stored.updatedBy).toBe('uid-2');
+    });
   });
 });
