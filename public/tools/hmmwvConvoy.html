@@ -257,6 +257,8 @@
         <button id="btnEditAddExtra" class="btn-add" type="button" onclick="addExtraMember('edit-convoy-extras', 'convoy')">+ הוסף בעל תפקיד</button>
         <button id="btnEditHeavyHead" class="btn-special" type="button" style="display: none; margin-top: 10px;" onclick="openHeavyHeadModal('edit')">📋 רשימת נוסעים (ראש כבד)</button>
 
+        <div id="edit-passenger-list"></div>
+
         <div class="modal-footer">
             <button class="btn-copy" type="button" onclick="saveConvoyEdit()">שמור שינויים</button>
             <button class="btn-clear" style="background-color: #6c757d;" type="button" onclick="closeConvoyModal()">ביטול</button>
@@ -795,7 +797,148 @@
         editHeavyHeadText = vehicle.heavyHeadPassengers || "";
         updateVehicleUI('convoy');
         updateAvailableSeats('convoy');
+        renderEditPassengers(parseInt(index));
         document.getElementById('convoyEditModal').style.display = 'flex';
+    }
+
+    // --- Per-passenger edit: return to list / move to vehicle / swap ----------
+    // Passenger edits commit live to currentConvoy (not deferred to "save"),
+    // because move/swap spans two vehicles while the save handler only writes
+    // the one being edited. Cancelling the edit modal therefore keeps any
+    // passenger moves you already made — matches how spread/manual-spread work.
+    function renderEditPassengers(vIdx) {
+        const container = document.getElementById('edit-passenger-list');
+        if (!container) return;
+        const v = currentConvoy[vIdx];
+        if (!v) { container.innerHTML = ''; return; }
+        const passengers = v.passengers || [];
+
+        let html = '<div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed #ccc;">';
+        html += '<label style="font-weight: bold; margin-bottom: 6px; display: block;">נוסעים אחוריים</label>';
+        if (passengers.length === 0) {
+            html += '<div style="font-size: 13px; color: #6c757d; font-style: italic;">אין נוסעים אחוריים. השתמש ב"פזר אנשים" או "פזר ידנית" כדי להוסיף.</div>';
+        } else {
+            passengers.forEach((name, pIdx) => {
+                html += `
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; padding: 6px 8px; background: #f8f9fa; border-radius: 4px;">
+                        <span style="flex: 1; font-size: 13px;">${name}</span>
+                        <button type="button" onclick="returnPassengerToList(${vIdx}, ${pIdx})" style="background: #6c757d; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; margin: 0; width: auto;" title="החזר לרשימת השמות">↩️ לרשימה</button>
+                        <button type="button" onclick="openMoveTargetPicker(${vIdx}, ${pIdx})" style="background: #2b5c8f; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; margin: 0; width: auto;" title="העבר לרכב אחר">🚚 העבר</button>
+                    </div>
+                    <div id="move-picker-${pIdx}" style="display: none; margin-bottom: 6px;"></div>
+                `;
+            });
+        }
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function returnPassengerToList(vIdx, pIdx) {
+        const v = currentConvoy[vIdx];
+        if (!v || !v.passengers || !v.passengers[pIdx]) return;
+        const name = v.passengers.splice(pIdx, 1)[0];
+        const ta = document.getElementById('personnelList');
+        const existing = ta.value.trim();
+        ta.value = existing ? `${existing}\n${name}` : name;
+        renderEditPassengers(vIdx);
+        renderConvoyList();
+        generateConvoyText();
+        showToast(`↩️ ${name} הוחזר לרשימה`, 'success');
+    }
+
+    function openMoveTargetPicker(srcIdx, pIdx) {
+        const pickerDiv = document.getElementById(`move-picker-${pIdx}`);
+        if (!pickerDiv) return;
+        if (pickerDiv.style.display === 'block') {
+            pickerDiv.style.display = 'none';
+            pickerDiv.innerHTML = '';
+            return;
+        }
+        document.querySelectorAll('[id^="move-picker-"]').forEach(el => {
+            el.style.display = 'none';
+            el.innerHTML = '';
+        });
+
+        const targets = currentConvoy
+            .map((v, i) => ({ v, i }))
+            .filter(({ v, i }) => i !== srcIdx && v.active);
+
+        let html = '<div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 8px; border-radius: 4px; font-size: 12px;">';
+        if (targets.length === 0) {
+            html += '<div style="color: #dc3545;">אין רכבים פעילים אחרים בשיירה.</div>';
+        } else {
+            html += '<div style="font-weight: bold; margin-bottom: 6px;">בחר רכב יעד:</div>';
+            targets.forEach(({ v, i }) => {
+                const remaining = vehicleRemainingSeats(v);
+                const total = vehicleBackCapacity(v);
+                const label = v.vehicleId || v.vehicleType;
+                if (remaining > 0) {
+                    html += `<button type="button" onclick="movePassengerToVehicle(${srcIdx}, ${pIdx}, ${i})" style="display: block; width: 100%; text-align: right; background: #28a745; color: white; border: none; padding: 6px 8px; border-radius: 4px; margin-bottom: 4px; font-size: 12px; cursor: pointer;">${label} — ${remaining}/${total} פנויים</button>`;
+                } else {
+                    html += `<button type="button" onclick="openSwapPicker(${srcIdx}, ${pIdx}, ${i})" style="display: block; width: 100%; text-align: right; background: #fd7e14; color: white; border: none; padding: 6px 8px; border-radius: 4px; margin-bottom: 4px; font-size: 12px; cursor: pointer;">${label} — מלא · להחלפה</button>`;
+                }
+            });
+        }
+        html += `<button type="button" onclick="closeMovePicker(${pIdx})" style="display: block; width: 100%; background: #6c757d; color: white; border: none; padding: 6px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; margin: 0;">ביטול</button>`;
+        html += '</div>';
+        pickerDiv.innerHTML = html;
+        pickerDiv.style.display = 'block';
+    }
+
+    function movePassengerToVehicle(srcIdx, pIdx, tgtIdx) {
+        const srcV = currentConvoy[srcIdx];
+        const tgtV = currentConvoy[tgtIdx];
+        if (!srcV || !tgtV) return;
+        if (vehicleRemainingSeats(tgtV) <= 0) return;
+        const name = srcV.passengers.splice(pIdx, 1)[0];
+        if (!name) return;
+        tgtV.passengers = [...(tgtV.passengers || []), name];
+        renderEditPassengers(srcIdx);
+        renderConvoyList();
+        generateConvoyText();
+        showToast(`🚚 ${name} → ${tgtV.vehicleId || tgtV.vehicleType}`, 'success');
+    }
+
+    function openSwapPicker(srcIdx, srcPIdx, tgtIdx) {
+        const pickerDiv = document.getElementById(`move-picker-${srcPIdx}`);
+        const tgtV = currentConvoy[tgtIdx];
+        if (!pickerDiv || !tgtV) return;
+        const passengers = tgtV.passengers || [];
+
+        let html = '<div style="background: #ffe5d0; border: 1px solid #fd7e14; padding: 8px; border-radius: 4px; font-size: 12px;">';
+        html += `<div style="font-weight: bold; margin-bottom: 6px;">בחר נוסע ב-${tgtV.vehicleId || tgtV.vehicleType} להחלפה:</div>`;
+        if (passengers.length === 0) {
+            html += '<div style="color: #dc3545; margin-bottom: 6px;">אין נוסעים אחוריים להחלפה.</div>';
+        } else {
+            passengers.forEach((name, tpIdx) => {
+                html += `<button type="button" onclick="swapPassengers(${srcIdx}, ${srcPIdx}, ${tgtIdx}, ${tpIdx})" style="display: block; width: 100%; text-align: right; background: white; border: 1px solid #fd7e14; color: #fd7e14; padding: 6px 8px; border-radius: 4px; margin-bottom: 4px; font-size: 12px; cursor: pointer;">${name}</button>`;
+            });
+        }
+        html += `<button type="button" onclick="openMoveTargetPicker(${srcIdx}, ${srcPIdx})" style="display: block; width: 100%; background: #6c757d; color: white; border: none; padding: 6px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; margin: 0;">חזרה</button>`;
+        html += '</div>';
+        pickerDiv.innerHTML = html;
+    }
+
+    function swapPassengers(srcIdx, srcPIdx, tgtIdx, tgtPIdx) {
+        const srcV = currentConvoy[srcIdx];
+        const tgtV = currentConvoy[tgtIdx];
+        if (!srcV || !tgtV) return;
+        const srcName = srcV.passengers && srcV.passengers[srcPIdx];
+        const tgtName = tgtV.passengers && tgtV.passengers[tgtPIdx];
+        if (!srcName || !tgtName) return;
+        srcV.passengers[srcPIdx] = tgtName;
+        tgtV.passengers[tgtPIdx] = srcName;
+        renderEditPassengers(srcIdx);
+        renderConvoyList();
+        generateConvoyText();
+        showToast(`🔄 ${srcName} ↔ ${tgtName}`, 'success');
+    }
+
+    function closeMovePicker(pIdx) {
+        const pickerDiv = document.getElementById(`move-picker-${pIdx}`);
+        if (!pickerDiv) return;
+        pickerDiv.style.display = 'none';
+        pickerDiv.innerHTML = '';
     }
 
     function saveConvoyEdit() {
