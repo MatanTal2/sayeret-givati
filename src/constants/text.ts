@@ -1351,6 +1351,21 @@ export const TEXT_CONSTANTS = {
     DELETE_ACCOUNT_OUTSTANDING_EQUIPMENT: 'ציוד בחתימה',
     DELETE_ACCOUNT_OUTSTANDING_AMMUNITION: 'תחמושת בחתימה',
     DELETE_ACCOUNT_OUTSTANDING_TRANSFERS: 'בקשות העברה פתוחות',
+    DELETE_ACCOUNT_OUTSTANDING_GO: 'לדף',
+
+    // Pending-deletion banner + cancel flow (PR-G follow-ups)
+    DELETE_ACCOUNT_PENDING_TITLE: 'החשבון מסומן למחיקה',
+    DELETE_ACCOUNT_PENDING_DAYS_LEFT: (days: number) =>
+      days <= 0
+        ? 'החשבון יימחק לצמיתות בקרוב.'
+        : days === 1
+          ? 'החשבון יימחק לצמיתות מחר.'
+          : `החשבון יימחק לצמיתות בעוד ${days} ימים.`,
+    DELETE_ACCOUNT_CANCEL_BUTTON: 'בטל בקשת מחיקה',
+    DELETE_ACCOUNT_CANCELLING: 'מבטל...',
+    DELETE_ACCOUNT_CANCEL_SUCCESS: 'בקשת המחיקה בוטלה. החשבון פעיל כרגיל.',
+    DELETE_ACCOUNT_CANCEL_ERROR: 'ביטול הבקשה נכשל. נסה שוב.',
+    DELETE_ACCOUNT_CANCEL_NO_PENDING: 'אין בקשת מחיקה פעילה לחשבון.',
     
     // Placeholders and labels
     COMING_SOON: 'בקרוב',

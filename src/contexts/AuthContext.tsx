@@ -128,6 +128,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               enlistmentCycle: firestoreData.enlistmentCycle,
               address: firestoreData.address,
               communicationPreferences: firestoreData.communicationPreferences,
+              deletionRequestedAt: firestoreData.deletionRequestedAt,
               initials: UserDataService.generateInitials(firestoreData)
             };
             
@@ -291,6 +292,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       enlistmentCycle: firestoreData.enlistmentCycle,
       address: firestoreData.address,
       communicationPreferences: firestoreData.communicationPreferences,
+      deletionRequestedAt: firestoreData.deletionRequestedAt,
       initials: UserDataService.generateInitials(firestoreData),
     };
     setUser(refreshed);

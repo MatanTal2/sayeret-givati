@@ -7,6 +7,7 @@ import PageHeader from './PageHeader';
 import AppSidebar from './AppSidebar';
 import QuickActionFab from './QuickActionFab';
 import WelcomeModal from '@/components/onboarding/WelcomeModal';
+import PendingDeletionBanner from '@/components/settings/PendingDeletionBanner';
 import { useAuth } from '@/contexts/AuthContext';
 import { trackRouteVisit } from '@/utils/recentRoutesStorage';
 import { isRegistrationInProgress } from '@/lib/registrationFlowFlag';
@@ -57,6 +58,7 @@ export default function AppShell({
         showBackArrow={showBackArrow}
         onOpenSidebar={() => setMobileSidebarOpen(true)}
       />
+      {isAuthenticated && <PendingDeletionBanner />}
       <div className="flex flex-1 min-h-0">
         <AppSidebar
           mobileOpen={mobileSidebarOpen}

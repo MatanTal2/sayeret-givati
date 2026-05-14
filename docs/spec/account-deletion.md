@@ -74,10 +74,17 @@ All three added to the `ALLOWED_EVENT_TYPES` allowlist in `/api/auth/audit`.
 - `src/components/settings/DeleteAccountModal.tsx` — danger-coloured Headless UI dialog. Password input (always required), reason textarea (optional, 500 chars), submit button. Re-auth runs first; on success, posts to `/delete`. If server returns `has_outstanding_assets`, the modal renders the breakdown inline rather than closing — user fixes inventory, retries.
 - `src/app/settings/page.tsx` — the previously-disabled "מחק חשבון" button is now enabled and opens the modal. Success toast uses `DELETE_ACCOUNT_SUCCESS` text (Hebrew + English).
 
-## Out of PR-G (follow-ups)
+## PR-G follow-ups
 
-- **Hard-delete script** at `deletionRequestedAt + 30d` — manual first run, then a cron. Auth user delete + `users.displayName` → "Deleted User" + `users.deletedAt` stamp.
-- **Pending-deletion banner** on the global app shell: "החשבון שלך מתוזמן למחיקה ב-X. בטל?" with a one-click cancel CTA. Surface visibility for the user mid-window.
-- **Outstanding-assets shortcut links** in the modal — "Return equipment" / "Cancel pending transfers" deep links rather than the user manually navigating.
-- **Hard-delete audit row** with the `ACCOUNT_DELETED` event already in the allowlist.
+### Shipped on `feat/pr-g-banner-cancel-and-cron` (2026-05-14)
+
+- **Pending-deletion banner** — `src/components/settings/PendingDeletionBanner.tsx`. Mounted in `AppShell` between `TopBar` and the main layout. Reads `enhancedUser.deletionRequestedAt` from `AuthContext`; renders nothing when unset. Shows days remaining via `computeDaysLeft` + one-click cancel button that calls `cancelAccountDeletion` and refreshes the enhanced user. Banner disappears in-place on success.
+- **Cancel-deletion UI in Settings** — when `enhancedUser.deletionRequestedAt` is set, the danger row at the bottom of `/settings` swaps "מחק חשבון" for "בטל בקשת מחיקה" (uses the same `cancelAccountDeletion` client). Title + description swap to the pending-state copy with the days-remaining count.
+- **`FirestoreUserProfile` + `EnhancedAuthUser`** — both gained the optional `deletionRequestedAt: Timestamp` field, surfaced through both `AuthContext` write sites (onAuthStateChanged initial load + `refreshEnhancedUser`).
+- **Outstanding-assets shortcut links** — `DeleteAccountModal`'s blocked-by-assets breakdown now renders each row as a Headless UI–free `<Link>` to `/equipment` (equipment + transfers) or `/ammunition`. Clicking dismisses the modal so the user lands on the asset page directly.
+
+### Still deferred
+
+- **Hard-delete script** at `deletionRequestedAt + 30d` — manual first run, then a cron. Auth user delete via Admin SDK `auth.deleteUser` + `users.displayName` → "Deleted User" + `users.deletedAt` stamp. Council needed on safety (cross-system irreversible write needs canary + audit) before scheduling; deferring keeps this PR small.
+- **Hard-delete audit row** with the `ACCOUNT_DELETED` event (already in the allowlist).
 - **Admin force-delete endpoint** if/when Q4 reopens.

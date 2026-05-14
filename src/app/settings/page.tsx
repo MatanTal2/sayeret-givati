@@ -9,8 +9,11 @@ import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
 import ChangePasswordModal from '@/components/settings/ChangePasswordModal';
 import ChangePhoneModal from '@/components/settings/ChangePhoneModal';
 import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
+import { cancelAccountDeletion } from '@/lib/accountDeletionClient';
+import { computeDaysLeft } from '@/components/settings/PendingDeletionBanner';
 import { Select } from '@/components/ui';
 import { useToast } from '@/components/ui/Toast';
+import type { Timestamp } from 'firebase/firestore';
 import {
   UserIcon,
   PhoneIcon,
@@ -26,17 +29,41 @@ import {
   ChevronRightIcon
 } from 'lucide-react';
 
+function daysUntilHardDelete(requestedAt: Timestamp | undefined): number {
+  if (!requestedAt) return 0;
+  return computeDaysLeft(requestedAt);
+}
+
 /**
  * Settings Page
  * Provides a comprehensive settings interface for user account management
  * All functionality is UI-only (placeholders) as requested
  */
 export default function SettingsPage() {
-  const { enhancedUser } = useAuth();
+  const { enhancedUser, refreshEnhancedUser } = useAuth();
   const { showToast } = useToast();
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [changePhoneOpen, setChangePhoneOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [cancellingDeletion, setCancellingDeletion] = useState(false);
+
+  const hasPendingDeletion = !!enhancedUser?.deletionRequestedAt;
+
+  const handleCancelDeletion = async () => {
+    if (cancellingDeletion) return;
+    setCancellingDeletion(true);
+    const result = await cancelAccountDeletion();
+    if (result.success) {
+      showToast(TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_CANCEL_SUCCESS, 'success');
+      await refreshEnhancedUser();
+    } else if (result.code === 'no_pending_request') {
+      showToast(TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_CANCEL_NO_PENDING, 'info');
+      await refreshEnhancedUser();
+    } else {
+      showToast(TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_CANCEL_ERROR, 'danger');
+    }
+    setCancellingDeletion(false);
+  };
 
   // TODO: Replace with actual state management when backend is implemented
   const [settings, setSettings] = useState({
@@ -367,26 +394,45 @@ export default function SettingsPage() {
                 </button>
               </div>
 
-              {/* Delete Account */}
+              {/* Delete Account — swaps to cancel-deletion button when a request is pending. */}
               <div className="flex items-center justify-between p-4 border border-danger-200 rounded-xl bg-danger-50">
                 <div className="flex items-center gap-4">
                   <TrashIcon className="w-5 h-5 text-danger-500" />
                   <div>
                     <h3 className="font-medium text-danger-900">
-                      {TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT}
+                      {hasPendingDeletion
+                        ? TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_PENDING_TITLE
+                        : TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT}
                     </h3>
                     <p className="text-sm text-danger-600">
-                      {TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_WARNING}
+                      {hasPendingDeletion
+                        ? TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_PENDING_DAYS_LEFT(
+                            daysUntilHardDelete(enhancedUser?.deletionRequestedAt),
+                          )
+                        : TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_WARNING}
                     </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setDeleteAccountOpen(true)}
-                  className="btn-danger text-sm"
-                >
-                  {TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT}
-                </button>
+                {hasPendingDeletion ? (
+                  <button
+                    type="button"
+                    onClick={handleCancelDeletion}
+                    disabled={cancellingDeletion}
+                    className="btn-ghost text-sm border border-danger-300 text-danger-700"
+                  >
+                    {cancellingDeletion
+                      ? TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_CANCELLING
+                      : TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT_CANCEL_BUTTON}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteAccountOpen(true)}
+                    className="btn-danger text-sm"
+                  >
+                    {TEXT_CONSTANTS.SETTINGS.DELETE_ACCOUNT}
+                  </button>
+                )}
               </div>
             </div>
           </div>
