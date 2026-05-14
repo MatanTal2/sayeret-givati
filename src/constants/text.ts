@@ -976,7 +976,9 @@ export const TEXT_CONSTANTS = {
       COL_ROLE: 'תפקיד',
       COL_EMAIL: 'אימייל',
       UNREGISTERED_BADGE: 'לא רשום',
-      TOTAL: 'סה״כ {count}'
+      TOTAL: 'סה״כ {count}',
+      REFRESH: 'רענן',
+      REFRESH_HINT: 'משוך נתונים מעודכנים מהשרת'
     },
     CONVOYS: {
       TITLE: 'שיירות',
