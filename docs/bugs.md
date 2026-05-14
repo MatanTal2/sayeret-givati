@@ -1,6 +1,37 @@
 
 # bugs need to be fix UI/UX
 
+## Open
+
+19. **App Check init warning floods console on localhost (admin route)**
+    - **Repro:** `npm run dev` → navigate to `/management`. Console emits the warning below on every page load:
+      ```
+      [appCheck] NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not set — App Check is disabled.
+      Phone Auth and Firestore traffic will not carry an attestation token.
+      See ENV_SETUP.md for the provisioning steps.
+      ```
+      Origin: `src/lib/appCheck.ts:45` → called from `src/lib/firebase.ts:28` on first import.
+    - **Why this matters:** Warning is correct in prod, but in local dev the env var is intentionally absent. Right now every dev hits it on every admin reload — noise that hides real warnings. Should be a dev-only `console.info` or gated on `process.env.NODE_ENV !== 'development'`, OR loud only when running on a non-localhost host.
+    - **Fix sketch:** In `ensureAppCheckInitialized`, when site key is missing AND `process.env.NODE_ENV === 'development'`, downgrade to a single `console.info('[appCheck] disabled in dev; set NEXT_PUBLIC_RECAPTCHA_SITE_KEY for parity testing')` and suppress the longer warning. Keep the loud warning for production builds.
+
+20. **Admin management tabs have no overflow indicator**
+    - **Repro:** Open `/management` on a narrow viewport (or any width where the tab strip overflows). Only the first 2-3 tabs are visible. Nothing in the UI signals that more tabs exist beyond what's rendered.
+    - **Why this matters:** Users miss whole admin features (System Config, Permissions, Templates, etc.). They scroll horizontally only if they discover it accidentally.
+    - **Fix scope:** Keep the horizontal scroll (don't switch to dropdown — user likes the tab strip). Need a discoverability signal: shadow fade on the trailing edge, or chevron buttons that scroll the strip programmatically, or a small "X more" indicator on the trailing edge. **Council needed** to pick the minimal-noise approach.
+
+21. **Admin UsersTab table not mobile-friendly**
+    - **Repro:** `/management` → "Manage Users" tab on a narrow viewport. Table is 6 columns (User+email | Role | Rank | Team | Status | Actions). On mobile the role + email columns sit far to the side; user must horizontally scroll the whole page to read them.
+    - **Fix scope:** Switch to the same mobile-priority pattern as `EquipmentTable` — fixed-height vertically scrolling container, each row is compact (Name + indicator dot + minimal status), clicking the row expands to reveal email, role, rank, team, actions. Phone column should also be added (data missing today; pull from `users.phoneNumber` ∪ `authorized_personnel.phoneNumber` when registered=false).
+    - **Council needed** for the registered-vs-unregistered indicator badge (minimal-noise design).
+
+22. **Manage Equipment Templates list has no category grouping**
+    - **Repro:** `/management` → "Equipment Templates" tab. Templates render as a flat list. Hard to scan; users see hundreds of items mixed across categories.
+    - **Fix scope:** Group templates by category. 4 design options below; user picks one:
+      1. **Two-level Disclosure** — collapsible category section → expand to see templates as nested Disclosure rows. Matches existing Headless UI Disclosure pattern in the tab today.
+      2. **Side nav + main panel** — left rail with category list (single-select), main panel renders flat templates for the selected category. Familiar admin-style.
+      3. **Sticky group headers (iOS-style)** — single scrolling list with sticky `<h3>` headers between groups. Templates stay in one flow; jump via header click.
+      4. **Tab strip per category** — horizontal tab strip at top, one tab per category. Selecting a category swaps the main list. Subcategory chips below if needed.
+
 > **Note (2026-04-29):** Incomplete-registration leak fixed on `fix/incomplete-registration-leak`. Bugs addressed in one branch:
 > - **Orphan Firebase Auth user on abandon** — `RegistrationModal` now calls `deleteCurrentUser()` on close/back/unmount; falls back to `signOutCurrentUser()` if `auth/requires-recent-login`. New helpers in `src/lib/firebasePhoneAuth.ts`, sessionStorage flag in `src/lib/registrationFlowFlag.ts`.
 > - **AuthContext authenticated orphans** — listener now signs out a Firebase user that has no Firestore profile unless `registrationInProgress` is set.
