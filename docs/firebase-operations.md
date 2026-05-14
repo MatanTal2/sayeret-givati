@@ -131,6 +131,7 @@ Not exposed via the app. Admins seed entries manually from the Firestore console
 | `src/lib/userService.ts` | `registerUser` | `setDoc` | Full user profile on registration |
 | `src/lib/adminUtils.ts` | `deleteUserByMilitaryHash` | `updateDoc` | `isDeleted: true`, `deletedAt` |
 | `src/lib/communicationService.ts` | `updateCommunicationPreferences` | `updateDoc` | `communicationPreferences.*` |
+| `src/lib/db/server/userService.ts` | `serverUpdateUserProfile` | `update` (admin) | Whitelisted: `teamId`, `profileImage`, `enlistmentCycle`, `address`, `communicationPreferences.{emailNotifications,equipmentTransferAlerts,systemUpdates,schedulingAlerts,emergencyNotifications}` (dotted paths + `lastUpdated`/`updatedBy` stamps) |
 | `src/components/SimpleUserTest.tsx` | `handleCreateTestUser` | `setDoc` | Test user profile |
 | `src/components/SimpleUserTest.tsx` | `handleDeleteTestUser` | `deleteDoc` | Removes test user document |
 

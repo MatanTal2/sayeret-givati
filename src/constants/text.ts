@@ -1363,6 +1363,10 @@ export const TEXT_CONSTANTS = {
     EMAIL_NOTIFICATIONS_DESC: 'קבל עדכונים חשובים באימייל',
     EQUIPMENT_TRANSFER_ALERTS: 'התראות העברת ציוד',
     EQUIPMENT_TRANSFER_DESC: 'קבל התראות על בקשות והעברות ציוד',
+    NOTIFICATION_PREFS_SAVED: 'העדפות ההתראות נשמרו.',
+    NOTIFICATION_PREFS_ERROR: 'שמירת ההעדפה נכשלה. נסה שוב.',
+    NOTIFICATION_PREFS_NOTE:
+      'ההגדרה נשמרת לחשבונך. שליחת ההתראות בפועל תופעל בעדכון עתידי.',
     TRANSFER_REQUESTS: 'בקשות העברה',
     PENDING_TRANSFERS: 'העברות ממתינות',
     

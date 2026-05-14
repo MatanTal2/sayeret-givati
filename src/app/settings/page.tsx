@@ -11,12 +11,20 @@ import ChangePhoneModal from '@/components/settings/ChangePhoneModal';
 import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 import AccountActivitySection from '@/components/settings/AccountActivitySection';
 import RevokeSessionsRow from '@/components/settings/RevokeSessionsRow';
+import NotificationToggleRow from '@/components/settings/NotificationToggleRow';
 import { cancelAccountDeletion } from '@/lib/accountDeletionClient';
 import { readProfileImageCache, writeProfileImageCache } from '@/lib/profileImageCache';
 import { computeDaysLeft } from '@/components/settings/PendingDeletionBanner';
 import { Select } from '@/components/ui';
 import { useToast } from '@/components/ui/Toast';
+import { updateUserProfile } from '@/lib/userProfileService';
 import type { Timestamp } from 'firebase/firestore';
+
+type NotifPrefKey = 'emailNotifications' | 'equipmentTransferAlerts';
+const NOTIF_DEFAULTS: Record<NotifPrefKey, boolean> = {
+  emailNotifications: true,
+  equipmentTransferAlerts: true,
+};
 import {
   UserIcon,
   PhoneIcon,
@@ -68,10 +76,18 @@ export default function SettingsPage() {
     setCancellingDeletion(false);
   };
 
-  // TODO: Replace with actual state management when backend is implemented
+  // Notification toggles persist via PATCH /api/users/profile. Language and
+  // theme are still UI-only placeholders (PR-F i18n + theming pending).
+  const [notifPrefs, setNotifPrefs] = useState<Record<NotifPrefKey, boolean>>(() => ({
+    emailNotifications:
+      enhancedUser?.communicationPreferences?.emailNotifications ??
+      NOTIF_DEFAULTS.emailNotifications,
+    equipmentTransferAlerts:
+      enhancedUser?.communicationPreferences?.equipmentTransferAlerts ??
+      NOTIF_DEFAULTS.equipmentTransferAlerts,
+  }));
+  const [savingPref, setSavingPref] = useState<NotifPrefKey | null>(null);
   const [settings, setSettings] = useState({
-    emailNotifications: true,
-    equipmentTransferAlerts: false,
     language: 'hebrew',
     theme: 'light'
   });
@@ -92,17 +108,45 @@ export default function SettingsPage() {
     writeProfileImageCache(enhancedUser?.uid, resolved);
   }, [enhancedUser?.profileImage, enhancedUser?.uid]);
 
+  // Resync notification prefs from server data whenever the auth context
+  // refreshes (e.g. AuthContext finishes its initial Firestore fetch).
+  useEffect(() => {
+    setNotifPrefs({
+      emailNotifications:
+        enhancedUser?.communicationPreferences?.emailNotifications ??
+        NOTIF_DEFAULTS.emailNotifications,
+      equipmentTransferAlerts:
+        enhancedUser?.communicationPreferences?.equipmentTransferAlerts ??
+        NOTIF_DEFAULTS.equipmentTransferAlerts,
+    });
+  }, [
+    enhancedUser?.communicationPreferences?.emailNotifications,
+    enhancedUser?.communicationPreferences?.equipmentTransferAlerts,
+  ]);
+
   // TODO: Replace with actual data when backend is implemented
   const mockPhoneNumber = enhancedUser?.phoneNumber || '+972-50-123-4567';
   const mockPendingTransfers = 3; // Placeholder for notification badge
 
-  const handleToggle = (setting: string) => {
-    // TODO: Implement actual toggle logic when backend is ready
-    setSettings(prev => ({
-      ...prev,
-      [setting]: !prev[setting as keyof typeof prev]
-    }));
-    console.log(`Toggle ${setting} - UI only, no backend action`);
+  const handleNotifToggle = async (key: NotifPrefKey) => {
+    if (savingPref || !enhancedUser?.uid) return;
+    const previous = notifPrefs[key];
+    const next = !previous;
+    setNotifPrefs(prev => ({ ...prev, [key]: next }));
+    setSavingPref(key);
+    try {
+      await updateUserProfile(enhancedUser.uid, {
+        communicationPreferences: { [key]: next },
+      });
+      await refreshEnhancedUser();
+      showToast(TEXT_CONSTANTS.SETTINGS.NOTIFICATION_PREFS_SAVED, 'success');
+    } catch (error) {
+      setNotifPrefs(prev => ({ ...prev, [key]: previous }));
+      console.error('[settings] notification toggle failed:', error);
+      showToast(TEXT_CONSTANTS.SETTINGS.NOTIFICATION_PREFS_ERROR, 'danger');
+    } finally {
+      setSavingPref(null);
+    }
   };
 
   const handleButtonClick = (action: string) => {
@@ -252,61 +296,25 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-4">
-              {/* Email Notifications */}
-              <div className="flex items-center justify-between p-4 border border-neutral-200 rounded-xl">
-                <div className="flex items-center gap-4">
-                  <MailIcon className="w-5 h-5 text-neutral-400" />
-                  <div>
-                    <h3 className="font-medium text-neutral-900">
-                      {TEXT_CONSTANTS.SETTINGS.EMAIL_NOTIFICATIONS}
-                    </h3>
-                    <p className="text-sm text-neutral-500">
-                      {TEXT_CONSTANTS.SETTINGS.EMAIL_NOTIFICATIONS_DESC}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleToggle('emailNotifications')}
-                  disabled
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-not-allowed
-                    ${settings.emailNotifications ? 'bg-neutral-300' : 'bg-neutral-200'}
-                  `}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform
-                      ${settings.emailNotifications ? 'translate-x-6' : 'translate-x-1'}
-                    `}
-                  />
-                </button>
-              </div>
-
-              {/* Equipment Transfer Alerts */}
-              <div className="flex items-center justify-between p-4 border border-neutral-200 rounded-xl">
-                <div className="flex items-center gap-4">
-                  <PackageIcon className="w-5 h-5 text-neutral-400" />
-                  <div>
-                    <h3 className="font-medium text-neutral-900">
-                      {TEXT_CONSTANTS.SETTINGS.EQUIPMENT_TRANSFER_ALERTS}
-                    </h3>
-                    <p className="text-sm text-neutral-500">
-                      {TEXT_CONSTANTS.SETTINGS.EQUIPMENT_TRANSFER_DESC}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleToggle('equipmentTransferAlerts')}
-                  disabled
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-not-allowed
-                    ${settings.equipmentTransferAlerts ? 'bg-neutral-300' : 'bg-neutral-200'}
-                  `}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform
-                      ${settings.equipmentTransferAlerts ? 'translate-x-6' : 'translate-x-1'}
-                    `}
-                  />
-                </button>
-              </div>
+              <NotificationToggleRow
+                icon={<MailIcon className="w-5 h-5 text-neutral-400" />}
+                title={TEXT_CONSTANTS.SETTINGS.EMAIL_NOTIFICATIONS}
+                description={TEXT_CONSTANTS.SETTINGS.EMAIL_NOTIFICATIONS_DESC}
+                enabled={notifPrefs.emailNotifications}
+                saving={savingPref === 'emailNotifications'}
+                onToggle={() => handleNotifToggle('emailNotifications')}
+              />
+              <NotificationToggleRow
+                icon={<PackageIcon className="w-5 h-5 text-neutral-400" />}
+                title={TEXT_CONSTANTS.SETTINGS.EQUIPMENT_TRANSFER_ALERTS}
+                description={TEXT_CONSTANTS.SETTINGS.EQUIPMENT_TRANSFER_DESC}
+                enabled={notifPrefs.equipmentTransferAlerts}
+                saving={savingPref === 'equipmentTransferAlerts'}
+                onToggle={() => handleNotifToggle('equipmentTransferAlerts')}
+              />
+              <p className="text-xs text-neutral-500 ps-1">
+                {TEXT_CONSTANTS.SETTINGS.NOTIFICATION_PREFS_NOTE}
+              </p>
             </div>
           </div>
 
