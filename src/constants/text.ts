@@ -1360,6 +1360,7 @@ export const TEXT_CONSTANTS = {
     ACCOUNT_ACTIVITY_DEVICE: 'מכשיר',
     ACCOUNT_ACTIVITY_ACTOR_SELF: 'על ידך',
     ACCOUNT_ACTIVITY_ACTOR_ADMIN: 'על ידי מנהל מערכת',
+    ACCOUNT_EVENT_ACCOUNT_CREATED: 'פתיחת חשבון',
     ACCOUNT_EVENT_PASSWORD_CHANGED: 'הסיסמה שונתה',
     ACCOUNT_EVENT_PHONE_CHANGED: 'מספר הטלפון שונה',
     ACCOUNT_EVENT_EMAIL_CHANGED: 'כתובת המייל שונתה',
