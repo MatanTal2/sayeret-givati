@@ -47,3 +47,14 @@ Object.assign(navigator, {
 
 // Mock window.alert
 global.alert = jest.fn()
+
+// jsdom doesn't implement ResizeObserver — Headless UI Listbox / Menu /
+// Floating UI anchor positioning all touch it during open/close.
+// A no-op observer is sufficient for tests that only assert on DOM, not
+// on actual layout measurements.
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+global.ResizeObserver = global.ResizeObserver || ResizeObserverMock
