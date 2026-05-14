@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthGuard from '@/components/auth/AuthGuard';
 import AppShell from '@/app/components/AppShell';
@@ -10,6 +10,7 @@ import ChangePasswordModal from '@/components/settings/ChangePasswordModal';
 import ChangePhoneModal from '@/components/settings/ChangePhoneModal';
 import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 import { cancelAccountDeletion } from '@/lib/accountDeletionClient';
+import { readProfileImageCache, writeProfileImageCache } from '@/lib/profileImageCache';
 import { computeDaysLeft } from '@/components/settings/PendingDeletionBanner';
 import { Select } from '@/components/ui';
 import { useToast } from '@/components/ui/Toast';
@@ -74,11 +75,20 @@ export default function SettingsPage() {
   });
 
   // Profile image state. Drop legacy blob: URLs from the old mock — they error on render.
+  // Seed from localStorage so the avatar paints instantly on reload (Firestore
+  // fetch is async). Effect below revalidates from enhancedUser.profileImage.
   const initialProfileImage =
     enhancedUser?.profileImage && /^https?:\/\//i.test(enhancedUser.profileImage)
       ? enhancedUser.profileImage
-      : undefined;
+      : readProfileImageCache(enhancedUser?.uid);
   const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(initialProfileImage);
+
+  useEffect(() => {
+    const img = enhancedUser?.profileImage;
+    const resolved = img && /^https?:\/\//i.test(img) ? img : undefined;
+    setProfileImageUrl(resolved);
+    writeProfileImageCache(enhancedUser?.uid, resolved);
+  }, [enhancedUser?.profileImage, enhancedUser?.uid]);
 
   // TODO: Replace with actual data when backend is implemented
   const mockPhoneNumber = enhancedUser?.phoneNumber || '+972-50-123-4567';
@@ -101,6 +111,7 @@ export default function SettingsPage() {
   // Handle profile image update
   const handleImageUpdate = (newImageUrl: string) => {
     setProfileImageUrl(newImageUrl);
+    writeProfileImageCache(enhancedUser?.uid, newImageUrl);
     // TODO: Update image in Firestore
     console.log('Profile image updated in settings:', newImageUrl);
   };
