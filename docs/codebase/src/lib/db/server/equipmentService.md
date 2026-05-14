@@ -17,6 +17,8 @@ Admin-SDK writes for `equipment`. All multi-doc writes run in a single Firestore
 | `serverCreateEquipmentBatch` | N-item atomic create with shared `batchId`; holder/signer team+unit denormalized from holder profile. |
 | `serverReportEquipment` | Appends history entry, updates `lastReportUpdate` + `lastReportPhotoUrl`, writes `REPORT_SUBMITTED` action log. Photo may be null only when actor has `canReportWithoutPhoto`. |
 | `serverRetireEquipment` | Signer-initiated. Returns `{ kind: 'retired' }` when signer==holder (immediate RETIRED status), else `{ kind: 'request_created', requestId }` and creates a `retirementRequests` doc routed to the holder. |
+| `serverSendToStorage` | Holder-initiated. Flips `AVAILABLE → STORED`, logs `STORED` action. |
+| `serverPullFromStorage` | Holder-initiated. Pre-checks `SystemConfig.roundOpen === true`; flips `STORED → AVAILABLE`, logs `REISSUED` action. |
 
 ## Firebase Operations
 
@@ -29,3 +31,5 @@ Admin-SDK writes for `equipment`. All multi-doc writes run in a single Firestore
 ## Notes
 
 - Any change to `currentHolderId` or `signedById` MUST also update the matching `holderTeamId/UnitId` or `signerTeamId/UnitId` in the same transaction.
+- Storage transitions are holder-only: `serverSendToStorage` and `serverPullFromStorage` both require `actor.uid === equipment.currentHolderId`. `transferRequestService` rejects creation against items in `STORED` or `EXCHANGE_REQUESTED` status.
+- Exchange-flow (broken-item swap that creates a new doc with a new serial) lives in `exchangeRequestService.ts`, not here. See `docs/spec/equipment-exchange-and-storage.md`.

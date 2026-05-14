@@ -1,7 +1,6 @@
 # Equipment statuses: EXCHANGE + STORED — Specification
 
-> **Status:** Spec only — code not started.
-> **Queued:** 2026-05-13.
+> **Status:** Shipped on `feat/equipment-exchange-and-storage` (2026-05-14). Awaits merge.
 > **Related:** `docs/spec/equipment-flow.md` (canonical equipment lifecycle), `project_equipment_new_statuses.md` (memory pointer).
 
 ---
