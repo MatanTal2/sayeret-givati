@@ -12,42 +12,32 @@
     - **Action:** spawn a Council (3 parallel reviewers: a11y / iOS-Safari behaviour / cross-browser viewport semantics) to converge on (a) vs (b) before coding. Document the picked approach in `docs/spec/` and apply globally via `globals.css` or a shared `useModalViewport()` hook.
     - **Sample route to reproduce:** `/equipment` → expand any row → `⋮` → "החלף בפריט אחר" → focus the search input. Compare with `/equipment` → same row → "בקשת החלפה" — both modals share the input pattern but the bigger one triggers a noticeably stronger zoom.
 
-24. **Ammunition list shows "צ:" label for items with no serial number**
-    - **Repro:** Ammunition page. Items whose template has `requiresSerialNumber === false` (the auto-generated UUID id case) render the inline `[צ: <uuid>]` tag — same precedent that bug #18 fixed for the *photo* field on non-serialized items, but the `צ:` label was missed for ammo.
-    - **Expected:** when the item has no real serial number, hide both the `צ:` label *and* the value. Don't show "צ: 7af3-...-bc9d" — show nothing in that slot. Mirrors the equipment-domain fix from bugs #18 / #16 / #15 where non-serialized items stop pretending to have a serial.
-    - **Likely fix surface:** the ammo list renderer that resolves `item.id` / `item.serialNumber` to the inline `[צ: ...]` chip. Gate the chip on `hasSerialNumber === true` (and backfill the flag on ammo items the same way `backfill-equipment-has-serial.js` did for equipment, if ammo docs don't already carry it).
+24. ~~**Ammunition list shows "צ:" label for items with no serial number**~~
+    - **FIXED (2026-05-14 on `fix/bug-batch-2026-05-14-pt3`):** added `hasSerialNumber?: boolean` to `AmmunitionItem` (`src/types/ammunition.ts`), mirroring the equipment flag added in bug #18's fix. `serverCreateSerialItem` (`src/lib/db/server/ammunitionInventoryService.ts`) now writes `hasSerialNumber: true` for every new SERIAL item it creates.
+    - `AmmunitionInventoryView.tsx` row cell and `ItemExpanded` panel both gate the `צ-${id}` chip on `item.hasSerialNumber !== false`. When the flag is explicitly `false` (legacy data flipped by ops, or a future flow that creates non-serialized items), the cell renders `—` (matching the stock row pattern) and the expanded panel omits the "מספר סידורי" row entirely.
+    - Back-compat: pre-flag docs are treated as serialized (`!== false`) so existing prod rows keep showing the chip until an operator explicitly flips them.
 
-26. **Phone book "refresh" doesn't reflect upstream deletions** *(phone book)*
-    - **Repro:** delete a row from `authorized_personnel` (admin → Manage Personnel → delete). Open Phone Book. Click the refresh button. The deleted person still appears in the list. A hard page reload (F5) is the only way to evict them.
-    - **Why:** the phone book cache (`phoneBookCache` localStorage seed used to paint instantly on reload) is not invalidated on refresh — refresh probably re-renders from the same cached array, or the server-side query backing the refresh doesn't notice the upstream `authorized_personnel` deletion because the row was synthesised from `users ∪ authorized_personnel` and the join key (`militaryPersonalNumberHash`) still points to a `users` doc that the personnel deletion didn't touch.
-    - **Likely fix surface:**
-      - Refresh path: invalidate `phoneBookCache` localStorage before re-fetching so the UI doesn't paint the stale set first.
-      - Server: when `authorized_personnel/{hash}` is deleted, also delete the matching `phoneBook/{hash}` doc (or mark it inactive). Same write-through pattern as `serverUpsertPhoneBookFromUser` on create/update — but for the deletion path. Check `adminUtils.deleteUserByMilitaryHash` / `serverDeletePersonnel` for the hook point.
-      - Alternatively: phone-book query filters out rows whose backing personnel doc is missing.
-    - **Note:** this isn't a stale-cache-only bug — the underlying `phoneBook` collection itself probably also retains the row, since `scripts/backfill-phone-book.js` doesn't have a delete pass either.
+26. ~~**Phone book "refresh" doesn't reflect upstream deletions**~~ *(phone book)*
+    - **FIXED (2026-05-14 on `fix/bug-batch-2026-05-14-pt3`):** root cause was the server-side delete leg, not the client cache. The client refresh path already invalidated `phoneBookCache` and force-fetched (`usePhoneBook.refresh` calls `clearPhoneBookCache()` before `forceFullFetch`). But `serverDeletePersonnel` (`src/lib/db/server/authorizedPersonnelService.ts`) only deleted the `authorized_personnel/{hash}` doc and left the downstream `phoneBook/{hash}` row in place, so every fresh fetch kept returning it.
+    - **Fix:** `serverDeletePersonnel` now also calls `serverDeletePhoneBookEntryByHash(personnelId)` after the personnel delete. The personnel doc id IS the `militaryPersonalNumberHash`, so the helper can be invoked directly. The existing helper already short-circuits when the entry has a `userId` field (i.e. the soldier is registered), so registered users keep their phone-book row intact until the underlying `users` doc is removed — only personnel-only entries are evicted.
+    - **Out of scope:** the bulk-delete personnel path (if any) is not touched here; ammo / equipment cleanup on personnel delete already lived elsewhere. A delete pass for `scripts/backfill-phone-book.js` is a separate cleanup task and was not in this bug.
 
-27. **Phone book table: rows clip data on mobile, need to be expandable** *(phone book, RAISED 3RD TIME)*
-    - **Operator note:** "as I told you three time already" — this is the third time the table-not-mobile-friendly pattern has been raised for the phone book. Same pattern that bug #21 fixed for the admin `UsersTab` is needed here.
-    - **Repro:** Phone Book on a phone-sized viewport. The table renders horizontal columns that overflow the viewport, so the user has to horizontally-scroll inside the row to see the data that's been cut off.
-    - **Expected behaviour:** rewrite the phone-book table to a list of expandable cards mirroring `UsersTab` (bug #21 fix) and `EquipmentTable`. Compact card visible state should show **name + phone + team**. Expand reveals the rest (email / userType / military ID / source / isRegistered / photoURL / address — whichever the row carries).
-    - **Likely fix surface:**
-      - `src/app/phone-book/page.tsx` (and any `PhoneBookTable.tsx` / `PhoneBookRow.tsx` if extracted) — drop the table layout, render a `<ul>` of Headless UI `<Disclosure>` rows.
-      - Copy the compact-card pattern from `UsersTab.tsx` (initials + name + suffix badge). Phone book doesn't have a registered-pending distinction but the `source: 'users' | 'authorized_personnel'` already distinguishes "real account" vs "personnel-only" rows — could surface as a small badge if it adds value.
-      - Reuse `formatPhoneForDisplay` from the existing utility for phone rendering.
+27. ~~**Phone book table: rows clip data on mobile, need to be expandable**~~ *(phone book, RAISED 3RD TIME)*
+    - **FIXED (2026-05-14 on `fix/bug-batch-2026-05-14-pt3`):** `src/app/phone-book/page.tsx` dropped the 5-column `<table>` and now renders a `<ul>` of click-to-expand rows mirroring `UsersTab` (bug #21) and `EquipmentTable`.
+      - Compact row: avatar (photo or initials) + display name + unregistered badge (when `!entry.isRegistered`), with phone + team in a small subtitle so the most common info is reachable without expanding.
+      - Expanded panel: 2-column grid surfacing phone, team, role (Hebrew label via `ROLE_LABEL`), and email — each rendered through a `DetailField` helper for layout parity with `UsersTab`.
+      - Phone and email links call `ev.stopPropagation()` on click so tapping the phone in the compact row dials instead of toggling the row.
+    - Reused `formatPhoneForDisplay`, the `Avatar` helper, `cn`, and `ChevronDown` (lucide) — no new dependencies.
     - **Reference fix:** bug #21 (`feat/users-tab-expandable-mobile-friendly`, 2026-05-14).
 
-28. **Phone book filters stack vertically instead of using horizontal space** *(phone book)*
-    - **Repro:** Phone Book → look at the filter bar. The search input and both dropdown filters are stacked one above the other, eating vertical space and making the page feel cramped.
-    - **Expected layout:**
-      - **Row 1:** name search input (full width).
-      - **Row 2:** both dropdown filters side-by-side (split the row 50/50, or whatever sizing the existing `Select` components prefer with `flex-1`).
-    - **Likely fix surface:** the filters container in `src/app/phone-book/page.tsx`. Wrap the search in its own row; wrap both dropdowns in a `flex gap-3` row beneath it. On mobile (`sm:`-down) keep them stacked vertically if needed to avoid cramped Selects.
+28. ~~**Phone book filters stack vertically instead of using horizontal space**~~ *(phone book)*
+    - **FIXED (2026-05-14 on `fix/bug-batch-2026-05-14-pt3`):** `src/app/phone-book/page.tsx` filter container restructured from a single `grid-cols-1 sm:grid-cols-3` row into:
+      - **Row 1:** full-width search input.
+      - **Row 2:** `grid-cols-1 sm:grid-cols-2` holding the team and role `Select`s side-by-side on `sm`+; stacked on mobile so the touch targets don't get cramped.
+    - Outer wrapper switched to `space-y-2` so the two rows breathe.
 
-29. **Phone book list overflows page height — need in-container scroll** *(phone book)*
-    - **Repro:** Phone Book with enough rows to scroll. The whole **page** scrolls instead of just the list inside its container, so the filter bar and page header scroll off-screen as the user moves down the list.
-    - **Expected behaviour:** the list container takes the remaining viewport height and scrolls internally (`max-h-[...] overflow-y-auto`), keeping filters + header pinned. Same pattern bug #21 used (`max-h-[28rem] overflow-y-auto` on `UsersTab`).
-    - **Why this matters here specifically:** the phone-book page only renders this one list — there is no other content the user could need to scroll to. Page scroll is wasted, in-container scroll matches user intent.
-    - **Likely fix surface:** the list wrapper in `src/app/phone-book/page.tsx`. Pick the height bound: `max-h-[calc(100vh-Npx)]` for "fill remaining viewport" or `max-h-[36rem]` for "give the page some breathing room below the list". Match the visual treatment used by `UsersTab` so the patterns stay consistent.
+29. ~~**Phone book list overflows page height — need in-container scroll**~~ *(phone book)*
+    - **FIXED (2026-05-14 on `fix/bug-batch-2026-05-14-pt3`):** the phone-book `<ul>` got `max-h-[calc(100vh-20rem)] overflow-y-auto` so the list scrolls inside its own container while the header, filter bar, and "total / refresh" row stay pinned. Picked the viewport-relative bound (rather than a fixed `max-h-[28rem]`) because the phone book is the entire screen — fill the available height, only show a scrollbar when the list overflows.
 
 25. **Stored / returned-to-army items still appear in the active list with full action set**
     - **Repro:** Equipment page. Items in `STORED` (`STATUS_STORED` from PR #76) and items returned to army (the "return" action that flips status to `RETIRED`) currently sit in the same list as active holdings and expose the full action menu.

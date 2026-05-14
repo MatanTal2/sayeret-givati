@@ -6,6 +6,7 @@ import { getAdminDb } from '../admin';
 import { COLLECTIONS } from '../collections';
 import { FieldValue } from 'firebase-admin/firestore';
 import { UserRole } from '@/types/equipment';
+import { serverDeletePhoneBookEntryByHash } from './phoneBookService';
 
 interface PersonnelDocData {
   militaryPersonalNumberHash: string;
@@ -93,6 +94,10 @@ export async function serverWritePhoneToPersonnel(
 export async function serverDeletePersonnel(personnelId: string): Promise<void> {
   const db = getAdminDb();
   await db.collection(COLLECTIONS.AUTHORIZED_PERSONNEL).doc(personnelId).delete();
+  // Personnel doc id IS the militaryPersonalNumberHash, so we can evict the
+  // matching phone-book entry directly. The helper is a no-op for registered
+  // users (rows with `userId`), so it only removes personnel-only entries.
+  await serverDeletePhoneBookEntryByHash(personnelId);
 }
 
 export async function serverBulkAddPersonnel(

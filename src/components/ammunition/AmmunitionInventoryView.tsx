@@ -329,7 +329,9 @@ export default function AmmunitionInventoryView({
                     />
                   </td>
                   <td className="px-3 py-2 text-neutral-900">{template.name}</td>
-                  <td className="px-3 py-2 font-medium text-neutral-900">צ-{it.id}</td>
+                  <td className="px-3 py-2 font-medium text-neutral-900">
+                    {it.hasSerialNumber !== false ? `צ-${it.id}` : '—'}
+                  </td>
                   <td className="px-3 py-2 text-xs">
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${
@@ -476,7 +478,9 @@ function ItemExpanded({
     { label: T.TEMPLATE_FORM.SUBCATEGORY, value: T.SUBCATEGORIES[template.subcategory] },
     { label: T.TEMPLATE_FORM.TRACKING_MODE, value: T.TRACKING_MODE[template.trackingMode] },
     { label: T.TEMPLATE_FORM.SECURITY_LEVEL, value: T.SECURITY_LEVEL[template.securityLevel] },
-    { label: 'מספר סידורי', value: `צ-${item.id}` },
+    ...(item.hasSerialNumber !== false
+      ? [{ label: 'מספר סידורי', value: `צ-${item.id}` } satisfies ExpandedRowMeta]
+      : []),
     { label: T.COL_STATUS, value: T.ITEM_STATUS[item.status] },
   ];
   if (showHolder) {

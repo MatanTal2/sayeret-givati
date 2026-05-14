@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { RefreshCw, Search, User as UserIcon } from 'lucide-react';
+import { ChevronDown, RefreshCw, Search, User as UserIcon } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import AppShell from '@/app/components/AppShell';
 import { Select } from '@/components/ui';
@@ -11,6 +11,7 @@ import { usePhoneBook } from '@/hooks/usePhoneBook';
 import { UserType } from '@/types/user';
 import type { PhoneBookEntry } from '@/types/phoneBook';
 import { formatPhoneForDisplay } from '@/utils/validationUtils';
+import { cn } from '@/lib/cn';
 
 const T = TEXT_CONSTANTS.FEATURES.PHONE_BOOK;
 const ROLE_LABEL: Record<UserType, string> = {
@@ -45,6 +46,7 @@ function PhoneBookContent() {
   const [search, setSearch] = useState('');
   const [team, setTeam] = useState<string | null>(null);
   const [role, setRole] = useState<UserType | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const teamOptions = useMemo(() => {
     const seen = new Set<string>();
@@ -105,8 +107,8 @@ function PhoneBookContent() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <div className="sm:col-span-1 relative">
+      <div className="space-y-2">
+        <div className="relative">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
           <input
             type="search"
@@ -116,22 +118,24 @@ function PhoneBookContent() {
             className="w-full ps-9 pe-3 py-2 text-sm border border-neutral-200 rounded-lg bg-white focus:ring-2 focus:ring-primary-500"
           />
         </div>
-        <Select
-          value={team}
-          onChange={(v) => setTeam(v)}
-          options={teamOptions}
-          placeholder={T.FILTER_TEAM_ALL}
-          clearable
-          ariaLabel={T.FILTER_TEAM}
-        />
-        <Select<UserType>
-          value={role}
-          onChange={(v) => setRole(v)}
-          options={roleOptions}
-          placeholder={T.FILTER_ROLE_ALL}
-          clearable
-          ariaLabel={T.FILTER_ROLE}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <Select
+            value={team}
+            onChange={(v) => setTeam(v)}
+            options={teamOptions}
+            placeholder={T.FILTER_TEAM_ALL}
+            clearable
+            ariaLabel={T.FILTER_TEAM}
+          />
+          <Select<UserType>
+            value={role}
+            onChange={(v) => setRole(v)}
+            options={roleOptions}
+            placeholder={T.FILTER_ROLE_ALL}
+            clearable
+            ariaLabel={T.FILTER_ROLE}
+          />
+        </div>
       </div>
 
       <div className="flex items-center justify-between gap-2">
@@ -162,65 +166,19 @@ function PhoneBookContent() {
           {T.EMPTY_FILTERED}
         </div>
       ) : (
-        <div className="overflow-x-auto border border-neutral-200 rounded-lg bg-white">
-          <table className="min-w-full text-start text-sm">
-            <thead className="bg-neutral-50">
-              <tr>
-                <th className="px-3 py-2 text-xs font-medium text-neutral-600">{T.COL_NAME}</th>
-                <th className="px-3 py-2 text-xs font-medium text-neutral-600">{T.COL_PHONE}</th>
-                <th className="px-3 py-2 text-xs font-medium text-neutral-600">{T.COL_TEAM}</th>
-                <th className="px-3 py-2 text-xs font-medium text-neutral-600">{T.COL_ROLE}</th>
-                <th className="px-3 py-2 text-xs font-medium text-neutral-600">{T.COL_EMAIL}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
-              {filtered.map((e) => (
-                <tr key={e.id} className={e.isRegistered ? 'hover:bg-neutral-50' : 'hover:bg-neutral-50 opacity-80'}>
-                  <td className="px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <Avatar entry={e} />
-                      <div>
-                        <div className="text-neutral-900">{e.displayName}</div>
-                        {!e.isRegistered && (
-                          <span className="inline-block mt-0.5 text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600">
-                            {T.UNREGISTERED_BADGE}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-3 py-2 text-neutral-700 whitespace-nowrap">
-                    {e.phoneNumber ? (
-                      <a className="text-primary-600 hover:underline" href={`tel:${e.phoneNumber}`}>
-                        {formatPhoneForDisplay(e.phoneNumber)}
-                      </a>
-                    ) : (
-                      <span className="text-neutral-400">—</span>
-                    )}
-                  </td>
-                  <td className="px-3 py-2 text-neutral-700">{e.teamId || '—'}</td>
-                  <td className="px-3 py-2">
-                    {e.userType ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-primary-50 text-primary-700">
-                        {ROLE_LABEL[e.userType]}
-                      </span>
-                    ) : (
-                      <span className="text-neutral-400">—</span>
-                    )}
-                  </td>
-                  <td className="px-3 py-2 text-neutral-700">
-                    {e.email ? (
-                      <a className="text-primary-600 hover:underline" href={`mailto:${e.email}`}>
-                        {e.email}
-                      </a>
-                    ) : (
-                      <span className="text-neutral-400">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="border border-neutral-200 rounded-lg bg-white overflow-hidden">
+          <ul className="divide-y divide-neutral-100 max-h-[calc(100vh-20rem)] overflow-y-auto">
+            {filtered.map((e) => (
+              <PhoneBookRow
+                key={e.id}
+                entry={e}
+                expanded={expandedId === e.id}
+                onToggle={() =>
+                  setExpandedId((cur) => (cur === e.id ? null : e.id))
+                }
+              />
+            ))}
+          </ul>
         </div>
       )}
     </div>
@@ -242,6 +200,120 @@ function Avatar({ entry }: { entry: PhoneBookEntry }) {
   return (
     <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-medium border border-primary-200">
       {init || <UserIcon className="w-4 h-4" />}
+    </div>
+  );
+}
+
+interface PhoneBookRowProps {
+  entry: PhoneBookEntry;
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+function PhoneBookRow({ entry, expanded, onToggle }: PhoneBookRowProps) {
+  return (
+    <li>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onToggle}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
+        className={cn(
+          'px-3 py-3 flex items-center gap-3 cursor-pointer transition-colors',
+          expanded ? 'bg-primary-50' : 'hover:bg-neutral-50',
+          !entry.isRegistered && !expanded ? 'opacity-90' : ''
+        )}
+      >
+        <Avatar entry={entry} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-sm font-medium text-neutral-900 truncate">
+              {entry.displayName}
+            </span>
+            {!entry.isRegistered && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 flex-shrink-0">
+                {T.UNREGISTERED_BADGE}
+              </span>
+            )}
+          </div>
+          <div className="mt-0.5 flex items-center gap-3 text-xs text-neutral-500">
+            {entry.phoneNumber ? (
+              <a
+                className="text-primary-600 hover:underline"
+                href={`tel:${entry.phoneNumber}`}
+                onClick={(ev) => ev.stopPropagation()}
+              >
+                {formatPhoneForDisplay(entry.phoneNumber)}
+              </a>
+            ) : (
+              <span>—</span>
+            )}
+            <span>·</span>
+            <span className="truncate">{entry.teamId || '—'}</span>
+          </div>
+        </div>
+        <ChevronDown
+          className={cn(
+            'w-4 h-4 text-neutral-400 flex-shrink-0 transition-transform',
+            expanded ? 'rotate-180' : ''
+          )}
+          aria-hidden
+        />
+      </div>
+      {expanded && (
+        <div className="px-4 pb-4 pt-2 border-t border-neutral-100 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm bg-neutral-50/40">
+          <DetailField label={T.COL_PHONE}>
+            {entry.phoneNumber ? (
+              <a className="text-primary-600 hover:underline" href={`tel:${entry.phoneNumber}`}>
+                {formatPhoneForDisplay(entry.phoneNumber)}
+              </a>
+            ) : (
+              <span className="text-neutral-400">—</span>
+            )}
+          </DetailField>
+          <DetailField label={T.COL_TEAM} value={entry.teamId || '—'} />
+          <DetailField label={T.COL_ROLE}>
+            {entry.userType ? (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-primary-50 text-primary-700">
+                {ROLE_LABEL[entry.userType]}
+              </span>
+            ) : (
+              <span className="text-neutral-400">—</span>
+            )}
+          </DetailField>
+          <DetailField label={T.COL_EMAIL}>
+            {entry.email ? (
+              <a className="text-primary-600 hover:underline break-all" href={`mailto:${entry.email}`}>
+                {entry.email}
+              </a>
+            ) : (
+              <span className="text-neutral-400">—</span>
+            )}
+          </DetailField>
+        </div>
+      )}
+    </li>
+  );
+}
+
+function DetailField({
+  label,
+  value,
+  children,
+}: {
+  label: string;
+  value?: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-wider text-neutral-500">{label}</div>
+      {children ?? <div className="text-neutral-900">{value ?? '—'}</div>}
     </div>
   );
 }

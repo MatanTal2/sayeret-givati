@@ -315,6 +315,7 @@ export async function serverCreateSerialItem(
     currentHolderType: input.holderType,
     currentHolderId: input.holderId,
     status: 'AVAILABLE',
+    hasSerialNumber: true,
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
     createdBy: input.actor.uid,
