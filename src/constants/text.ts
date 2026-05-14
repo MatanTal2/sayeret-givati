@@ -240,8 +240,8 @@ export const TEXT_CONSTANTS = {
       DESCRIPTION: 'מעקב כישורים והרשאות חיילים'
     },
     LOGISTICS: {
-      TITLE: 'לוגיסטיקה',
-      DESCRIPTION: 'ניהול ציוד ואספקה'
+      TITLE: 'אפסנאות',
+      DESCRIPTION: 'ניהול ציוד לא-ממוספר וכמויות'
     },
     EQUIPMENT: {
       TITLE: 'צלם',

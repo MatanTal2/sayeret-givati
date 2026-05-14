@@ -45,10 +45,10 @@ export function getFeatureRoutes(): FeatureRoute[] {
       description: TEXT_CONSTANTS.FEATURES.LOGISTICS.DESCRIPTION,
       icon: "📦",
       href: "/logistics",
-      available: false,
-      color: "bg-gray-400",
+      available: true,
+      color: "bg-primary-600",
       requiresAuth: true,
-      isComingSoon: true
+      isComingSoon: false
     },
     {
       title: TEXT_CONSTANTS.FEATURES.EQUIPMENT.TITLE,
