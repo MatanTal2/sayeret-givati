@@ -12,15 +12,24 @@ Manager review surface for equipment templates. Phase 5 deliverable. Replaces th
 
 A single fetch returns all templates and the component bins them client-side. Re-fetched after each mutation.
 
-## Row layout
+## Layout: two-level Disclosure (bug #22, option 1)
 
-Each template row is a Headless UI `Disclosure` inside a list. Collapsed
-state shows only the template name + the per-row action buttons (so the
-row never overflows narrow screens). Expanding the row reveals
-description, resolved category / subcategory names, the
-requiresSerialNumber / requiresDailyStatusCheck flags, the default
-catalog number, and the raw status. Action buttons live outside the
-disclosure trigger so clicking them does not toggle the panel.
+Each section renders its templates **grouped by category**. The outer
+list is a `<ul>` of category-level `Disclosure` items; each category
+collapses to a header showing the resolved category name + count, and
+expanding it reveals the per-template `Disclosure` rows for that
+category. Categories sort alphabetically by their resolved Hebrew name
+via `String.localeCompare(b, 'he')`; templates with no category land in
+a "ללא קטגוריה" bucket sorted last. Unresolved category IDs use
+`text-warning-700` so orphan refs surface visibly.
+
+Each template row is itself a Headless UI `Disclosure`. Collapsed state
+shows only the template name + the per-row action buttons (so the row
+never overflows narrow screens). Expanding the row reveals description,
+resolved category / subcategory names, the requiresSerialNumber /
+requiresDailyStatusCheck flags, the default catalog number, and the raw
+status. Action buttons live outside the disclosure trigger so clicking
+them does not toggle the panel.
 
 ## Actions
 

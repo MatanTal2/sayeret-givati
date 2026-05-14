@@ -17,13 +17,8 @@
     - Phone rendered via existing `formatPhoneForDisplay`.
     - **Council outcome (4 agents — name-side dot / leading icon glyph / row tint / suffix text-badge):** 3/4 converged on **asymmetric** rendering (no signal on registered rows, show signal only on unregistered). Picked variant: text-badge "ממתין" via the existing `VIEW_PENDING_BADGE` constant — reuses bug #4's vocabulary, self-describing (no SR-only fallback needed), matches the "צ" inline-tag precedent in `EquipmentTable`.
 
-22. **Manage Equipment Templates list has no category grouping**
-    - **Repro:** `/management` → "Equipment Templates" tab. Templates render as a flat list. Hard to scan; users see hundreds of items mixed across categories.
-    - **Fix scope:** Group templates by category. 4 design options below; user picks one:
-      1. **Two-level Disclosure** — collapsible category section → expand to see templates as nested Disclosure rows. Matches existing Headless UI Disclosure pattern in the tab today.
-      2. **Side nav + main panel** — left rail with category list (single-select), main panel renders flat templates for the selected category. Familiar admin-style.
-      3. **Sticky group headers (iOS-style)** — single scrolling list with sticky `<h3>` headers between groups. Templates stay in one flow; jump via header click.
-      4. **Tab strip per category** — horizontal tab strip at top, one tab per category. Selecting a category swaps the main list. Subcategory chips below if needed.
+22. ~~**Manage Equipment Templates list has no category grouping**~~
+    - **FIXED (2026-05-14 on `feat/equipment-templates-grouped-by-category`):** user picked option 1 (two-level Disclosure). `TemplatesTab.tsx` `section()` helper now wraps each template list in a category-level `<Disclosure>`: outer button shows resolved category name + count, panel reveals the existing per-template `Disclosure` rows. Categories sort by resolved Hebrew name; uncategorised templates fall into a "ללא קטגוריה" bucket sorted last; unresolved IDs render with `text-warning-700` so orphan refs surface visibly. Same renderer used by all three sections (canonical / proposed / pending) so they stay visually consistent.
 
 > **Note (2026-04-29):** Incomplete-registration leak fixed on `fix/incomplete-registration-leak`. Bugs addressed in one branch:
 > - **Orphan Firebase Auth user on abandon** — `RegistrationModal` now calls `deleteCurrentUser()` on close/back/unmount; falls back to `signOutCurrentUser()` if `auth/requires-recent-login`. New helpers in `src/lib/firebasePhoneAuth.ts`, sessionStorage flag in `src/lib/registrationFlowFlag.ts`.
