@@ -23,6 +23,12 @@ export default function EquipmentStatus({ status, size = 'md', variant = 'filled
         return TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_LOST;
       case StatusType.PENDING_TRANSFER:
         return TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_PENDING_TRANSFER;
+      case StatusType.EXCHANGE_REQUESTED:
+        return TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_EXCHANGE_REQUESTED;
+      case StatusType.STORED:
+        return TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_STORED;
+      case StatusType.RETIRED:
+        return TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_RETIRED;
       default:
         return status;
     }
@@ -42,6 +48,12 @@ export default function EquipmentStatus({ status, size = 'md', variant = 'filled
           return 'bg-transparent text-danger-700 border border-danger-700';
         case StatusType.PENDING_TRANSFER:
           return 'bg-transparent text-warning-700 border border-warning-700';
+        case StatusType.EXCHANGE_REQUESTED:
+          return 'bg-transparent text-warning-700 border border-warning-700';
+        case StatusType.STORED:
+          return 'bg-transparent text-info-700 border border-info-700';
+        case StatusType.RETIRED:
+          return 'bg-transparent text-neutral-700 border border-neutral-700';
         default:
           return 'bg-transparent text-neutral-700 border border-neutral-700';
       }
@@ -58,6 +70,12 @@ export default function EquipmentStatus({ status, size = 'md', variant = 'filled
           return 'bg-danger-100 text-danger-800 dark:bg-danger-900 dark:text-danger-200';
         case StatusType.PENDING_TRANSFER:
           return 'bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-200';
+        case StatusType.EXCHANGE_REQUESTED:
+          return 'bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-200';
+        case StatusType.STORED:
+          return 'bg-info-100 text-info-800 dark:bg-info-900 dark:text-info-200';
+        case StatusType.RETIRED:
+          return 'bg-neutral-100 text-neutral-700 dark:bg-neutral-900 dark:text-neutral-300';
         default:
           return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-200';
       }
