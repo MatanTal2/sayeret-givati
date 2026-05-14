@@ -15,6 +15,7 @@
 import type { Timestamp } from 'firebase/firestore';
 
 export type CredentialAuditEventType =
+  | 'ACCOUNT_CREATED'
   | 'PASSWORD_CHANGED'
   | 'PHONE_CHANGED'
   | 'EMAIL_CHANGED'

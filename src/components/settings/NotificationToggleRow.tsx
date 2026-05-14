@@ -42,13 +42,17 @@ export default function NotificationToggleRow({
         aria-label={title}
         onClick={onToggle}
         disabled={saving}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+        className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
           saving ? 'cursor-wait opacity-60' : 'cursor-pointer'
         } ${enabled ? 'bg-primary-600' : 'bg-neutral-300'}`}
       >
+        {/* Absolute-positioned thumb with logical `start-*` so RTL flips it
+            correctly. The previous flex+translate-x approach pushed the thumb
+            out of the pill in RTL (translate-x is physical, layout was
+            logical). */}
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-            enabled ? 'translate-x-6' : 'translate-x-1'
+          className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-white shadow-sm transition-all ${
+            enabled ? 'start-6' : 'start-1'
           }`}
         />
       </button>

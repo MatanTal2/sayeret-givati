@@ -16,6 +16,7 @@ import {
   ShieldOffIcon,
   TrashIcon,
   UndoIcon,
+  UserPlusIcon,
   UserXIcon,
   ActivityIcon,
 } from 'lucide-react';
@@ -28,6 +29,7 @@ import type { CredentialAuditEventType } from '@/types/credentialAudit';
 import { cn } from '@/lib/cn';
 
 const EVENT_ICON: Record<CredentialAuditEventType, React.ComponentType<{ className?: string }>> = {
+  ACCOUNT_CREATED: UserPlusIcon,
   PASSWORD_CHANGED: KeyIcon,
   PHONE_CHANGED: PhoneIcon,
   EMAIL_CHANGED: MailIcon,
@@ -39,6 +41,7 @@ const EVENT_ICON: Record<CredentialAuditEventType, React.ComponentType<{ classNa
 };
 
 const EVENT_LABEL: Record<CredentialAuditEventType, string> = {
+  ACCOUNT_CREATED: TEXT_CONSTANTS.SETTINGS.ACCOUNT_EVENT_ACCOUNT_CREATED,
   PASSWORD_CHANGED: TEXT_CONSTANTS.SETTINGS.ACCOUNT_EVENT_PASSWORD_CHANGED,
   PHONE_CHANGED: TEXT_CONSTANTS.SETTINGS.ACCOUNT_EVENT_PHONE_CHANGED,
   EMAIL_CHANGED: TEXT_CONSTANTS.SETTINGS.ACCOUNT_EVENT_EMAIL_CHANGED,
@@ -177,6 +180,7 @@ function AccountActivityBody({ entries, loading, error, onRetry, selfUid }: Body
           <AlertCircleIcon className="w-4 h-4" aria-hidden="true" />
           <span>{TEXT_CONSTANTS.SETTINGS.ACCOUNT_ACTIVITY_ERROR}</span>
         </div>
+        <p className="text-xs text-danger-700/80 font-mono break-all" dir="ltr">{error}</p>
         <button type="button" onClick={onRetry} className="btn-ghost text-sm text-danger-700">
           {TEXT_CONSTANTS.SETTINGS.ACCOUNT_ACTIVITY_RETRY}
         </button>
@@ -185,8 +189,9 @@ function AccountActivityBody({ entries, loading, error, onRetry, selfUid }: Body
   }
   if (!entries || entries.length === 0) {
     return (
-      <div className="text-sm text-neutral-500 py-4 text-center">
-        {TEXT_CONSTANTS.SETTINGS.ACCOUNT_ACTIVITY_EMPTY}
+      <div className="flex flex-col items-center gap-2 p-6 border border-dashed border-neutral-200 rounded-xl text-center">
+        <ActivityIcon className="w-6 h-6 text-neutral-400" aria-hidden="true" />
+        <p className="text-sm text-neutral-600">{TEXT_CONSTANTS.SETTINGS.ACCOUNT_ACTIVITY_EMPTY}</p>
       </div>
     );
   }

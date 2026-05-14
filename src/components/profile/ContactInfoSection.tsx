@@ -1,16 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import type { EnhancedAuthUser } from '@/types/user';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { updateUserProfile } from '@/lib/userProfileService';
-import PhoneNumberUpdate from '@/components/profile/PhoneNumberUpdate';
 
 interface Props {
   user: EnhancedAuthUser;
   authEmail: string | undefined;
   phoneNumber: string;
-  onPhoneUpdate: (newPhone: string) => Promise<void> | void;
   onSaved: () => Promise<void> | void;
 }
 
@@ -19,7 +18,7 @@ interface Props {
  * dedicated update component. Address is editable behind the same
  * section-level pencil pattern used by `MilitaryInfoSection`.
  */
-export default function ContactInfoSection({ user, authEmail, phoneNumber, onPhoneUpdate, onSaved }: Props) {
+export default function ContactInfoSection({ user, authEmail, phoneNumber, onSaved }: Props) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,22 +78,20 @@ export default function ContactInfoSection({ user, authEmail, phoneNumber, onPho
           <div className="text-neutral-900">{user.email || authEmail || TEXT_CONSTANTS.PROFILE.NOT_AVAILABLE}</div>
         </div>
 
-        {/* Phone is identity-anchor and needs its own re-verification ceremony
-            (real OTP path lands in the queued Settings PR-C). Outside edit
-            mode we render it as plain text — the PhoneNumberUpdate sub-flow
-            (with its own Update button + OTP) only appears when the section
-            is in edit mode. This avoids two competing action surfaces at
-            rest and preserves the seam PR-C will land on. */}
+        {/* Phone change moved to /settings — that's the canonical surface
+            with the real OTP flow. Rendered here as plain text plus a link
+            so the two pages stop competing. */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">{TEXT_CONSTANTS.PROFILE.PHONE_NUMBER_LABEL}</label>
-          {editing ? (
-            <PhoneNumberUpdate
-              currentPhoneNumber={phoneNumber}
-              onPhoneUpdate={onPhoneUpdate}
-            />
-          ) : (
+          <div className="flex items-center justify-between gap-3">
             <div className="text-neutral-900" dir="ltr">{phoneNumber || TEXT_CONSTANTS.PROFILE.NOT_AVAILABLE}</div>
-          )}
+            <Link
+              href="/settings"
+              className="text-sm text-primary-600 hover:text-primary-800 underline-offset-2 hover:underline shrink-0"
+            >
+              עדכן בהגדרות
+            </Link>
+          </div>
         </div>
 
         <div>

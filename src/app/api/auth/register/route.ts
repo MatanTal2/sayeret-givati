@@ -6,6 +6,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { UserType } from '@/types/user';
 import { UserRole } from '@/types/equipment';
 import { serverUpsertPhoneBookFromUser } from '@/lib/db/server/phoneBookService';
+import { writeCredentialAuditEvent } from '@/lib/db/server/credentialAuditService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -99,6 +100,27 @@ export async function POST(request: NextRequest) {
       email: profile.email,
       userType: profile.userType as UserType,
     });
+
+    // Seed the credential audit log so the new user has at least one entry to
+    // see in Settings → Account Activity from day one. Fire-and-forget — never
+    // block registration on the audit write.
+    const ip =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      undefined;
+    const userAgent = request.headers.get('user-agent') || undefined;
+    try {
+      await writeCredentialAuditEvent({
+        uid,
+        actorUid: uid,
+        actorUserType: String(profile.userType),
+        eventType: 'ACCOUNT_CREATED',
+        ip,
+        userAgent,
+      });
+    } catch (e) {
+      console.warn('[API] /auth/register: account_created audit write failed:', e);
+    }
 
     return NextResponse.json({ success: true, uid, message: 'User profile created successfully' });
   } catch (error) {

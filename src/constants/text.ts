@@ -1336,6 +1336,11 @@ export const TEXT_CONSTANTS = {
 
     // Revoke other sessions
     REVOKE_SESSIONS: 'התנתק ממכשירים אחרים',
+    REVOKE_SESSIONS_BTN_SHORT: 'התנתק',
+    CHANGE_PASSWORD_BTN_SHORT: 'שנה',
+    DELETE_ACCOUNT_BTN_SHORT: 'מחק',
+    DANGER_ZONE: 'איזור מסוכן',
+    DANGER_ZONE_DESCRIPTION: 'פעולות בלתי הפיכות. הקפד לקרוא לפני ביצוע.',
     REVOKE_SESSIONS_DESCRIPTION:
       'מנתק את כל הסשנים האחרים שלך — כל מכשיר אחר יידרש להתחבר מחדש. המכשיר הנוכחי יישאר מחובר.',
     REVOKE_SESSIONS_CONFIRM_TITLE: 'לנתק מכשירים אחרים?',
@@ -1360,6 +1365,7 @@ export const TEXT_CONSTANTS = {
     ACCOUNT_ACTIVITY_DEVICE: 'מכשיר',
     ACCOUNT_ACTIVITY_ACTOR_SELF: 'על ידך',
     ACCOUNT_ACTIVITY_ACTOR_ADMIN: 'על ידי מנהל מערכת',
+    ACCOUNT_EVENT_ACCOUNT_CREATED: 'פתיחת חשבון',
     ACCOUNT_EVENT_PASSWORD_CHANGED: 'הסיסמה שונתה',
     ACCOUNT_EVENT_PHONE_CHANGED: 'מספר הטלפון שונה',
     ACCOUNT_EVENT_EMAIL_CHANGED: 'כתובת המייל שונתה',
