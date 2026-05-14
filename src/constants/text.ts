@@ -1341,8 +1341,7 @@ export const TEXT_CONSTANTS = {
     DELETE_ACCOUNT_BTN_SHORT: 'מחק',
     DANGER_ZONE: 'איזור מסוכן',
     DANGER_ZONE_DESCRIPTION: 'פעולות בלתי הפיכות. הקפד לקרוא לפני ביצוע.',
-    REVOKE_SESSIONS_DESCRIPTION:
-      'מנתק את כל הסשנים האחרים שלך — כל מכשיר אחר יידרש להתחבר מחדש. המכשיר הנוכחי יישאר מחובר.',
+    REVOKE_SESSIONS_DESCRIPTION: 'מנתק את כל המכשירים האחרים שמחוברים',
     REVOKE_SESSIONS_CONFIRM_TITLE: 'לנתק מכשירים אחרים?',
     REVOKE_SESSIONS_CONFIRM_BODY:
       'מכשירים אחרים שמחוברים עם החשבון שלך יידרשו להתחבר מחדש. פעולה זו נכנסת לתוקף מיידית.',

@@ -180,7 +180,6 @@ function AccountActivityBody({ entries, loading, error, onRetry, selfUid }: Body
           <AlertCircleIcon className="w-4 h-4" aria-hidden="true" />
           <span>{TEXT_CONSTANTS.SETTINGS.ACCOUNT_ACTIVITY_ERROR}</span>
         </div>
-        <p className="text-xs text-danger-700/80 font-mono break-all" dir="ltr">{error}</p>
         <button type="button" onClick={onRetry} className="btn-ghost text-sm text-danger-700">
           {TEXT_CONSTANTS.SETTINGS.ACCOUNT_ACTIVITY_RETRY}
         </button>

@@ -17,6 +17,7 @@ import { readProfileImageCache, writeProfileImageCache } from '@/lib/profileImag
 import { computeDaysLeft } from '@/components/settings/PendingDeletionBanner';
 import { useToast } from '@/components/ui/Toast';
 import { updateUserProfile } from '@/lib/userProfileService';
+import { formatPhoneForDisplay } from '@/utils/validationUtils';
 import type { Timestamp } from 'firebase/firestore';
 
 type NotifPrefKey = 'emailNotifications' | 'equipmentTransferAlerts';
@@ -118,7 +119,9 @@ export default function SettingsPage() {
     enhancedUser?.communicationPreferences?.equipmentTransferAlerts,
   ]);
 
-  const userPhoneNumber = enhancedUser?.phoneNumber || '—';
+  const userPhoneNumber = enhancedUser?.phoneNumber
+    ? formatPhoneForDisplay(enhancedUser.phoneNumber)
+    : '—';
 
   const handleNotifToggle = async (key: NotifPrefKey) => {
     if (savingPref || !enhancedUser?.uid) return;
@@ -222,14 +225,9 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between p-4 border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors">
                 <div className="flex items-center gap-4">
                   <KeyIcon className="w-5 h-5 text-neutral-400" />
-                  <div>
-                    <h3 className="font-medium text-neutral-900">
-                      {TEXT_CONSTANTS.SETTINGS.CHANGE_PASSWORD}
-                    </h3>
-                    <p className="text-sm text-neutral-500">
-                      {TEXT_CONSTANTS.SETTINGS.CHANGE_PASSWORD_DESCRIPTION}
-                    </p>
-                  </div>
+                  <h3 className="font-medium text-neutral-900">
+                    {TEXT_CONSTANTS.SETTINGS.CHANGE_PASSWORD}
+                  </h3>
                 </div>
                 <button
                   type="button"
@@ -289,9 +287,6 @@ export default function SettingsPage() {
                 saving={savingPref === 'equipmentTransferAlerts'}
                 onToggle={() => handleNotifToggle('equipmentTransferAlerts')}
               />
-              <p className="text-xs text-neutral-500 ps-1">
-                {TEXT_CONSTANTS.SETTINGS.NOTIFICATION_PREFS_NOTE}
-              </p>
             </div>
           </div>
 
@@ -316,14 +311,9 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between p-4 border border-neutral-200 rounded-xl">
                 <div className="flex items-center gap-4">
                   <LockIcon className="w-5 h-5 text-neutral-400" />
-                  <div>
-                    <h3 className="font-medium text-neutral-900">
-                      {TEXT_CONSTANTS.SETTINGS.REQUEST_PERMISSION}
-                    </h3>
-                    <p className="text-sm text-neutral-500">
-                      {TEXT_CONSTANTS.SETTINGS.REQUEST_PERMISSION_DESC}
-                    </p>
-                  </div>
+                  <h3 className="font-medium text-neutral-900">
+                    {TEXT_CONSTANTS.SETTINGS.REQUEST_PERMISSION}
+                  </h3>
                 </div>
                 <button
                   type="button"
@@ -341,7 +331,7 @@ export default function SettingsPage() {
               separated from the rest of the settings to make accidental
               clicks less likely. */}
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-danger-200">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-danger-100 rounded-lg">
                 <AlertTriangleIcon className="w-5 h-5 text-danger-600" />
               </div>
@@ -349,9 +339,6 @@ export default function SettingsPage() {
                 {TEXT_CONSTANTS.SETTINGS.DANGER_ZONE}
               </h2>
             </div>
-            <p className="text-sm text-neutral-600 mb-6 ps-1">
-              {TEXT_CONSTANTS.SETTINGS.DANGER_ZONE_DESCRIPTION}
-            </p>
 
             <div className="flex items-center justify-between p-4 border border-danger-200 rounded-xl bg-danger-50">
               <div className="flex items-center gap-4">
