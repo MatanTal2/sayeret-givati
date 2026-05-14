@@ -45,6 +45,7 @@ interface UserDocLite {
   firstName?: string;
   lastName?: string;
   teamId?: string;
+  phoneNumber?: string;
 }
 
 interface PersonnelDocLite {
@@ -52,6 +53,7 @@ interface PersonnelDocLite {
   lastName?: string;
   approvedRole?: string;
   status?: string;
+  phoneNumber?: string;
 }
 
 interface StatusDocLite {
@@ -100,6 +102,7 @@ export async function serverListRoster(): Promise<RosterEntry[]> {
       platoon: 'מסייעת',
       status: 'בית',
       isRegistered: false,
+      ...(data.phoneNumber ? { phoneNumber: data.phoneNumber } : {}),
     });
   }
 
@@ -109,6 +112,9 @@ export async function serverListRoster(): Promise<RosterEntry[]> {
     if (!hash) continue;
     const platoon = data.teamId && data.teamId.trim() ? data.teamId : 'מסייעת';
     const existing = rowByHash.get(hash);
+    // Prefer the user's phone (the soldier maintains it themselves once
+    // registered); fall back to the personnel-roster phone.
+    const phoneNumber = data.phoneNumber || existing?.phoneNumber;
     rowByHash.set(hash, {
       id: hash,
       firstName: data.firstName ?? existing?.firstName ?? '',
@@ -118,6 +124,7 @@ export async function serverListRoster(): Promise<RosterEntry[]> {
       isRegistered: true,
       ...(existing?.customStatus ? { customStatus: existing.customStatus } : {}),
       ...(existing?.updatedAtMs ? { updatedAtMs: existing.updatedAtMs } : {}),
+      ...(phoneNumber ? { phoneNumber } : {}),
     });
   }
 

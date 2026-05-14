@@ -9,4 +9,6 @@ export interface Soldier {
   notes?: string;
   isSelected: boolean;
   isRegistered: boolean;
+  /** Raw phone string from the roster join; formatted for display in the table. */
+  phoneNumber?: string;
 }

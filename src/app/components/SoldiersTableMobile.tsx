@@ -6,6 +6,7 @@ import { Soldier } from '../../types';
 import { getAvailableStatuses } from '@/lib/statusUtils';
 import SelectAllCheckbox from './SelectAllCheckbox';
 import { TEXT_CONSTANTS } from '@/constants/text';
+import { formatPhoneForDisplay } from '@/utils/validationUtils';
 
 interface SoldiersTableMobileProps {
   soldiers: Soldier[];
@@ -254,9 +255,21 @@ export default function SoldiersTableMobile({
               </div>
             </div>
             
+            {soldier.phoneNumber && (
+              <div className="mb-3 text-sm text-neutral-700">
+                <span className="text-neutral-500">{TEXT_CONSTANTS.STATUS_PAGE.PHONE}: </span>
+                <a
+                  href={`tel:${soldier.phoneNumber}`}
+                  className="text-primary-600 hover:underline"
+                >
+                  {formatPhoneForDisplay(soldier.phoneNumber)}
+                </a>
+              </div>
+            )}
+
             {/* Row 2: Notes + Custom Status (when selected) */}
             <div className="flex gap-3">
-              <input 
+              <input
                 type="text"
                 value={soldier.notes || ''}
                 onChange={(e) => onNotesChange(index, e.target.value)}

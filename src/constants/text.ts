@@ -1643,8 +1643,10 @@ export const TEXT_CONSTANTS = {
     SELECTION: 'בחירה',
     NAME: 'שם',
     TEAM: 'צוות',
+    PHONE: 'טלפון',
     STATUS: 'סטטוס',
     NOTES: 'הערות',
+    NO_PHONE: '—',
     
     // Report Features
     REPORT_PREVIEW_TITLE: 'תצוגה מקדימה של הדוח',

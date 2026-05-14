@@ -53,6 +53,12 @@ export interface RosterEntry {
   updatedAtMs?: number;
   /** True when there is a matching `users` doc (i.e. soldier completed registration). */
   isRegistered: boolean;
+  /**
+   * E.164 or Israeli-local phone string. Sourced from the `users` doc when the
+   * soldier has registered (likely freshest), falling back to the
+   * `authorized_personnel` doc. Format-for-display happens in the UI layer.
+   */
+  phoneNumber?: string;
 }
 
 export interface UpdateSoldierStatusInput {
