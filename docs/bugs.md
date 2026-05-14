@@ -22,14 +22,12 @@
     - **Fix:** `serverDeletePersonnel` now also calls `serverDeletePhoneBookEntryByHash(personnelId)` after the personnel delete. The personnel doc id IS the `militaryPersonalNumberHash`, so the helper can be invoked directly. The existing helper already short-circuits when the entry has a `userId` field (i.e. the soldier is registered), so registered users keep their phone-book row intact until the underlying `users` doc is removed — only personnel-only entries are evicted.
     - **Out of scope:** the bulk-delete personnel path (if any) is not touched here; ammo / equipment cleanup on personnel delete already lived elsewhere. A delete pass for `scripts/backfill-phone-book.js` is a separate cleanup task and was not in this bug.
 
-27. **Phone book table: rows clip data on mobile, need to be expandable** *(phone book, RAISED 3RD TIME)*
-    - **Operator note:** "as I told you three time already" — this is the third time the table-not-mobile-friendly pattern has been raised for the phone book. Same pattern that bug #21 fixed for the admin `UsersTab` is needed here.
-    - **Repro:** Phone Book on a phone-sized viewport. The table renders horizontal columns that overflow the viewport, so the user has to horizontally-scroll inside the row to see the data that's been cut off.
-    - **Expected behaviour:** rewrite the phone-book table to a list of expandable cards mirroring `UsersTab` (bug #21 fix) and `EquipmentTable`. Compact card visible state should show **name + phone + team**. Expand reveals the rest (email / userType / military ID / source / isRegistered / photoURL / address — whichever the row carries).
-    - **Likely fix surface:**
-      - `src/app/phone-book/page.tsx` (and any `PhoneBookTable.tsx` / `PhoneBookRow.tsx` if extracted) — drop the table layout, render a `<ul>` of Headless UI `<Disclosure>` rows.
-      - Copy the compact-card pattern from `UsersTab.tsx` (initials + name + suffix badge). Phone book doesn't have a registered-pending distinction but the `source: 'users' | 'authorized_personnel'` already distinguishes "real account" vs "personnel-only" rows — could surface as a small badge if it adds value.
-      - Reuse `formatPhoneForDisplay` from the existing utility for phone rendering.
+27. ~~**Phone book table: rows clip data on mobile, need to be expandable**~~ *(phone book, RAISED 3RD TIME)*
+    - **FIXED (2026-05-14 on `fix/bug-batch-2026-05-14-pt3`):** `src/app/phone-book/page.tsx` dropped the 5-column `<table>` and now renders a `<ul>` of click-to-expand rows mirroring `UsersTab` (bug #21) and `EquipmentTable`.
+      - Compact row: avatar (photo or initials) + display name + unregistered badge (when `!entry.isRegistered`), with phone + team in a small subtitle so the most common info is reachable without expanding.
+      - Expanded panel: 2-column grid surfacing phone, team, role (Hebrew label via `ROLE_LABEL`), and email — each rendered through a `DetailField` helper for layout parity with `UsersTab`.
+      - Phone and email links call `ev.stopPropagation()` on click so tapping the phone in the compact row dials instead of toggling the row.
+    - Reused `formatPhoneForDisplay`, the `Avatar` helper, `cn`, and `ChevronDown` (lucide) — no new dependencies.
     - **Reference fix:** bug #21 (`feat/users-tab-expandable-mobile-friendly`, 2026-05-14).
 
 28. ~~**Phone book filters stack vertically instead of using horizontal space**~~ *(phone book)*
