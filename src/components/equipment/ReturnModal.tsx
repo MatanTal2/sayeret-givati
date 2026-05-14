@@ -16,6 +16,7 @@ interface ReturnModalProps {
 export default function ReturnModal({ equipment, isHolder, onClose, onSubmit }: ReturnModalProps) {
   const labels = TEXT_CONSTANTS.FEATURES.EQUIPMENT.RETURN_MODAL;
   const [reason, setReason] = useState('');
+  const [isZikuim, setIsZikuim] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -27,13 +28,14 @@ export default function ReturnModal({ equipment, isHolder, onClose, onSubmit }: 
 
   const handleSubmit = async () => {
     setError(null);
-    if (!reason.trim()) {
+    const effectiveReason = isZikuim ? labels.ZIKUIM_LABEL : reason.trim();
+    if (!effectiveReason) {
       setError(labels.REASON_REQUIRED);
       return;
     }
     setSubmitting(true);
     try {
-      const result = await onSubmit(reason.trim());
+      const result = await onSubmit(effectiveReason);
       if (!result.success) {
         setError(result.error || labels.ERROR);
         return;
@@ -75,6 +77,22 @@ export default function ReturnModal({ equipment, isHolder, onClose, onSubmit }: 
             {subtitle}
           </div>
 
+          <label className="flex items-start gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isZikuim}
+              onChange={(e) => {
+                setIsZikuim(e.target.checked);
+                setError(null);
+              }}
+              className="mt-0.5 w-4 h-4 text-primary-600 rounded focus:ring-2 focus:ring-primary-500"
+            />
+            <span>
+              <span className="block text-sm font-medium text-neutral-900">{labels.ZIKUIM_LABEL}</span>
+              <span className="block text-xs text-neutral-500">{labels.ZIKUIM_HINT}</span>
+            </span>
+          </label>
+
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">{labels.REASON_LABEL}</label>
             <textarea
@@ -82,7 +100,8 @@ export default function ReturnModal({ equipment, isHolder, onClose, onSubmit }: 
               onChange={(e) => setReason(e.target.value)}
               placeholder={labels.REASON_PLACEHOLDER}
               rows={3}
-              className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              disabled={isZikuim}
+              className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-neutral-50 disabled:text-neutral-400"
             />
           </div>
 

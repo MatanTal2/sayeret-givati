@@ -630,6 +630,8 @@ export const TEXT_CONSTANTS = {
         SUCCESS_REQUEST: 'בקשת ההחזרה נשלחה למחזיק',
         ERROR: 'פעולת ההחזרה נכשלה',
         REASON_REQUIRED: 'יש להזין סיבת החזרה',
+        ZIKUIM_LABEL: 'זיכויים',
+        ZIKUIM_HINT: 'סמן אם ההחזרה במסגרת זיכויים — אין צורך לכתוב סיבה',
       },
       HISTORY_PANEL: {
         TITLE: 'היסטוריית פעולות',
