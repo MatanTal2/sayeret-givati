@@ -241,7 +241,13 @@ export const TEXT_CONSTANTS = {
     },
     LOGISTICS: {
       TITLE: 'אפסנאות',
-      DESCRIPTION: 'ניהול ציוד לא-ממוספר וכמויות'
+      DESCRIPTION: 'ניהול ציוד לא-ממוספר וכמויות',
+      SEARCH_PLACEHOLDER: 'חיפוש שם, קטגוריה, מיקום או מחזיק...',
+      ALL_CATEGORIES: 'כל הקטגוריות',
+      ALL_SUBCATEGORIES: 'כל תתי-הקטגוריות',
+      FILTER_BY_CATEGORY: 'סינון לפי קטגוריה',
+      FILTER_BY_SUBCATEGORY: 'סינון לפי תת-קטגוריה',
+      ADD_ITEM: 'הוסף פריט'
     },
     EQUIPMENT: {
       TITLE: 'צלם',
