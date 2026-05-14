@@ -90,6 +90,7 @@ export interface AmmunitionItem {
   status: AmmunitionItemStatus;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  hasSerialNumber?: boolean; // True iff the item carries a real user-entered serial. When false, `id` is auto-generated and the צ chip must be hidden. Optional for back-compat with pre-flag docs (use !== false to treat unknown as serialized). Mirrors Equipment.hasSerialNumber.
 }
 
 export interface AmmunitionReport {

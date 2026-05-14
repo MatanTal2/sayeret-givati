@@ -12,10 +12,10 @@
     - **Action:** spawn a Council (3 parallel reviewers: a11y / iOS-Safari behaviour / cross-browser viewport semantics) to converge on (a) vs (b) before coding. Document the picked approach in `docs/spec/` and apply globally via `globals.css` or a shared `useModalViewport()` hook.
     - **Sample route to reproduce:** `/equipment` → expand any row → `⋮` → "החלף בפריט אחר" → focus the search input. Compare with `/equipment` → same row → "בקשת החלפה" — both modals share the input pattern but the bigger one triggers a noticeably stronger zoom.
 
-24. **Ammunition list shows "צ:" label for items with no serial number**
-    - **Repro:** Ammunition page. Items whose template has `requiresSerialNumber === false` (the auto-generated UUID id case) render the inline `[צ: <uuid>]` tag — same precedent that bug #18 fixed for the *photo* field on non-serialized items, but the `צ:` label was missed for ammo.
-    - **Expected:** when the item has no real serial number, hide both the `צ:` label *and* the value. Don't show "צ: 7af3-...-bc9d" — show nothing in that slot. Mirrors the equipment-domain fix from bugs #18 / #16 / #15 where non-serialized items stop pretending to have a serial.
-    - **Likely fix surface:** the ammo list renderer that resolves `item.id` / `item.serialNumber` to the inline `[צ: ...]` chip. Gate the chip on `hasSerialNumber === true` (and backfill the flag on ammo items the same way `backfill-equipment-has-serial.js` did for equipment, if ammo docs don't already carry it).
+24. ~~**Ammunition list shows "צ:" label for items with no serial number**~~
+    - **FIXED (2026-05-14 on `fix/bug-batch-2026-05-14-pt3`):** added `hasSerialNumber?: boolean` to `AmmunitionItem` (`src/types/ammunition.ts`), mirroring the equipment flag added in bug #18's fix. `serverCreateSerialItem` (`src/lib/db/server/ammunitionInventoryService.ts`) now writes `hasSerialNumber: true` for every new SERIAL item it creates.
+    - `AmmunitionInventoryView.tsx` row cell and `ItemExpanded` panel both gate the `צ-${id}` chip on `item.hasSerialNumber !== false`. When the flag is explicitly `false` (legacy data flipped by ops, or a future flow that creates non-serialized items), the cell renders `—` (matching the stock row pattern) and the expanded panel omits the "מספר סידורי" row entirely.
+    - Back-compat: pre-flag docs are treated as serialized (`!== false`) so existing prod rows keep showing the chip until an operator explicitly flips them.
 
 26. **Phone book "refresh" doesn't reflect upstream deletions** *(phone book)*
     - **Repro:** delete a row from `authorized_personnel` (admin → Manage Personnel → delete). Open Phone Book. Click the refresh button. The deleted person still appears in the list. A hard page reload (F5) is the only way to evict them.
