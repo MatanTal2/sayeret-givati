@@ -24,6 +24,7 @@ Settings page (`/settings`). Provides a comprehensive settings UI covering profi
 
 - **Change password** — opens `<ChangePasswordModal>` (`src/components/settings/ChangePasswordModal.tsx`). Re-authenticates via Firebase, then `updatePassword`. Success → toast via `useToast`. Errors mapped through `mapFirebaseAuthError`. See PR-B in `project_settings_page.md`.
 - **Account activity** — `<AccountActivitySection>` renders a collapsible read of the user's `credentialAuditLog` via `GET /api/auth/audit`. Shows event kind, timestamp, actor (self / admin), IP, and User-Agent. See `docs/codebase/src/components/settings/AccountActivitySection.md`.
+- **Sign out other devices** — `<RevokeSessionsRow>` renders inside the Account Security section. Posts to `/api/users/sessions/revoke` which bumps `users.sessionEpoch`, killing every other device on the next API hit. Writes a `SESSIONS_REVOKED` audit row. See `docs/codebase/src/components/settings/RevokeSessionsRow.md`.
 
 ## Known Issues / TODO
 

@@ -86,6 +86,19 @@ export const TEXT_EN = {
     ACCOUNT_EVENT_ACCOUNT_DELETION_REQUESTED: 'Account deletion requested',
     ACCOUNT_EVENT_ACCOUNT_DELETION_CANCELLED: 'Account deletion cancelled',
     ACCOUNT_EVENT_ACCOUNT_DELETED: 'Account deleted',
+
+    // Revoke other sessions
+    REVOKE_SESSIONS: 'Sign out other devices',
+    REVOKE_SESSIONS_DESCRIPTION:
+      'Signs out every other session on your account. Other devices will have to log in again. This device stays signed in.',
+    REVOKE_SESSIONS_CONFIRM_TITLE: 'Sign out other devices?',
+    REVOKE_SESSIONS_CONFIRM_BODY:
+      'Other devices signed in to your account will need to log in again. This takes effect immediately.',
+    REVOKE_SESSIONS_CONFIRM_SUBMIT: 'Sign out other devices',
+    REVOKE_SESSIONS_CANCEL: 'Cancel',
+    REVOKE_SESSIONS_SUBMITTING: 'Signing out...',
+    REVOKE_SESSIONS_SUCCESS: 'Other devices signed out. They will be asked to log in again.',
+    REVOKE_SESSIONS_ERROR: 'Sign-out failed. Try again.',
   },
   EQUIPMENT: {
     STATUS_AVAILABLE: 'Available',
