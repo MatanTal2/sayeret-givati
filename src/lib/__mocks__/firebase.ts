@@ -30,6 +30,12 @@ export const serverTimestamp = jest.fn(() => ({ __serverTimestamp: true }));
 export const Timestamp = {
   now: jest.fn(() => ({ toDate: () => new Date(), seconds: 0, nanoseconds: 0 })),
   fromDate: jest.fn((d: Date) => ({ toDate: () => d, seconds: Math.floor(d.getTime() / 1000), nanoseconds: 0 })),
+  fromMillis: jest.fn((ms: number) => ({
+    toDate: () => new Date(ms),
+    toMillis: () => ms,
+    seconds: Math.floor(ms / 1000),
+    nanoseconds: (ms % 1000) * 1_000_000,
+  })),
 };
 export const FieldValue = { serverTimestamp: () => ({ __serverTimestamp: true }) };
 

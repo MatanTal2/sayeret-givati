@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Search, User as UserIcon } from 'lucide-react';
+import { RefreshCw, Search, User as UserIcon } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import AppShell from '@/app/components/AppShell';
 import { Select } from '@/components/ui';
@@ -40,7 +40,7 @@ export default function PhoneBookPage() {
 }
 
 function PhoneBookContent() {
-  const { entries, isLoading, error } = usePhoneBook();
+  const { entries, isLoading, isRefreshing, error, refresh } = usePhoneBook();
   const { config: systemConfig } = useSystemConfig();
   const [search, setSearch] = useState('');
   const [team, setTeam] = useState<string | null>(null);
@@ -134,8 +134,21 @@ function PhoneBookContent() {
         />
       </div>
 
-      <div className="text-xs text-neutral-500">
-        {T.TOTAL.replace('{count}', String(filtered.length))}
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs text-neutral-500">
+          {T.TOTAL.replace('{count}', String(filtered.length))}
+        </div>
+        <button
+          type="button"
+          onClick={refresh}
+          disabled={isRefreshing || isLoading}
+          title={T.REFRESH_HINT}
+          aria-label={T.REFRESH}
+          className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span>{T.REFRESH}</span>
+        </button>
       </div>
 
       {isLoading ? (
