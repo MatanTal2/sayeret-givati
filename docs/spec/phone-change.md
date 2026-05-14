@@ -180,11 +180,11 @@ Stacked commits inside the PR for review clarity:
 ## Follow-ups (out of PR-C)
 
 - Rate-limit OTP sends keyed on `(actorUid, destinationPhone, ip)`. (Council "should-have".)
-- `phoneChangePending` cron purge for stale > 24h reservations.
-- `credentialAuditLog` 1y TTL purge job (Q5=a).
+- ✅ `phoneChangePending` purge for stale > 24h reservations — operator-callable script at `scripts/purge-phone-change-pending.js` (2026-05-13). Cron promotion is next.
+- ✅ `credentialAuditLog` 1y TTL purge — operator-callable script at `scripts/purge-credential-audit-log.js` (2026-05-13). Cron promotion is next.
 - Old-phone notification (email + SMS) — depends on PR-E notification sender pick.
-- Auth↔Firestore phone reconciler cron.
+- Auth↔Firestore phone reconciler cron. (Manual script `scripts/reconcile-phone.js` exists; cron promotion is next.)
 - `auth/credential-already-in-use` → "phone already linked" UX with sign-in offer.
 - Admin force-phone-reset endpoint (Q4=b separate PR with 4-eyes).
 - App Check + reCAPTCHA Enterprise initialization (not present in codebase yet — Council "should-have").
-- `cachedVerifier` reset on Settings-page mount (Council polish).
+- ✅ `cachedVerifier` reset on Settings-page mount (Council polish) — done inside `ChangePhoneModal` `useEffect(open)`.
