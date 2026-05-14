@@ -10,6 +10,7 @@ import PermissionGrantsTab from './PermissionGrantsTab';
 import AuditLogsTab from './AuditLogsTab';
 import DataManagementTab from './DataManagementTab';
 import TemplatesTab from './TemplatesTab';
+import CategoriesTab from './CategoriesTab';
 import EquipmentCreationTab from './EquipmentCreationTab';
 import EnforceTransferTab from './EnforceTransferTab';
 import ForceOperationsTab from './ForceOperationsTab';
@@ -42,7 +43,10 @@ export default function TabContentRenderer({ activeTab, activeTabData }: TabCont
     
     case 'template-management':
       return <TemplatesTab />;
-    
+
+    case 'categories':
+      return <CategoriesTab />;
+
     case 'equipment-creation':
       return <EquipmentCreationTab />;
     

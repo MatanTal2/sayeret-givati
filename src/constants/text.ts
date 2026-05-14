@@ -1473,7 +1473,8 @@ export const TEXT_CONSTANTS = {
       AUDIT_LOGS: 'יומני ביקורת',
       SEND_EMAIL: 'שליחת אימייל',
       AMMUNITION: 'תחמושת',
-      PERMISSION_GRANTS: 'הענקות תפקיד זמניות'
+      PERMISSION_GRANTS: 'הענקות תפקיד זמניות',
+      CATEGORIES: 'קטגוריות'
     },
 
     // Tab Descriptions
@@ -1491,7 +1492,8 @@ export const TEXT_CONSTANTS = {
       AUDIT_LOGS: 'מעקב פעילות ויומני מערכת',
       SEND_EMAIL: 'שליחת הודעות אימייל לקבוצות משתמשים או משתמשים ספציפיים',
       AMMUNITION: 'ניהול תבניות, מלאי, דיווחים ובקשות תחמושת',
-      PERMISSION_GRANTS: 'הענקה זמנית של תפקיד למשתמש לתקופה של עד 7 ימים'
+      PERMISSION_GRANTS: 'הענקה זמנית של תפקיד למשתמש לתקופה של עד 7 ימים',
+      CATEGORIES: 'שינוי שמות קטגוריות ותתי-קטגוריות לציוד'
     },
     
     // Access Denied
