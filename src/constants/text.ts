@@ -315,6 +315,7 @@ export const TEXT_CONSTANTS = {
       // Search and Filters
       SEARCH_PLACEHOLDER: 'חיפוש לפי מספר סידורי, שם פריט, מחזיק...',
       ALL_STATUSES: 'כל הסטטוסים',
+      ALL_CATEGORIES: 'כל הקטגוריות',
       ALL_CONDITIONS: 'כל המצבים',
       SHOWING_RESULTS: 'מציג {count} מתוך {total} פריטי ציוד',
       NO_EQUIPMENT_FILTERED: 'טרם נוסף ציוד למערכת',
