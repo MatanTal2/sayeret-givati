@@ -85,6 +85,7 @@ export interface Equipment {
   qrCode?: string; // QR code for quick scanning
   requiresDailyStatusCheck?: boolean; // Whether this equipment requires daily status checks (inherited from template)
   hasSerialNumber?: boolean; // True iff template.requiresSerialNumber. When false, `id` is auto-generated and must NOT be displayed as a צ. Optional for back-compat with pre-flag docs (use !== false to treat unknown as serialized).
+  teamLabel?: string; // Optional label tagging the item as "belonging to" a team (e.g. "צוות 1"). LABEL ONLY — `currentHolderId` still points at a single user; transfer remains the only way to move responsibility.
 
   // Exchange lifecycle linkage. Set when an item is created via exchange or replaced by exchange.
   predecessorDocId?: string; // Doc ID of the item this one replaces (set on the new doc created via exchange).

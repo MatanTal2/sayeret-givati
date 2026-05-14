@@ -12,6 +12,7 @@ export interface WizardItemDraft {
   notes: string;
   location: string;
   condition: EquipmentCondition;
+  teamLabel: string | null; // Optional team-label tag (label only — does NOT change ownership)
 }
 
 export interface WizardState {
@@ -34,6 +35,7 @@ export function createEmptyItem(defaults?: Partial<WizardItemDraft>): WizardItem
     notes: '',
     location: '',
     condition: EquipmentCondition.GOOD,
+    teamLabel: null,
     ...defaults,
   };
 }
