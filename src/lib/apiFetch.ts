@@ -1,27 +1,40 @@
 import { auth } from './firebase';
+import { enqueue } from './offline/outbox';
+import { matchAllowlist } from './offline/allowlist';
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 function generateIdempotencyKey(): string {
-  // crypto.randomUUID is available in Node 19+ and all modern browsers.
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return crypto.randomUUID();
   }
-  // Fallback for older runtimes.
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function urlToPath(input: RequestInfo | URL): string {
+  if (typeof input === 'string') {
+    return input.startsWith('http') ? new URL(input).pathname : input;
+  }
+  if (input instanceof URL) return input.pathname;
+  return urlToPath((input as Request).url);
+}
+
 /**
- * Authenticated fetch wrapper. Attaches the current user's Firebase ID token
- * as `Authorization: Bearer <token>`. Use for every call to a protected
- * `/api/...` route. Public auth routes (`/api/auth/register`,
- * `/api/auth/verify-military-id`, `/api/auth/check-email-verified`) use plain
- * `fetch` instead.
+ * Authenticated fetch wrapper.
  *
- * Mutating methods (POST/PUT/PATCH/DELETE) automatically receive an
- * `Idempotency-Key` header (UUID v4) so server-side `withIdempotency` can
- * dedupe replays. Callers can override by setting the header themselves
- * (e.g. the outbox replay loop reuses the original key on retry).
+ * Attaches `Authorization: Bearer <token>` for protected `/api/...` routes.
+ * Public auth routes use plain `fetch`.
+ *
+ * Mutating methods (POST/PUT/PATCH/DELETE) receive an `Idempotency-Key`
+ * header (UUID) unless the caller supplies one. The outbox replay loop
+ * overrides with the originally-enqueued key on retry — that's how server
+ * dedupe stays consistent across reconnect cycles.
+ *
+ * Offline + allowlisted: enqueues the request into the outbox and returns
+ * a synthetic `202 Accepted` response (`{ success: true, queued: true }`).
+ * Callers can treat this as success for optimistic UI; the real reply
+ * arrives via outbox replay. Routes not on the allowlist throw — security
+ * (auth, sessions, phone-change) and audit routes must never queue.
  *
  * Throws `Error('Not authenticated')` if there is no signed-in user.
  */
@@ -33,15 +46,47 @@ export async function apiFetch(
   if (!user) {
     throw new Error('Not authenticated');
   }
-  const idToken = await user.getIdToken();
+  const method = (init.method ?? 'GET').toUpperCase();
+  const path = urlToPath(input);
   const headers = new Headers(init.headers);
-  headers.set('Authorization', `Bearer ${idToken}`);
+
+  let idempotencyKey: string | null = null;
+  if (MUTATING_METHODS.has(method)) {
+    idempotencyKey = headers.get('Idempotency-Key') ?? generateIdempotencyKey();
+    headers.set('Idempotency-Key', idempotencyKey);
+  }
   if (init.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
-  const method = (init.method ?? 'GET').toUpperCase();
-  if (MUTATING_METHODS.has(method) && !headers.has('Idempotency-Key')) {
-    headers.set('Idempotency-Key', generateIdempotencyKey());
+
+  // Offline path — enqueue if route is allowlisted.
+  if (typeof navigator !== 'undefined' && !navigator.onLine && MUTATING_METHODS.has(method)) {
+    const match = matchAllowlist(method, path);
+    if (match) {
+      const body = typeof init.body === 'string' ? init.body : init.body ? await new Response(init.body).text() : '';
+      const headerEntries = Object.fromEntries(headers.entries());
+      delete headerEntries.authorization;
+      delete headerEntries.Authorization;
+      await enqueue({
+        uid: user.uid,
+        method,
+        url: path,
+        headers: headerEntries,
+        body,
+        idempotencyKey: idempotencyKey!,
+        routeName: match.routeName,
+        ...(match.resourceKey ? { resourceKey: match.resourceKey } : {}),
+      });
+      return new Response(
+        JSON.stringify({ success: true, queued: true, idempotencyKey }),
+        { status: 202, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+    // Non-allowlisted offline mutation → let fetch fail loudly. The caller
+    // should surface the network error to the user.
   }
+
+  const idToken = await user.getIdToken();
+  headers.set('Authorization', `Bearer ${idToken}`);
   return fetch(input, { ...init, headers });
 }

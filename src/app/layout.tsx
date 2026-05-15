@@ -3,10 +3,12 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { OutboxProvider } from "@/contexts/OutboxContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import GlobalAuthModal from "@/components/auth/GlobalAuthModal";
 import EmailVerificationBanner from "@/components/auth/EmailVerificationBanner";
 import ServiceWorkerUpdater from "@/components/pwa/ServiceWorkerUpdater";
+import SyncStatusIndicator from "@/components/pwa/SyncStatusIndicator";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,14 +36,17 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <NotificationProvider>
-            <ToastProvider>
-              <EmailVerificationBanner />
-              {children}
-              <GlobalAuthModal />
-              <ServiceWorkerUpdater />
-            </ToastProvider>
-          </NotificationProvider>
+          <OutboxProvider>
+            <NotificationProvider>
+              <ToastProvider>
+                <EmailVerificationBanner />
+                {children}
+                <GlobalAuthModal />
+                <ServiceWorkerUpdater />
+                <SyncStatusIndicator />
+              </ToastProvider>
+            </NotificationProvider>
+          </OutboxProvider>
         </AuthProvider>
       </body>
     </html>

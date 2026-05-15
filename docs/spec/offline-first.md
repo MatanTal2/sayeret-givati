@@ -175,6 +175,7 @@ As each phase ships, findings are reflected in:
 - ✅ **Phase 2** — `next.config.ts` Firebase Storage `remotePatterns` + bundle-budget tooling (PR #123).
 - ✅ **Phase 3** — Serwist PWA shell (PR #124).
 - ✅ **Phase 4a** — Idempotency infra + 7 representative routes (PR #125).
-- ✅ **Phase 4b** — Remaining 47 mutation routes wrapped (54 handlers total). Migration tracking doc fully ✅. Phase 5 unblocked.
-- ⬜ **Phase 5** — Outbox + replay. Cleared to start.
-- ⬜ **Phase 6..8** — see table above.
+- ✅ **Phase 4b** — Remaining 47 mutation routes wrapped (PR #126).
+- ✅ **Phase 5** — Outbox + replay shipped. IndexedDB store with `DB_VERSION=1` upgrade scaffold (M4). Replay loop: auth-await (M6), concurrency cap 3 (S3), per-batch token cache, chained `If-Match` rewrite (M3), page-thread fallback for iOS (M7). Deny-by-default allowlist (`equipment.transfer/retire/storage`, `soldier-status.update`). `OutboxContext` + `SyncStatusIndicator` mounted globally. Threat model at `docs/spec/offline-threat-model.md` (S10 locked: no app-layer encryption). **Not shipped here:** S9 hooks projection (deferred to P5b), Background Sync registration (deferred to P8).
+- ⬜ **Phase 6** — `ConflictCenter` aggregator + IDB-persistent conflicts.
+- ⬜ **Phase 7..8** — see table above.
