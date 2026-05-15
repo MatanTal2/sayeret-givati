@@ -27,7 +27,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "vercel-build": "npm run build"
+    "vercel-build": "npm run build",
+    "bundle-budget": "node scripts/check-bundle-size.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.10",

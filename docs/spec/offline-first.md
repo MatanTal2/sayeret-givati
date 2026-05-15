@@ -171,6 +171,7 @@ As each phase ships, findings are reflected in:
 ## Resume Pointer
 
 - ✅ **Phase 0** — spec + `OFFLINE_REPLAY_CONCURRENCY` flag (PR #121).
-- ✅ **Phase 1** — Firestore persistent cache enabled in `src/lib/firebase.ts` (browser path uses `persistentLocalCache` + `persistentSingleTabManager({ forceOwnership: false })`; SSR falls back to in-memory).
-- ⬜ **Phase 2** — `next.config.ts` remote-image patterns + bundle-budget CI gate.
-- ⬜ **Phase 3..8** — see table above.
+- ✅ **Phase 1** — Firestore persistent cache enabled in `src/lib/firebase.ts` (PR #122).
+- ✅ **Phase 2** — `next.config.ts` Firebase Storage `remotePatterns`. `scripts/check-bundle-size.js` + `bundle-budget.json` + `npm run bundle-budget` script. CI wiring (build job + budget step) lands with P3 PR when the SW adds the first real chunk weight.
+- ⬜ **Phase 3** — Serwist PWA shell + bundle-budget CI step + user-driven `SKIP_WAITING`.
+- ⬜ **Phase 4..8** — see table above.

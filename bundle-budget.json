@@ -1,0 +1,9 @@
+{
+  "$schema": "./scripts/check-bundle-size.js",
+  "description": "Gzipped first-load JS budget for the largest entrypoint. Bumped per phase as the SW / outbox land. See docs/spec/offline-first.md (audit note N5).",
+  "maxFirstLoadKB": null,
+  "phaseDeltas": {
+    "3": { "maxIncreaseKB": 40, "note": "Service Worker shell" },
+    "5": { "maxIncreaseKB": 25, "note": "Outbox + replay loop" }
+  }
+}
