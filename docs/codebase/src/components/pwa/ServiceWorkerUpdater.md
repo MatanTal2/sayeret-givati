@@ -39,3 +39,15 @@ claim policy. Regression test:
 
 - `src/components/pwa/__tests__/ServiceWorkerUpdater.test.tsx` — covers the regression: after SKIP_WAITING, reload fires only when the waiting worker reaches `'activated'`, and no global `controllerchange` listener is registered.
 - Manual end-to-end flow documented in `docs/codebase/pwa-shell.md`.
+
+## Positioning
+
+Container: `fixed bottom-6 inset-x-4 mx-auto max-w-md ...`. The earlier
+`start-1/2 -translate-x-1/2 w-[calc(100%-2rem)]` combination clipped the
+toast off the left edge on mobile in `dir="rtl"`: `start-1/2` resolves to
+`right: 50%`, then `-translate-x-1/2` is direction-neutral (`translateX(-50%)`),
+so the element's center landed *left* of viewport center and a nearly-full
+viewport width spilled off the left edge — hiding the "Update now" button.
+The `inset-x-4 mx-auto max-w-md` pattern anchors both sides with a 16px
+gutter and centers between them, so the layout is symmetric in RTL and LTR
+and bounded on mobile.
