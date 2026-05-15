@@ -24,7 +24,7 @@ export default function EquipmentTabs({ scope, onChange, user, counts }: Equipme
   if (showAll) tabs.push({ id: 'all', label: labels.ALL });
 
   return (
-    <div className="border-b border-neutral-200 bg-white rounded-t-xl">
+    <div className="border border-neutral-200 bg-white rounded-xl">
       <nav className="flex" role="tablist" aria-label="Equipment scope">
         {tabs.map((t) => {
           const active = t.id === scope;

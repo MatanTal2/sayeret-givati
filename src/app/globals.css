@@ -232,4 +232,15 @@
   select {
     font-size: 16px !important;
   }
+  /* iOS Safari decides auto-zoom from the *input's* font-size, not the
+     placeholder's. Pin placeholders to `text-sm` (0.875rem / 14px) so the
+     hint text matches the design language of non-input controls (e.g. the
+     Headless UI `Listbox` placeholder in `src/components/ui/Select.tsx`,
+     which renders inside a `<button>` and stays at 14px). Without this
+     override the placeholder inherits the 16px floor above and visually
+     dominates the form. */
+  input::placeholder,
+  textarea::placeholder {
+    font-size: 0.875rem !important;
+  }
 }
