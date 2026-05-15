@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { serverUpdateUserProfile, InvalidProfileUpdateError } from '@/lib/db/server/userService';
 import { getActorOrError } from '@/lib/db/server/auth';
+import { withIdempotency } from '@/lib/db/server/idempotency';
+import type { ApiActor } from '@/lib/db/server/policyHelpers';
 import { getAdminDb } from '@/lib/db/admin';
 import { COLLECTIONS } from '@/lib/db/collections';
 import { UserType } from '@/types/user';
@@ -19,11 +21,17 @@ import { serverUpsertPhoneBookFromUser } from '@/lib/db/server/phoneBookService'
  * `project_settings_page.md` Council synthesis for the threat model.
  */
 export async function PATCH(request: Request) {
+  const actorOrError = await getActorOrError(request);
+  if (actorOrError instanceof NextResponse) return actorOrError;
+  const actor = actorOrError;
+  const rawBody = await request.text();
+
+  return withIdempotency(request, actor, rawBody, () => handlePatch(actor, rawBody));
+}
+
+async function handlePatch(actor: ApiActor, rawBody: string): Promise<NextResponse> {
   try {
-    const actorOrError = await getActorOrError(request);
-    if (actorOrError instanceof NextResponse) return actorOrError;
-    const actor = actorOrError;
-    const body = await request.json();
+    const body = rawBody ? JSON.parse(rawBody) : {};
     if (!body?.uid || typeof body.uid !== 'string') {
       return NextResponse.json({ success: false, error: 'uid is required' }, { status: 400 });
     }
