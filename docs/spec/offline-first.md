@@ -173,6 +173,8 @@ As each phase ships, findings are reflected in:
 - ✅ **Phase 0** — spec + `OFFLINE_REPLAY_CONCURRENCY` flag (PR #121).
 - ✅ **Phase 1** — Firestore persistent cache enabled in `src/lib/firebase.ts` (PR #122).
 - ✅ **Phase 2** — `next.config.ts` Firebase Storage `remotePatterns` + bundle-budget tooling (PR #123).
-- ✅ **Phase 3** — Serwist PWA shell. `src/app/sw.ts` with `skipWaiting:false` + user-driven `SKIP_WAITING` (M5). `ServiceWorkerUpdater` toast wired in `layout.tsx`. `/sw.js` Cache-Control `no-cache` via `next.config.ts` headers (S7). CI `build-and-budget` job + `bundle-budget.json` cap 110 KB. Baseline `/_error` first-load JS = 93.56 KB.
-- ⬜ **Phase 4** — Server-side idempotency: `_idempotency` collection + `withIdempotency` wrap all mutation routes.
-- ⬜ **Phase 5..8** — see table above.
+- ✅ **Phase 3** — Serwist PWA shell (PR #124).
+- 🚧 **Phase 4a** — Infrastructure: `withIdempotency` helper, rules deny `_idempotency`, composite + TTL index, cron sweeper, `apiFetch` injects `Idempotency-Key`. 7 representative routes wrapped (equipment transfer/retire/storage send & pull, soldier-status, transfer-requests, users profile). Full migration tracked in `docs/spec/idempotency-route-migration.md`.
+- ⬜ **Phase 4b** — Wrap remaining 47 mutation routes per checklist.
+- ⬜ **Phase 5** — Outbox + replay. **Gated** on 4b completion.
+- ⬜ **Phase 6..8** — see table above.

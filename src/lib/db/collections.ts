@@ -36,6 +36,7 @@ export const COLLECTIONS = {
   PHONE_CHANGE_RATE_LIMIT: 'phoneChangeRateLimit',
   LOGISTICS_TEMPLATES: 'logisticsTemplates',
   LOGISTICS_ITEMS: 'logisticsItems',
+  IDEMPOTENCY: '_idempotency',
 } as const;
 
 export type CollectionName = typeof COLLECTIONS[keyof typeof COLLECTIONS];
