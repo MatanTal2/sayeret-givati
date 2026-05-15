@@ -344,3 +344,85 @@ describe('equipmentPolicy — exchange + storage', () => {
     expect(canPullFromStorage({ user: holder, equipment: baseEquipment })).toBe(false);
   });
 });
+
+describe('equipmentPolicy — bug #25 status gates', () => {
+  // Regression guard for bug #25: RETIRED items should leave the active list
+  // entirely (only history allowed), and STORED items should collapse the
+  // action menu to history + pull-from-storage. The policy layer is the
+  // single chokepoint — UI uses these helpers to decide menu visibility.
+  const holder = makeUser({ uid: 'holder-uid' });
+  const signer = makeUser({ uid: 'signer-uid' });
+  const both = makeUser({ uid: 'self-uid' }); // is BOTH holder + signer
+  const admin = makeUser({ uid: 'admin-uid', userType: UserType.ADMIN });
+
+  function eq(over: Partial<Equipment>): Equipment {
+    return makeEquipment({
+      currentHolderId: 'holder-uid',
+      signedById: 'signer-uid',
+      currentHolder: 'Holder',
+      signedBy: 'Signer',
+      ...over,
+    });
+  }
+
+  describe('RETIRED items: every mutating action returns false', () => {
+    const retired = eq({ status: EquipmentStatus.RETIRED });
+
+    it('canReport returns false even for holder', () => {
+      expect(canReport({ user: holder, equipment: retired })).toBe(false);
+    });
+    it('canReport returns false even for admin', () => {
+      expect(canReport({ user: admin, equipment: retired })).toBe(false);
+    });
+    it('canTransfer returns false for holder', () => {
+      expect(canTransfer({ user: holder, equipment: retired })).toBe(false);
+    });
+    it('canRetire returns false for signer (already retired)', () => {
+      expect(canRetire({ user: signer, equipment: retired })).toBe(false);
+    });
+    it('canRetireImmediately returns false for holder+signer combo', () => {
+      const selfRetired = eq({
+        status: EquipmentStatus.RETIRED,
+        currentHolderId: 'self-uid',
+        signedById: 'self-uid',
+      });
+      expect(canRetireImmediately({ user: both, equipment: selfRetired })).toBe(false);
+    });
+    it('canForceTransfer returns false even for admin', () => {
+      expect(canForceTransfer({ user: admin, equipment: retired })).toBe(false);
+    });
+    it('canRequestExchange / canSendToStorage / canReplaceByAnother all false', () => {
+      expect(canRequestExchange({ user: holder, equipment: retired })).toBe(false);
+      expect(canSendToStorage({ user: holder, equipment: retired })).toBe(false);
+      expect(canReplaceByAnother({ user: signer, equipment: retired })).toBe(false);
+    });
+  });
+
+  describe('STORED items: only pull-from-storage permitted; rest false', () => {
+    const stored = eq({ status: EquipmentStatus.STORED });
+
+    it('canPullFromStorage stays true for holder (un-store path)', () => {
+      expect(canPullFromStorage({ user: holder, equipment: stored })).toBe(true);
+    });
+    it('canReport returns false for holder while stored', () => {
+      expect(canReport({ user: holder, equipment: stored })).toBe(false);
+    });
+    it('canReport returns false even for admin while stored', () => {
+      expect(canReport({ user: admin, equipment: stored })).toBe(false);
+    });
+    it('canTransfer returns false while stored', () => {
+      expect(canTransfer({ user: holder, equipment: stored })).toBe(false);
+    });
+    it('canRetire returns false while stored (must pull from storage first)', () => {
+      expect(canRetire({ user: signer, equipment: stored })).toBe(false);
+    });
+    it('canRequestExchange / canSendToStorage / canReplaceByAnother all false', () => {
+      expect(canRequestExchange({ user: holder, equipment: stored })).toBe(false);
+      expect(canSendToStorage({ user: holder, equipment: stored })).toBe(false);
+      expect(canReplaceByAnother({ user: signer, equipment: stored })).toBe(false);
+    });
+    it('canForceTransfer returns false even for admin while stored', () => {
+      expect(canForceTransfer({ user: admin, equipment: stored })).toBe(false);
+    });
+  });
+});

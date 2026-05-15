@@ -613,6 +613,13 @@ export const TEXT_CONSTANTS = {
       EMPTY_TAB_SELF: 'אין לך ציוד פעיל. לחץ "הוסף ציוד" כדי לחתום על פריט.',
       EMPTY_TAB_TEAM: 'אין ציוד הקשור לצוות שלך.',
       EMPTY_TAB_ALL: 'אין ציוד במערכת.',
+      ARCHIVE: {
+        SHOW_ACTIVE: 'ציוד פעיל',
+        SHOW_ARCHIVE: 'ארכיון',
+        EMPTY_SELF: 'אין פריטים בארכיון.',
+        EMPTY_TEAM: 'אין פריטים בארכיון של הצוות.',
+        EMPTY_ALL: 'אין פריטים בארכיון.',
+      },
       REPORT_MODAL: {
         TITLE: 'דיווח על ציוד',
         SUBTITLE: 'צלם תמונה עדכנית והוסף הערה.',

@@ -23,7 +23,14 @@ interface UseEquipmentOptions {
 }
 
 interface UseEquipmentReturn {
+  /** Active equipment — excludes RETIRED items (those live on `archivedEquipment`). */
   equipment: Equipment[];
+  /**
+   * Archived equipment — RETIRED items only. Surfaced via a separate view in
+   * the equipment page so users don't see retired rows in their working list
+   * but can still walk their history. Bug #25.
+   */
+  archivedEquipment: Equipment[];
   loading: boolean;
   error: string | null;
 
@@ -121,14 +128,14 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
     }
   }, []);
 
-  const equipment = useMemo(() => {
+  // Apply visibility + scope first, then partition by lifecycle status.
+  // RETIRED items are visible (history matters) but move to a separate
+  // archived bucket so they don't clutter the active working list (bug #25).
+  const scoped = useMemo(() => {
     if (!enhancedUser) return [];
-    // canView already encodes self / team / manager+ visibility.
     const visible = rawEquipment.filter((e) => canView({ user: enhancedUser, equipment: e }));
     if (scope === 'all') return visible;
     if (scope === 'team') {
-      // Team scope = items where holder or signer is in the user's team,
-      // OR the user is signer/holder. Self items still surface to avoid empty surprise.
       return visible.filter((e) => {
         const inTeam =
           !!enhancedUser.teamId &&
@@ -136,11 +143,20 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
         return inTeam || e.signedById === enhancedUser.uid || e.currentHolderId === enhancedUser.uid;
       });
     }
-    // self
     return visible.filter(
       (e) => e.signedById === enhancedUser.uid || e.currentHolderId === enhancedUser.uid,
     );
   }, [rawEquipment, enhancedUser, scope]);
+
+  const equipment = useMemo(
+    () => scoped.filter((e) => e.status !== EquipmentStatus.RETIRED),
+    [scoped],
+  );
+
+  const archivedEquipment = useMemo(
+    () => scoped.filter((e) => e.status === EquipmentStatus.RETIRED),
+    [scoped],
+  );
 
   const addEquipment = useCallback(async (
     equipmentData: Omit<Equipment, 'createdAt' | 'updatedAt' | 'trackingHistory'>,
@@ -379,6 +395,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
 
   return {
     equipment,
+    archivedEquipment,
     loading,
     error,
     equipmentTypes,
