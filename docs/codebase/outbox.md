@@ -111,12 +111,16 @@ Cap is `OFFLINE_REPLAY_CONCURRENCY` (default 3). One bearer token is fetched
 per drain pass and reused across the batch. 429 from server triggers backoff
 on the **batch**, not just the failing item.
 
-## What's NOT shipped in P5
+## Phase 5b — partial S9 (shipped)
 
-- **S9 — hooks projection from `(server, outbox)`.** Hooks like
-  `useEquipment` still read server data only. Optimistic overlay lives in
-  the next iteration; current outbox surfaces queue depth but doesn't blend
-  pending mutations into list rendering. Phase 5b follow-up.
+`OutboxContext.pendingResourceKeys: Set<string>` exposes resource keys with
+uncommitted entries (status pending / replaying / awaiting_auth / conflict).
+`src/hooks/usePendingSync.ts` is the narrow selector. List components query
+it and flag rows as "syncing" without local optimistic state.
+
+Full projection of pending mutations onto server data (e.g. showing the
+post-transfer holder before the server confirms) is deferred to Phase 5c
+once a projection helper proves out across more than one domain.
 - **P6 — `ConflictCenter`.** 409s land in `conflictState` and bump the
   badge, but a per-conflict modal / aggregator UI is its own phase.
 - **Background Sync registration.** Page-thread drain is the only path.
