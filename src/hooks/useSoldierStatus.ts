@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/apiFetch';
-import { getCachedData, setCachedData } from '@/lib/cache';
-import { formatCacheErrorDate } from '@/lib/dateUtils';
 import type { Soldier } from '@/app/types';
 import type { RosterEntry, SoldierStatus } from '@/types/soldierStatus';
 
@@ -33,9 +31,12 @@ function rosterToSoldier(entry: RosterEntry): Soldier {
  * Loads + mutates the soldier-status roster against `/api/soldier-status`.
  *
  * Roster is the join of `users` ∪ `authorized_personnel` plus the optional
- * status overlay; adding a soldier happens in the admin panel, not here. The
- * hook caches via the existing localStorage cache layer for offline / fast
- * paint and invalidates on every successful PUT.
+ * status overlay; adding a soldier happens in the admin panel, not here.
+ *
+ * Caching: the Service Worker runtime cache (offline-first Phase 3) covers
+ * `/api/soldier-status` for offline / fast paint. The legacy in-hook
+ * localStorage cache was retired in Phase 7 (PR #129); the SW + Firestore
+ * persistent cache layers are now authoritative.
  */
 export function useSoldierStatus() {
   const [soldiers, setSoldiers] = useState<Soldier[]>([]);
@@ -52,17 +53,6 @@ export function useSoldierStatus() {
       setError(null);
       if (forceRefresh) setIsRefreshing(true);
 
-      if (!forceRefresh) {
-        const cached = getCachedData();
-        if (cached) {
-          setSoldiers(cached.data);
-          setOriginalSoldiers(JSON.parse(JSON.stringify(cached.data)));
-          setLastUpdated(new Date(cached.timestamp));
-          setLoading(false);
-          return;
-        }
-      }
-
       const response = await apiFetch('/api/soldier-status');
       const result: ApiResponse = await response.json().catch(() => ({ success: false }));
       if (!response.ok || !result.success || !Array.isArray(result.soldiers)) {
@@ -70,28 +60,17 @@ export function useSoldierStatus() {
       }
 
       const soldiersData = result.soldiers.map(rosterToSoldier);
-      const now = Date.now();
-      setCachedData(soldiersData, now);
-      setLastUpdated(new Date(now));
+      setLastUpdated(new Date());
       setSoldiers(soldiersData);
       setOriginalSoldiers(JSON.parse(JSON.stringify(soldiersData)));
     } catch (err) {
       console.error('Error fetching soldiers:', err);
-      const cached = getCachedData();
-      if (cached && soldiers.length === 0) {
-        setSoldiers(cached.data);
-        setLastUpdated(new Date(cached.timestamp));
-        setError(
-          `שגיאה בטעינת נתונים חדשים. מציג נתונים שמורים מ-${formatCacheErrorDate(cached.timestamp)}`
-        );
-      } else {
-        setError(err instanceof Error ? err.message : 'שגיאה לא צפויה בטעינת הנתונים');
-      }
+      setError(err instanceof Error ? err.message : 'שגיאה לא צפויה בטעינת הנתונים');
     } finally {
       setLoading(false);
       if (forceRefresh) setIsRefreshing(false);
     }
-  }, [soldiers.length]);
+  }, []);
 
   useEffect(() => {
     fetchSoldiers();
