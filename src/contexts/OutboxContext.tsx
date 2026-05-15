@@ -26,6 +26,15 @@ interface OutboxContextValue {
   pendingCount: number;
   conflictCount: number;
   stuckCount: number;
+  /**
+   * Set of resource keys currently in-flight or queued. Audit S9: lets
+   * list components flag rows as "syncing" without each maintaining local
+   * optimistic state. Entry shape: `<domain>:<id>` (e.g.
+   * `equipment:EQ-1234`). Built from entries whose status is pending,
+   * replaying, awaiting_auth, or conflict (anything not yet committed
+   * server-side).
+   */
+  pendingResourceKeys: Set<string>;
   /** Manually trigger a drain pass — useful for "retry now" buttons. */
   drain: () => Promise<void>;
   /**
@@ -37,6 +46,13 @@ interface OutboxContextValue {
    */
   resolveConflict: (id: number, resolution: ConflictResolution) => Promise<void>;
 }
+
+const UNCOMMITTED_STATUSES = new Set<OutboxEntry['status']>([
+  'pending',
+  'replaying',
+  'awaiting_auth',
+  'conflict',
+]);
 
 const OutboxContext = createContext<OutboxContextValue | undefined>(undefined);
 
@@ -80,11 +96,18 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
     const pendingCount = entries.filter((e) => e.status === 'pending' || e.status === 'awaiting_auth' || e.status === 'replaying').length;
     const conflictCount = entries.filter((e) => e.status === 'conflict').length;
     const stuckCount = entries.filter((e) => e.status === 'stuck' || e.status === 'poisoned').length;
+    const pendingResourceKeys = new Set<string>();
+    for (const e of entries) {
+      if (e.resourceKey && UNCOMMITTED_STATUSES.has(e.status)) {
+        pendingResourceKeys.add(e.resourceKey);
+      }
+    }
     return {
       entries,
       pendingCount,
       conflictCount,
       stuckCount,
+      pendingResourceKeys,
       drain: async () => { await drainOutbox(); },
       resolveConflict: async (id, resolution) => {
         if (resolution === 'discard') {
@@ -124,6 +147,7 @@ export function useOutbox(): OutboxContextValue {
       pendingCount: 0,
       conflictCount: 0,
       stuckCount: 0,
+      pendingResourceKeys: new Set<string>(),
       drain: async () => {},
       resolveConflict: async () => {},
     };
