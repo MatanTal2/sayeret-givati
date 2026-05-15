@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query } from 'firebase/firestore';
+import { collection, getDocs, onSnapshot } from 'firebase/firestore';
 import { FirestoreUserProfile } from '@/types/user';
 import { UserRole } from '@/types/equipment';
 import { ADMIN_CONFIG } from '@/constants/admin';
@@ -26,82 +26,79 @@ export interface UseUsersReturn {
   fetchUsers: (forceRefresh?: boolean) => Promise<void>;
 }
 
+function mapAndFilter(docs: Array<{ data(): FirestoreUserProfile }>): UserForEmail[] {
+  return docs
+    .map((d) => {
+      const data = d.data() as FirestoreUserProfile;
+      return {
+        uid: data.uid,
+        email: data.email,
+        fullName: `${data.firstName} ${data.lastName}`.trim(),
+        firstName: data.firstName,
+        lastName: data.lastName,
+        team: getTeamFromRole(data.role),
+        role: getRoleDisplayName(data.role),
+        rank: data.rank || 'לא מוגדר',
+        status: data.status || 'active',
+      } as UserForEmail;
+    })
+    .filter((user) => user.status === 'active')
+    .sort((a, b) => {
+      const lastNameCompare = a.lastName.localeCompare(b.lastName, 'he');
+      if (lastNameCompare !== 0) return lastNameCompare;
+      return a.firstName.localeCompare(b.firstName, 'he');
+    });
+}
+
 export function useUsers(): UseUsersReturn {
   const [users, setUsers] = useState<UserForEmail[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUsers = useCallback(async (forceRefresh: boolean = false) => {
-    // Skip fetch if we already have users and not forcing refresh
-    if (!forceRefresh && users.length > 0) {
-      console.log('🔍 Using cached users data...');
-      return;
-    }
-
+  // Listener-based. The previous hook had naive `users.length > 0` caching
+  // that broke after deletes. With onSnapshot the list stays correct under
+  // adds/removes/updates without explicit refetch, and persistent IndexedDB
+  // cache paints the initial state synchronously.
+  useEffect(() => {
     setLoading(true);
     setError(null);
+    const unsub = onSnapshot(
+      collection(db, ADMIN_CONFIG.FIRESTORE_USERS_COLLECTION),
+      (snap) => {
+        setUsers(mapAndFilter(snap.docs));
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Users snapshot error:', err);
+        setError('שגיאה בטעינת רשימת המשתמשים');
+        setLoading(false);
+      }
+    );
+    return () => unsub();
+  }, []);
 
+  // Force-resync escape hatch — kept for API parity. Listener owns state in
+  // normal flow.
+  const fetchUsers = useCallback(async (_forceRefresh: boolean = false) => {
+    void _forceRefresh;
     try {
-      console.log('🔍 Fetching users from Firestore...');
-      
-      const usersCollection = collection(db, ADMIN_CONFIG.FIRESTORE_USERS_COLLECTION);
-      // Remove orderBy to avoid requiring composite index - we'll sort on frontend
-      const q = query(usersCollection);
-      
-      const querySnapshot = await getDocs(q);
-      
-      const fetchedUsers: UserForEmail[] = querySnapshot.docs
-        .map(doc => {
-          const data = doc.data() as FirestoreUserProfile;
-          
-          // Map the data to our simplified interface
-          return {
-            uid: data.uid,
-            email: data.email,
-            fullName: `${data.firstName} ${data.lastName}`.trim(),
-            firstName: data.firstName,
-            lastName: data.lastName,
-            team: getTeamFromRole(data.role), // Map role to team display
-            role: getRoleDisplayName(data.role),
-            rank: data.rank || 'לא מוגדר',
-            status: data.status || 'active'
-          };
-        })
-        .filter(user => user.status === 'active') // Only show active users
-        .sort((a, b) => {
-          // Sort by lastName first, then firstName (Hebrew locale)
-          const lastNameCompare = a.lastName.localeCompare(b.lastName, 'he');
-          if (lastNameCompare !== 0) return lastNameCompare;
-          return a.firstName.localeCompare(b.firstName, 'he');
-        });
-      
-      console.log(`✅ Fetched ${fetchedUsers.length} active users`);
-      setUsers(fetchedUsers);
-      
+      const snapshot = await getDocs(collection(db, ADMIN_CONFIG.FIRESTORE_USERS_COLLECTION));
+      setUsers(mapAndFilter(snapshot.docs));
     } catch (err) {
-      console.error('❌ Error fetching users:', err);
+      console.error('Error fetching users:', err);
       setError('שגיאה בטעינת רשימת המשתמשים');
-    } finally {
-      setLoading(false);
     }
-  }, [users.length]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  }, []);
 
   return {
     users,
     loading,
     error,
-    fetchUsers
+    fetchUsers,
   };
 }
 
-// Helper function to map role to team display
 function getTeamFromRole(role: UserRole): string {
-  // For now, we'll derive team from role - this can be enhanced later
-  // to include actual team assignments from user profile
   switch (role) {
     case UserRole.COMMANDER:
     case UserRole.OFFICER:
@@ -119,7 +116,6 @@ function getTeamFromRole(role: UserRole): string {
   }
 }
 
-// Helper function to get role display name
 function getRoleDisplayName(role: UserRole): string {
   const roleDisplayMap: Record<UserRole, string> = {
     [UserRole.SOLDIER]: 'חייל',
@@ -128,8 +124,8 @@ function getRoleDisplayName(role: UserRole): string {
     [UserRole.SERGEANT]: 'סמל',
     [UserRole.OFFICER]: 'קצין',
     [UserRole.COMMANDER]: 'מפקד',
-    [UserRole.EQUIPMENT_MANAGER]: 'מנהל ציוד'
+    [UserRole.EQUIPMENT_MANAGER]: 'מנהל ציוד',
   };
-  
+
   return roleDisplayMap[role] || role.toString();
 }
