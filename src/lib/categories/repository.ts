@@ -7,6 +7,8 @@ import {
   doc,
   getDocs,
   getDoc,
+  limit,
+  orderBy,
   query,
   where
 } from 'firebase/firestore';
@@ -278,32 +280,59 @@ export class CategoriesRepository {
   }
 
   /**
-   * Get next order number for categories (client SDK read)
+   * Get next order number for categories.
+   * Reads max(order)+1 via orderBy+limit(1) instead of scanning the whole
+   * collection. Safer than `snapshot.size` (which produces duplicate orders
+   * after deletes) and cheaper (1 doc read vs N).
    */
   static async getNextCategoryOrder(): Promise<number> {
     try {
-      const snapshot = await getDocs(collection(db, COLLECTIONS.CATEGORIES));
-      return snapshot.size;
+      const q = query(collection(db, COLLECTIONS.CATEGORIES), orderBy('order', 'desc'), limit(1));
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) return 0;
+      const top = snapshot.docs[0].data() as { order?: number };
+      return (top.order ?? 0) + 1;
     } catch (error) {
-      console.log('Error getting category count, assuming 0:', error);
+      console.log('Error getting max category order, assuming 0:', error);
       return 0;
     }
   }
 
   /**
-   * Get next order number for subcategories in a category (client SDK read)
+   * Get next order number for subcategories in a category.
+   * Needs a composite index (parentCategoryId ASC, order DESC) to use the
+   * limited path; falls back to scanning the parent's subcategories if the
+   * index is missing.
    */
   static async getNextSubcategoryOrder(parentCategoryId: string): Promise<number> {
     try {
       const q = query(
         collection(db, COLLECTIONS.SUBCATEGORIES),
-        where('parentCategoryId', '==', parentCategoryId)
+        where('parentCategoryId', '==', parentCategoryId),
+        orderBy('order', 'desc'),
+        limit(1)
       );
       const snapshot = await getDocs(q);
-      return snapshot.size;
+      if (snapshot.empty) return 0;
+      const top = snapshot.docs[0].data() as { order?: number };
+      return (top.order ?? 0) + 1;
     } catch (error) {
-      console.log('Error getting subcategory count, assuming 0:', error);
-      return 0;
+      console.log('Error getting max subcategory order, falling back:', error);
+      try {
+        const q = query(
+          collection(db, COLLECTIONS.SUBCATEGORIES),
+          where('parentCategoryId', '==', parentCategoryId)
+        );
+        const snapshot = await getDocs(q);
+        let max = -1;
+        snapshot.forEach((d) => {
+          const o = (d.data() as { order?: number }).order ?? -1;
+          if (o > max) max = o;
+        });
+        return max + 1;
+      } catch {
+        return 0;
+      }
     }
   }
 
