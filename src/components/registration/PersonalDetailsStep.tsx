@@ -93,7 +93,7 @@ export default function PersonalDetailsStep({
               value={formData.firstName}
               onChange={(e) => handleInputChange('firstName', e.target.value)}
               className={`w-full h-10 px-3 py-0 border-2 rounded-lg focus:ring-2 outline-none transition-all
-                       text-end text-neutral-800 bg-white text-sm ${
+                       text-neutral-800 bg-white text-sm ${
                 validationErrors.firstName && formData.firstName
                   ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
                   : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
@@ -104,7 +104,7 @@ export default function PersonalDetailsStep({
             
             {/* First Name Error Message */}
             {validationErrors.firstName && formData.firstName && (
-              <p className="text-xs text-danger-600 text-end px-1" data-testid="first-name-error">
+              <p className="text-xs text-danger-600 px-1" data-testid="first-name-error">
                 {validationErrors.firstName}
               </p>
             )}
@@ -117,7 +117,7 @@ export default function PersonalDetailsStep({
               value={formData.lastName}
               onChange={(e) => handleInputChange('lastName', e.target.value)}
               className={`w-full h-10 px-3 py-0 border-2 rounded-lg focus:ring-2 outline-none transition-all
-                       text-end text-neutral-800 bg-white text-sm ${
+                       text-neutral-800 bg-white text-sm ${
                 validationErrors.lastName && formData.lastName
                   ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
                   : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
@@ -128,7 +128,7 @@ export default function PersonalDetailsStep({
             
             {/* Last Name Error Message */}
             {validationErrors.lastName && formData.lastName && (
-              <p className="text-xs text-danger-600 text-end px-1" data-testid="last-name-error">
+              <p className="text-xs text-danger-600 px-1" data-testid="last-name-error">
                 {validationErrors.lastName}
               </p>
             )}
@@ -161,7 +161,7 @@ export default function PersonalDetailsStep({
                 className="!h-10 !px-3 !py-0 !rounded-lg !text-sm !border-2 !border-neutral-200"
               />
               {validationErrors.gender && formData.gender && (
-                <p className="text-xs text-danger-600 text-end px-1" data-testid="gender-error">
+                <p className="text-xs text-danger-600 px-1" data-testid="gender-error">
                   {validationErrors.gender}
                 </p>
               )}
@@ -191,7 +191,7 @@ export default function PersonalDetailsStep({
                 data-testid="birthdate-input"
               />
               {validationErrors.birthdate && formData.birthdate && (
-                <p className="text-xs text-danger-600 text-end px-1" data-testid="birthdate-error">
+                <p className="text-xs text-danger-600 px-1" data-testid="birthdate-error">
                   {validationErrors.birthdate}
                 </p>
               )}
