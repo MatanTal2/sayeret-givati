@@ -84,7 +84,7 @@ export default function ServiceWorkerUpdater() {
           transition={{ duration: 0.2 }}
           role="status"
           aria-live="polite"
-          className="fixed bottom-6 start-1/2 -translate-x-1/2 z-[10000] max-w-md w-[calc(100%-2rem)] bg-neutral-900 text-white rounded-2xl shadow-medium p-4 flex items-start gap-3"
+          className="fixed bottom-6 inset-x-4 mx-auto max-w-md z-[10000] bg-neutral-900 text-white rounded-2xl shadow-medium p-4 flex items-start gap-3"
         >
           <div className="flex-1">
             <div className="font-semibold text-sm">
