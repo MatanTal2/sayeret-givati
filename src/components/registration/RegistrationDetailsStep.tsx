@@ -135,7 +135,7 @@ export default function RegistrationDetailsStep({
                 value={firstName}
                 readOnly
                 className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl bg-neutral-100
-                         text-end text-neutral-600 cursor-not-allowed"
+                         text-neutral-600 cursor-not-allowed"
                 data-testid="first-name-readonly"
               />
             </div>
@@ -150,7 +150,7 @@ export default function RegistrationDetailsStep({
                 value={lastName}
                 readOnly
                 className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl bg-neutral-100
-                         text-end text-neutral-600 cursor-not-allowed"
+                         text-neutral-600 cursor-not-allowed"
                 data-testid="last-name-readonly"
               />
             </div>
@@ -168,8 +168,8 @@ export default function RegistrationDetailsStep({
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                         text-end text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 ${
+                className={`w-full ps-4 pe-11 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
+                         text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 ${
                   validationErrors.email && formData.email
                     ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
                     : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
@@ -177,7 +177,7 @@ export default function RegistrationDetailsStep({
                 placeholder={TEXT_CONSTANTS.AUTH.EMAIL_PLACEHOLDER_REGISTRATION}
                 data-testid="email-input"
               />
-              <div className="absolute end-3 top-1/2 transform -translate-y-1/2">
+              <div className="pointer-events-none absolute end-3 top-1/2 transform -translate-y-1/2">
                 <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
@@ -185,7 +185,7 @@ export default function RegistrationDetailsStep({
               </div>
             </div>
             {validationErrors.email && formData.email && (
-              <p className="text-sm text-danger-600 text-end px-1" data-testid="email-error">
+              <p className="text-sm text-danger-600 px-1" data-testid="email-error">
                 {validationErrors.email}
               </p>
             )}
@@ -201,8 +201,8 @@ export default function RegistrationDetailsStep({
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                         text-end text-neutral-800 bg-neutral-50 focus:bg-white pe-12 placeholder-neutral-500 ${
+                className={`w-full ps-4 pe-12 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
+                         text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 ${
                   validationErrors.password && formData.password
                     ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
                     : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
@@ -233,7 +233,7 @@ export default function RegistrationDetailsStep({
               </button>
             </div>
             {validationErrors.password && formData.password && (
-              <p className="text-sm text-danger-600 text-end px-1" data-testid="password-error">
+              <p className="text-sm text-danger-600 px-1" data-testid="password-error">
                 {validationErrors.password}
               </p>
             )}
@@ -257,7 +257,7 @@ export default function RegistrationDetailsStep({
               ariaLabel={TEXT_CONSTANTS.AUTH.GENDER}
             />
             {validationErrors.gender && (
-              <p className="text-sm text-danger-600 text-end px-1" data-testid="gender-error">
+              <p className="text-sm text-danger-600 px-1" data-testid="gender-error">
                 {validationErrors.gender}
               </p>
             )}
@@ -273,7 +273,7 @@ export default function RegistrationDetailsStep({
               value={formData.birthdate}
               onChange={(e) => handleInputChange('birthdate', e.target.value)}
               className={`w-full px-4 py-3.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                       text-end text-neutral-800 bg-neutral-50 focus:bg-white ${
+                       text-neutral-800 bg-neutral-50 focus:bg-white ${
                 validationErrors.birthdate && formData.birthdate
                   ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
                   : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
@@ -281,7 +281,7 @@ export default function RegistrationDetailsStep({
               data-testid="birthdate-input"
             />
             {validationErrors.birthdate && formData.birthdate && (
-              <p className="text-sm text-danger-600 text-end px-1" data-testid="birthdate-error">
+              <p className="text-sm text-danger-600 px-1" data-testid="birthdate-error">
                 {validationErrors.birthdate}
               </p>
             )}
@@ -310,7 +310,7 @@ export default function RegistrationDetailsStep({
               </span>
             </label>
             {validationErrors.consent && (
-              <p className="text-sm text-danger-600 text-end px-1" data-testid="consent-error">
+              <p className="text-sm text-danger-600 px-1" data-testid="consent-error">
                 {validationErrors.consent}
               </p>
             )}

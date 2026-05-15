@@ -97,8 +97,8 @@ export default function AccountDetailsStep({
                 spellCheck={false}
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className={`w-full px-4 py-2.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                         text-end text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 ps-12 ${
+                className={`w-full ps-11 pe-4 py-2.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
+                         text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 ${
                   validationErrors.email && formData.email
                     ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
                     : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
@@ -106,7 +106,7 @@ export default function AccountDetailsStep({
                 placeholder={TEXT_CONSTANTS.AUTH.EMAIL_PLACEHOLDER_REGISTRATION}
                 data-testid="email-input"
               />
-              <div className="absolute start-3 top-1/2 transform -translate-y-1/2">
+              <div className="pointer-events-none absolute start-3 top-1/2 transform -translate-y-1/2">
                 <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
@@ -116,7 +116,7 @@ export default function AccountDetailsStep({
             
             {/* Email Error Message */}
             {validationErrors.email && formData.email && (
-              <p className="text-xs text-danger-600 text-end px-1" data-testid="email-error">
+              <p className="text-xs text-danger-600 px-1" data-testid="email-error">
                 {validationErrors.email}
               </p>
             )}
@@ -132,8 +132,8 @@ export default function AccountDetailsStep({
                 spellCheck={false}
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                className={`w-full px-4 py-2.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
-                         text-end text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 pe-12 ps-12 ${
+                className={`w-full ps-12 pe-12 py-2.5 border-2 rounded-xl focus:ring-2 outline-none transition-all
+                         text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500 ${
                   validationErrors.password && formData.password
                     ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500'
                     : 'border-neutral-200 focus:border-info-500 focus:ring-info-500'
@@ -181,7 +181,7 @@ export default function AccountDetailsStep({
                   {showPasswordTooltip && (
                     <div className="absolute bottom-full start-0 mb-2 w-64 bg-neutral-800 text-white text-xs rounded-lg p-3 z-10 shadow-lg">
                       <div className="text-center font-semibold mb-2">דרישות סיסמה:</div>
-                      <ul className="text-end space-y-1">
+                      <ul className="space-y-1">
                         <li>• לפחות 8 תווים</li>
                         <li>• אות גדולה (A-Z)</li>
                         <li>• אות קטנה (a-z)</li>
@@ -198,7 +198,7 @@ export default function AccountDetailsStep({
             
             {/* Password Error Message */}
             {validationErrors.password && formData.password && (
-              <p className="text-xs text-danger-600 text-end px-1" data-testid="password-error">
+              <p className="text-xs text-danger-600 px-1" data-testid="password-error">
                 {validationErrors.password}
               </p>
             )}
@@ -220,7 +220,7 @@ export default function AccountDetailsStep({
                 
                 data-testid="consent-checkbox"
               />
-              <label htmlFor="consent" className="text-sm text-neutral-700 text-end leading-5">
+              <label htmlFor="consent" className="text-sm text-neutral-700 leading-5">
                 * אני מסכים/ה ל
                 <button
                   type="button"
@@ -236,7 +236,7 @@ export default function AccountDetailsStep({
           {/* Submission error from parent (linkEmailPassword / register API) */}
           {submitError && !isSubmitting && (
             <p
-              className="text-xs text-danger-600 text-end px-1"
+              className="text-xs text-danger-600 px-1"
               data-testid="account-submit-error"
               role="alert"
             >
