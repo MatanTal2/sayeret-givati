@@ -116,14 +116,14 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3.5 border-2 border-neutral-200 rounded-xl focus:ring-2
+                    className="w-full ps-4 pe-11 py-3.5 border-2 border-neutral-200 rounded-xl focus:ring-2
                              focus:ring-primary-500 focus:border-primary-500 outline-none transition-all
-                             text-end text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500"
+                             text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500"
                     placeholder={TEXT_CONSTANTS.AUTH.EMAIL_PLACEHOLDER}
                     disabled={isLoading}
                     required
                   />
-                  <div className="absolute end-3 top-1/2 transform -translate-y-1/2">
+                  <div className="pointer-events-none absolute end-3 top-1/2 transform -translate-y-1/2">
                     <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                             d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
@@ -147,9 +147,9 @@ export default function LoginModal({ isOpen, onClose, onSwitch }: LoginModalProp
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3.5 border-2 border-neutral-200 rounded-xl focus:ring-2
+                    className="w-full ps-4 pe-12 py-3.5 border-2 border-neutral-200 rounded-xl focus:ring-2
                              focus:ring-primary-500 focus:border-primary-500 outline-none transition-all
-                             text-end text-neutral-800 bg-neutral-50 focus:bg-white pe-12 placeholder-neutral-500"
+                             text-neutral-800 bg-neutral-50 focus:bg-white placeholder-neutral-500"
                     placeholder={TEXT_CONSTANTS.AUTH.PASSWORD_PLACEHOLDER}
                     disabled={isLoading}
                     required
