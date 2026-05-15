@@ -170,6 +170,7 @@ As each phase ships, findings are reflected in:
 
 ## Resume Pointer
 
-- ✅ **Phase 0** — this spec lands, `OFFLINE_REPLAY_CONCURRENCY` flag in `src/lib/offline/config.ts`.
-- ⬜ **Phase 1** — enable Firestore persistent cache in `src/lib/firebase.ts`. PR title: `feat(offline): persistent Firestore cache (phase 1)`.
-- ⬜ **Phase 2..8** — see table above.
+- ✅ **Phase 0** — spec + `OFFLINE_REPLAY_CONCURRENCY` flag (PR #121).
+- ✅ **Phase 1** — Firestore persistent cache enabled in `src/lib/firebase.ts` (browser path uses `persistentLocalCache` + `persistentSingleTabManager({ forceOwnership: false })`; SSR falls back to in-memory).
+- ⬜ **Phase 2** — `next.config.ts` remote-image patterns + bundle-budget CI gate.
+- ⬜ **Phase 3..8** — see table above.
