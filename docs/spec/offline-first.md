@@ -174,7 +174,7 @@ As each phase ships, findings are reflected in:
 - ✅ **Phase 1** — Firestore persistent cache enabled in `src/lib/firebase.ts` (PR #122).
 - ✅ **Phase 2** — `next.config.ts` Firebase Storage `remotePatterns` + bundle-budget tooling (PR #123).
 - ✅ **Phase 3** — Serwist PWA shell (PR #124).
-- 🚧 **Phase 4a** — Infrastructure: `withIdempotency` helper, rules deny `_idempotency`, composite + TTL index, cron sweeper, `apiFetch` injects `Idempotency-Key`. 7 representative routes wrapped (equipment transfer/retire/storage send & pull, soldier-status, transfer-requests, users profile). Full migration tracked in `docs/spec/idempotency-route-migration.md`.
-- ⬜ **Phase 4b** — Wrap remaining 47 mutation routes per checklist.
-- ⬜ **Phase 5** — Outbox + replay. **Gated** on 4b completion.
+- ✅ **Phase 4a** — Idempotency infra + 7 representative routes (PR #125).
+- ✅ **Phase 4b** — Remaining 47 mutation routes wrapped (54 handlers total). Migration tracking doc fully ✅. Phase 5 unblocked.
+- ⬜ **Phase 5** — Outbox + replay. Cleared to start.
 - ⬜ **Phase 6..8** — see table above.

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getActorOrError } from '@/lib/db/server/auth';
+import { withIdempotency } from '@/lib/db/server/idempotency';
 import { serverCancelPhoneChange } from '@/lib/db/server/phoneChangeService';
 import type { CancelResponse } from '@/types/phoneChange';
 
@@ -16,17 +17,21 @@ import type { CancelResponse } from '@/types/phoneChange';
  * a separate planned PR, Q4=b.)
  */
 export async function POST(request: Request): Promise<NextResponse<CancelResponse>> {
-  try {
-    const actorOrError = await getActorOrError(request);
-    if (actorOrError instanceof NextResponse) {
-      return actorOrError as NextResponse<CancelResponse>;
-    }
-    const actor = actorOrError;
-    await serverCancelPhoneChange(actor.uid);
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[API] users/phone-change/cancel POST failed:', message);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+  const actorOrError = await getActorOrError(request);
+  if (actorOrError instanceof NextResponse) {
+    return actorOrError as NextResponse<CancelResponse>;
   }
+  const actor = actorOrError;
+  const rawBody = await request.text();
+
+  return withIdempotency(request, actor, rawBody, async () => {
+    try {
+      await serverCancelPhoneChange(actor.uid);
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[API] users/phone-change/cancel POST failed:', message);
+      return NextResponse.json({ success: false, error: message }, { status: 500 });
+    }
+  }) as Promise<NextResponse<CancelResponse>>;
 }

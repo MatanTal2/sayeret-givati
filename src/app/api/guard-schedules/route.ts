@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getActorOrError } from '@/lib/db/server/auth';
+import { withIdempotency } from '@/lib/db/server/idempotency';
 import {
   GuardScheduleValidationError,
   serverCreateGuardSchedule,
@@ -28,28 +29,31 @@ export async function GET(request: Request) {
 
 /** POST /api/guard-schedules — create a schedule. Algorithm runs server-side. */
 export async function POST(request: Request) {
-  try {
-    const actorOrError = await getActorOrError(request);
-    if (actorOrError instanceof NextResponse) return actorOrError;
-    const actor = actorOrError;
+  const actorOrError = await getActorOrError(request);
+  if (actorOrError instanceof NextResponse) return actorOrError;
+  const actor = actorOrError;
+  const rawBody = await request.text();
 
-    const body = (await request.json()) as Partial<CreateGuardScheduleInput> & { actorName?: string };
-    const actorName = body.actorName?.trim() || actor.displayName || actor.uid;
+  return withIdempotency(request, actor, rawBody, async () => {
+    try {
+      const body = (rawBody ? JSON.parse(rawBody) : {}) as Partial<CreateGuardScheduleInput> & { actorName?: string };
+      const actorName = body.actorName?.trim() || actor.displayName || actor.uid;
 
-    const { id } = await serverCreateGuardSchedule({
-      actorUid: actor.uid,
-      actorName,
-      title: body.title ?? '',
-      config: body.config!,
-      posts: body.posts ?? [],
-      roster: body.roster ?? [],
-      ...(body.initialAssignments ? { initialAssignments: body.initialAssignments } : {}),
-    });
+      const { id } = await serverCreateGuardSchedule({
+        actorUid: actor.uid,
+        actorName,
+        title: body.title ?? '',
+        config: body.config!,
+        posts: body.posts ?? [],
+        roster: body.roster ?? [],
+        ...(body.initialAssignments ? { initialAssignments: body.initialAssignments } : {}),
+      });
 
-    return NextResponse.json({ success: true, id });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[API] guard-schedules POST failed:', message);
-    return NextResponse.json({ success: false, error: message }, { status: mapErrorStatus(error) });
-  }
+      return NextResponse.json({ success: true, id });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[API] guard-schedules POST failed:', message);
+      return NextResponse.json({ success: false, error: message }, { status: mapErrorStatus(error) });
+    }
+  });
 }

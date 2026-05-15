@@ -6,6 +6,7 @@ import {
   validateLogisticsItemInput,
 } from '@/lib/db/server/logisticsItemsService';
 import { getActorOrError } from '@/lib/db/server/auth';
+import { withIdempotency } from '@/lib/db/server/idempotency';
 import { UserType } from '@/types/user';
 
 function requireTL(userType: UserType): NextResponse | null {
@@ -22,56 +23,71 @@ function requireTL(userType: UserType): NextResponse | null {
 }
 
 export async function POST(request: Request) {
-  try {
-    const actorOrError = await getActorOrError(request);
-    if (actorOrError instanceof NextResponse) return actorOrError;
-    const forbidden = requireTL(actorOrError.userType);
-    if (forbidden) return forbidden;
-    const body = await request.json();
-    const input = validateLogisticsItemInput({ ...body, createdBy: actorOrError.uid });
-    const id = await serverCreateLogisticsItem(input);
-    return NextResponse.json({ success: true, id });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[API] logistics-items POST failed:', message);
-    return NextResponse.json({ success: false, error: message }, { status: 400 });
-  }
+  const actorOrError = await getActorOrError(request);
+  if (actorOrError instanceof NextResponse) return actorOrError;
+  const actor = actorOrError;
+  const rawBody = await request.text();
+
+  return withIdempotency(request, actor, rawBody, async () => {
+    try {
+      const forbidden = requireTL(actor.userType);
+      if (forbidden) return forbidden;
+      const body = rawBody ? JSON.parse(rawBody) : {};
+      const input = validateLogisticsItemInput({ ...body, createdBy: actor.uid });
+      const id = await serverCreateLogisticsItem(input);
+      return NextResponse.json({ success: true, id });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[API] logistics-items POST failed:', message);
+      return NextResponse.json({ success: false, error: message }, { status: 400 });
+    }
+  });
 }
 
 export async function PUT(request: Request) {
-  try {
-    const actorOrError = await getActorOrError(request);
-    if (actorOrError instanceof NextResponse) return actorOrError;
-    const forbidden = requireTL(actorOrError.userType);
-    if (forbidden) return forbidden;
-    const { id, ...updates } = await request.json();
-    if (!id || typeof id !== 'string') {
-      return NextResponse.json({ success: false, error: 'Item id is required' }, { status: 400 });
+  const actorOrError = await getActorOrError(request);
+  if (actorOrError instanceof NextResponse) return actorOrError;
+  const actor = actorOrError;
+  const rawBody = await request.text();
+
+  return withIdempotency(request, actor, rawBody, async () => {
+    try {
+      const forbidden = requireTL(actor.userType);
+      if (forbidden) return forbidden;
+      const { id, ...updates } = rawBody ? JSON.parse(rawBody) : {};
+      if (!id || typeof id !== 'string') {
+        return NextResponse.json({ success: false, error: 'Item id is required' }, { status: 400 });
+      }
+      await serverUpdateLogisticsItem(id, updates);
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[API] logistics-items PUT failed:', message);
+      return NextResponse.json({ success: false, error: message }, { status: 400 });
     }
-    await serverUpdateLogisticsItem(id, updates);
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[API] logistics-items PUT failed:', message);
-    return NextResponse.json({ success: false, error: message }, { status: 400 });
-  }
+  });
 }
 
 export async function DELETE(request: Request) {
-  try {
-    const actorOrError = await getActorOrError(request);
-    if (actorOrError instanceof NextResponse) return actorOrError;
-    const forbidden = requireTL(actorOrError.userType);
-    if (forbidden) return forbidden;
-    const { id } = await request.json();
-    if (!id || typeof id !== 'string') {
-      return NextResponse.json({ success: false, error: 'Item id is required' }, { status: 400 });
+  const actorOrError = await getActorOrError(request);
+  if (actorOrError instanceof NextResponse) return actorOrError;
+  const actor = actorOrError;
+  const rawBody = await request.text();
+
+  return withIdempotency(request, actor, rawBody, async () => {
+    try {
+      const forbidden = requireTL(actor.userType);
+      if (forbidden) return forbidden;
+      const { id } = rawBody ? JSON.parse(rawBody) : {};
+      if (!id || typeof id !== 'string') {
+        return NextResponse.json({ success: false, error: 'Item id is required' }, { status: 400 });
+      }
+      await serverDeleteLogisticsItem(id);
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[API] logistics-items DELETE failed:', message);
+      return NextResponse.json({ success: false, error: message }, { status: 500 });
     }
-    await serverDeleteLogisticsItem(id);
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[API] logistics-items DELETE failed:', message);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
-  }
+  });
 }

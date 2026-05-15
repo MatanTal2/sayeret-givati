@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getActorOrError } from '@/lib/db/server/auth';
+import { withIdempotency } from '@/lib/db/server/idempotency';
 import {
   GrantValidationError,
   isGrantIssuer,
@@ -55,77 +56,80 @@ interface CreateBody {
 }
 
 export async function POST(request: Request) {
-  try {
-    const actorOrError = await getActorOrError(request);
-    if (actorOrError instanceof NextResponse) return actorOrError;
-    const actor = actorOrError;
+  const actorOrError = await getActorOrError(request);
+  if (actorOrError instanceof NextResponse) return actorOrError;
+  const actor = actorOrError;
+  const rawBody = await request.text();
 
-    const body = (await request.json()) as CreateBody;
+  return withIdempotency(request, actor, rawBody, async () => {
+    try {
+      const body = (rawBody ? JSON.parse(rawBody) : {}) as CreateBody;
 
-    if (typeof body.userId !== 'string' || !body.userId) {
-      return NextResponse.json(
-        { success: false, error: 'userId is required' },
-        { status: 400 }
-      );
-    }
-    if (typeof body.grantedRole !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'grantedRole is required' },
-        { status: 400 }
-      );
-    }
-    if (body.scope !== 'all' && body.scope !== 'team') {
-      return NextResponse.json(
-        { success: false, error: "scope must be 'all' or 'team'" },
-        { status: 400 }
-      );
-    }
-    if (typeof body.reason !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'reason is required' },
-        { status: 400 }
-      );
-    }
+      if (typeof body.userId !== 'string' || !body.userId) {
+        return NextResponse.json(
+          { success: false, error: 'userId is required' },
+          { status: 400 }
+        );
+      }
+      if (typeof body.grantedRole !== 'string') {
+        return NextResponse.json(
+          { success: false, error: 'grantedRole is required' },
+          { status: 400 }
+        );
+      }
+      if (body.scope !== 'all' && body.scope !== 'team') {
+        return NextResponse.json(
+          { success: false, error: "scope must be 'all' or 'team'" },
+          { status: 400 }
+        );
+      }
+      if (typeof body.reason !== 'string') {
+        return NextResponse.json(
+          { success: false, error: 'reason is required' },
+          { status: 400 }
+        );
+      }
 
-    let expiresAtMs: number;
-    if (typeof body.expiresAtMs === 'number') {
-      expiresAtMs = body.expiresAtMs;
-    } else if (typeof body.durationMs === 'number') {
-      expiresAtMs = Date.now() + body.durationMs;
-    } else {
-      return NextResponse.json(
-        { success: false, error: 'durationMs or expiresAtMs is required' },
-        { status: 400 }
-      );
-    }
+      let expiresAtMs: number;
+      if (typeof body.expiresAtMs === 'number') {
+        expiresAtMs = body.expiresAtMs;
+      } else if (typeof body.durationMs === 'number') {
+        expiresAtMs = Date.now() + body.durationMs;
+      } else {
+        return NextResponse.json(
+          { success: false, error: 'durationMs or expiresAtMs is required' },
+          { status: 400 }
+        );
+      }
 
-    const result = await serverIssueGrant({
-      userId: body.userId,
-      ...(typeof body.userDisplayName === 'string' && body.userDisplayName
-        ? { userDisplayName: body.userDisplayName }
-        : {}),
-      grantedRole: body.grantedRole as UserType,
-      scope: body.scope,
-      ...(body.scope === 'team' && typeof body.scopeTeamId === 'string'
-        ? { scopeTeamId: body.scopeTeamId }
-        : {}),
-      expiresAtMs,
-      reason: body.reason,
-      issuerUid: actor.uid,
-      issuerUserType: actor.userType,
-      ...(actor.displayName ? { issuerDisplayName: actor.displayName } : {}),
-    });
+      const result = await serverIssueGrant({
+        userId: body.userId,
+        ...(typeof body.userDisplayName === 'string' && body.userDisplayName
+          ? { userDisplayName: body.userDisplayName }
+          : {}),
+        grantedRole: body.grantedRole as UserType,
+        scope: body.scope,
+        ...(body.scope === 'team' && typeof body.scopeTeamId === 'string'
+          ? { scopeTeamId: body.scopeTeamId }
+          : {}),
+        expiresAtMs,
+        reason: body.reason,
+        issuerUid: actor.uid,
+        issuerUserType: actor.userType,
+        ...(actor.displayName ? { issuerDisplayName: actor.displayName } : {}),
+      });
 
-    return NextResponse.json({ success: true, id: result.id });
-  } catch (error) {
-    if (error instanceof GrantValidationError) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: error.status }
-      );
+      return NextResponse.json({ success: true, id: result.id });
+    } catch (error) {
+      if (error instanceof GrantValidationError) {
+        return NextResponse.json(
+          { success: false, error: error.message },
+          { status: error.status }
+        );
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[API] permission-grants POST failed:', message);
+      return NextResponse.json({ success: false, error: message }, { status: 500 });
     }
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[API] permission-grants POST failed:', message);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
-  }
+  });
 }

@@ -5,6 +5,7 @@ import {
   validateSystemConfigPayload,
 } from '@/lib/db/server/systemConfigService';
 import { getActorOrError } from '@/lib/db/server/auth';
+import { withIdempotency } from '@/lib/db/server/idempotency';
 import { UserType } from '@/types/user';
 
 function canEditSystemConfig(userType: UserType): boolean {
@@ -29,31 +30,35 @@ export async function GET(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  try {
-    const actorOrError = await getActorOrError(request);
-    if (actorOrError instanceof NextResponse) return actorOrError;
-    const actor = actorOrError;
-    const input = await request.json();
+  const actorOrError = await getActorOrError(request);
+  if (actorOrError instanceof NextResponse) return actorOrError;
+  const actor = actorOrError;
+  const rawBody = await request.text();
 
-    if (!canEditSystemConfig(actor.userType)) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden: only admin, system manager, or manager may update system config' },
-        { status: 403 }
-      );
+  return withIdempotency(request, actor, rawBody, async () => {
+    try {
+      const input = rawBody ? JSON.parse(rawBody) : {};
+
+      if (!canEditSystemConfig(actor.userType)) {
+        return NextResponse.json(
+          { success: false, error: 'Forbidden: only admin, system manager, or manager may update system config' },
+          { status: 403 }
+        );
+      }
+
+      const payload = validateSystemConfigPayload(input.payload);
+
+      await serverUpdateSystemConfig({
+        payload,
+        actorUserId: actor.uid,
+      });
+
+      const config = await serverGetSystemConfig();
+      return NextResponse.json({ success: true, config });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[API] system-config PUT failed:', message);
+      return NextResponse.json({ success: false, error: message }, { status: 500 });
     }
-
-    const payload = validateSystemConfigPayload(input.payload);
-
-    await serverUpdateSystemConfig({
-      payload,
-      actorUserId: actor.uid,
-    });
-
-    const config = await serverGetSystemConfig();
-    return NextResponse.json({ success: true, config });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[API] system-config PUT failed:', message);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
-  }
+  });
 }
