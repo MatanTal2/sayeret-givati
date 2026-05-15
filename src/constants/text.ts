@@ -2127,7 +2127,13 @@ export const TEXT_CONSTANTS = {
     UPDATE_AVAILABLE_TITLE: 'גרסה חדשה זמינה',
     UPDATE_AVAILABLE_BODY: 'עדכון מוכן להתקנה. המסך ייטען מחדש.',
     UPDATE_NOW: 'עדכן עכשיו',
-    UPDATE_LATER: 'אחר כך'
+    UPDATE_LATER: 'אחר כך',
+    CONFLICT_TITLE: 'התנגשות בעדכון',
+    CONFLICT_BODY: 'הפעולה ניסתה לעדכן פריט שהשתנה בשרת מאז שעבדת במצב לא־מקוון.',
+    CONFLICT_KEEP_LOCAL: 'דרוס את השרת',
+    CONFLICT_DISCARD: 'בטל את הפעולה',
+    CONFLICT_QUEUE_COUNT: 'נותרו',
+    CONFLICT_ROUTE_LABEL: 'פעולה'
   }
 } as const;
 
