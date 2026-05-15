@@ -1,5 +1,11 @@
-import { initializeApp, getApps } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentSingleTabManager,
+  type Firestore,
+} from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 import { ensureAppCheckInitialized } from "./appCheck";
@@ -16,8 +22,28 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
-// Initialize Firestore, Auth, and Storage
-export const db = getFirestore(app);
+// Browser path uses an IndexedDB-backed persistent cache so reads survive
+// reloads and serve while offline (P1 of offline-first migration —
+// docs/spec/offline-first.md). Server / SSR path falls back to in-memory.
+// `persistentSingleTabManager({ forceOwnership: false })` lets multi-tab use
+// proceed; only one tab owns the writer at a time, others read.
+function initDb(firebaseApp: FirebaseApp): Firestore {
+  if (typeof window === 'undefined') {
+    return getFirestore(firebaseApp);
+  }
+  try {
+    return initializeFirestore(firebaseApp, {
+      localCache: persistentLocalCache({
+        tabManager: persistentSingleTabManager({ forceOwnership: false }),
+      }),
+    });
+  } catch {
+    // HMR / second import after the app was already initialized once.
+    return getFirestore(firebaseApp);
+  }
+}
+
+export const db = initDb(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 

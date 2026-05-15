@@ -15,6 +15,9 @@ export const initializeApp = () => ({});
 
 // firebase/firestore
 export const getFirestore = () => ({});
+export const initializeFirestore = jest.fn(() => ({}));
+export const persistentLocalCache = jest.fn((opts?: unknown) => ({ kind: 'persistent', opts }));
+export const persistentSingleTabManager = jest.fn((opts?: unknown) => ({ kind: 'single-tab', opts }));
 export const collection = jest.fn();
 export const doc = jest.fn();
 export const getDoc = jest.fn();
