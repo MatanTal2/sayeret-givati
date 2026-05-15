@@ -12,10 +12,14 @@ import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
   listForUid,
+  removeById,
   subscribe as subscribeOutbox,
+  updateById,
   type OutboxEntry,
 } from '@/lib/offline/outbox';
 import { drainOutbox, installAutoDrain } from '@/lib/offline/replay';
+
+export type ConflictResolution = 'keep' | 'discard';
 
 interface OutboxContextValue {
   entries: OutboxEntry[];
@@ -24,6 +28,14 @@ interface OutboxContextValue {
   stuckCount: number;
   /** Manually trigger a drain pass — useful for "retry now" buttons. */
   drain: () => Promise<void>;
+  /**
+   * Resolve a queued conflict.
+   *  - `keep`: rewrite `If-Match` to the latest server version (from
+   *    conflictState.serverData) and set status back to pending so the
+   *    replay loop sends it again on the next tick.
+   *  - `discard`: remove the entry; user accepts the server state.
+   */
+  resolveConflict: (id: number, resolution: ConflictResolution) => Promise<void>;
 }
 
 const OutboxContext = createContext<OutboxContextValue | undefined>(undefined);
@@ -74,6 +86,29 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
       conflictCount,
       stuckCount,
       drain: async () => { await drainOutbox(); },
+      resolveConflict: async (id, resolution) => {
+        if (resolution === 'discard') {
+          await removeById(id);
+          return;
+        }
+        // keep — reset to pending; if the server's 409 body carried an
+        // updatedAt-like field, lift it into If-Match so the next send
+        // wins.
+        const target = entries.find((e) => e.id === id);
+        const headers = { ...(target?.headers ?? {}) };
+        const sd = (target?.conflictState?.serverData ?? null) as
+          | { newUpdatedAt?: string; updatedAt?: string }
+          | null;
+        const newIfMatch = sd?.newUpdatedAt ?? sd?.updatedAt;
+        if (newIfMatch) headers['If-Match'] = newIfMatch;
+        await updateById(id, {
+          status: 'pending',
+          headers,
+          conflictState: undefined,
+          nextAttemptAt: Date.now(),
+        });
+        void drainOutbox();
+      },
     };
   }, [entries]);
 
@@ -84,7 +119,14 @@ export function useOutbox(): OutboxContextValue {
   const ctx = useContext(OutboxContext);
   if (!ctx) {
     // Return a safe empty value when used outside the provider (e.g. SSR before mount).
-    return { entries: [], pendingCount: 0, conflictCount: 0, stuckCount: 0, drain: async () => {} };
+    return {
+      entries: [],
+      pendingCount: 0,
+      conflictCount: 0,
+      stuckCount: 0,
+      drain: async () => {},
+      resolveConflict: async () => {},
+    };
   }
   return ctx;
 }

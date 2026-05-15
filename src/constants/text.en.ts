@@ -190,6 +190,12 @@ export const TEXT_EN = {
     UPDATE_AVAILABLE_BODY: 'An update is ready. The page will reload.',
     UPDATE_NOW: 'Update now',
     UPDATE_LATER: 'Later',
+    CONFLICT_TITLE: 'Sync conflict',
+    CONFLICT_BODY: 'The action tried to update an item that changed on the server after you went offline.',
+    CONFLICT_KEEP_LOCAL: 'Force overwrite',
+    CONFLICT_DISCARD: 'Discard action',
+    CONFLICT_QUEUE_COUNT: 'remaining',
+    CONFLICT_ROUTE_LABEL: 'Action',
   },
   PROFILE: {
     PHONE_NUMBER_LABEL: 'Phone number',

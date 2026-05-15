@@ -176,6 +176,7 @@ As each phase ships, findings are reflected in:
 - ✅ **Phase 3** — Serwist PWA shell (PR #124).
 - ✅ **Phase 4a** — Idempotency infra + 7 representative routes (PR #125).
 - ✅ **Phase 4b** — Remaining 47 mutation routes wrapped (PR #126).
-- ✅ **Phase 5** — Outbox + replay shipped. IndexedDB store with `DB_VERSION=1` upgrade scaffold (M4). Replay loop: auth-await (M6), concurrency cap 3 (S3), per-batch token cache, chained `If-Match` rewrite (M3), page-thread fallback for iOS (M7). Deny-by-default allowlist (`equipment.transfer/retire/storage`, `soldier-status.update`). `OutboxContext` + `SyncStatusIndicator` mounted globally. Threat model at `docs/spec/offline-threat-model.md` (S10 locked: no app-layer encryption). **Not shipped here:** S9 hooks projection (deferred to P5b), Background Sync registration (deferred to P8).
-- ⬜ **Phase 6** — `ConflictCenter` aggregator + IDB-persistent conflicts.
-- ⬜ **Phase 7..8** — see table above.
+- ✅ **Phase 5** — Outbox + replay shipped (PR #127).
+- ✅ **Phase 6** — `ConflictCenter` aggregator (Headless UI Dialog). One-at-a-time resolution. Keep-local rewrites `If-Match` from server data and re-arms drain; Discard removes the entry. Conflicts persist in IDB across reloads (already part of P5 entry shape). `SyncStatusIndicator` opens the center when `conflictCount > 0`.
+- ⬜ **Phase 7** — SWR-style hooks. `localStorage` migration. Permission revocation cache invalidation.
+- ⬜ **Phase 8** — Telemetry SLOs + `/debug/offline` prod-build exclusion.
