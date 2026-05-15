@@ -112,6 +112,17 @@ export async function drainOutbox(signal?: AbortSignal): Promise<ReplayResult | 
       pending = await listPendingForUid(uid);
     }
 
+    // Phase 8 / S8 telemetry breadcrumb. Vercel function logs + browser
+    // console capture these for now; Sentry wiring is queued.
+    if (result.drained || result.conflicts || result.failures || result.stuck || result.poisoned) {
+      console.info('[offline.replay]', {
+        drained: result.drained,
+        conflicts: result.conflicts,
+        failures: result.failures,
+        stuck: result.stuck,
+        poisoned: result.poisoned,
+      });
+    }
     return result;
   } finally {
     running = false;

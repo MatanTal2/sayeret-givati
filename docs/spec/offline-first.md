@@ -178,5 +178,7 @@ As each phase ships, findings are reflected in:
 - ✅ **Phase 4b** — Remaining 47 mutation routes wrapped (PR #126).
 - ✅ **Phase 5** — Outbox + replay shipped (PR #127).
 - ✅ **Phase 6** — `ConflictCenter` (PR #128).
-- ✅ **Phase 7** — Cache invalidation (S5): `src/lib/offline/cacheInvalidation.ts` wipes Firestore persistent cache + SW `/api/*` runtime cache on UID change, on 401/403 from any read, and on server `X-Cache-Invalidate` header. Legacy `src/lib/cache.ts` (audit S6) deprecated; `getCachedData` / `setCachedData` are no-ops with one-time legacy-key cleanup + telemetry breadcrumb. SW + Firestore caches cover the same role plus cross-tab.
-- ⬜ **Phase 8** — Telemetry SLOs + `/debug/offline` prod-build exclusion.
+- ✅ **Phase 7** — Cache invalidation + legacy `cache.ts` deprecation (PR #129).
+- ✅ **Phase 8** — `/debug/offline` dev-only page (audit N6; `notFound()` short-circuit on `process.env.NODE_ENV === 'production'`). Replay loop emits `[offline.replay]` breadcrumbs (S8). SLO doc + alert thresholds at `docs/spec/offline-slo.md`. Sentry wiring queued — breadcrumb format is the stable contract.
+
+🎉 **Migration complete.** All 8 phases shipped 2026-05-15 (PRs #121, #122, #123, #124, #125, #126, #127, #128, #129, #130).
