@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getActorOrError } from '@/lib/db/server/auth';
+import { withIdempotency } from '@/lib/db/server/idempotency';
 import {
   GrantValidationError,
   serverRevokeGrant,
@@ -13,38 +14,42 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const actorOrError = await getActorOrError(request);
-    if (actorOrError instanceof NextResponse) return actorOrError;
-    const actor = actorOrError;
+  const actorOrError = await getActorOrError(request);
+  if (actorOrError instanceof NextResponse) return actorOrError;
+  const actor = actorOrError;
+  const { id } = await context.params;
+  const rawBody = await request.text();
 
-    const { id } = await context.params;
-
-    let body: RevokeBody = {};
+  return withIdempotency(request, actor, rawBody, async () => {
     try {
-      body = (await request.json()) as RevokeBody;
-    } catch {
-      // No body or invalid JSON → treat as empty
-    }
+      let body: RevokeBody = {};
+      if (rawBody) {
+        try {
+          body = JSON.parse(rawBody) as RevokeBody;
+        } catch {
+          // No body or invalid JSON → treat as empty
+        }
+      }
 
-    await serverRevokeGrant({
-      grantId: id,
-      actorUid: actor.uid,
-      actorUserType: actor.userType,
-      ...(actor.displayName ? { actorDisplayName: actor.displayName } : {}),
-      ...(typeof body.reason === 'string' ? { reason: body.reason } : {}),
-    });
+      await serverRevokeGrant({
+        grantId: id,
+        actorUid: actor.uid,
+        actorUserType: actor.userType,
+        ...(actor.displayName ? { actorDisplayName: actor.displayName } : {}),
+        ...(typeof body.reason === 'string' ? { reason: body.reason } : {}),
+      });
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    if (error instanceof GrantValidationError) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: error.status }
-      );
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      if (error instanceof GrantValidationError) {
+        return NextResponse.json(
+          { success: false, error: error.message },
+          { status: error.status }
+        );
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[API] permission-grants revoke failed:', message);
+      return NextResponse.json({ success: false, error: message }, { status: 500 });
     }
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[API] permission-grants revoke failed:', message);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
-  }
+  });
 }

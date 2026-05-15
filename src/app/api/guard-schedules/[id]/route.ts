@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getActorOrError } from '@/lib/db/server/auth';
+import { withIdempotency } from '@/lib/db/server/idempotency';
 import {
   GuardScheduleValidationError,
   serverDeleteGuardSchedule,
@@ -42,44 +43,51 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  try {
-    const { id } = await params;
-    const actorOrError = await getActorOrError(request);
-    if (actorOrError instanceof NextResponse) return actorOrError;
-    const actor = actorOrError;
+  const { id } = await params;
+  const actorOrError = await getActorOrError(request);
+  if (actorOrError instanceof NextResponse) return actorOrError;
+  const actor = actorOrError;
+  const rawBody = await request.text();
 
-    const body = (await request.json()) as Partial<UpdateGuardSchedulePatch> & { actorName?: string };
-    const actorName = body.actorName?.trim() || actor.displayName || actor.uid;
+  return withIdempotency(request, actor, rawBody, async () => {
+    try {
+      const body = (rawBody ? JSON.parse(rawBody) : {}) as Partial<UpdateGuardSchedulePatch> & { actorName?: string };
+      const actorName = body.actorName?.trim() || actor.displayName || actor.uid;
 
-    await serverUpdateGuardSchedule(id, {
-      actorUid: actor.uid,
-      actorName,
-      ...(body.title !== undefined ? { title: body.title } : {}),
-      ...(body.assignments !== undefined ? { assignments: body.assignments } : {}),
-    });
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[API] guard-schedules PATCH failed:', message);
-    return NextResponse.json({ success: false, error: message }, { status: mapErrorStatus(error) });
-  }
+      await serverUpdateGuardSchedule(id, {
+        actorUid: actor.uid,
+        actorName,
+        ...(body.title !== undefined ? { title: body.title } : {}),
+        ...(body.assignments !== undefined ? { assignments: body.assignments } : {}),
+      });
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[API] guard-schedules PATCH failed:', message);
+      return NextResponse.json({ success: false, error: message }, { status: mapErrorStatus(error) });
+    }
+  });
 }
 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  try {
-    const { id } = await params;
-    const actorOrError = await getActorOrError(request);
-    if (actorOrError instanceof NextResponse) return actorOrError;
-    const actor = actorOrError;
-    const actorName = actor.displayName || actor.uid;
-    await serverDeleteGuardSchedule(id, actor.uid, actorName);
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[API] guard-schedules DELETE failed:', message);
-    return NextResponse.json({ success: false, error: message }, { status: mapErrorStatus(error) });
-  }
+  const { id } = await params;
+  const actorOrError = await getActorOrError(request);
+  if (actorOrError instanceof NextResponse) return actorOrError;
+  const actor = actorOrError;
+  const rawBody = await request.text();
+
+  return withIdempotency(request, actor, rawBody, async () => {
+    try {
+      const actorName = actor.displayName || actor.uid;
+      await serverDeleteGuardSchedule(id, actor.uid, actorName);
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[API] guard-schedules DELETE failed:', message);
+      return NextResponse.json({ success: false, error: message }, { status: mapErrorStatus(error) });
+    }
+  });
 }

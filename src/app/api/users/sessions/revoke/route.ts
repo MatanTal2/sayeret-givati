@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getActorOrError } from '@/lib/db/server/auth';
+import { withIdempotency } from '@/lib/db/server/idempotency';
 import { getAdminAuth, getAdminDb } from '@/lib/db/admin';
 import { COLLECTIONS } from '@/lib/db/collections';
 import { writeCredentialAuditEvent } from '@/lib/db/server/credentialAuditService';
@@ -21,63 +22,66 @@ import { writeCredentialAuditEvent } from '@/lib/db/server/credentialAuditServic
  * can see the action surface in the Account Activity section.
  */
 export async function POST(request: Request) {
-  try {
-    const actorOrError = await getActorOrError(request);
-    if (actorOrError instanceof NextResponse) return actorOrError;
-    const actor = actorOrError;
+  const actorOrError = await getActorOrError(request);
+  if (actorOrError instanceof NextResponse) return actorOrError;
+  const actor = actorOrError;
+  const rawBody = await request.text();
 
-    const header =
-      request.headers.get('authorization') ?? request.headers.get('Authorization') ?? '';
-    const idToken = header.startsWith('Bearer ') ? header.slice('Bearer '.length).trim() : '';
-    if (!idToken) {
-      return NextResponse.json(
-        { success: false, error: 'Missing bearer token' },
-        { status: 401 },
-      );
-    }
-
-    let authTimeSeconds: number;
+  return withIdempotency(request, actor, rawBody, async () => {
     try {
-      const decoded = await getAdminAuth().verifyIdToken(idToken, true);
-      authTimeSeconds = decoded.auth_time ?? 0;
-    } catch {
-      return NextResponse.json(
-        { success: false, error: 'Invalid or expired token' },
-        { status: 401 },
-      );
-    }
-    if (!authTimeSeconds) {
-      return NextResponse.json(
-        { success: false, error: 'Token missing auth_time claim' },
-        { status: 400 },
-      );
-    }
+      const header =
+        request.headers.get('authorization') ?? request.headers.get('Authorization') ?? '';
+      const idToken = header.startsWith('Bearer ') ? header.slice('Bearer '.length).trim() : '';
+      if (!idToken) {
+        return NextResponse.json(
+          { success: false, error: 'Missing bearer token' },
+          { status: 401 },
+        );
+      }
 
-    const sessionEpochMs = authTimeSeconds * 1000;
-    await getAdminDb().collection(COLLECTIONS.USERS).doc(actor.uid).update({
-      sessionEpoch: sessionEpochMs,
-    });
+      let authTimeSeconds: number;
+      try {
+        const decoded = await getAdminAuth().verifyIdToken(idToken, true);
+        authTimeSeconds = decoded.auth_time ?? 0;
+      } catch {
+        return NextResponse.json(
+          { success: false, error: 'Invalid or expired token' },
+          { status: 401 },
+        );
+      }
+      if (!authTimeSeconds) {
+        return NextResponse.json(
+          { success: false, error: 'Token missing auth_time claim' },
+          { status: 400 },
+        );
+      }
 
-    try {
-      const xff = request.headers.get('x-forwarded-for') ?? '';
-      const ip = xff.split(',')[0]?.trim() || request.headers.get('x-real-ip') || undefined;
-      const userAgent = request.headers.get('user-agent') ?? undefined;
-      await writeCredentialAuditEvent({
-        uid: actor.uid,
-        actorUid: actor.uid,
-        actorUserType: String(actor.userType),
-        eventType: 'SESSIONS_REVOKED',
-        ip,
-        userAgent,
+      const sessionEpochMs = authTimeSeconds * 1000;
+      await getAdminDb().collection(COLLECTIONS.USERS).doc(actor.uid).update({
+        sessionEpoch: sessionEpochMs,
       });
-    } catch (e) {
-      console.warn('[sessions/revoke] audit-log write failed:', e);
-    }
 
-    return NextResponse.json({ success: true, sessionEpochMs });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[API] users/sessions/revoke POST failed:', message);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
-  }
+      try {
+        const xff = request.headers.get('x-forwarded-for') ?? '';
+        const ip = xff.split(',')[0]?.trim() || request.headers.get('x-real-ip') || undefined;
+        const userAgent = request.headers.get('user-agent') ?? undefined;
+        await writeCredentialAuditEvent({
+          uid: actor.uid,
+          actorUid: actor.uid,
+          actorUserType: String(actor.userType),
+          eventType: 'SESSIONS_REVOKED',
+          ip,
+          userAgent,
+        });
+      } catch (e) {
+        console.warn('[sessions/revoke] audit-log write failed:', e);
+      }
+
+      return NextResponse.json({ success: true, sessionEpochMs });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[API] users/sessions/revoke POST failed:', message);
+      return NextResponse.json({ success: false, error: message }, { status: 500 });
+    }
+  });
 }

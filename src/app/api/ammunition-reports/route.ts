@@ -5,6 +5,7 @@ import {
   validateSubmitReportInput,
 } from '@/lib/db/server/ammunitionReportsService';
 import { getActorOrError } from '@/lib/db/server/auth';
+import { withIdempotency } from '@/lib/db/server/idempotency';
 
 export async function GET(request: Request) {
   try {
@@ -35,22 +36,26 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  try {
-    const actorOrError = await getActorOrError(request);
-    if (actorOrError instanceof NextResponse) return actorOrError;
-    const actor = actorOrError;
-    const input = await request.json();
-    const payload = validateSubmitReportInput({ ...(input.payload || {}), actor });
-    const result = await serverSubmitAmmunitionReport(payload);
-    return NextResponse.json({
-      success: true,
-      reportId: result.reportId,
-      notifiedCount: result.notificationRecipientIds.length,
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const status = /forbidden/i.test(message) ? 403 : 500;
-    console.error('[API] ammunition-reports POST failed:', message);
-    return NextResponse.json({ success: false, error: message }, { status });
-  }
+  const actorOrError = await getActorOrError(request);
+  if (actorOrError instanceof NextResponse) return actorOrError;
+  const actor = actorOrError;
+  const rawBody = await request.text();
+
+  return withIdempotency(request, actor, rawBody, async () => {
+    try {
+      const input = rawBody ? JSON.parse(rawBody) : {};
+      const payload = validateSubmitReportInput({ ...(input.payload || {}), actor });
+      const result = await serverSubmitAmmunitionReport(payload);
+      return NextResponse.json({
+        success: true,
+        reportId: result.reportId,
+        notifiedCount: result.notificationRecipientIds.length,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const status = /forbidden/i.test(message) ? 403 : 500;
+      console.error('[API] ammunition-reports POST failed:', message);
+      return NextResponse.json({ success: false, error: message }, { status });
+    }
+  });
 }
