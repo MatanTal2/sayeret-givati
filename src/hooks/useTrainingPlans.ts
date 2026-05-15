@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiFetch } from '@/lib/apiFetch';
 import {
   listTrainingPlans,
+  subscribeTrainingPlans,
   type ListTrainingPlansFilter,
 } from '@/lib/training/trainingPlansService';
 import type {
@@ -47,23 +48,38 @@ export function useTrainingPlans(): UseTrainingPlansReturn {
   const [plans, setPlans] = useState<TrainingPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const filterRef = useRef<ListTrainingPlansFilter>({});
 
-  const refresh = useCallback(async (filter: ListTrainingPlansFilter = {}) => {
+  // Listener-based mount. Persistent IndexedDB cache paints initial state
+  // synchronously; server deltas keep it current without per-mutation refetch.
+  useEffect(() => {
     setIsLoading(true);
+    setError(null);
+    const unsub = subscribeTrainingPlans(
+      filterRef.current,
+      (list) => {
+        setPlans(list);
+        setIsLoading(false);
+      },
+      (e) => {
+        setError(e.message || 'שגיאה בטעינת תכנוני אימונים');
+        setIsLoading(false);
+      }
+    );
+    return () => unsub();
+  }, []);
+
+  // Force-resync escape hatch; supports an ad-hoc filter swap for callers
+  // that need a one-shot read with different scope.
+  const refresh = useCallback(async (filter: ListTrainingPlansFilter = {}) => {
     setError(null);
     try {
       const list = await listTrainingPlans(filter);
       setPlans(list);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'שגיאה בטעינת תכנוני אימונים');
-    } finally {
-      setIsLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
 
   const create = useCallback(
     async (payload: CreateTrainingPlanInput) => {
@@ -77,14 +93,13 @@ export function useTrainingPlans(): UseTrainingPlansReturn {
         });
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json.error || 'יצירת תכנון נכשלה');
-        await refresh();
         return { ok: true, id: json.id as string };
       } catch (e) {
         setError(e instanceof Error ? e.message : 'שגיאה לא צפויה');
         return { ok: false };
       }
     },
-    [enhancedUser, refresh]
+    [enhancedUser]
   );
 
   const transition = useCallback(
@@ -100,14 +115,13 @@ export function useTrainingPlans(): UseTrainingPlansReturn {
         });
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json.error || 'הפעולה נכשלה');
-        await refresh();
         return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : 'שגיאה לא צפויה');
         return false;
       }
     },
-    [enhancedUser, refresh]
+    [enhancedUser]
   );
 
   const approve = useCallback((planId: string) => transition(planId, 'approve'), [transition]);
