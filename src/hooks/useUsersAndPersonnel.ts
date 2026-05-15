@@ -60,6 +60,10 @@ const ROLE_DISPLAY: Record<UserRole, string> = {
   [UserRole.EQUIPMENT_MANAGER]: 'מנהל ציוד',
 };
 
+// Role-bucket fallback used when a user has no `teamId` set on their Firestore
+// doc. Real team assignments live in `users.teamId` and are sourced from
+// `systemConfig/main.teams`. Personnel docs (`authorized_personnel`) have no
+// team field today, so unregistered rows always fall back to this bucket.
 const TEAM_FROM_ROLE: Record<UserRole, string> = {
   [UserRole.SOLDIER]: 'כללי',
   [UserRole.TEAM_LEADER]: 'מפקדי צוות',
@@ -78,6 +82,12 @@ function roleDisplay(role: UserRole | undefined): string {
 function teamFromRole(role: UserRole | undefined): string {
   if (!role) return TEAM_FROM_ROLE[UserRole.SOLDIER];
   return TEAM_FROM_ROLE[role] ?? 'כללי';
+}
+
+function resolveTeam(teamId: string | undefined | null, role: UserRole | undefined): string {
+  const trimmed = (teamId ?? '').trim();
+  if (trimmed) return trimmed;
+  return teamFromRole(role);
 }
 
 export function useUsersAndPersonnel(): UseUsersAndPersonnelReturn {
@@ -130,7 +140,7 @@ export function useUsersAndPersonnel(): UseUsersAndPersonnelReturn {
           rank: userDoc?.rank || personnel.rank || 'לא מוגדר',
           role,
           roleDisplay: roleDisplay(role),
-          team: teamFromRole(role),
+          team: resolveTeam(userDoc?.teamId, role),
           status: userDoc?.status ?? personnel.status ?? 'active',
           registered,
         });
@@ -152,7 +162,7 @@ export function useUsersAndPersonnel(): UseUsersAndPersonnelReturn {
           rank: data.rank || 'לא מוגדר',
           role,
           roleDisplay: roleDisplay(role),
-          team: teamFromRole(role),
+          team: resolveTeam(data.teamId, role),
           status: data.status ?? 'active',
           registered: true,
         });
