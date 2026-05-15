@@ -83,6 +83,8 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
     };
   }, [enhancedUser]);
 
+  // Force-resync escape hatch. The listener keeps state current; this exists for
+  // edge cases (e.g. after a forced auth refresh) where callers want to re-prime.
   const refreshEquipment = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -92,12 +94,10 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
         setRawEquipment(result.equipments);
       } else {
         setError(result.error || TEXT_CONSTANTS.FEATURES.EQUIPMENT.ERROR_LOADING);
-        setRawEquipment([]);
       }
     } catch (err) {
       console.error('Error loading equipment:', err);
       setError(TEXT_CONSTANTS.ERRORS.CONNECTION_ERROR);
-      setRawEquipment([]);
     } finally {
       setLoading(false);
     }
@@ -112,12 +112,10 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
         setEquipmentTypes(result.equipmentTypes);
       } else {
         setTypesError(result.error || TEXT_CONSTANTS.FEATURES.EQUIPMENT.ERROR_LOADING);
-        setEquipmentTypes([]);
       }
     } catch (err) {
       console.error('Error loading equipment types:', err);
       setTypesError(TEXT_CONSTANTS.ERRORS.CONNECTION_ERROR);
-      setEquipmentTypes([]);
     } finally {
       setTypesLoading(false);
     }
@@ -156,7 +154,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
         signedBy,
         TEXT_CONSTANTS.FEATURES.EQUIPMENT.INITIAL_SIGN_IN
       );
-      if (result.success) { await refreshEquipment(); return true; }
+      if (result.success) return true;
       setError(result.message);
       return false;
     } catch (err) {
@@ -164,7 +162,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       setError(TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR);
       return false;
     }
-  }, [refreshEquipment]);
+  }, []);
 
   const transferEquipment = useCallback(async (
     equipmentId: string,
@@ -186,7 +184,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
         equipmentId, newHolder, newHolderId, updatedBy, updatedByName,
         approvalDetails, newUnit, newLocation, notes
       );
-      if (result.success) { await refreshEquipment(); return true; }
+      if (result.success) return true;
       setError(result.message);
       return false;
     } catch (err) {
@@ -194,7 +192,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       setError(TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR);
       return false;
     }
-  }, [refreshEquipment]);
+  }, []);
 
   const updateEquipmentStatus = useCallback(async (
     equipmentId: string, newStatus: EquipmentStatus, updatedBy: string, updatedByName: string, notes?: string
@@ -203,7 +201,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       const result = await EquipmentService.Items.updateEquipment(
         equipmentId, { status: newStatus }, updatedBy, updatedByName, EquipmentAction.STATUS_UPDATE, notes
       );
-      if (result.success) { await refreshEquipment(); return true; }
+      if (result.success) return true;
       setError(result.message);
       return false;
     } catch (err) {
@@ -211,7 +209,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       setError(TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR);
       return false;
     }
-  }, [refreshEquipment]);
+  }, []);
 
   const updateEquipmentCondition = useCallback(async (
     equipmentId: string, newCondition: EquipmentCondition, updatedBy: string, updatedByName: string, notes?: string
@@ -220,7 +218,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       const result = await EquipmentService.Items.updateEquipment(
         equipmentId, { condition: newCondition }, updatedBy, updatedByName, EquipmentAction.CONDITION_UPDATE, notes
       );
-      if (result.success) { await refreshEquipment(); return true; }
+      if (result.success) return true;
       setError(result.message);
       return false;
     } catch (err) {
@@ -228,7 +226,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       setError(TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR);
       return false;
     }
-  }, [refreshEquipment]);
+  }, []);
 
   const performDailyCheck = useCallback(async (
     equipmentId: string, checkedBy: string, checkedByName: string, notes?: string
@@ -240,7 +238,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
         checkedBy, checkedByName, EquipmentAction.DAILY_CHECK_IN,
         notes || TEXT_CONSTANTS.FEATURES.EQUIPMENT.DAILY_CHECK
       );
-      if (result.success) { await refreshEquipment(); return true; }
+      if (result.success) return true;
       setError(result.message);
       return false;
     } catch (err) {
@@ -248,7 +246,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       setError(TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR);
       return false;
     }
-  }, [refreshEquipment]);
+  }, []);
 
   const reportEquipment = useCallback(async (
     equipmentId: string, photoUrl: string | null, note?: string
@@ -259,7 +257,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       const result = await EquipmentService.Items.reportEquipment(
         equipmentId, photoUrl, identity.displayName, note
       );
-      if (result.success) { await refreshEquipment(); return true; }
+      if (result.success) return true;
       setError(result.message);
       return false;
     } catch (err) {
@@ -267,7 +265,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       setError(TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR);
       return false;
     }
-  }, [refreshEquipment, buildActorIdentity]);
+  }, [buildActorIdentity]);
 
   const retireEquipment = useCallback(async (
     equipmentId: string, reason: string
@@ -279,7 +277,6 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
         equipmentId, identity.displayName, reason
       );
       if (result.success) {
-        await refreshEquipment();
         const kind = (result.data as { kind?: 'immediate' | 'request' } | undefined)?.kind;
         return { success: true, kind };
       }
@@ -288,7 +285,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       console.error('Error retiring equipment:', err);
       return { success: false, error: TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR };
     }
-  }, [refreshEquipment, buildActorIdentity]);
+  }, [buildActorIdentity]);
 
   const createEquipmentBatch = useCallback(async (
     items: Array<Omit<Equipment, 'createdAt' | 'updatedAt' | 'trackingHistory'>>,
@@ -300,7 +297,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       const result = await EquipmentService.Items.createEquipmentBatch(
         items, identity.displayName, identity.uid, identity.displayName, identity.uid, notes
       );
-      if (result.success) { await refreshEquipment(); return true; }
+      if (result.success) return true;
       setError(result.message);
       return false;
     } catch (err) {
@@ -308,14 +305,14 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       setError(TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR);
       return false;
     }
-  }, [refreshEquipment, buildActorIdentity]);
+  }, [buildActorIdentity]);
 
   const addEquipmentType = useCallback(async (
     equipmentTypeData: Omit<EquipmentType, 'createdAt' | 'updatedAt'>
   ): Promise<boolean> => {
     try {
       const result = await EquipmentService.Types.createEquipmentType(equipmentTypeData);
-      if (result.success) { await refreshEquipmentTypes(); return true; }
+      if (result.success) return true;
       setTypesError(result.message);
       return false;
     } catch (err) {
@@ -323,7 +320,7 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
       setTypesError(TEXT_CONSTANTS.ERRORS.UNEXPECTED_ERROR);
       return false;
     }
-  }, [refreshEquipmentTypes]);
+  }, []);
 
   const getEquipmentById = useCallback((equipmentId: string) => equipment.find((i) => i.id === equipmentId), [equipment]);
   const getEquipmentByStatus = useCallback((status: EquipmentStatus) => equipment.filter((i) => i.status === status), [equipment]);
@@ -332,18 +329,53 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
   const getEquipmentByTeam = useCallback((teamId: string) => equipment.filter((i) => i.holderTeamId === teamId || i.signerTeamId === teamId), [equipment]);
   const getEquipmentTypeById = useCallback((typeId: string) => equipmentTypes.find((t) => t.id === typeId), [equipmentTypes]);
 
+  // Subscribe to live snapshots while authenticated. Listener pattern replaces
+  // the previous fetch-on-mount + refetch-after-mutation churn: persistent IndexedDB
+  // cache paints initial state synchronously, and server deltas keep it current
+  // across tabs and other writers without per-mutation full-collection scans.
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        refreshEquipment();
-        refreshEquipmentTypes();
-      } else {
+    let unsubEquipment: (() => void) | null = null;
+    let unsubTypes: (() => void) | null = null;
+
+    const unsubAuth = auth.onAuthStateChanged((user) => {
+      unsubEquipment?.(); unsubTypes?.();
+      unsubEquipment = null; unsubTypes = null;
+
+      if (!user) {
         setRawEquipment([]);
         setEquipmentTypes([]);
+        return;
       }
+
+      setLoading(true);
+      setError(null);
+      unsubEquipment = EquipmentService.Items.subscribeEquipmentList((result) => {
+        if (result.success) {
+          setRawEquipment(result.equipments);
+        } else {
+          setError(result.error || TEXT_CONSTANTS.FEATURES.EQUIPMENT.ERROR_LOADING);
+        }
+        setLoading(false);
+      });
+
+      setTypesLoading(true);
+      setTypesError(null);
+      unsubTypes = EquipmentService.Types.subscribeEquipmentTypes((result) => {
+        if (result.success) {
+          setEquipmentTypes(result.equipmentTypes);
+        } else {
+          setTypesError(result.error || TEXT_CONSTANTS.FEATURES.EQUIPMENT.ERROR_LOADING);
+        }
+        setTypesLoading(false);
+      });
     });
-    return () => unsubscribe();
-  }, [refreshEquipment, refreshEquipmentTypes]);
+
+    return () => {
+      unsubAuth();
+      unsubEquipment?.();
+      unsubTypes?.();
+    };
+  }, []);
 
   return {
     equipment,

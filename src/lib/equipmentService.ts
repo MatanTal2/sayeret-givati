@@ -11,6 +11,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   query,
   where,
   orderBy,
@@ -18,6 +19,7 @@ import {
   serverTimestamp,
   Timestamp,
   writeBatch,
+  type Unsubscribe,
 } from 'firebase/firestore';
 
 import {
@@ -231,8 +233,38 @@ export class EquipmentTypesService {
   }
 
   /**
-   * Update equipment type
+   * Subscribe to equipment types via onSnapshot. Replaces mount-time + post-mutation
+   * refetch pattern. Fires synchronously from local cache when available, then
+   * delivers server deltas. Returns unsubscribe.
    */
+  static subscribeEquipmentTypes(
+    callback: (result: EquipmentTypeListResult) => void,
+    { activeOnly = true, category = null }: { activeOnly?: boolean; category?: string | null } = {}
+  ): Unsubscribe {
+    let q = query(collection(db, EQUIPMENT_TEMPLATES_COLLECTION));
+    if (activeOnly) q = query(q, where('isActive', '==', true));
+    if (category) q = query(q, where('category', '==', category));
+
+    return onSnapshot(
+      q,
+      (snap) => {
+        const equipmentTypes: EquipmentType[] = [];
+        snap.forEach((d) => equipmentTypes.push({ id: d.id, ...d.data() } as EquipmentType));
+        equipmentTypes.sort((a, b) => {
+          const sa = (a as unknown as { sortOrder?: number }).sortOrder ?? Number.MAX_SAFE_INTEGER;
+          const sb = (b as unknown as { sortOrder?: number }).sortOrder ?? Number.MAX_SAFE_INTEGER;
+          if (sa !== sb) return sa - sb;
+          return (a.name ?? '').localeCompare(b.name ?? '');
+        });
+        callback({ success: true, equipmentTypes, totalCount: equipmentTypes.length });
+      },
+      (error) => {
+        console.error('Equipment types snapshot error:', error);
+        callback({ success: false, equipmentTypes: [], totalCount: 0, error: error.message });
+      }
+    );
+  }
+
   /**
    * Update equipment type.
    * Delegates to server API route (firebase-admin) for the write.
@@ -449,6 +481,58 @@ export class EquipmentItemsService {
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
+  }
+
+  /**
+   * Subscribe to equipment list via onSnapshot. Replaces refetch-after-mutation pattern.
+   * Filters mirror getEquipmentList for parity. Returns unsubscribe.
+   */
+  static subscribeEquipmentList(
+    callback: (result: EquipmentListResult) => void,
+    filters: {
+      holder?: string;
+      holderId?: string;
+      status?: EquipmentStatus[];
+      category?: string;
+      equipmentType?: string;
+      limitCount?: number;
+    } = {}
+  ): Unsubscribe {
+    let q = query(collection(db, EQUIPMENT_COLLECTION), orderBy('updatedAt', 'desc'));
+
+    if (filters.holderId) {
+      q = query(q, where('currentHolderId', '==', filters.holderId));
+    } else if (filters.holder) {
+      q = query(q, where('currentHolder', '==', filters.holder));
+    }
+    if (filters.status && filters.status.length > 0) q = query(q, where('status', 'in', filters.status));
+    if (filters.category) q = query(q, where('category', '==', filters.category));
+    if (filters.equipmentType) q = query(q, where('equipmentType', '==', filters.equipmentType));
+    if (filters.limitCount) q = query(q, limit(filters.limitCount));
+
+    return onSnapshot(
+      q,
+      (snap) => {
+        const equipments: Equipment[] = [];
+        snap.forEach((d) => equipments.push({ id: d.id, ...d.data() } as Equipment));
+        callback({
+          success: true,
+          equipments,
+          totalCount: equipments.length,
+          hasMore: filters.limitCount ? equipments.length === filters.limitCount : false,
+        });
+      },
+      (error) => {
+        console.error('Equipment list snapshot error:', error);
+        callback({
+          success: false,
+          equipments: [],
+          totalCount: 0,
+          hasMore: false,
+          error: error.message,
+        });
+      }
+    );
   }
 
   /**
