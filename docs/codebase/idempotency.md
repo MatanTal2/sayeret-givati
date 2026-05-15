@@ -88,18 +88,37 @@ how dedupe stays consistent across reconnect cycles.
 
 ## Index
 
-- `(expiresAt ASC)` on `_idempotency` for the cron sweeper.
-  See `firebase/firestore.indexes.json`.
+Firestore auto-creates the single-field ascending index for `expiresAt`
+once the `fieldOverrides[].ttl` entry is deployed. No manual composite
+index needed — single-field indexes are rejected by the composite API
+("this index is not necessary, configure using single field index
+controls"). See `firebase/firestore.indexes.json` `fieldOverrides`.
 
 ## Deployment checklist (Phase 4)
 
-Before this PR merges:
-1. `firebase deploy --only firestore:rules` — pushes the deny rule.
-2. `firebase deploy --only firestore:indexes` — pushes the new composite + TTL.
-3. Verify TTL is enabled:
-   `gcloud firestore fields ttls update expiresAt --collection-group=_idempotency --project=sayeret-givati-1983`
-   (or toggle in Firebase Console → Firestore → Indexes → TTL).
-4. `CRON_SECRET` must be set in Vercel; same value already used by the other crons.
+Before users hit the new routes:
+
+```bash
+firebase deploy --only firestore:rules
+firebase deploy --only firestore:indexes
+```
+
+`firebase deploy --only firestore:indexes` reads `fieldOverrides` and
+enables TTL on `_idempotency.expiresAt`. If for some reason that path
+fails, fall back to the gcloud command:
+
+```bash
+gcloud firestore fields ttls update expiresAt \
+  --collection-group=_idempotency \
+  --enable-ttl \
+  --project=sayeret-givati-1983
+```
+
+(`--enable-ttl` is required — gcloud needs exactly one of
+`--enable-ttl` / `--disable-ttl`.)
+
+Confirm `CRON_SECRET` is set in Vercel; same value already used by the
+other crons.
 
 ## Migration tracking
 
