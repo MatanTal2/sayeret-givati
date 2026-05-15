@@ -9,6 +9,7 @@ import { UserDataService } from '@/lib/userDataService';
 import { EnhancedAuthUser, UserType } from '@/types/user';
 import { isRegistrationInProgress } from '@/lib/registrationFlowFlag';
 import { clearProfileImageCache } from '@/lib/profileImageCache';
+import { notifyAuthStateChanged } from '@/lib/offline/cacheInvalidation';
 
 // Types
 export interface AuthUser {
@@ -77,6 +78,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Initialize auth state listener with Firestore data fetching
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
+      // Audit S5: wipe persistent caches on UID change. First sign-in is a
+      // no-op; subsequent identity changes (logout, switch user) clear
+      // Firestore cache + SW runtime cache so the old user's authorized
+      // content doesn't leak to the new one.
+      void notifyAuthStateChanged(firebaseUser?.uid ?? null);
       if (firebaseUser) {
         // Always fetch user data from Firestore to get the most up-to-date user type
         // Fallback to email-based admin check only if Firestore data is unavailable

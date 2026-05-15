@@ -1,6 +1,7 @@
 import { auth } from './firebase';
 import { enqueue } from './offline/outbox';
 import { matchAllowlist } from './offline/allowlist';
+import { notifyResponseObserved } from './offline/cacheInvalidation';
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
@@ -88,5 +89,9 @@ export async function apiFetch(
 
   const idToken = await user.getIdToken();
   headers.set('Authorization', `Bearer ${idToken}`);
-  return fetch(input, { ...init, headers });
+  const response = await fetch(input, { ...init, headers });
+  // Fire-and-forget invalidation (S5). Do not await — the response should
+  // surface to the caller without waiting for IDB wipe.
+  void notifyResponseObserved(response.clone(), method);
+  return response;
 }
