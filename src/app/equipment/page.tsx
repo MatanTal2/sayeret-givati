@@ -237,6 +237,7 @@ function EquipmentPageContent() {
           setSelectedIds(new Set());
         }}
         archiveCount={archivedEquipment.length}
+        className="mt-4 mb-2"
       />
 
       <FilterBar
@@ -450,7 +451,7 @@ function FilterBar({
   // empty result if a user selects e.g. AVAILABLE while viewing the archive.
   const showStatusFilter = view === 'active';
   return (
-    <div className="bg-white rounded-b-xl border-x border-b border-neutral-200 p-3 mb-4 space-y-2">
+    <div className="bg-white rounded-xl border border-neutral-200 p-3 mb-4 space-y-2">
       <div className="relative">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
         <input
@@ -495,14 +496,20 @@ function ViewToggle({
   view,
   onChange,
   archiveCount,
+  className,
 }: {
   view: 'active' | 'archive';
   onChange: (v: 'active' | 'archive') => void;
   archiveCount: number;
+  className?: string;
 }) {
   const labels = TEXT_CONSTANTS.FEATURES.EQUIPMENT.ARCHIVE;
   return (
-    <div className="flex gap-2 mb-2" role="tablist" aria-label="equipment view">
+    <div
+      className={cn('flex gap-2', className ?? 'mb-2')}
+      role="tablist"
+      aria-label="equipment view"
+    >
       <button
         type="button"
         role="tab"

@@ -7,9 +7,19 @@ import { TEXT_CONSTANTS } from '@/constants/text';
 /**
  * Mounts the service worker registration and surfaces an update banner when a
  * new SW is installed and waiting. The SW (src/app/sw.ts) is built with
- * `skipWaiting: false`, so the waiting worker only activates after the user
- * accepts. We post `{ type: 'SKIP_WAITING' }` to the waiting worker, then
- * reload on `controllerchange`.
+ * `skipWaiting: false` AND `clientsClaim: false`, so the waiting worker only
+ * activates after the user accepts AND it does not auto-claim already-open
+ * tabs. We post `{ type: 'SKIP_WAITING' }`, listen for the worker's own
+ * `statechange` to `'activated'`, and reload from there.
+ *
+ * Why not `controllerchange`: with `clientsClaim: false`, after SKIP_WAITING
+ * the new SW activates but does NOT take over the current document's
+ * controller. `navigator.serviceWorker.controller` stays pointed at the old
+ * SW, so `controllerchange` never fires for this page and the original
+ * implementation left the toast pinned forever (the user reloaded, but the
+ * waiting worker was still waiting because `controllerchange` only signals a
+ * controller swap — not activation). The waiting worker's `statechange`
+ * fires reliably across browsers and is the canonical signal here.
  *
  * Audit note M5 (docs/spec/offline-first.md). Never auto-activate the new SW
  * — open tabs with in-flight optimistic state would be taken over mid-session.
@@ -44,20 +54,22 @@ export default function ServiceWorkerUpdater() {
         console.warn('[sw] registration failed', err);
       });
 
-    const onControllerChange = () => {
-      window.location.reload();
-    };
-    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
-
     return () => {
       cleanup?.();
-      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
     };
   }, []);
 
   const onUpdateNow = () => {
     if (!waitingWorker) return;
-    waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+    const worker = waitingWorker;
+    const onState = () => {
+      if (worker.state === 'activated') {
+        worker.removeEventListener('statechange', onState);
+        window.location.reload();
+      }
+    };
+    worker.addEventListener('statechange', onState);
+    worker.postMessage({ type: 'SKIP_WAITING' });
   };
 
   const onDismiss = () => setWaitingWorker(null);
