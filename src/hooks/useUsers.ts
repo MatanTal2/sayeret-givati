@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, onSnapshot, type QueryDocumentSnapshot } from 'firebase/firestore';
 import { FirestoreUserProfile } from '@/types/user';
 import { UserRole } from '@/types/equipment';
 import { ADMIN_CONFIG } from '@/constants/admin';
@@ -26,7 +26,7 @@ export interface UseUsersReturn {
   fetchUsers: (forceRefresh?: boolean) => Promise<void>;
 }
 
-function mapAndFilter(docs: Array<{ data(): FirestoreUserProfile }>): UserForEmail[] {
+function mapAndFilter(docs: QueryDocumentSnapshot[]): UserForEmail[] {
   return docs
     .map((d) => {
       const data = d.data() as FirestoreUserProfile;
