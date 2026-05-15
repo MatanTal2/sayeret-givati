@@ -16,11 +16,18 @@ import {
 } from '@/lib/reportRequestService';
 import UserSearchInput from '@/components/users/UserSearchInput';
 import type { UserSearchResult } from '@/lib/userService';
+import { Select } from '@/components/ui';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 
 export default function ReportRequestTab() {
   const labels = TEXT_CONSTANTS.FEATURES.EQUIPMENT.REPORT_REQUEST;
   const { enhancedUser } = useAuth();
   const { equipment } = useEquipment({ scope: 'all' });
+  const { config: systemConfig } = useSystemConfig();
+  const teamOptions = useMemo(
+    () => (systemConfig?.teams ?? []).map((t) => ({ value: t, label: t })),
+    [systemConfig?.teams],
+  );
 
   const [scope, setScope] = useState<ReportRequestScope>(ReportRequestScope.USER);
   const [target, setTarget] = useState<UserSearchResult | null>(null);
@@ -138,12 +145,13 @@ export default function ReportRequestTab() {
         {scope === ReportRequestScope.TEAM && (
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">{labels.TARGET_TEAM_LABEL}</label>
-            <input
-              type="text"
-              value={teamId}
-              onChange={(e) => setTeamId(e.target.value)}
+            <Select
+              value={teamId || null}
+              onChange={(v) => setTeamId(v ?? '')}
+              options={teamOptions}
               placeholder={labels.TARGET_TEAM_PLACEHOLDER}
-              className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500"
+              clearable
+              ariaLabel={labels.TARGET_TEAM_LABEL}
             />
           </div>
         )}
