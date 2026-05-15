@@ -6,6 +6,7 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import GlobalAuthModal from "@/components/auth/GlobalAuthModal";
 import EmailVerificationBanner from "@/components/auth/EmailVerificationBanner";
+import ServiceWorkerUpdater from "@/components/pwa/ServiceWorkerUpdater";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +39,7 @@ export default function RootLayout({
               <EmailVerificationBanner />
               {children}
               <GlobalAuthModal />
+              <ServiceWorkerUpdater />
             </ToastProvider>
           </NotificationProvider>
         </AuthProvider>

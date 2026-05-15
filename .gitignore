@@ -17,6 +17,11 @@
 /.next/
 /out/
 
+# Serwist SW build artifacts (generated from src/app/sw.ts)
+/public/sw.js
+/public/sw.js.map
+/public/swe-worker-*.js
+
 # production
 /build
 

@@ -1,3 +1,5 @@
+const withSerwistInit = require('@serwist/next').default;
+
 const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
 
@@ -11,7 +13,7 @@ const firebaseStorageHosts = Array.from(
       'storage.googleapis.com',
       projectId ? `${projectId}.firebasestorage.app` : null,
       storageBucket ? storageBucket : null,
-    ].filter((v): v is string => Boolean(v)),
+    ].filter((v) => Boolean(v)),
   ),
 );
 
@@ -21,11 +23,32 @@ const nextConfig = {
   serverExternalPackages: ['firebase-admin'],
   images: {
     remotePatterns: firebaseStorageHosts.map((hostname) => ({
-      protocol: 'https' as const,
+      protocol: 'https',
       hostname,
       pathname: '/**',
     })),
   },
+  async headers() {
+    return [
+      {
+        // Belt-and-braces: keep /sw.js uncacheable at the edge so a new
+        // deploy is picked up on the next page visit. Audit note S7.
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+        ],
+      },
+    ];
+  },
 };
 
-module.exports = nextConfig;
+// Phase 3 — Serwist PWA shell. SW is generated from src/app/sw.ts and emitted
+// to public/sw.js. Disabled in dev so HMR isn't tripped by a stale SW.
+const withSerwist = withSerwistInit({
+  swSrc: 'src/app/sw.ts',
+  swDest: 'public/sw.js',
+  cacheOnNavigation: true,
+  disable: process.env.NODE_ENV === 'development',
+});
+
+module.exports = withSerwist(nextConfig);
