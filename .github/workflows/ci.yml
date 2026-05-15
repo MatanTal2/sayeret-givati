@@ -34,3 +34,35 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  build-and-budget:
+    # Builds prod bundle (with stub Firebase env so client config compiles)
+    # and runs the bundle-size budget check. Cap activates once
+    # bundle-budget.json sets maxFirstLoadKB.
+    # See docs/spec/offline-first.md (audit note N5) for the per-phase deltas.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: stub-ci-key
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: stub.firebaseapp.com
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: stub-ci-project
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: stub.appspot.com
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '0'
+          NEXT_PUBLIC_FIREBASE_APP_ID: '1:0:web:stub'
+        run: npm run build
+
+      - name: Bundle-size budget
+        run: npm run bundle-budget

@@ -185,6 +185,12 @@ export const TEXT_EN = {
       ROUND_OPEN_HELP: 'When enabled, users can pull items from storage. Turn off at the end of the round.',
     },
   },
+  PWA: {
+    UPDATE_AVAILABLE_TITLE: 'New version available',
+    UPDATE_AVAILABLE_BODY: 'An update is ready. The page will reload.',
+    UPDATE_NOW: 'Update now',
+    UPDATE_LATER: 'Later',
+  },
   PROFILE: {
     PHONE_NUMBER_LABEL: 'Phone number',
     TEAM: 'Team',

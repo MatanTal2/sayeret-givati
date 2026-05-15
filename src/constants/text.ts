@@ -2122,6 +2122,12 @@ export const TEXT_CONSTANTS = {
     CHOOSE_FILE: 'בחר קובץ',
     ERROR_GENERIC: 'שגיאה בפתיחת המצלמה',
     ERROR_CAPTURE: 'צילום נכשל. נסה שוב.'
+  },
+  PWA: {
+    UPDATE_AVAILABLE_TITLE: 'גרסה חדשה זמינה',
+    UPDATE_AVAILABLE_BODY: 'עדכון מוכן להתקנה. המסך ייטען מחדש.',
+    UPDATE_NOW: 'עדכן עכשיו',
+    UPDATE_LATER: 'אחר כך'
   }
 } as const;
 
@@ -2135,4 +2141,4 @@ export const TEXT_FMT = {
 };
 
 // Export individual sections for easier imports
-export const { BUTTONS, AUTH, FEATURES, ADMIN, ERRORS, SUCCESS, MANAGEMENT, CONFIRMATIONS, NOTIFICATIONS, ARIA_LABELS, ONBOARDING, CAMERA } = TEXT_CONSTANTS;
+export const { BUTTONS, AUTH, FEATURES, ADMIN, ERRORS, SUCCESS, MANAGEMENT, CONFIRMATIONS, NOTIFICATIONS, ARIA_LABELS, ONBOARDING, CAMERA, PWA } = TEXT_CONSTANTS;

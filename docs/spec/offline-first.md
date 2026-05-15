@@ -172,6 +172,7 @@ As each phase ships, findings are reflected in:
 
 - ✅ **Phase 0** — spec + `OFFLINE_REPLAY_CONCURRENCY` flag (PR #121).
 - ✅ **Phase 1** — Firestore persistent cache enabled in `src/lib/firebase.ts` (PR #122).
-- ✅ **Phase 2** — `next.config.ts` Firebase Storage `remotePatterns`. `scripts/check-bundle-size.js` + `bundle-budget.json` + `npm run bundle-budget` script. CI wiring (build job + budget step) lands with P3 PR when the SW adds the first real chunk weight.
-- ⬜ **Phase 3** — Serwist PWA shell + bundle-budget CI step + user-driven `SKIP_WAITING`.
-- ⬜ **Phase 4..8** — see table above.
+- ✅ **Phase 2** — `next.config.ts` Firebase Storage `remotePatterns` + bundle-budget tooling (PR #123).
+- ✅ **Phase 3** — Serwist PWA shell. `src/app/sw.ts` with `skipWaiting:false` + user-driven `SKIP_WAITING` (M5). `ServiceWorkerUpdater` toast wired in `layout.tsx`. `/sw.js` Cache-Control `no-cache` via `next.config.ts` headers (S7). CI `build-and-budget` job + `bundle-budget.json` cap 110 KB. Baseline `/_error` first-load JS = 93.56 KB.
+- ⬜ **Phase 4** — Server-side idempotency: `_idempotency` collection + `withIdempotency` wrap all mutation routes.
+- ⬜ **Phase 5..8** — see table above.
