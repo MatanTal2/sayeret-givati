@@ -177,6 +177,6 @@ As each phase ships, findings are reflected in:
 - ✅ **Phase 4a** — Idempotency infra + 7 representative routes (PR #125).
 - ✅ **Phase 4b** — Remaining 47 mutation routes wrapped (PR #126).
 - ✅ **Phase 5** — Outbox + replay shipped (PR #127).
-- ✅ **Phase 6** — `ConflictCenter` aggregator (Headless UI Dialog). One-at-a-time resolution. Keep-local rewrites `If-Match` from server data and re-arms drain; Discard removes the entry. Conflicts persist in IDB across reloads (already part of P5 entry shape). `SyncStatusIndicator` opens the center when `conflictCount > 0`.
-- ⬜ **Phase 7** — SWR-style hooks. `localStorage` migration. Permission revocation cache invalidation.
+- ✅ **Phase 6** — `ConflictCenter` (PR #128).
+- ✅ **Phase 7** — Cache invalidation (S5): `src/lib/offline/cacheInvalidation.ts` wipes Firestore persistent cache + SW `/api/*` runtime cache on UID change, on 401/403 from any read, and on server `X-Cache-Invalidate` header. Legacy `src/lib/cache.ts` (audit S6) deprecated; `getCachedData` / `setCachedData` are no-ops with one-time legacy-key cleanup + telemetry breadcrumb. SW + Firestore caches cover the same role plus cross-tab.
 - ⬜ **Phase 8** — Telemetry SLOs + `/debug/offline` prod-build exclusion.
