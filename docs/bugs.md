@@ -36,17 +36,13 @@
 29. ~~**Phone book list overflows page height — need in-container scroll**~~ *(phone book)*
     - **FIXED (2026-05-14 on `fix/bug-batch-2026-05-14-pt3`):** the phone-book `<ul>` got `max-h-[calc(100vh-20rem)] overflow-y-auto` so the list scrolls inside its own container while the header, filter bar, and "total / refresh" row stay pinned. Picked the viewport-relative bound (rather than a fixed `max-h-[28rem]`) because the phone book is the entire screen — fill the available height, only show a scrollbar when the list overflows.
 
-25. **Stored / returned-to-army items still appear in the active list with full action set**
-    - **Repro:** Equipment page. Items in `STORED` (`STATUS_STORED` from PR #76) and items returned to army (the "return" action that flips status to `RETIRED`) currently sit in the same list as active holdings and expose the full action menu.
-    - **Expected behaviour:**
-      - **Returned-to-army (`RETIRED`)**: leaves the active list entirely. Should move to a history / archived list — same pattern as the ammunition "used" / consumed flow that drops items into a separate greyed list. Only action surfaced from there: **View history**. Not pickable for transfer / report / replace / return.
-      - **Stored (`STORED`)**: stays visible but the action menu collapses to **View history** + a new **משוך** ("pull back / un-store") action that moves the item back into the holder's active list. No transfer / report / replace / re-store while in this state.
-    - **Why this matters:** users see "active" rows for items that aren't theirs anymore, leading to confused transfers and miscounts on the status page.
-    - **Likely fix surface:**
-      - `EquipmentRowActions.tsx` — gate the action set by `status`. Returned/retired rows render only history. Stored rows render history + un-store.
-      - `useEquipment` (or equivalent list hook) — partition active vs archived by `status`. Two list buckets, same as ammo. Active list filters out `RETIRED`; archived view shows them read-only.
-      - New action: `pullBackFromStorage` (RPC + audit row). Inverts the storage transition from PR #76 — moves the item back to the holder and clears the storage location.
-      - Spec at `docs/spec/equipment-exchange-and-storage.md` — extend with the partitioning + un-store action.
+25. ~~**Stored / returned-to-army items still appear in the active list with full action set**~~
+    - **FIXED (2026-05-15 on `fix/equipment-archive-and-stored-actions`, PR #142 merged to `main` as `32ec161`):** two-layer fix per the spec section in `docs/spec/equipment-exchange-and-storage.md` §6.
+    - **Policy (`src/lib/equipmentPolicy.ts`):** added internal predicates `isArchived` (status === `RETIRED`) and `isFrozen` (status === `STORED`). Every mutating helper now returns `false` when either matches: `canReport`, `canTransfer`, `canRetire`, `canRetireImmediately`, `canForceTransfer`. Exchange + storage helpers already gated on `AVAILABLE` so no change. `canPullFromStorage` stays true while `STORED` — only path out of storage. Net effect: RETIRED rows expose history only; STORED rows expose history + `pull-from-storage` (when `roundOpen=true`).
+    - **Hook partition (`src/hooks/useEquipment.ts`):** new `archivedEquipment: Equipment[]` return (RETIRED-only); existing `equipment` filters RETIRED out. Both memoized off a shared `scoped` intermediate so visibility + scope filters run once.
+    - **UI (`src/app/equipment/page.tsx`):** new `view: 'active' | 'archive'` toggle via new `ViewToggle` component (`role="tablist"`/`role="tab"`). Archive tab shows count badge. Status filter in `FilterBar` hides while in archive view (everything is RETIRED there). Selection set cleared on view switch.
+    - **Regression coverage:** `src/lib/__tests__/equipmentPolicy.test.ts` adds `bug #25 status gates` describe block asserting every mutating helper returns `false` for both RETIRED and STORED across holder/signer/admin actor variants. `src/hooks/__tests__/useEquipmentPartition.test.tsx` (new) asserts the bucket split.
+    - **Out of scope (deliberate):** no new `pullBackFromStorage` server action — `serverPullFromStorage` from PR #76 already inverts the storage transition. Bug fix was pure UI/policy gating.
 
 19. ~~**App Check init warning floods console on localhost (admin route)**~~
     - **FIXED (2026-05-14 on `fix/appcheck-dev-warning-noise`):** `ensureAppCheckInitialized` (`src/lib/appCheck.ts:43`) now branches on `process.env.NODE_ENV`. Dev emits a single-line `console.info('[appCheck] disabled (no NEXT_PUBLIC_RECAPTCHA_SITE_KEY in dev)')`; prod / preview keep the original multi-line `console.warn`. Still gated by `warnedMissingKey` so it logs at most once per page load.
