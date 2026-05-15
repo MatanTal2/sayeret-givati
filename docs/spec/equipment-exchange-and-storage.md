@@ -202,3 +202,37 @@ Headless UI `Dialog` (per `feedback_ui_libs`, `feedback_no_browser_dialogs`):
 ## 5. Sequencing
 
 Phases 1-2 (types + exchange server) → Phase 3-4 (storage server + SystemConfig) → Phase 5-7 (UI wiring) → Phase 8 (modals) → Phase 9 (docs). Single feature branch `feat/equipment-exchange-and-storage`. Sized for 2 sessions; ship in one PR when both statuses pass manual QA.
+
+---
+
+## 6. Follow-up: lifecycle partition (bug #25, shipped 2026-05-15)
+
+After the exchange + storage features landed, RETIRED rows kept showing up in the active list with the full action menu, and STORED rows still surfaced report/transfer/retire actions even though those are blocked server-side. Bug #25 closed both gaps.
+
+### Policy
+
+`src/lib/equipmentPolicy.ts` adds two private predicates `isArchived` (status === RETIRED) and `isFrozen` (status === STORED). Every mutating helper now returns `false` when either predicate is true:
+
+- `canReport`, `canTransfer`, `canRetire`, `canRetireImmediately`, `canForceTransfer` — gated by both.
+- `canRequestExchange`, `canApproveExchange`, `canReplaceByAnother`, `canSendToStorage` — already gated on `AVAILABLE`, no change.
+- `canPullFromStorage` — unchanged (the only action allowed while STORED).
+
+This means RETIRED rows expose `history` only and STORED rows expose `history` + `pull-from-storage` (when `roundOpen=true`).
+
+### Partition
+
+`useEquipment` (`src/hooks/useEquipment.ts`) now returns two buckets:
+
+- `equipment` — scoped + visible, RETIRED filtered out.
+- `archivedEquipment` — scoped + visible, RETIRED only.
+
+The split is memoized off a shared `scoped` intermediate so visibility/scope filters run once.
+
+### UI
+
+`src/app/equipment/page.tsx` adds a `view: 'active' | 'archive'` toggle (new `ViewToggle` component, accessible via `role="tablist"`/`role="tab"`). The archive tab shows a count badge. The status filter in `FilterBar` hides while in archive view (everything is RETIRED). Selection set is cleared on view switch.
+
+### Regression coverage
+
+- `src/lib/__tests__/equipmentPolicy.test.ts` adds a `bug #25 status gates` describe block — every mutating helper asserted `false` for both RETIRED and STORED items, across holder/signer/admin actor variants.
+- `src/hooks/__tests__/useEquipmentPartition.test.tsx` (new) asserts the bucket split: RETIRED rows end up in `archivedEquipment`, STORED rows stay in `equipment`.

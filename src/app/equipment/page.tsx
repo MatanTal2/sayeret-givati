@@ -29,6 +29,7 @@ import TeamAmmunitionSection from '@/components/equipment/TeamAmmunitionSection'
 import { Select } from '@/components/ui';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { useCategoryLookup } from '@/hooks/useCategoryLookup';
+import { cn } from '@/lib/cn';
 import {
   requestExchange,
   approveExchangeRequest,
@@ -77,6 +78,7 @@ function EquipmentPageContent() {
 
   const {
     equipment,
+    archivedEquipment,
     loading,
     error,
     scope,
@@ -85,6 +87,9 @@ function EquipmentPageContent() {
     reportEquipment,
     retireEquipment,
   } = useEquipment({ scope: 'self' });
+
+  const [view, setView] = useState<'active' | 'archive'>('active');
+  const visibleEquipment = view === 'archive' ? archivedEquipment : equipment;
 
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -105,17 +110,17 @@ function EquipmentPageContent() {
 
   const categoryOptions = useMemo(() => {
     const ids = new Set<string>();
-    for (const it of equipment) {
+    for (const it of visibleEquipment) {
       const c = (it.category ?? '').trim();
       if (c) ids.add(c);
     }
     return Array.from(ids)
       .map((id) => ({ value: id, label: categoryName(id) ?? id }))
       .sort((a, b) => a.label.localeCompare(b.label, 'he'));
-  }, [equipment, categoryName]);
+  }, [visibleEquipment, categoryName]);
 
   const filtered = useMemo(() => {
-    return equipment.filter((it) => {
+    return visibleEquipment.filter((it) => {
       if (statusFilter !== 'all' && it.status !== statusFilter) return false;
       if (categoryFilter !== 'all' && it.category !== categoryFilter) return false;
       if (searchTerm) {
@@ -131,7 +136,7 @@ function EquipmentPageContent() {
       }
       return true;
     });
-  }, [equipment, statusFilter, categoryFilter, searchTerm, categoryName]);
+  }, [visibleEquipment, statusFilter, categoryFilter, searchTerm, categoryName]);
 
   const closeModal = () => {
     setActiveModal(null);
@@ -223,6 +228,17 @@ function EquipmentPageContent() {
 
       <EquipmentTabs scope={scope} onChange={setScope} user={enhancedUser} />
 
+      <ViewToggle
+        view={view}
+        onChange={(v) => {
+          setView(v);
+          // Selection set is bucket-scoped — clear it when switching views so
+          // a bulk action can't accidentally target rows the user can't see.
+          setSelectedIds(new Set());
+        }}
+        archiveCount={archivedEquipment.length}
+      />
+
       <FilterBar
         searchTerm={searchTerm}
         onSearch={setSearchTerm}
@@ -231,9 +247,10 @@ function EquipmentPageContent() {
         categoryFilter={categoryFilter}
         onCategoryChange={setCategoryFilter}
         categoryOptions={categoryOptions}
+        view={view}
       />
 
-      {loading && equipment.length === 0 ? (
+      {loading && visibleEquipment.length === 0 ? (
         <EquipmentLoadingState count={6} />
       ) : error ? (
         <ErrorState message={error} onRetry={refreshEquipment} />
@@ -245,7 +262,7 @@ function EquipmentPageContent() {
           onToggleSelect={toggleSelect}
           onToggleSelectAllVisible={toggleSelectAllVisible}
           onRowAction={handleRowAction}
-          emptyMessage={emptyMessageFor(scope)}
+          emptyMessage={emptyMessageFor(scope, view)}
           roundOpen={roundOpen}
         />
       )}
@@ -417,6 +434,7 @@ function FilterBar({
   categoryFilter,
   onCategoryChange,
   categoryOptions,
+  view,
 }: {
   searchTerm: string;
   onSearch: (s: string) => void;
@@ -425,7 +443,12 @@ function FilterBar({
   categoryFilter: string | 'all';
   onCategoryChange: (c: string | 'all') => void;
   categoryOptions: { value: string; label: string }[];
+  view: 'active' | 'archive';
 }) {
+  // Status filter only makes sense on the active list — the archive is, by
+  // definition, all RETIRED. Hiding the filter avoids producing a confusing
+  // empty result if a user selects e.g. AVAILABLE while viewing the archive.
+  const showStatusFilter = view === 'active';
   return (
     <div className="bg-white rounded-b-xl border-x border-b border-neutral-200 p-3 mb-4 space-y-2">
       <div className="relative">
@@ -438,21 +461,23 @@ function FilterBar({
           className="w-full ps-9 pe-3 py-2 text-sm border border-neutral-200 rounded-lg bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-primary-500"
         />
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <Select
-          value={statusFilter === 'all' ? null : statusFilter}
-          onChange={(v) => onStatusChange(v === null ? 'all' : (v as EquipmentStatus))}
-          options={[
-            { value: EquipmentStatus.AVAILABLE, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.AVAILABLE },
-            { value: EquipmentStatus.SECURITY, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.SECURITY },
-            { value: EquipmentStatus.REPAIR, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.REPAIR },
-            { value: EquipmentStatus.LOST, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.LOST },
-            { value: EquipmentStatus.PENDING_TRANSFER, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.PENDING_TRANSFER },
-          ]}
-          placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}
-          clearable
-          ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}
-        />
+      <div className={showStatusFilter ? 'grid grid-cols-2 gap-2' : ''}>
+        {showStatusFilter && (
+          <Select
+            value={statusFilter === 'all' ? null : statusFilter}
+            onChange={(v) => onStatusChange(v === null ? 'all' : (v as EquipmentStatus))}
+            options={[
+              { value: EquipmentStatus.AVAILABLE, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.AVAILABLE },
+              { value: EquipmentStatus.SECURITY, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.SECURITY },
+              { value: EquipmentStatus.REPAIR, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.REPAIR },
+              { value: EquipmentStatus.LOST, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.LOST },
+              { value: EquipmentStatus.PENDING_TRANSFER, label: TEXT_CONSTANTS.FEATURES.EQUIPMENT.STATUS_OPTIONS.PENDING_TRANSFER },
+            ]}
+            placeholder={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}
+            clearable
+            ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_STATUSES}
+          />
+        )}
         <Select
           value={categoryFilter === 'all' ? null : categoryFilter}
           onChange={(v) => onCategoryChange(v === null ? 'all' : (v as string))}
@@ -462,6 +487,60 @@ function FilterBar({
           ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_CATEGORIES}
         />
       </div>
+    </div>
+  );
+}
+
+function ViewToggle({
+  view,
+  onChange,
+  archiveCount,
+}: {
+  view: 'active' | 'archive';
+  onChange: (v: 'active' | 'archive') => void;
+  archiveCount: number;
+}) {
+  const labels = TEXT_CONSTANTS.FEATURES.EQUIPMENT.ARCHIVE;
+  return (
+    <div className="flex gap-2 mb-2" role="tablist" aria-label="equipment view">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={view === 'active'}
+        onClick={() => onChange('active')}
+        className={cn(
+          'px-3 py-1.5 text-sm rounded-md transition-colors',
+          view === 'active'
+            ? 'bg-primary-600 text-white'
+            : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50',
+        )}
+      >
+        {labels.SHOW_ACTIVE}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={view === 'archive'}
+        onClick={() => onChange('archive')}
+        className={cn(
+          'px-3 py-1.5 text-sm rounded-md transition-colors inline-flex items-center gap-2',
+          view === 'archive'
+            ? 'bg-primary-600 text-white'
+            : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50',
+        )}
+      >
+        <span>{labels.SHOW_ARCHIVE}</span>
+        {archiveCount > 0 && (
+          <span
+            className={cn(
+              'inline-flex items-center justify-center text-xs rounded-full min-w-[1.25rem] h-5 px-1.5',
+              view === 'archive' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-700',
+            )}
+          >
+            {archiveCount}
+          </span>
+        )}
+      </button>
     </div>
   );
 }
@@ -477,8 +556,13 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   );
 }
 
-function emptyMessageFor(scope: 'self' | 'team' | 'all'): string {
+function emptyMessageFor(scope: 'self' | 'team' | 'all', view: 'active' | 'archive'): string {
   const t = TEXT_CONSTANTS.FEATURES.EQUIPMENT;
+  if (view === 'archive') {
+    if (scope === 'self') return t.ARCHIVE.EMPTY_SELF;
+    if (scope === 'team') return t.ARCHIVE.EMPTY_TEAM;
+    return t.ARCHIVE.EMPTY_ALL;
+  }
   if (scope === 'self') return t.EMPTY_TAB_SELF;
   if (scope === 'team') return t.EMPTY_TAB_TEAM;
   return t.EMPTY_TAB_ALL;

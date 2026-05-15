@@ -138,9 +138,28 @@ export function canAddEquipment(_user: EnhancedAuthUser): boolean {
   return true;
 }
 
+// ---------- Status gates ----------
+
+/**
+ * Items in terminal or frozen states drop most actions:
+ *   RETIRED — archive-only. The item is no longer in service; the row's
+ *             only useful operation is viewing history (bug #25).
+ *   STORED  — frozen for the round. Holder retains logical ownership but
+ *             the physical item is in storage. Only un-store may move it
+ *             back to AVAILABLE; everything else is blocked (bug #25).
+ */
+function isArchived(equipment: Equipment): boolean {
+  return equipment.status === EquipmentStatus.RETIRED;
+}
+
+function isFrozen(equipment: Equipment): boolean {
+  return equipment.status === EquipmentStatus.STORED;
+}
+
 // ---------- Report (possession check) ----------
 
 export function canReport(ctx: EquipmentActionContext): boolean {
+  if (isArchived(ctx.equipment) || isFrozen(ctx.equipment)) return false;
   const equipmentTeams = [ctx.equipment.holderTeamId, ctx.equipment.signerTeamId].filter(
     (t): t is string => !!t
   );
@@ -157,20 +176,24 @@ export function canReportWithoutPhoto(user: EnhancedAuthUser): boolean {
 // ---------- Retirement ----------
 
 export function canRetire(ctx: EquipmentActionContext): boolean {
+  if (isArchived(ctx.equipment) || isFrozen(ctx.equipment)) return false;
   return isSigner(ctx);
 }
 
 export function canRetireImmediately(ctx: EquipmentActionContext): boolean {
+  if (isArchived(ctx.equipment) || isFrozen(ctx.equipment)) return false;
   return isSigner(ctx) && isHolder(ctx);
 }
 
 // ---------- Transfer ----------
 
 export function canTransfer(ctx: EquipmentActionContext): boolean {
+  if (isArchived(ctx.equipment) || isFrozen(ctx.equipment)) return false;
   return isHolder(ctx);
 }
 
 export function canForceTransfer(ctx: EquipmentActionContext): boolean {
+  if (isArchived(ctx.equipment) || isFrozen(ctx.equipment)) return false;
   const equipmentTeams = [ctx.equipment.holderTeamId, ctx.equipment.signerTeamId].filter(
     (t): t is string => !!t
   );
