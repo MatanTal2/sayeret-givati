@@ -33,7 +33,13 @@ Each `UserWithRegistration` field uses `users` first, falling back to `authorize
 | `status` | `users.status` → `authorized_personnel.status` → `'active'` |
 | `registered` | `users` doc present AND `authorized_personnel.registered !== false` |
 
-`roleDisplay` and `team` are derived from `role` via the in-file lookup tables. The team mapping is a placeholder (matches the prior `useUsers` behavior) until team resolution is wired through `FirestoreUserProfile.teamId`.
+`roleDisplay` is derived from `role` via the `ROLE_DISPLAY` lookup table.
+
+`team` resolves through `resolveTeam(teamId, role)`:
+1. If the joined `users.teamId` is set and non-blank, that value is used verbatim (matches `systemConfig/main.teams`).
+2. Otherwise — including every unregistered personnel row, since `authorized_personnel` docs don't carry a team field today — falls back to a role-bucket via `TEAM_FROM_ROLE` (e.g. SOLDIER → `כללי`, TEAM_LEADER → `מפקדי צוות`).
+
+Regression coverage in `src/hooks/__tests__/useUsersAndPersonnel.test.tsx`. The bug fixed there: the original implementation called `teamFromRole(role)` unconditionally, so every soldier with a real `teamId` rendered as `כללי` in the management UsersTab.
 
 ## Sort
 
