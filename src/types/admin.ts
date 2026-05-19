@@ -92,7 +92,7 @@ export interface ValidationResult {
 }
 
 // Admin dashboard types
-export type AdminTabType = 'add-personnel' | 'bulk-upload' | 'view-personnel' | 'update-personnel' | 'system-stats' | 'system-config';
+export type AdminTabType = 'add-personnel' | 'bulk-upload' | 'personnel' | 'system-stats' | 'system-config';
 
 export interface SystemStats {
   authorizedPersonnelCount: number;

@@ -117,14 +117,9 @@ export const ADMIN_TABS = [
     description: 'העלה כוח אדם מורשה במרוכז באמצעות קובץ CSV.'
   },
   {
-    id: 'view-personnel' as const,
-    name: '📋 צפייה בכוח אדם',
-    description: 'צפייה וניהול רשימת הכוח אדם המורשה.'
-  },
-  {
-    id: 'update-personnel' as const,
-    name: '✏️ עדכון כוח אדם',
-    description: 'חיפוש ועדכון פרטי כוח אדם — שם, דרגה, טלפון וסוג משתמש.'
+    id: 'personnel' as const,
+    name: '👥 כוח אדם',
+    description: 'צפייה, עדכון ומחיקה של רשימת הכוח אדם המורשה — לחיצה על שורה פותחת עריכה במקום.'
   },
   {
     id: 'system-stats' as const,

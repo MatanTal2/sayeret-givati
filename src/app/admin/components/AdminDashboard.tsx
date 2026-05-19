@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { ADMIN_TABS } from '@/constants/admin';
 import { AdminTabType } from '@/types/admin';
@@ -8,8 +9,7 @@ import { CONFIRMATIONS, TEXT_CONSTANTS } from '@/constants/text';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import AddPersonnel from './AddPersonnel';
 import BulkUpload from './BulkUpload';
-import ViewPersonnel from './ViewPersonnel';
-import UpdatePersonnel from './UpdatePersonnel';
+import PersonnelTab from './PersonnelTab';
 import SystemStats from './SystemStats';
 import SystemConfigPanel from './SystemConfigPanel';
 import { cn } from '@/lib/cn';
@@ -18,9 +18,45 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
+const VALID_TAB_IDS = ADMIN_TABS.map((t) => t.id) as readonly AdminTabType[];
+const DEFAULT_TAB: AdminTabType = 'add-personnel';
+
+function isValidTab(id: string | null): id is AdminTabType {
+  return id !== null && (VALID_TAB_IDS as readonly string[]).includes(id);
+}
+
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<AdminTabType>('add-personnel');
+  return (
+    <Suspense fallback={<DashboardFallback />}>
+      <AdminDashboardInner onLogout={onLogout} />
+    </Suspense>
+  );
+}
+
+function DashboardFallback() {
+  return (
+    <div className="max-w-6xl mx-auto w-full">
+      <div className="bg-white rounded-lg shadow-lg p-8 text-center text-neutral-600">
+        {TEXT_CONSTANTS.ADMIN.LOADING_MESSAGE}
+      </div>
+    </div>
+  );
+}
+
+function AdminDashboardInner({ onLogout }: AdminDashboardProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const activeTab: AdminTabType = isValidTab(tabParam) ? tabParam : DEFAULT_TAB;
+
   const { showLogoutModal, confirmLogout, cancelLogout } = useAdminAuth();
+
+  const setActiveTab = useCallback(
+    (id: AdminTabType) => {
+      router.replace(`?tab=${id}`, { scroll: false });
+    },
+    [router],
+  );
 
   const handleLogoutConfirm = async () => {
     await confirmLogout();
@@ -69,8 +105,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
                 {tab.id === 'add-personnel' && <AddPersonnel />}
                 {tab.id === 'bulk-upload' && <BulkUpload />}
-                {tab.id === 'view-personnel' && <ViewPersonnel />}
-                {tab.id === 'update-personnel' && <UpdatePersonnel />}
+                {tab.id === 'personnel' && <PersonnelTab />}
                 {tab.id === 'system-stats' && <SystemStats />}
                 {tab.id === 'system-config' && <SystemConfigPanel />}
               </div>
