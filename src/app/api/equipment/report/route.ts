@@ -7,6 +7,9 @@ import {
 import { getActorOrError } from '@/lib/db/server/auth';
 import { withIdempotency } from '@/lib/db/server/idempotency';
 import { canReport, canReportWithoutPhoto } from '@/lib/equipmentPolicy';
+import { EquipmentCondition } from '@/types/equipment';
+
+const VALID_CONDITIONS = new Set<string>(Object.values(EquipmentCondition));
 
 export async function POST(request: Request) {
   const actorOrError = await getActorOrError(request);
@@ -20,6 +23,12 @@ export async function POST(request: Request) {
 
       if (!input.equipmentId) {
         return NextResponse.json({ success: false, error: 'equipmentId is required' }, { status: 400 });
+      }
+      if (!input.condition || typeof input.condition !== 'string' || !VALID_CONDITIONS.has(input.condition)) {
+        return NextResponse.json(
+          { success: false, error: 'condition is required and must be a valid EquipmentCondition' },
+          { status: 400 }
+        );
       }
 
       const equipment = await fetchEquipmentForPolicy(input.equipmentId);
@@ -41,6 +50,7 @@ export async function POST(request: Request) {
         actorId: actor.uid,
         actorName: input.actorName || actor.displayName || actor.uid,
         photoUrl: input.photoUrl ?? null,
+        condition: input.condition as EquipmentCondition,
         ...(input.note ? { note: input.note } : {}),
       });
       return NextResponse.json({ success: true });

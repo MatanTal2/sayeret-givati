@@ -47,7 +47,8 @@ export function createEquipmentCreatedEntry(
     holder: holderName,
     location: location,
     notes: notes || 'Equipment created in system',
-    updatedBy: creatorUserId
+    updatedBy: creatorUserId,
+    actor: holderName,
   };
 }
 

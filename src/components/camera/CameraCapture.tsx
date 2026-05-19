@@ -125,7 +125,7 @@ export default function CameraCapture({
         <>
           <video
             ref={camera.videoRef}
-            className="w-full aspect-[3/4] bg-neutral-900 rounded-lg object-cover"
+            className="w-full aspect-square bg-neutral-900 rounded-lg object-cover"
             playsInline
             muted
           />
@@ -175,7 +175,7 @@ function PreviewBox({
     <div>
       {/* Preview uses plain <img> because the Blob URL is ephemeral and next/image refuses non-configured hosts */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="preview" className="w-full aspect-[3/4] rounded-lg object-cover bg-neutral-100" />
+      <img src={src} alt="preview" className="w-full aspect-square rounded-lg object-cover bg-neutral-100" />
       <div className="flex items-center justify-center gap-3 mt-3">
         <button type="button" className="btn-secondary" onClick={onRetake}>
           {TEXT_CONSTANTS.CAMERA.RETAKE}

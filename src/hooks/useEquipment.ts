@@ -49,7 +49,7 @@ interface UseEquipmentReturn {
   performDailyCheck: (equipmentId: string, checkedBy: string, checkedByName: string, notes?: string) => Promise<boolean>;
 
   // Phase 6 lifecycle methods
-  reportEquipment: (equipmentId: string, photoUrl: string | null, note?: string) => Promise<boolean>;
+  reportEquipment: (equipmentId: string, photoUrl: string | null, condition: EquipmentCondition, note?: string) => Promise<boolean>;
   retireEquipment: (equipmentId: string, reason: string) => Promise<{ success: boolean; kind?: 'immediate' | 'request'; error?: string }>;
   createEquipmentBatch: (
     items: Array<Omit<Equipment, 'createdAt' | 'updatedAt' | 'trackingHistory'>>,
@@ -265,13 +265,13 @@ export function useEquipment(options: UseEquipmentOptions = {}): UseEquipmentRet
   }, []);
 
   const reportEquipment = useCallback(async (
-    equipmentId: string, photoUrl: string | null, note?: string
+    equipmentId: string, photoUrl: string | null, condition: EquipmentCondition, note?: string
   ): Promise<boolean> => {
     const identity = buildActorIdentity();
     if (!identity) { setError(TEXT_CONSTANTS.ERRORS.CONNECTION_ERROR); return false; }
     try {
       const result = await EquipmentService.Items.reportEquipment(
-        equipmentId, photoUrl, identity.displayName, note
+        equipmentId, photoUrl, identity.displayName, condition, note
       );
       if (result.success) return true;
       setError(result.message);

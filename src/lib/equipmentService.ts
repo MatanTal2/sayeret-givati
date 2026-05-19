@@ -27,6 +27,7 @@ import {
   Equipment,
   EquipmentStatus,
   EquipmentAction,
+  EquipmentCondition,
   EquipmentHistoryEntry,
   ApprovalDetails,
   TemplateStatus,
@@ -691,6 +692,7 @@ export class EquipmentItemsService {
     equipmentId: string,
     photoUrl: string | null,
     actorName: string,
+    condition: EquipmentCondition,
     note?: string
   ): Promise<EquipmentServiceResult> {
     try {
@@ -700,6 +702,7 @@ export class EquipmentItemsService {
           equipmentId,
           photoUrl,
           actorName,
+          condition,
           ...(note ? { note } : {}),
         }),
       });
