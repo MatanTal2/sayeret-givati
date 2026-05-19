@@ -178,6 +178,8 @@ export const TEXT_EN = {
       PULL_SUBMIT: 'Pull from storage',
       PULL_SUCCESS: 'Item pulled from storage',
       ROUND_CLOSED_TOOLTIP: 'Round is closed — items cannot be pulled from storage right now',
+      TRANSFER_BLOCKED_STORED_TOOLTIP: 'Item is in storage — pull from storage before transferring',
+      INFO_BUBBLE_LABEL: 'Info',
     },
 
     SYSTEM_CONFIG: {

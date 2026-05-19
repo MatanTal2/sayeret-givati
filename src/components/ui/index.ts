@@ -16,3 +16,6 @@ export type { FormFieldProps } from './FormField';
 
 export { default as Select } from './Select';
 export type { SelectProps, SelectOption } from './Select';
+
+export { default as InfoPopover } from './InfoPopover';
+export type { InfoPopoverProps } from './InfoPopover';
