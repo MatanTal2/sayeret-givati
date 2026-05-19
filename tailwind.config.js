@@ -125,6 +125,11 @@ module.exports = {
         '88': '22rem',    // 352px
         '128': '32rem',   // 512px
       },
+      // Z-index stack (extends Tailwind's 0/10/20/30/40/50/auto defaults).
+      // 60 = floats over `Menu`/`Listbox` panels which sit at z-50.
+      zIndex: {
+        '60': '60',
+      },
       // Box shadows
       boxShadow: {
         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',

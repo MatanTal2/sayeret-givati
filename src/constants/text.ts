@@ -602,6 +602,8 @@ export const TEXT_CONSTANTS = {
         PULL_SUBMIT: 'הוצא מאחסון',
         PULL_SUCCESS: 'הפריט הוצא מהאחסון',
         ROUND_CLOSED_TOOLTIP: 'הסבב סגור — לא ניתן להוציא פריטים מהאחסון כעת',
+        TRANSFER_BLOCKED_STORED_TOOLTIP: 'פריט באחסון — יש להוציאו מהאחסון לפני העברה',
+        INFO_BUBBLE_LABEL: 'מידע',
       },
       SYSTEM_CONFIG: {
         ROUND_OPEN_LABEL: 'סבב פעיל',
