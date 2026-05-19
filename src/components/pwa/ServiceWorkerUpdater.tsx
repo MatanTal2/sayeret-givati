@@ -62,13 +62,35 @@ export default function ServiceWorkerUpdater() {
   const onUpdateNow = () => {
     if (!waitingWorker) return;
     const worker = waitingWorker;
+
+    // Already-activated short-circuit. If the user has been sitting on the
+    // toast long enough that the SW transitioned without us, reload now.
+    if (worker.state === 'activated') {
+      window.location.reload();
+      return;
+    }
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      worker.removeEventListener('statechange', onState);
+      clearTimeout(timeoutId);
+      window.location.reload();
+    };
+
     const onState = () => {
-      if (worker.state === 'activated') {
-        worker.removeEventListener('statechange', onState);
-        window.location.reload();
-      }
+      if (worker.state === 'activated') finish();
     };
     worker.addEventListener('statechange', onState);
+
+    // Mobile fallback. iOS Safari (and some Chromium-on-iOS WebKit shells)
+    // do not reliably fire `statechange` on a worker whose controller is not
+    // adopted by the current document (clientsClaim: false). After we ask the
+    // worker to activate, reload regardless after a short delay — the new SW
+    // is picked up on the next navigation even if it never reaches us.
+    const timeoutId = setTimeout(finish, 3000);
+
     worker.postMessage({ type: 'SKIP_WAITING' });
   };
 

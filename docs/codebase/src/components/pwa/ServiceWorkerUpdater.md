@@ -14,9 +14,15 @@ installed and waiting. User-driven activation only — audit note M5.
 1. Mounts → `navigator.serviceWorker.register('/sw.js')`.
 2. Reads existing `reg.waiting`; subscribes to `updatefound` for future installs.
 3. When a waiting worker is present, renders an action banner.
-4. "Update now" → attaches a `statechange` listener to the waiting worker, then posts `{ type: 'SKIP_WAITING' }`.
-5. The listener fires when the worker reaches `'activated'` → page reloads.
+4. "Update now":
+   - If the worker is already `'activated'` (rare but possible if the user sat on the toast through an activation), reload immediately.
+   - Otherwise attach a `statechange` listener to the waiting worker, post `{ type: 'SKIP_WAITING' }`, and arm a 3-second fallback timer.
+5. Reload triggers from whichever fires first: the `'activated'` state transition, or the 3-second fallback (mobile browsers, esp. iOS Safari, do not always fire `statechange` on a worker that never claims the current document).
 6. "Later" hides the banner locally; next page load picks up the waiting worker again.
+
+### Mobile fallback timer
+
+`statechange → 'activated'` is the canonical signal, but iOS Safari and some Chromium-on-iOS WebKit shells do not reliably dispatch it for a worker that activates without adopting the current document (which is exactly our case under `clientsClaim: false`). Symptom on those devices: tap "Update Now" → SW activates in the background → page never reloads → toast stays up. The 3-second `setTimeout` reload fallback handles this — by the time it fires, the new SW is either already activated (so the reload picks it up immediately) or activating (so the next navigation picks it up). Both timers race; whichever wins clears the other.
 
 ### Why `statechange` and not `controllerchange`
 
