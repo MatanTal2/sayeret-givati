@@ -20,6 +20,12 @@ Computed client-side from `lastReportUpdate` against a 7-day threshold. Phase 1 
 
 `Equipment.category` and `Equipment.subcategory` are stored as Firestore doc IDs (mirrors `EquipmentType`). The expanded row resolves them to Hebrew names via `useCategoryLookup` and renders `cat / sub`. Unresolved IDs fall back to the raw ID with `text-warning-700` (same pattern as `TemplatesTab`), so orphan refs surface visibly instead of silently. See `docs/bugs.md` #16.
 
+## Expand behaviour
+
+Single-open expansion — clicking another row collapses the previous one. Each row keeps a `useRef<HTMLLIElement>` and runs a `useEffect` keyed on `expanded`: when the row becomes expanded, it schedules `scrollIntoView({ block: 'nearest', behavior: 'smooth' })` inside a `requestAnimationFrame` so the expanded panel is already in the DOM before the browser measures.
+
+`block: 'nearest'` is a no-op when the row is already in view, so already-visible rows don't jump. The expanded row gets a stronger focus ring (`ring-2 ring-primary-400 shadow-md`) and a smooth `transition-shadow transition-colors duration-200` transition.
+
 ## What this component does NOT do
 
 - Filtering / search — that is the page's job; the table receives the already-filtered list.

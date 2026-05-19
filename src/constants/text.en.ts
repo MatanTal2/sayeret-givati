@@ -126,6 +126,12 @@ export const TEXT_EN = {
     STATUS_STORED: 'Stored',
     STATUS_RETIRED: 'Returned to army',
 
+    ARCHIVE: {
+      SHOW_ACTIVE: 'Active equipment',
+      SHOW_ARCHIVE: 'Archive',
+      TOGGLE_ARIA: 'Toggle between active and archive views',
+    },
+
     ROW_ACTIONS: {
       REPORT: 'Report',
       TRANSFER: 'Transfer',
