@@ -136,7 +136,13 @@ export interface AmmunitionReportRequest {
 
 export interface SystemConfig {
   id: string;
-  ammoNotificationRecipientUserId?: string;
+  /**
+   * Array of user UIDs flagged as "ammunition managers" — receive every
+   * ammo-report notification (in addition to the reporter's team leader) and
+   * count as ammo-responsible for training-plan approvals + central-stock
+   * mutations. Bounded at 10 entries. Empty/absent = no extra recipients.
+   */
+  ammoNotificationRecipientUserIds?: string[];
   teams?: string[];
   /**
    * Gates pull-from-storage on equipment items in EquipmentStatus.STORED.

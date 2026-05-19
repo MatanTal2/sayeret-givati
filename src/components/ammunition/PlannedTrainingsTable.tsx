@@ -76,13 +76,13 @@ export default function PlannedTrainingsTable({
 }: PlannedTrainingsTableProps) {
   const { enhancedUser } = useAuth();
   const { config: systemConfig } = useSystemConfig();
-  const ammoResponsibleUid = systemConfig?.ammoNotificationRecipientUserId ?? null;
+  const ammoResponsibleUids = systemConfig?.ammoNotificationRecipientUserIds ?? [];
 
   const isAdminOrSysMgr =
     enhancedUser?.userType === UserType.ADMIN ||
     enhancedUser?.userType === UserType.SYSTEM_MANAGER;
   const isAmmoResponsible =
-    !!ammoResponsibleUid && enhancedUser?.uid === ammoResponsibleUid;
+    !!enhancedUser?.uid && ammoResponsibleUids.includes(enhancedUser.uid);
   const canApproveOrReject = isAdminOrSysMgr || isAmmoResponsible;
 
   const { active, archived } = useMemo(() => {

@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { Bell, ShieldAlert, Save, Package } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ShieldAlert, Save, Package } from 'lucide-react';
 import { Switch } from '@headlessui/react';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserType } from '@/types/user';
-import UserSearchInput from '@/components/users/UserSearchInput';
-import type { UserSearchResult } from '@/lib/userService';
-import { getUserProfile } from '@/lib/userService';
+import AmmoRecipientsSection from '@/components/management/tabs/system-config/AmmoRecipientsSection';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { cn } from '@/lib/cn';
 
@@ -21,70 +19,39 @@ export default function SystemConfigTab() {
     enhancedUser?.userType === UserType.SYSTEM_MANAGER ||
     enhancedUser?.userType === UserType.MANAGER;
 
-  const [recipient, setRecipient] = useState<UserSearchResult | null>(null);
-  const [hydratedFor, setHydratedFor] = useState<string | null>(null);
   const [roundOpen, setRoundOpen] = useState<boolean>(false);
-  const [saving, setSaving] = useState(false);
+  const [savingRound, setSavingRound] = useState(false);
   const [toast, setToast] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
 
-  const persistedRecipientId = config?.ammoNotificationRecipientUserId || '';
   const persistedRoundOpen = !!config?.roundOpen;
+  const recipientIds = config?.ammoNotificationRecipientUserIds ?? [];
 
   useEffect(() => {
     if (!config) return;
-    if (hydratedFor === persistedRecipientId) return;
     setRoundOpen(persistedRoundOpen);
-    if (!persistedRecipientId) {
-      setRecipient(null);
-      setHydratedFor('');
-      return;
-    }
-    let alive = true;
-    (async () => {
-      const profile = await getUserProfile(persistedRecipientId);
-      if (!alive) return;
-      if (profile) {
-        setRecipient({
-          uid: profile.uid,
-          displayName: `${profile.firstName || ''} ${profile.lastName || ''}`.trim(),
-          email: profile.email || '',
-          firstName: profile.firstName,
-          lastName: profile.lastName,
-          rank: profile.rank,
-          status: profile.status,
-        });
-      } else {
-        setRecipient(null);
-      }
-      setHydratedFor(persistedRecipientId);
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [config, persistedRecipientId, persistedRoundOpen, hydratedFor]);
+  }, [config, persistedRoundOpen]);
 
-  const dirty = useMemo(() => {
-    return (
-      (recipient?.uid || '') !== persistedRecipientId ||
-      roundOpen !== persistedRoundOpen
-    );
-  }, [recipient, persistedRecipientId, roundOpen, persistedRoundOpen]);
+  const roundDirty = roundOpen !== persistedRoundOpen;
 
-  const handleSave = async () => {
+  const handleSaveRound = async () => {
     if (!canEdit) return;
-    setSaving(true);
+    setSavingRound(true);
     setToast(null);
-    const ok = await save({
-      ammoNotificationRecipientUserId: recipient?.uid || '',
-      roundOpen,
-    });
-    setSaving(false);
+    const ok = await save({ roundOpen });
+    setSavingRound(false);
     setToast(
       ok
         ? { kind: 'success', message: 'הגדרות נשמרו' }
         : { kind: 'error', message: 'שמירת ההגדרות נכשלה' }
     );
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleSaveRecipients = async (next: string[]) => {
+    const ok = await save({ ammoNotificationRecipientUserIds: next });
+    if (!ok) {
+      throw new Error('save_failed');
+    }
   };
 
   return (
@@ -102,30 +69,15 @@ export default function SystemConfigTab() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg border border-neutral-200 p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Bell className="w-5 h-5 text-primary-600" />
-          <h4 className="text-lg font-medium text-neutral-900">התראות תחמושת</h4>
-        </div>
-        <p className="text-sm text-neutral-600 mb-4">
-          המנהל האחראי לתחמושת יקבל התראה על כל דיווח חדש בנוסף למפקד הצוות של המדווח.
-        </p>
-
-        <label className="block text-sm font-medium text-neutral-700 mb-2">
-          המנהל האחראי
-        </label>
-        {isLoading ? (
-          <div className="h-10 rounded-lg bg-neutral-100 animate-pulse" />
-        ) : (
-          <div className={canEdit ? '' : 'pointer-events-none opacity-60'}>
-            <UserSearchInput
-              value={recipient}
-              onChange={setRecipient}
-              placeholder="חפש משתמש לפי שם או אימייל"
-            />
-          </div>
-        )}
-      </div>
+      {isLoading ? (
+        <div className="h-32 rounded-lg bg-neutral-100 animate-pulse" />
+      ) : (
+        <AmmoRecipientsSection
+          value={recipientIds}
+          onSave={handleSaveRecipients}
+          disabled={!canEdit}
+        />
+      )}
 
       <div className="bg-white rounded-lg border border-neutral-200 p-6">
         <div className="flex items-center gap-2 mb-4">
@@ -162,12 +114,12 @@ export default function SystemConfigTab() {
       <div className="flex items-center gap-3">
         <button
           type="button"
-          disabled={!canEdit || !dirty || saving}
-          onClick={handleSave}
+          disabled={!canEdit || !roundDirty || savingRound}
+          onClick={handleSaveRound}
           className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
         >
           <Save className="w-4 h-4" />
-          {saving ? 'שומר...' : 'שמור הגדרות'}
+          {savingRound ? 'שומר...' : 'שמור הגדרות'}
         </button>
         {toast && (
           <span

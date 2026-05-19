@@ -37,6 +37,7 @@ You can also export these directly in your shell — `.env.local` never clobbers
 | `reconcile-phone.js` | Detect / fix drift between Firebase Auth and Firestore `users.phoneNumber`. Report-only without `--fix`. | yes | no |
 | `sweep-account-deletions.js` | Hard-delete soft-deleted users past the 30-day retention window. Mirror of the daily cron. | yes (resumable via `users.deletionStartedAt`) | **yes** |
 | `check-bundle-size.js` | Run after `next build`. Prints gzipped first-load JS of the largest entrypoint. Fails when over `bundle-budget.json.maxFirstLoadKB`. Wired via `npm run bundle-budget`. CI hookup lands with the Serwist SW PR (Phase 3 of `docs/spec/offline-first.md`). | yes | no |
+| `migrate-ammo-recipient-to-array.mjs` | One-shot: rename `systemConfig/main.ammoNotificationRecipientUserId` (string) → `ammoNotificationRecipientUserIds` (string[]). Ships with the multi-recipient PR. Run once post-merge against prod; idempotent so a second invocation is a no-op. | yes | no |
 
 ## Common flags
 

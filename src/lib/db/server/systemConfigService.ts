@@ -1,8 +1,9 @@
 /**
  * Server-side System Config Service (firebase-admin).
  * Backs the single doc `systemConfig/main` — system-wide settings.
- * Currently used for `ammoNotificationRecipientUserId`; will accumulate
- * additional system-wide flags as features land.
+ * Currently used for `ammoNotificationRecipientUserIds` (array of ammo
+ * managers), `teams`, and `roundOpen`; will accumulate additional system-wide
+ * flags as features land.
  */
 import { getAdminDb } from '../admin';
 import { COLLECTIONS } from '../collections';
@@ -11,13 +12,19 @@ import type { SystemConfig } from '@/types/ammunition';
 
 const MAIN_DOC_ID = 'main';
 
+/**
+ * Maximum number of ammo notification recipients we allow callers to store.
+ * Keep in sync with `AmmoRecipientsSection` UI cap.
+ */
+export const AMMO_RECIPIENTS_MAX = 10;
+
 export type SystemConfigUpdatableFields = Pick<
   SystemConfig,
-  'ammoNotificationRecipientUserId' | 'teams' | 'roundOpen'
+  'ammoNotificationRecipientUserIds' | 'teams' | 'roundOpen'
 >;
 
 export interface SystemConfigPayload {
-  ammoNotificationRecipientUserId?: string;
+  ammoNotificationRecipientUserIds?: string[];
   teams?: string[];
   roundOpen?: boolean;
 }
@@ -41,14 +48,35 @@ export function validateSystemConfigPayload(payload: unknown): SystemConfigPaylo
   const p = payload as Record<string, unknown>;
   const out: SystemConfigPayload = {};
 
-  if ('ammoNotificationRecipientUserId' in p) {
-    const v = p.ammoNotificationRecipientUserId;
-    if (v === null || v === '' || v === undefined) {
-      out.ammoNotificationRecipientUserId = '';
-    } else if (typeof v === 'string') {
-      out.ammoNotificationRecipientUserId = v;
+  if ('ammoNotificationRecipientUserIds' in p) {
+    const v = p.ammoNotificationRecipientUserIds;
+    if (v === undefined || v === null) {
+      out.ammoNotificationRecipientUserIds = [];
+    } else if (!Array.isArray(v)) {
+      throw new Error('ammoNotificationRecipientUserIds must be an array of strings');
     } else {
-      throw new Error('ammoNotificationRecipientUserId must be a string');
+      const seen = new Set<string>();
+      const normalized: string[] = [];
+      for (const item of v) {
+        if (typeof item !== 'string') {
+          throw new Error('ammoNotificationRecipientUserIds entries must be strings');
+        }
+        const trimmed = item.trim();
+        if (!trimmed) {
+          throw new Error('ammoNotificationRecipientUserIds entries must be non-empty');
+        }
+        if (seen.has(trimmed)) {
+          throw new Error('ammoNotificationRecipientUserIds contains duplicate uids');
+        }
+        seen.add(trimmed);
+        normalized.push(trimmed);
+      }
+      if (normalized.length > AMMO_RECIPIENTS_MAX) {
+        throw new Error(
+          `ammoNotificationRecipientUserIds exceeds the maximum of ${AMMO_RECIPIENTS_MAX}`
+        );
+      }
+      out.ammoNotificationRecipientUserIds = normalized;
     }
   }
 

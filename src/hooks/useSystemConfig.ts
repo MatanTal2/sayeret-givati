@@ -5,7 +5,7 @@ import { apiFetch } from '@/lib/apiFetch';
 import type { SystemConfig } from '@/types/ammunition';
 
 export interface SystemConfigSavePayload {
-  ammoNotificationRecipientUserId?: string;
+  ammoNotificationRecipientUserIds?: string[];
   teams?: string[];
   roundOpen?: boolean;
 }

@@ -39,24 +39,6 @@ describe('systemConfigService.validateSystemConfigPayload', () => {
     expect(validateSystemConfigPayload({})).toEqual({});
   });
 
-  it('passes through a string recipient id', () => {
-    const out = validateSystemConfigPayload({ ammoNotificationRecipientUserId: 'uid-1' });
-    expect(out.ammoNotificationRecipientUserId).toBe('uid-1');
-  });
-
-  it('coerces null/empty/undefined recipient to empty string for clearing', () => {
-    expect(validateSystemConfigPayload({ ammoNotificationRecipientUserId: null }))
-      .toEqual({ ammoNotificationRecipientUserId: '' });
-    expect(validateSystemConfigPayload({ ammoNotificationRecipientUserId: '' }))
-      .toEqual({ ammoNotificationRecipientUserId: '' });
-  });
-
-  it('throws when recipient id is not a string', () => {
-    expect(() =>
-      validateSystemConfigPayload({ ammoNotificationRecipientUserId: 42 })
-    ).toThrow(/must be a string/);
-  });
-
   it('throws when payload is not an object', () => {
     expect(() => validateSystemConfigPayload(undefined)).toThrow(/payload is required/);
     expect(() => validateSystemConfigPayload(null)).toThrow(/payload is required/);
@@ -82,7 +64,7 @@ describe('systemConfigService — admin DB reach (proves validation passed)', ()
   it('serverUpdateSystemConfig touches the admin DB after validation', async () => {
     await expect(
       serverUpdateSystemConfig({
-        payload: { ammoNotificationRecipientUserId: 'uid-1' },
+        payload: { roundOpen: true },
         actorUserId: 'admin-uid',
       })
     ).rejects.toThrow(/Test reached admin DB/);
