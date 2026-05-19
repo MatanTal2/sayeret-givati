@@ -23,7 +23,7 @@ import ApproveExchangeModal from '@/components/equipment/ApproveExchangeModal';
 import RejectExchangeModal from '@/components/equipment/RejectExchangeModal';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import ActionHistoryPanel from '@/components/equipment/ActionHistoryPanel';
-import { type Equipment, EquipmentStatus } from '@/types/equipment';
+import { type Equipment, EquipmentStatus, EquipmentCondition } from '@/types/equipment';
 import PersonalAmmunitionSection from '@/components/equipment/PersonalAmmunitionSection';
 import TeamAmmunitionSection from '@/components/equipment/TeamAmmunitionSection';
 import { Select } from '@/components/ui';
@@ -186,7 +186,7 @@ function EquipmentPageContent() {
       // Only an aggregate "report now" pass without photos — privileged users only.
       // For non-privileged we'd need to walk each item with a camera; that's a future enhancement.
       for (const id of selectedIds) {
-        await reportEquipment(id, null, 'Bulk report');
+        await reportEquipment(id, null, EquipmentCondition.GOOD, 'Bulk report');
       }
       setSelectedIds(new Set());
     } else if (action === 'transfer') {
@@ -292,8 +292,8 @@ function EquipmentPageContent() {
           equipment={activeModal.equipment}
           user={enhancedUser}
           onClose={closeModal}
-          onSubmit={async (photoUrl, note) => {
-            const ok = await reportEquipment(activeModal.equipment.id, photoUrl, note);
+          onSubmit={async (photoUrl, note, condition) => {
+            const ok = await reportEquipment(activeModal.equipment.id, photoUrl, condition, note);
             return { success: ok, error: ok ? undefined : TEXT_CONSTANTS.FEATURES.EQUIPMENT.REPORT_MODAL.ERROR };
           }}
         />

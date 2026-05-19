@@ -72,7 +72,8 @@ export interface Equipment {
   signerTeamId?: string; // Denormalized from signer user profile. Updated on signer change.
   status: EquipmentStatus; // Current status
   location: string; // Physical location
-  condition: EquipmentCondition; // Current condition
+  condition: EquipmentCondition; // Current condition (sign-up condition)
+  currentCondition?: EquipmentCondition; // Most recently reported condition (updated by ReportModal). Falls back to `condition` when missing.
 
   // Additional Info
   catalogNumber?: string; // Army catalog number (מקט). Optional — not always known at sign-up.
@@ -107,6 +108,8 @@ export interface EquipmentHistoryEntry {
   photoUrl?: string; // Photo captured at this action (report / sign-up). Optional because not all actions carry photos.
   timestamp: Timestamp; // When this action occurred
   updatedBy: string; // UID of user who performed this action
+  actor?: string; // Display name of the actor (denormalized for read-side rendering)
+  condition?: EquipmentCondition; // Condition reported at this action (for report/storage actions)
 }
 
 export interface ApprovalDetails {
@@ -397,6 +400,11 @@ export interface ActionsLog {
   targetName?: string; // Display name of target user
   note?: string; // Optional note/reason
   timestamp: Timestamp; // When the action occurred
+  details?: ActionsLogDetails; // Structured payload for action-specific data (e.g. condition)
+}
+
+export interface ActionsLogDetails {
+  condition?: EquipmentCondition; // Recorded equipment condition (REPORT_SUBMITTED, etc.)
 }
 
 export enum ActionType {

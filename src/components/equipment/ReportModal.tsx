@@ -3,18 +3,24 @@
 import React, { useState } from 'react';
 import { X, AlertCircle } from 'lucide-react';
 import type { Equipment } from '@/types/equipment';
+import { EquipmentCondition } from '@/types/equipment';
 import type { EnhancedAuthUser } from '@/types/user';
 import { TEXT_CONSTANTS } from '@/constants/text';
 import { canReportWithoutPhoto } from '@/lib/equipmentPolicy';
 import { uploadEquipmentPhoto } from '@/lib/storageService';
 import CameraCapture from '@/components/camera/CameraCapture';
+import Select, { type SelectOption } from '@/components/ui/Select';
 import { equipmentSerialDisplay } from '@/utils/equipmentDisplay';
 
 interface ReportModalProps {
   equipment: Equipment;
   user: EnhancedAuthUser;
   onClose: () => void;
-  onSubmit: (photoUrl: string | null, note: string) => Promise<{ success: boolean; error?: string }>;
+  onSubmit: (
+    photoUrl: string | null,
+    note: string,
+    condition: EquipmentCondition
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 export default function ReportModal({ equipment, user, onClose, onSubmit }: ReportModalProps) {
@@ -24,8 +30,15 @@ export default function ReportModal({ equipment, user, onClose, onSubmit }: Repo
   const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [note, setNote] = useState('');
+  const [condition, setCondition] = useState<EquipmentCondition>(EquipmentCondition.GOOD);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const conditionOptions: SelectOption<EquipmentCondition>[] = [
+    { value: EquipmentCondition.GOOD, label: labels.CONDITION_OPTIONS.GOOD },
+    { value: EquipmentCondition.NEEDS_REPAIR, label: labels.CONDITION_OPTIONS.NEEDS_REPAIR },
+    { value: EquipmentCondition.WORN, label: labels.CONDITION_OPTIONS.WORN },
+  ];
 
   const handleCapture = (blob: Blob) => {
     setPhotoBlob(blob);
@@ -46,7 +59,7 @@ export default function ReportModal({ equipment, user, onClose, onSubmit }: Repo
         const upload = await uploadEquipmentPhoto(photoBlob, equipment.id, 'report');
         photoUrl = upload.url;
       }
-      const result = await onSubmit(photoUrl, note);
+      const result = await onSubmit(photoUrl, note, condition);
       if (!result.success) {
         setError(result.error || labels.ERROR);
         return;
@@ -118,8 +131,22 @@ export default function ReportModal({ equipment, user, onClose, onSubmit }: Repo
           )}
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">{labels.NOTE_LABEL}</label>
+            <label htmlFor="report-condition" className="block text-sm font-medium text-neutral-700 mb-1">
+              {labels.CONDITION_LABEL}
+            </label>
+            <Select<EquipmentCondition>
+              id="report-condition"
+              value={condition}
+              onChange={(next) => setCondition(next ?? EquipmentCondition.GOOD)}
+              options={conditionOptions}
+              ariaLabel={labels.CONDITION_LABEL}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="report-note" className="block text-sm font-medium text-neutral-700 mb-1">{labels.NOTE_LABEL}</label>
             <textarea
+              id="report-note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder={labels.NOTE_PLACEHOLDER}

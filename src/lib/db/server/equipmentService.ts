@@ -12,6 +12,7 @@ import {
   EquipmentStatus,
   ActionType,
   RetirementRequestStatus,
+  type EquipmentCondition,
 } from '@/types/equipment';
 
 interface CreateEquipmentInput {
@@ -195,6 +196,7 @@ interface ReportEquipmentInput {
   actorId: string;
   actorName: string;
   photoUrl: string | null; // null only when actor is privileged and chose to skip
+  condition: EquipmentCondition;
   note?: string;
 }
 
@@ -215,11 +217,14 @@ export async function serverReportEquipment(input: ReportEquipmentInput): Promis
       notes: input.note || 'Report submitted',
       timestamp: now,
       updatedBy: input.actorId,
+      actor: input.actorName,
+      condition: input.condition,
     };
     if (input.photoUrl) historyEntry.photoUrl = input.photoUrl;
 
     const updates: Record<string, unknown> = {
       lastReportUpdate: FieldValue.serverTimestamp(),
+      currentCondition: input.condition,
       trackingHistory: [...(equipment.trackingHistory || []), historyEntry],
       updatedAt: FieldValue.serverTimestamp(),
     };
@@ -238,6 +243,7 @@ export async function serverReportEquipment(input: ReportEquipmentInput): Promis
       equipmentName: eq.productName,
       actorId: input.actorId,
       actorName: input.actorName,
+      details: { condition: input.condition },
       ...(input.note ? { note: input.note } : {}),
     });
   } catch (e) {
@@ -417,6 +423,7 @@ export async function serverSendToStorage(input: StorageInput): Promise<void> {
       notes: `Sent to storage by ${input.actorName}`,
       timestamp: now,
       updatedBy: input.actorId,
+      actor: input.actorName,
     };
     transaction.update(equipmentRef, {
       status: EquipmentStatus.STORED,
@@ -470,6 +477,7 @@ export async function serverPullFromStorage(input: StorageInput): Promise<void> 
       notes: `Pulled from storage by ${input.actorName}`,
       timestamp: now,
       updatedBy: input.actorId,
+      actor: input.actorName,
     };
     transaction.update(equipmentRef, {
       status: EquipmentStatus.AVAILABLE,

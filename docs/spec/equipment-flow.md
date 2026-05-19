@@ -49,7 +49,8 @@ Populated by `WelcomeModal` on first login when missing; editable in `/profile`.
 | `currentHolder` / `currentHolderId` | display name + UID of the physical holder |
 | `holderTeamId`, `holderUnitId`, `signerTeamId`, `signerUnitId` | denormalized from user profiles; **server txn must update both pairs whenever holder/signer changes** |
 | `status` | `available` / `security` / `repair` / `lost` / `pending_transfer` / `retired` |
-| `condition` | `good` / `needs_repair` / `worn` |
+| `condition` | sign-up condition: `good` / `needs_repair` / `worn` |
+| `currentCondition` | latest reported condition (updated by Report flow); falls back to `condition` when unset |
 | `photoUrl` | sign-up photo (required at creation) |
 | `lastReportPhotoUrl` | most recent report photo |
 | `lastReportUpdate` | for staleness badge |
@@ -106,8 +107,9 @@ Regular users can only pick `status='canonical'` templates.
 ### 4.3 Report
 
 1. User opens an item → row action "Report" → `ReportModal`.
-2. Camera capture (mandatory). TL+ may toggle "bypass photo" (gated by `canReportWithoutPhoto`).
-3. Submit uploads via `uploadEquipmentPhoto(blob, equipmentId, 'report')` then calls `EquipmentService.Items.reportEquipment` → `POST /api/equipment/report` → `serverReportEquipment`. Updates `lastReportUpdate`, `lastReportPhotoUrl`, appends tracking entry, writes `DAILY_CHECK_IN` action log.
+2. Camera capture (mandatory, square viewfinder). TL+ may toggle "bypass photo" (gated by `canReportWithoutPhoto`).
+3. User picks an `EquipmentCondition` (GOOD / NEEDS_REPAIR / WORN) — required field, defaults to GOOD.
+4. Submit uploads via `uploadEquipmentPhoto(blob, equipmentId, 'report')` then calls `EquipmentService.Items.reportEquipment(equipmentId, photoUrl, actorName, condition, note?)` → `POST /api/equipment/report` (`condition` validated against the enum) → `serverReportEquipment`. The transaction updates `lastReportUpdate`, `lastReportPhotoUrl`, `currentCondition`, appends a tracking entry (`action: 'report_submitted'`, with `actor`, `condition`, `photoUrl?`), and writes a `REPORT_SUBMITTED` action log with `details.condition`.
 
 ### 4.4 Transfer
 
@@ -149,7 +151,7 @@ Audit panel in `RetirementApprovalTab` (manager+) shows pending requests via `ge
 | Method | Route | Purpose | Body |
 |--------|-------|---------|------|
 | POST | `/api/equipment/batch` | Bulk create | `{ items, signedBy, signedById, actor, notes? }` |
-| POST | `/api/equipment/report` | Record report | `{ equipmentId, photoUrl, actor, actorName, note? }` |
+| POST | `/api/equipment/report` | Record report | `{ equipmentId, photoUrl, actor, actorName, condition, note? }` |
 | POST | `/api/equipment/retire` | Retire (immediate or request) | `{ equipmentId, actor, actorName, reason }` |
 | POST | `/api/equipment/transfer` | Approved transfer write | as `transferRequestService` payload |
 | POST | `/api/transfer-requests/approve`, `/reject` | Transfer request workflow | `{ transferRequestId, ... }` |
