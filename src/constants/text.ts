@@ -618,6 +618,7 @@ export const TEXT_CONSTANTS = {
       ARCHIVE: {
         SHOW_ACTIVE: 'ציוד פעיל',
         SHOW_ARCHIVE: 'ארכיון',
+        TOGGLE_ARIA: 'החלף תצוגה בין ציוד פעיל לארכיון',
         EMPTY_SELF: 'אין פריטים בארכיון.',
         EMPTY_TEAM: 'אין פריטים בארכיון של הצוות.',
         EMPTY_ALL: 'אין פריטים בארכיון.',

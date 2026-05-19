@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import type { Equipment } from '@/types/equipment';
@@ -206,11 +206,24 @@ function EquipmentRow({
   const serial = equipmentSerialDisplay(item);
   const requiresSerial = serial !== null;
 
+  // Smooth-scroll the row into view when it expands, so the panel doesn't
+  // render below the fold without any visual cue. `block: 'nearest'` is a
+  // no-op when the row is already in view.
+  const rowRef = useRef<HTMLLIElement>(null);
+  useEffect(() => {
+    if (!expanded || !rowRef.current) return;
+    const id = requestAnimationFrame(() => {
+      rowRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [expanded]);
+
   return (
     <li
-      className={`bg-white rounded-xl border border-neutral-200 overflow-hidden transition-colors ${
+      ref={rowRef}
+      className={`bg-white rounded-xl border border-neutral-200 overflow-hidden transition-shadow transition-colors duration-200 ${
         dimmed ? 'opacity-60' : ''
-      } ${expanded ? 'ring-1 ring-primary-200 border-primary-300' : 'hover:border-neutral-300'}`}
+      } ${expanded ? 'ring-2 ring-primary-400 border-primary-300 shadow-md' : 'hover:border-neutral-300'}`}
     >
       <div
         role="button"

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import AppShell from '@/app/components/AppShell';
 import { TEXT_CONSTANTS } from '@/constants/text';
@@ -12,6 +12,7 @@ import EquipmentErrorBoundary from '@/components/equipment/EquipmentErrorBoundar
 import EquipmentLoadingState from '@/components/equipment/EquipmentLoadingState';
 import EquipmentTabs from '@/components/equipment/EquipmentTabs';
 import EquipmentTable from '@/components/equipment/EquipmentTable';
+import EquipmentToolbar from '@/components/equipment/EquipmentToolbar';
 import BulkActionBar, { type BulkAction } from '@/components/equipment/BulkActionBar';
 import type { EquipmentRowAction } from '@/components/equipment/EquipmentRowActions';
 import AddEquipmentWizard from '@/components/equipment/AddEquipmentWizard';
@@ -29,7 +30,6 @@ import TeamAmmunitionSection from '@/components/equipment/TeamAmmunitionSection'
 import { Select } from '@/components/ui';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { useCategoryLookup } from '@/hooks/useCategoryLookup';
-import { cn } from '@/lib/cn';
 import {
   requestExchange,
   approveExchangeRequest,
@@ -224,20 +224,19 @@ function EquipmentPageContent() {
 
   return (
     <div className="max-w-7xl mx-auto w-full pb-24">
-      <PageHeader onAdd={() => setActiveModal({ kind: 'wizard' })} />
-
       <EquipmentTabs scope={scope} onChange={setScope} user={enhancedUser} />
 
-      <ViewToggle
+      <EquipmentToolbar
         view={view}
-        onChange={(v) => {
+        onViewChange={(v) => {
           setView(v);
           // Selection set is bucket-scoped — clear it when switching views so
           // a bulk action can't accidentally target rows the user can't see.
           setSelectedIds(new Set());
         }}
         archiveCount={archivedEquipment.length}
-        className="mt-4 mb-2"
+        onAddClick={() => setActiveModal({ kind: 'wizard' })}
+        canAdd
       />
 
       <FilterBar
@@ -412,21 +411,6 @@ function EquipmentPageContent() {
   );
 }
 
-function PageHeader({ onAdd }: { onAdd: () => void }) {
-  return (
-    <div className="flex items-center justify-between mb-6">
-      <button
-        type="button"
-        onClick={onAdd}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
-      >
-        <Plus className="w-4 h-4" />
-        {TEXT_CONSTANTS.FEATURES.EQUIPMENT.ADD_NEW}
-      </button>
-    </div>
-  );
-}
-
 function FilterBar({
   searchTerm,
   onSearch,
@@ -488,66 +472,6 @@ function FilterBar({
           ariaLabel={TEXT_CONSTANTS.FEATURES.EQUIPMENT.ALL_CATEGORIES}
         />
       </div>
-    </div>
-  );
-}
-
-function ViewToggle({
-  view,
-  onChange,
-  archiveCount,
-  className,
-}: {
-  view: 'active' | 'archive';
-  onChange: (v: 'active' | 'archive') => void;
-  archiveCount: number;
-  className?: string;
-}) {
-  const labels = TEXT_CONSTANTS.FEATURES.EQUIPMENT.ARCHIVE;
-  return (
-    <div
-      className={cn('flex gap-2', className ?? 'mb-2')}
-      role="tablist"
-      aria-label="equipment view"
-    >
-      <button
-        type="button"
-        role="tab"
-        aria-selected={view === 'active'}
-        onClick={() => onChange('active')}
-        className={cn(
-          'px-3 py-1.5 text-sm rounded-md transition-colors',
-          view === 'active'
-            ? 'bg-primary-600 text-white'
-            : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50',
-        )}
-      >
-        {labels.SHOW_ACTIVE}
-      </button>
-      <button
-        type="button"
-        role="tab"
-        aria-selected={view === 'archive'}
-        onClick={() => onChange('archive')}
-        className={cn(
-          'px-3 py-1.5 text-sm rounded-md transition-colors inline-flex items-center gap-2',
-          view === 'archive'
-            ? 'bg-primary-600 text-white'
-            : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50',
-        )}
-      >
-        <span>{labels.SHOW_ARCHIVE}</span>
-        {archiveCount > 0 && (
-          <span
-            className={cn(
-              'inline-flex items-center justify-center text-xs rounded-full min-w-[1.25rem] h-5 px-1.5',
-              view === 'archive' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-700',
-            )}
-          >
-            {archiveCount}
-          </span>
-        )}
-      </button>
     </div>
   );
 }

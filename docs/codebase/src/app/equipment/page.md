@@ -11,18 +11,17 @@ AuthGuard
   EquipmentErrorBoundary
     AppShell (mounts WelcomeModal if profile missing teamId/unitId)
       EquipmentPageContent
-        ├ PageHeader   (+ הוסף ציוד button → opens AddEquipmentWizard)
-        ├ EquipmentTabs (Self / Team / All — All gated by manager+; rounded card)
-        ├ ViewToggle    (active / archive — bug #25; sits *between* the tabs and
-        │                the filter card, separated by `mt-4 mb-2` for breathing
-        │                room. EquipmentTabs + FilterBar are independent cards,
-        │                NOT a glued top/bottom unit anymore — that was the
-        │                pre-#25 layout before ViewToggle was inserted between
-        │                them.)
-        ├ FilterBar     (search + status filter + category filter; rounded card)
-        ├ EquipmentTable (or loading / error / empty state)
-        └ BulkActionBar (sticky, surfaces when rows selected)
+        ├ EquipmentTabs    (Self / Team / All — All gated by manager+; rounded card)
+        ├ EquipmentToolbar (single row: active/archive Switch + count badge on
+        │                   the RTL right, "+ הוסף ציוד" button on the RTL left.
+        │                   Replaced the separate PageHeader + ViewToggle layout
+        │                   that wasted two rows. See docs/codebase/src/components/equipment/EquipmentToolbar.md.)
+        ├ FilterBar        (search + status filter + category filter; rounded card)
+        ├ EquipmentTable   (or loading / error / empty state)
+        └ BulkActionBar    (sticky, surfaces when rows selected)
 ```
+
+Switching view (active ↔ archive) clears the row selection set — the set is bucket-scoped, so otherwise a bulk action triggered from the new view could target rows the user can no longer see.
 
 Modals (portal-style, not nested under AppShell): AddEquipmentWizard, ReportModal, ReturnModal, TransferModal, ActionHistoryPanel.
 
