@@ -125,4 +125,80 @@ describe('ServiceWorkerUpdater', () => {
     await flushPromises();
     expect(swListeners.get('controllerchange')?.length ?? 0).toBe(0);
   });
+
+  it('reloads immediately if the waiting worker is already activated when the user clicks', async () => {
+    const waiting = new FakeWorker();
+    waiting.state = 'activated';
+    registration.waiting = waiting;
+
+    render(<ServiceWorkerUpdater />);
+    await flushPromises();
+
+    const updateBtn = await screen.findByRole('button', { name: /עדכן עכשיו/ });
+    await act(async () => {
+      updateBtn.click();
+    });
+
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(waiting.postMessage).not.toHaveBeenCalled();
+  });
+
+  it('falls back to reloading after 3s if statechange never fires (iOS Safari mobile path)', async () => {
+    jest.useFakeTimers();
+    try {
+      const waiting = new FakeWorker();
+      waiting.state = 'installed';
+      registration.waiting = waiting;
+
+      render(<ServiceWorkerUpdater />);
+      await flushPromises();
+
+      const updateBtn = await screen.findByRole('button', { name: /עדכן עכשיו/ });
+      await act(async () => {
+        updateBtn.click();
+      });
+
+      expect(waiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+      expect(reload).not.toHaveBeenCalled();
+
+      // No statechange ever fires (the broken-mobile case). Advance the
+      // fallback timer and expect a reload.
+      act(() => {
+        jest.advanceTimersByTime(3000);
+      });
+      expect(reload).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('does not double-reload if statechange and the fallback timer both fire', async () => {
+    jest.useFakeTimers();
+    try {
+      const waiting = new FakeWorker();
+      waiting.state = 'installed';
+      registration.waiting = waiting;
+
+      render(<ServiceWorkerUpdater />);
+      await flushPromises();
+
+      const updateBtn = await screen.findByRole('button', { name: /עדכן עכשיו/ });
+      await act(async () => {
+        updateBtn.click();
+      });
+
+      await act(async () => {
+        waiting.transitionTo('activated');
+      });
+      expect(reload).toHaveBeenCalledTimes(1);
+
+      // Run the fallback timer; it must be a no-op.
+      act(() => {
+        jest.advanceTimersByTime(3000);
+      });
+      expect(reload).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
