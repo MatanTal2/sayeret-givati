@@ -8,7 +8,7 @@
  *
  * Permission model (enforced here, not by callers):
  *   - ADMIN / SYSTEM_MANAGER / MANAGER → any holder.
- *   - admin-configured `ammoNotificationRecipientUserId` → any holder.
+ *   - any uid in `systemConfig.ammoNotificationRecipientUserIds` → any holder.
  *   - TEAM_LEADER → own team + members of own team.
  *   - USER → self only, USER-allocated templates only.
  *   - Update / delete: actor's own writes only, manager+ overrides.
@@ -40,11 +40,13 @@ function isManagerOrAbove(userType: UserType): boolean {
   );
 }
 
-async function getResponsibleManagerId(): Promise<string | null> {
+async function getResponsibleManagerIds(): Promise<string[]> {
   const db = getAdminDb();
   const snap = await db.collection(COLLECTIONS.SYSTEM_CONFIG).doc('main').get();
-  if (!snap.exists) return null;
-  return (snap.data()?.ammoNotificationRecipientUserId as string) || null;
+  if (!snap.exists) return [];
+  const raw = snap.data()?.ammoNotificationRecipientUserIds;
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((uid): uid is string => typeof uid === 'string' && uid.trim().length > 0);
 }
 
 async function userTeamId(uid: string): Promise<string | undefined> {
@@ -71,18 +73,18 @@ export interface MutationContext {
 export async function canMutateAmmunitionInventory(ctx: MutationContext): Promise<boolean> {
   const { actor, template, holderType, holderId } = ctx;
 
-  // UNIT (central pool) is admin/manager + responsible-mgr only. TL and USER
+  // UNIT (central pool) is admin/manager + responsible-mgrs only. TL and USER
   // never write to the warehouse — they receive via assignFromCentral.
   if (holderType === 'UNIT') {
     if (isManagerOrAbove(actor.userType)) return true;
-    const responsibleId = await getResponsibleManagerId();
-    return !!responsibleId && responsibleId === actor.uid;
+    const responsibleIds = await getResponsibleManagerIds();
+    return responsibleIds.includes(actor.uid);
   }
 
   if (isManagerOrAbove(actor.userType)) return true;
 
-  const responsibleId = await getResponsibleManagerId();
-  if (responsibleId && responsibleId === actor.uid) return true;
+  const responsibleIds = await getResponsibleManagerIds();
+  if (responsibleIds.includes(actor.uid)) return true;
 
   if (actor.userType === UserType.TEAM_LEADER) {
     if (!actor.teamId) return false;
@@ -205,8 +207,8 @@ export async function serverUpsertAmmunitionStock(
     existingCreatedBy &&
     existingCreatedBy !== input.actor.uid
   ) {
-    const responsibleId = await getResponsibleManagerId();
-    if (responsibleId !== input.actor.uid) {
+    const responsibleIds = await getResponsibleManagerIds();
+    if (!responsibleIds.includes(input.actor.uid)) {
       throw new Error('Forbidden: cannot modify another user\'s inventory entry');
     }
   }
@@ -244,8 +246,8 @@ export async function serverDeleteAmmunitionStock(input: DeleteStockInput): Prom
     createdBy &&
     createdBy !== input.actor.uid
   ) {
-    const responsibleId = await getResponsibleManagerId();
-    if (responsibleId !== input.actor.uid) {
+    const responsibleIds = await getResponsibleManagerIds();
+    if (!responsibleIds.includes(input.actor.uid)) {
       throw new Error('Forbidden: cannot delete another user\'s inventory entry');
     }
   }
@@ -386,13 +388,16 @@ export async function serverReturnSerialItemToMgr(
     throw new Error('Only CONSUMED items can be returned to the ammo manager');
   }
 
-  const ammoMgrId = await getResponsibleManagerId();
-  if (!ammoMgrId) {
+  const ammoMgrIds = await getResponsibleManagerIds();
+  if (ammoMgrIds.length === 0) {
     throw new Error('No ammo-responsible user is configured in system config');
   }
+  // When multiple managers are configured, the first entry is the canonical
+  // "return-to" target — UI lists them in display order, top is primary.
+  const ammoMgrId = ammoMgrIds[0];
 
-  // Permission: admin / system_manager / manager, OR ammo-responsible user, OR TL of holding team.
-  let allowed = isManagerOrAbove(actor.userType) || actor.uid === ammoMgrId;
+  // Permission: admin / system_manager / manager, OR any ammo-responsible user, OR TL of holding team.
+  let allowed = isManagerOrAbove(actor.userType) || ammoMgrIds.includes(actor.uid);
   if (!allowed && actor.userType === UserType.TEAM_LEADER && actor.teamId) {
     if (item.currentHolderType === 'TEAM') {
       allowed = item.currentHolderId === actor.teamId;

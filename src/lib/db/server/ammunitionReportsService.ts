@@ -114,10 +114,10 @@ export function validateSubmitReportInput(input: unknown): SubmitReportInput {
 
 interface ResolvedRecipients {
   teamLeaderIds: string[];
-  responsibleManagerId: string | null;
+  responsibleManagerIds: string[];
 }
 
-async function resolveRecipients(reporterUid: string): Promise<ResolvedRecipients> {
+export async function resolveRecipients(reporterUid: string): Promise<ResolvedRecipients> {
   const db = getAdminDb();
 
   const reporterSnap = await db.collection(COLLECTIONS.USERS).doc(reporterUid).get();
@@ -136,11 +136,15 @@ async function resolveRecipients(reporterUid: string): Promise<ResolvedRecipient
   }
 
   const cfgSnap = await db.collection(COLLECTIONS.SYSTEM_CONFIG).doc('main').get();
-  const responsibleManagerId = cfgSnap.exists
-    ? ((cfgSnap.data()?.ammoNotificationRecipientUserId as string) || null)
-    : null;
+  const responsibleManagerIds = cfgSnap.exists
+    ? (((cfgSnap.data()?.ammoNotificationRecipientUserIds as unknown) instanceof Array
+        ? (cfgSnap.data()?.ammoNotificationRecipientUserIds as unknown[])
+        : []
+      )
+        .filter((uid): uid is string => typeof uid === 'string' && uid.trim().length > 0))
+    : [];
 
-  return { teamLeaderIds, responsibleManagerId };
+  return { teamLeaderIds, responsibleManagerIds };
 }
 
 export interface SubmitReportResult {
@@ -262,7 +266,7 @@ export async function serverSubmitAmmunitionReport(
 
   const recipients = await resolveRecipients(reporterUid);
   const recipientIds = Array.from(
-    new Set([...recipients.teamLeaderIds, ...(recipients.responsibleManagerId ? [recipients.responsibleManagerId] : [])])
+    new Set([...recipients.teamLeaderIds, ...recipients.responsibleManagerIds])
   ).filter((uid) => uid !== reporterUid);
 
   // Side effects — failures here do not roll back the report.

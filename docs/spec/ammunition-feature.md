@@ -67,7 +67,7 @@ The feature reuses heavily from the existing equipment + report-request + notifi
 | `ammunitionInventory` | BRUCE-mode stock per holder (one doc per template+holder). |
 | `ammunitionReports` | Submitted usage reports. |
 | `ammunitionReportRequests` | Manager-triggered requests. Mirrors existing `reportRequests`. |
-| `systemConfig` | Single-doc (`main`) for system-wide settings. New field: `ammoNotificationRecipientUserId`. |
+| `systemConfig` | Single-doc (`main`) for system-wide settings. Ammo recipients live on `ammoNotificationRecipientUserIds: string[]` — array of user UIDs flagged to receive every ammo-report notification + count as ammo-responsible for training-plan approvals. Bounded at 10 entries. |
 
 ### Key types (in `src/types/ammunition.ts`)
 
@@ -168,8 +168,8 @@ interface AmmunitionReportRequest {
 
 1. Read reporter's `teamId` from `users/{reporterId}`.
 2. Query `users` where `teamId == reporter.teamId` AND `userType == TEAM_LEADER`. Exclude reporter if reporter is the TL.
-3. Read `systemConfig/main.ammoNotificationRecipientUserId`.
-4. Build target list = TL UIDs ∪ {recipient}; dedupe; remove the reporter.
+3. Read `systemConfig/main.ammoNotificationRecipientUserIds` (array of UIDs, ≤ 10).
+4. Build target list = TL UIDs ∪ recipients; dedupe; remove the reporter.
 5. Batch-create `AMMO_REPORT_SUBMITTED` notifications with deep link to the report.
 6. All inside one transaction with the report write + inventory decrement + actionsLog entry.
 
@@ -205,7 +205,7 @@ Order matters where noted. A phase's "depends on" lists prior phases that must b
 - Create `src/lib/db/server/systemConfigService.ts` — read/write `systemConfig/main`.
 - Create `src/app/api/system-config/route.ts` — GET + PUT (admin only).
 - Create `src/hooks/useSystemConfig.ts` — `{ config, isLoading, error, save }` shape.
-- Modify `src/components/management/tabs/SystemConfigTab.tsx` — replace placeholder with real form. Add `ammoNotificationRecipientUserId` field using a UserPicker (search users by name).
+- Modify `src/components/management/tabs/SystemConfigTab.tsx` — replace placeholder with real form. Recipients live on `ammoNotificationRecipientUserIds` (array, ≤ 10) — managed by the profile-style `AmmoRecipientsSection` (`src/components/management/tabs/system-config/AmmoRecipientsSection.tsx`).
 
 **Verify:** Admin opens System Config, picks a user, saves, refreshes — value persists. Non-admin can't write (rule check). Add Jest test for the service.
 **Docs:** `docs/codebase/src/lib/db/server/systemConfigService.md`, `docs/codebase/src/hooks/useSystemConfig.md`. Update SystemConfigTab.md.
@@ -275,7 +275,7 @@ Order matters where noted. A phase's "depends on" lists prior phases that must b
   1. write `ammunitionReports` doc
   2. decrement `ammunitionInventory` (BRUCE) or update `ammunition` items to CONSUMED (SERIAL)
   3. write `actionsLog` entry
-  4. resolve TL UIDs via team query + read `systemConfig/main.ammoNotificationRecipientUserId`
+  4. resolve TL UIDs via team query + read `systemConfig/main.ammoNotificationRecipientUserIds` (array)
   5. batch-create notifications
 - Create `src/lib/ammunition/reportsService.ts` (client read).
 - Create `src/app/api/ammunition-reports/route.ts` (POST + GET).

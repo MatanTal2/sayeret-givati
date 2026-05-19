@@ -897,6 +897,21 @@ export const TEXT_CONSTANTS = {
         REPORT_SUBMITTED_TITLE: 'דיווח תחמושת חדש',
         REPORT_REQUESTED_TITLE: 'בקשה לדיווח תחמושת'
       },
+      RECIPIENTS: {
+        SECTION_TITLE: 'מנהל אחראי לתחמושת',
+        SECTION_DESCRIPTION:
+          'המנהלים שמוגדרים כאן יקבלו התראה על כל דיווח תחמושת ויקבלו הרשאות לאשר תכנוני אימונים.',
+        EMPTY_STATE: 'לא הוגדר מנהל אחראי',
+        ADD_PLACEHOLDER: 'הוסף מנהל...',
+        EDIT: 'ערוך',
+        EDIT_ARIA: 'ערוך מנהלים אחראים לתחמושת',
+        SAVE: 'שמור',
+        SAVING: 'שומר...',
+        CANCEL: 'ביטול',
+        REMOVE_ARIA: 'הסר מנהל',
+        MAX_REACHED: 'ניתן להגדיר עד 10 מנהלים',
+        SAVE_ERROR: 'שמירת הרשימה נכשלה. נסה שוב.'
+      },
       TRAINING: {
         PAGE_TITLE: 'תכנון אימוני ירי',
         PAGE_SUBTITLE: 'תכנון אימונים, אישור ע״י אחראי תחמושת ובקרה על הבטן',

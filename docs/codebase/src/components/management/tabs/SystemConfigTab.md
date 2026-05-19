@@ -1,53 +1,67 @@
 # SystemConfigTab.tsx
 
 **File:** `src/components/management/tabs/SystemConfigTab.tsx`
-**Status:** Active (Phase 1 — Ammunition feature)
+**Status:** Active
 
 ## Purpose
 
-System-wide settings panel inside `/management`. Phase 1 adds the ammunition
-notification recipient picker — the admin chooses one user who receives a copy
-of every ammunition report submission (alongside the reporter's TL).
+System-wide settings surface inside `/management`. Owns the two operational
+flags that managers update day-to-day:
+
+- **Ammunition managers** — array of user UIDs flagged to receive ammo report
+  notifications and to count as ammo-responsible for training-plan approvals.
+- **Round open** — gates pull-from-storage on equipment items in
+  `EquipmentStatus.STORED`.
+
+Both settings live on the single Firestore doc `systemConfig/main`. Teams
+allowlist + authorized personnel stay on `/admin` (identity boundary); the
+ownership split is documented in `docs/spec/settings-ownership.md`.
+
+## Composition
+
+The tab is now a thin shell — most of the recipient UI lives in a child
+component:
+
+| Component | Responsibility |
+|---|---|
+| `AmmoRecipientsSection` (`./system-config/AmmoRecipientsSection.tsx`) | Read-only list + inline edit mode for `ammoNotificationRecipientUserIds` |
+| Inline Headless UI `<Switch>` block | `roundOpen` toggle |
 
 ## State
 
 | State | Type | Purpose |
 |-------|------|---------|
-| `recipient` | `UserSearchResult \| null` | Currently selected user in the picker |
-| `hydratedFor` | `string \| null` | Memo key — last persisted recipient id we hydrated to avoid re-fetching the profile on every render |
-| `saving` | `boolean` | Disables the save button while the request is in-flight |
-| `toast` | `{ kind, message } \| null` | 3-second success/error chip next to the save button |
+| `roundOpen` | `boolean` | Local copy of the round-open toggle; mirrored from `config.roundOpen` on hydrate |
+| `savingRound` | `boolean` | Disables the round save button while the request is in-flight |
+| `toast` | `{ kind, message } \| null` | 3-second success/error chip next to the round save button |
+
+Recipient editing state (`pending`, `editing`, `saving`, `error`) lives inside
+`AmmoRecipientsSection` and is invisible to the tab.
 
 ## Behavior
 
 - Reads `systemConfig/main` via `useSystemConfig()`.
-- After the config loads, calls `getUserProfile(persistedRecipientId)` once to
-  hydrate the picker with the persisted user's display name + email.
-- `UserSearchInput` is rendered read-only for non-admins (pointer-events none +
-  opacity).
-- Admin gate: `UserType.ADMIN || UserType.SYSTEM_MANAGER`. Server enforces the
-  same check via `/api/system-config` PUT.
-- Save button is disabled when nothing has changed (`recipient.uid` equals
-  persisted id) or while saving.
-
-## Removed (vs. previous placeholder)
-
-The old mock fields — auto backup toggle, session timeout, max login attempts,
-notification email, "system info" block, "perform backup now" / "reset
-settings" buttons — were not persisted and not on the Phase 1 spec. They are
-removed; reintroduce them with real backing if that work returns.
+- `AmmoRecipientsSection` is fed the persisted array and a callback that
+  forwards to `useSystemConfig().save({ ammoNotificationRecipientUserIds })`.
+  When the save fails the callback throws so the child surfaces the error
+  inline.
+- Round toggle uses a separate save button so a stale roundOpen edit doesn't
+  get bundled with a recipient change.
+- Admin gate: `UserType.ADMIN || UserType.SYSTEM_MANAGER || UserType.MANAGER`.
+  Server enforces the same check via `/api/system-config` PUT.
 
 ## Round-activation toggle
 
 Headless UI `<Switch>` bound to `roundOpen`. The thumb is **absolutely
 positioned** with the logical `start-1` (off) / `start-6` (on) properties —
 the previous `flex + translate-x-*` pattern pushed the thumb out of the pill
-in RTL because `translate-x` is physical. Same fix applied earlier to
-`NotificationToggleRow`.
+in RTL because `translate-x` is physical.
 
-## Open
+## Notes
 
-- The ammunition recipient is the only field today. Subsequent phases may add
-  more system-wide flags (retention, default scopes). Each new field follows
-  the same shape: extend `SystemConfig` + `validateSystemConfigPayload` + the
-  hook + this UI.
+- The earlier inline `UserSearchInput` was replaced by
+  `AmmoRecipientsSection`. The new layout mirrors profile-section pattern
+  (edit pencil top-left, view-mode shows display names only — no emails).
+- Storage field on the doc is now an array (`ammoNotificationRecipientUserIds:
+  string[]`). One-shot migration script:
+  `scripts/migrate-ammo-recipient-to-array.mjs`.

@@ -214,4 +214,23 @@ export const TEXT_EN = {
     SAVED: 'Saved',
     SAVE_ERROR: 'Save failed. Try again.',
   },
+  FEATURES: {
+    AMMUNITION: {
+      RECIPIENTS: {
+        SECTION_TITLE: 'Ammunition managers',
+        SECTION_DESCRIPTION:
+          'Listed managers receive a notification for every ammunition report and can approve training plans.',
+        EMPTY_STATE: 'No managers configured',
+        ADD_PLACEHOLDER: 'Add manager...',
+        EDIT: 'Edit',
+        EDIT_ARIA: 'Edit ammunition managers',
+        SAVE: 'Save',
+        SAVING: 'Saving...',
+        CANCEL: 'Cancel',
+        REMOVE_ARIA: 'Remove manager',
+        MAX_REACHED: 'Up to 10 managers',
+        SAVE_ERROR: 'Saving the list failed. Try again.',
+      },
+    },
+  },
 } as const;

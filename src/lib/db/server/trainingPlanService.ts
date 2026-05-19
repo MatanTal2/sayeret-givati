@@ -44,17 +44,18 @@ function isTeamLeaderOrAbove(actor: ApiActor): boolean {
   );
 }
 
-async function getAmmoResponsibleUserId(): Promise<string | null> {
+async function getAmmoResponsibleUserIds(): Promise<string[]> {
   const db = getAdminDb();
   const snap = await db.collection(COLLECTIONS.SYSTEM_CONFIG).doc('main').get();
-  if (!snap.exists) return null;
+  if (!snap.exists) return [];
   const data = snap.data() ?? {};
-  const id = data.ammoNotificationRecipientUserId;
-  return typeof id === 'string' && id ? id : null;
+  const raw = data.ammoNotificationRecipientUserIds;
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((uid): uid is string => typeof uid === 'string' && uid.trim().length > 0);
 }
 
-function isAmmoResponsible(actor: ApiActor, ammoResponsibleUid: string | null): boolean {
-  return !!ammoResponsibleUid && actor.uid === ammoResponsibleUid;
+function isAmmoResponsible(actor: ApiActor, ammoResponsibleUids: string[]): boolean {
+  return ammoResponsibleUids.includes(actor.uid);
 }
 
 export function validateCreateTrainingPlanInput(input: unknown): CreateTrainingPlanInput {
@@ -153,8 +154,8 @@ export async function serverCreateTrainingPlan(
   await ref.set(data);
 
   try {
-    const ammoResponsibleUid = await getAmmoResponsibleUserId();
-    if (ammoResponsibleUid) {
+    const ammoResponsibleUids = await getAmmoResponsibleUserIds();
+    for (const ammoResponsibleUid of ammoResponsibleUids) {
       await serverCreateNotification({
         userId: ammoResponsibleUid,
         type: NotificationType.TRAINING_PLAN_SUBMITTED,
@@ -184,7 +185,7 @@ export async function serverTransitionTrainingPlan(input: TransitionInput): Prom
   }
   const db = getAdminDb();
   const ref = db.collection(COLLECTIONS.TRAINING_PLANS).doc(input.planId);
-  const ammoResponsibleUid = await getAmmoResponsibleUserId();
+  const ammoResponsibleUids = await getAmmoResponsibleUserIds();
 
   let newStatus: TrainingPlanStatus = 'PENDING_APPROVAL';
   let plannedBy = '';
@@ -199,7 +200,7 @@ export async function serverTransitionTrainingPlan(input: TransitionInput): Prom
     teamId = (data.teamId as string) || '';
 
     const isPlanner = input.actor.uid === plannedBy;
-    const isApprover = isAdminOrSystemManager(input.actor) || isAmmoResponsible(input.actor, ammoResponsibleUid);
+    const isApprover = isAdminOrSystemManager(input.actor) || isAmmoResponsible(input.actor, ammoResponsibleUids);
 
     if (input.action === 'approve' || input.action === 'reject') {
       if (!isApprover) throw new Error('Forbidden: only the ammo-responsible user, system manager, or admin may approve or reject');
@@ -276,18 +277,20 @@ export async function serverCreateRestockRequest(input: RestockRequestInput): Pr
   const planSnap = await planRef.get();
   if (!planSnap.exists) throw new Error('Training plan not found');
 
-  const ammoResponsibleUid = await getAmmoResponsibleUserId();
-  if (!ammoResponsibleUid) {
+  const ammoResponsibleUids = await getAmmoResponsibleUserIds();
+  if (ammoResponsibleUids.length === 0) {
     throw new Error('No ammo-responsible user is configured in system config');
   }
 
-  await serverCreateNotification({
-    userId: ammoResponsibleUid,
-    type: NotificationType.AMMO_RESTOCK_REQUEST,
-    title: 'בקשה לתוספת תחמושת',
-    message: input.note
-      ? `${input.actorName} מבקש ${input.shortfallQty} ${input.templateName}: ${input.note}`
-      : `${input.actorName} מבקש תוספת של ${input.shortfallQty} ${input.templateName} עבור אימון`,
-    relatedEquipmentDocId: input.planId,
-  });
+  for (const ammoResponsibleUid of ammoResponsibleUids) {
+    await serverCreateNotification({
+      userId: ammoResponsibleUid,
+      type: NotificationType.AMMO_RESTOCK_REQUEST,
+      title: 'בקשה לתוספת תחמושת',
+      message: input.note
+        ? `${input.actorName} מבקש ${input.shortfallQty} ${input.templateName}: ${input.note}`
+        : `${input.actorName} מבקש תוספת של ${input.shortfallQty} ${input.templateName} עבור אימון`,
+      relatedEquipmentDocId: input.planId,
+    });
+  }
 }
