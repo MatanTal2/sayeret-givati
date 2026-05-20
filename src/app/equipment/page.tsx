@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
@@ -101,9 +101,15 @@ function EquipmentPageContent() {
   const roundOpen = !!systemConfig?.roundOpen;
   const { categoryName } = useCategoryLookup();
 
-  // Auto-open wizard when notification deep-links here
+  // Auto-open wizard when notification deep-links here (once per mount).
+  // Ref guard prevents reopen after close: router.replace is async, so the
+  // resumeTemplate param can still be in searchParams during the re-render
+  // that follows setActiveModal(null) — without the ref, the effect would
+  // re-fire and reopen the modal.
+  const consumedDeepLink = useRef(false);
   useEffect(() => {
-    if ((resumeTemplate || resumeDraft) && !activeModal) {
+    if ((resumeTemplate || resumeDraft) && !activeModal && !consumedDeepLink.current) {
+      consumedDeepLink.current = true;
       setActiveModal({ kind: 'wizard' });
     }
   }, [resumeTemplate, resumeDraft, activeModal]);

@@ -41,6 +41,8 @@ The page hooks `useEquipment({ scope: 'self' })` and lets `EquipmentTabs` flip t
 
 The page reads `resumeTemplate` and `resumeDraft` from the URL search params (set by `NotificationItem` on `template_request_approved` clicks). When either is present, the wizard opens automatically with those props; closing the wizard clears the params via `router.replace('/equipment')` so the page returns to a normal state.
 
+The auto-open effect is gated by a `consumedDeepLink` ref so it fires at most once per page mount. Without the ref, the close handler would `setActiveModal(null)` synchronously while `router.replace` cleared the URL asynchronously — during the intervening render, `resumeTemplate` would still be in `searchParams` and the effect would reopen the modal, forcing the user to click X twice.
+
 ## Bulk handling
 
 - `report` runs sequentially across the selection with `photoUrl=null`. Useful for privileged users only; regular soldiers can't bypass the photo requirement, so the bulk path is effectively a TL+ feature.
