@@ -18,9 +18,14 @@ Individual notification item with type-based styling (icon + color), read/unread
 
 `handleClick` calls `markAsRead` and then routes via `next/navigation`. `resolveNotificationTarget` maps the notification type:
 
-- `template_request_approved` → `/equipment?resumeTemplate={relatedEquipmentDocId}` (the equipment page reads the param and opens `AddEquipmentWizard` with the matching draft pre-filled).
-- Equipment-domain types (transfer, retirement, report-request, force-ops, daily-check, maintenance) → `/equipment`.
-- Manager-side template-review types (`template_proposed_for_review`, `new_template_request_for_review`, `template_request_rejected`) → `/management?tab=template-management` so the management page lands directly on the equipment-template tab instead of the default user tab.
+- `TEMPLATE_REQUEST_APPROVED` → `/equipment?resumeTemplate={relatedEquipmentDocId}` (the equipment page reads the param and opens `AddEquipmentWizard` with the matching draft pre-filled).
+- Equipment-domain types (transfer, retirement, report-request, force-ops, equipment_status_change, exchange) → `/equipment`.
+- Manager-side template-review types (`TEMPLATE_PROPOSED_FOR_REVIEW`, `NEW_TEMPLATE_REQUEST_FOR_REVIEW`, `TEMPLATE_REQUEST_REJECTED`) → `/management?tab=template-management` so the management page lands directly on the equipment-template tab instead of the default user tab.
+- Training-plan types (`TRAINING_PLAN_SUBMITTED`, `TRAINING_PLAN_APPROVED`, `TRAINING_PLAN_REJECTED`, `AMMO_RESTOCK_REQUEST`) → `/ammunition/training?planId={relatedEquipmentDocId}` — the page highlights and scrolls to the matching plan row.
+- `AMMO_REPORT_SUBMITTED`, `AMMO_ASSIGNED_FROM_CENTRAL` → `/ammunition`.
+- `AMMO_REPORT_REQUESTED` → `/ammunition?requestId={relatedEquipmentDocId}`.
+- `GUARD_SCHEDULE_SHARED` → `/guard-scheduler/{relatedGuardScheduleId}` (or `/guard-scheduler` if missing).
+- `SYSTEM_MESSAGE` → `/` (home — no domain-specific context).
 
 `resolveNotificationTarget` is exported for unit tests in `__tests__/NotificationItem.test.tsx` — covers the equipment auto-open route, the management tab routing, and the no-duplicates / snake_case enum sanity suite.
 
