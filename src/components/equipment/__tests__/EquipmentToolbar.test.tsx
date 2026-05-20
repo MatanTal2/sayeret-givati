@@ -19,7 +19,7 @@ jest.mock('@/constants/text', () => ({
 }));
 
 describe('EquipmentToolbar', () => {
-  it('renders the active label when view=active and Switch is off', () => {
+  it('renders the active label when view=active and Switch is on (colored)', () => {
     render(
       <EquipmentToolbar
         view="active"
@@ -31,7 +31,7 @@ describe('EquipmentToolbar', () => {
     );
 
     const sw = screen.getByRole('switch', { name: 'Toggle archive view' });
-    expect(sw).toHaveAttribute('aria-checked', 'false');
+    expect(sw).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByText('Active equipment')).toBeInTheDocument();
     expect(screen.queryByText('Archive')).not.toBeInTheDocument();
   });
@@ -61,10 +61,10 @@ describe('EquipmentToolbar', () => {
       />,
     );
     expect(screen.getByText('Archive')).toBeInTheDocument();
-    expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
   });
 
-  it('toggling off from archive calls onViewChange("active")', () => {
+  it('toggling on from archive calls onViewChange("active")', () => {
     const onViewChange = jest.fn();
     render(
       <EquipmentToolbar
@@ -80,10 +80,10 @@ describe('EquipmentToolbar', () => {
     expect(onViewChange).toHaveBeenCalledWith('active');
   });
 
-  it('shows the archive count badge when archiveCount > 0', () => {
+  it('shows the archive count badge when in archive view and archiveCount > 0', () => {
     render(
       <EquipmentToolbar
-        view="active"
+        view="archive"
         onViewChange={jest.fn()}
         archiveCount={7}
         onAddClick={jest.fn()}
@@ -93,10 +93,23 @@ describe('EquipmentToolbar', () => {
     expect(screen.getByText('7')).toBeInTheDocument();
   });
 
-  it('hides the archive count badge when archiveCount = 0', () => {
+  it('hides the archive count badge while viewing active list', () => {
     render(
       <EquipmentToolbar
         view="active"
+        onViewChange={jest.fn()}
+        archiveCount={7}
+        onAddClick={jest.fn()}
+        canAdd
+      />,
+    );
+    expect(screen.queryByText('7')).not.toBeInTheDocument();
+  });
+
+  it('hides the archive count badge when archiveCount = 0', () => {
+    render(
+      <EquipmentToolbar
+        view="archive"
         onViewChange={jest.fn()}
         archiveCount={0}
         onAddClick={jest.fn()}
