@@ -223,7 +223,6 @@ export const TEXT_EN = {
       COLLAPSE_ROW_ARIA: 'Hide details',
       SOURCE_TRACKING: 'From item history',
       SOURCE_LOG: 'From action log',
-      FULL_TIMESTAMP_LABEL: 'Exact time',
       SOURCE_LABEL: 'Source',
       OWNER_DOC_LABEL: 'Item document',
       PREDECESSOR_FLAG_LABEL: 'From a predecessor item history',

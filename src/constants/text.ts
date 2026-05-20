@@ -668,7 +668,6 @@ export const TEXT_CONSTANTS = {
         COLLAPSE_ROW_ARIA: 'הסתר פרטים',
         SOURCE_TRACKING: 'מהיסטוריית הפריט',
         SOURCE_LOG: 'מיומן הפעולות',
-        FULL_TIMESTAMP_LABEL: 'זמן מדויק',
         SOURCE_LABEL: 'מקור',
         OWNER_DOC_LABEL: 'מסמך פריט',
         PREDECESSOR_FLAG_LABEL: 'מהיסטוריה של פריט קודם',
