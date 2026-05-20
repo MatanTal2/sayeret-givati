@@ -108,19 +108,56 @@ describe('resolveNotificationTarget', () => {
     });
   });
 
-  describe('unrouted types', () => {
-    // These notification types exist in the enum (have real producers) but
-    // currently have no route in resolveNotificationTarget. PR-B will wire
-    // them up; this test pins the current state.
+  describe('training plan notifications', () => {
     test.each<NotificationType>([
       NotificationType.TRAINING_PLAN_SUBMITTED,
       NotificationType.TRAINING_PLAN_APPROVED,
       NotificationType.TRAINING_PLAN_REJECTED,
       NotificationType.AMMO_RESTOCK_REQUEST,
-      NotificationType.AMMO_ASSIGNED_FROM_CENTRAL,
-      NotificationType.SYSTEM_MESSAGE,
-    ])('%s returns null (route not yet wired)', (type) => {
-      expect(resolveNotificationTarget(makeNotification({ type }))).toBeNull();
+    ])('%s with planId routes to /ammunition/training?planId=<id>', (type) => {
+      const target = resolveNotificationTarget(
+        makeNotification({ type, relatedEquipmentDocId: 'plan-42' }),
+      );
+      expect(target).toBe('/ammunition/training?planId=plan-42');
+    });
+
+    test('TRAINING_PLAN_SUBMITTED without planId falls back to /ammunition/training', () => {
+      expect(
+        resolveNotificationTarget(makeNotification({ type: NotificationType.TRAINING_PLAN_SUBMITTED })),
+      ).toBe('/ammunition/training');
+    });
+  });
+
+  describe('miscellaneous notifications', () => {
+    test('AMMO_ASSIGNED_FROM_CENTRAL routes to /ammunition', () => {
+      expect(
+        resolveNotificationTarget(makeNotification({ type: NotificationType.AMMO_ASSIGNED_FROM_CENTRAL })),
+      ).toBe('/ammunition');
+    });
+
+    test('SYSTEM_MESSAGE routes to home', () => {
+      expect(
+        resolveNotificationTarget(makeNotification({ type: NotificationType.SYSTEM_MESSAGE })),
+      ).toBe('/');
+    });
+  });
+
+  describe('exhaustiveness', () => {
+    // Every value in the unified NotificationType enum must have a non-null
+    // target. Catches the case where a value is added to the enum without
+    // wiring its route.
+    test('every NotificationType value resolves to a non-null target', () => {
+      for (const type of Object.values(NotificationType) as NotificationType[]) {
+        const target = resolveNotificationTarget(
+          makeNotification({
+            type,
+            // Provide IDs for the branches that read them; safe to overpopulate.
+            relatedEquipmentDocId: 'fake-doc',
+            relatedGuardScheduleId: 'fake-sched',
+          }),
+        );
+        expect(target).not.toBeNull();
+      }
     });
   });
 });

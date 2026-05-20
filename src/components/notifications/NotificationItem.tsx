@@ -169,12 +169,27 @@ export function resolveNotificationTarget(n: NotificationDisplayData): string | 
       ? `/ammunition?requestId=${n.relatedEquipmentDocId}`
       : '/ammunition';
   }
+  if (n.type === NotificationType.AMMO_ASSIGNED_FROM_CENTRAL) return '/ammunition';
+
+  const trainingTypes: ReadonlySet<NotificationType> = new Set([
+    NotificationType.TRAINING_PLAN_SUBMITTED,
+    NotificationType.TRAINING_PLAN_APPROVED,
+    NotificationType.TRAINING_PLAN_REJECTED,
+    NotificationType.AMMO_RESTOCK_REQUEST,
+  ]);
+  if (trainingTypes.has(n.type)) {
+    return n.relatedEquipmentDocId
+      ? `/ammunition/training?planId=${n.relatedEquipmentDocId}`
+      : '/ammunition/training';
+  }
 
   if (n.type === NotificationType.GUARD_SCHEDULE_SHARED) {
     return n.relatedGuardScheduleId
       ? `/guard-scheduler/${n.relatedGuardScheduleId}`
       : '/guard-scheduler';
   }
+
+  if (n.type === NotificationType.SYSTEM_MESSAGE) return '/';
 
   return null;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Disclosure,
   DisclosureButton,
@@ -64,6 +64,8 @@ export interface PlannedTrainingsTableProps {
   onReject: (planId: string, reason: string) => Promise<boolean>;
   onCancel: (planId: string) => Promise<boolean>;
   onComplete: (planId: string) => Promise<boolean>;
+  /** When set, the matching plan row scrolls into view and is highlighted. */
+  highlightPlanId?: string | null;
 }
 
 export default function PlannedTrainingsTable({
@@ -73,6 +75,7 @@ export default function PlannedTrainingsTable({
   onReject,
   onCancel,
   onComplete,
+  highlightPlanId,
 }: PlannedTrainingsTableProps) {
   const { enhancedUser } = useAuth();
   const { config: systemConfig } = useSystemConfig();
@@ -95,6 +98,8 @@ export default function PlannedTrainingsTable({
     return { active: a, archived: z };
   }, [plans]);
 
+  const highlightedInArchive = !!highlightPlanId && archived.some((p) => p.id === highlightPlanId);
+
   if (isLoading) {
     return <div className="text-sm text-neutral-500 text-center py-8">{TT.LOADING}</div>;
   }
@@ -111,9 +116,10 @@ export default function PlannedTrainingsTable({
         onReject={onReject}
         onCancel={onCancel}
         onComplete={onComplete}
+        highlightPlanId={highlightPlanId}
       />
 
-      <Disclosure as="div" className="border border-neutral-200 rounded-lg">
+      <Disclosure as="div" className="border border-neutral-200 rounded-lg" defaultOpen={highlightedInArchive}>
         {({ open }) => (
           <>
             <DisclosureButton className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
@@ -135,6 +141,7 @@ export default function PlannedTrainingsTable({
                 onReject={onReject}
                 onCancel={onCancel}
                 onComplete={onComplete}
+                highlightPlanId={highlightPlanId}
               />
             </DisclosurePanel>
           </>
@@ -154,6 +161,7 @@ interface PlanTableProps {
   onReject: (planId: string, reason: string) => Promise<boolean>;
   onCancel: (planId: string) => Promise<boolean>;
   onComplete: (planId: string) => Promise<boolean>;
+  highlightPlanId?: string | null;
 }
 
 function PlanTable({
@@ -166,7 +174,14 @@ function PlanTable({
   onReject,
   onCancel,
   onComplete,
+  highlightPlanId,
 }: PlanTableProps) {
+  const highlightRowRef = useRef<HTMLTableRowElement | null>(null);
+  useEffect(() => {
+    if (highlightPlanId && highlightRowRef.current) {
+      highlightRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [highlightPlanId, plans]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingCancelId, setPendingCancelId] = useState<string | null>(null);
   const [rejectingPlanId, setRejectingPlanId] = useState<string | null>(null);
@@ -252,8 +267,17 @@ function PlanTable({
                 const showApproveReject =
                   canApproveOrReject && p.status === 'PENDING_APPROVAL';
                 const busy = busyId === p.id;
+                const isHighlighted = !!highlightPlanId && highlightPlanId === p.id;
                 return (
-                  <tr key={p.id} className="hover:bg-neutral-50">
+                  <tr
+                    key={p.id}
+                    ref={isHighlighted ? highlightRowRef : undefined}
+                    className={
+                      isHighlighted
+                        ? 'bg-warning-50 ring-2 ring-warning-400 ring-inset'
+                        : 'hover:bg-neutral-50'
+                    }
+                  >
                     <td className="px-3 py-2 text-xs text-neutral-700 whitespace-nowrap">
                       {fmtRange(p)}
                     </td>

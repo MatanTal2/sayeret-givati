@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import AppShell from '@/app/components/AppShell';
@@ -26,7 +27,21 @@ function isTeamLeaderOrAbove(userType: UserType | null | undefined): boolean {
 }
 
 export default function AmmunitionTrainingPage() {
+  return (
+    <AuthGuard>
+      <AppShell title={TT.PAGE_TITLE} subtitle={TT.PAGE_SUBTITLE}>
+        <Suspense fallback={null}>
+          <AmmunitionTrainingPageContent />
+        </Suspense>
+      </AppShell>
+    </AuthGuard>
+  );
+}
+
+function AmmunitionTrainingPageContent() {
   const { enhancedUser } = useAuth();
+  const searchParams = useSearchParams();
+  const planId = searchParams.get('planId');
   const {
     plans,
     isLoading,
@@ -43,44 +58,43 @@ export default function AmmunitionTrainingPage() {
   const canPlan = isTeamLeaderOrAbove(enhancedUser?.userType ?? undefined);
 
   return (
-    <AuthGuard>
-      <AppShell title={TT.PAGE_TITLE} subtitle={TT.PAGE_SUBTITLE}>
-        <div className="max-w-6xl mx-auto w-full space-y-6">
-          {error && (
-            <div className="p-3 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm">
-              {error}
-            </div>
-          )}
-
-          {canPlan && (
-            <div className="flex items-center justify-start">
-              <Button onClick={() => setPlanModalOpen(true)}>
-                <Plus className="w-4 h-4 ms-1" />
-                {TT.PLAN_BUTTON}
-              </Button>
-            </div>
-          )}
-
-          <Card padding="lg">
-            <AmmunitionBellyView plans={plans} onSubmitRestock={requestRestock} />
-          </Card>
-
-          <Card padding="lg">
-            <PlannedTrainingsTable
-              plans={plans}
-              isLoading={isLoading}
-              onApprove={approve}
-              onReject={reject}
-              onCancel={cancel}
-              onComplete={complete}
-            />
-          </Card>
-        </div>
-
-        {planModalOpen && (
-          <PlanTrainingModal onClose={() => setPlanModalOpen(false)} onSubmit={create} />
+    <>
+      <div className="max-w-6xl mx-auto w-full space-y-6">
+        {error && (
+          <div className="p-3 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm">
+            {error}
+          </div>
         )}
-      </AppShell>
-    </AuthGuard>
+
+        {canPlan && (
+          <div className="flex items-center justify-start">
+            <Button onClick={() => setPlanModalOpen(true)}>
+              <Plus className="w-4 h-4 ms-1" />
+              {TT.PLAN_BUTTON}
+            </Button>
+          </div>
+        )}
+
+        <Card padding="lg">
+          <AmmunitionBellyView plans={plans} onSubmitRestock={requestRestock} />
+        </Card>
+
+        <Card padding="lg">
+          <PlannedTrainingsTable
+            plans={plans}
+            isLoading={isLoading}
+            onApprove={approve}
+            onReject={reject}
+            onCancel={cancel}
+            onComplete={complete}
+            highlightPlanId={planId}
+          />
+        </Card>
+      </div>
+
+      {planModalOpen && (
+        <PlanTrainingModal onClose={() => setPlanModalOpen(false)} onSubmit={create} />
+      )}
+    </>
   );
 }
