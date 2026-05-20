@@ -131,7 +131,7 @@ export default function NotificationItem({ notification }: NotificationItemProps
   );
 }
 
-function resolveNotificationTarget(n: NotificationDisplayData): string | null {
+export function resolveNotificationTarget(n: NotificationDisplayData): string | null {
   // Compare against string values directly — server writes notification types
   // beyond the legacy NotificationType enum (template/retirement/report/force-ops types
   // live in src/types/equipment.ts NotificationType).
@@ -153,7 +153,7 @@ function resolveNotificationTarget(n: NotificationDisplayData): string | null {
   const managementTypes = new Set([
     'template_proposed_for_review', 'new_template_request_for_review', 'template_request_rejected',
   ]);
-  if (managementTypes.has(t)) return '/management';
+  if (managementTypes.has(t)) return '/management?tab=template-management';
 
   if (t === 'ammo_report_submitted') return '/ammunition';
   if (t === 'ammo_report_requested') {

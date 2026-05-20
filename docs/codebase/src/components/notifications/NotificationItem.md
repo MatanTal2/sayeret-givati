@@ -20,7 +20,9 @@ Individual notification item with type-based styling (icon + color), read/unread
 
 - `template_request_approved` → `/equipment?resumeTemplate={relatedEquipmentDocId}` (the equipment page reads the param and opens `AddEquipmentWizard` with the matching draft pre-filled).
 - Equipment-domain types (transfer, retirement, report-request, force-ops, daily-check, maintenance) → `/equipment`.
-- Manager-side template-review types (`template_proposed_for_review`, `new_template_request_for_review`, `template_request_rejected`) → `/management`.
+- Manager-side template-review types (`template_proposed_for_review`, `new_template_request_for_review`, `template_request_rejected`) → `/management?tab=template-management` so the management page lands directly on the equipment-template tab instead of the default user tab.
+
+`resolveNotificationTarget` is exported for unit tests in `__tests__/NotificationItem.test.tsx` — covers both the equipment auto-open route and the management tab routing.
 
 The function compares against raw string values because the Phase 4/5 server emits notification types from `src/types/equipment.ts`'s `NotificationType` enum, while `NotificationDisplayData` is typed against the legacy enum in `src/types/notifications.ts`.
 
