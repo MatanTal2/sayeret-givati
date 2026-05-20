@@ -26,6 +26,7 @@ import {
   EquipmentCondition,
   ExchangeRequestStatus,
 } from '@/types/equipment';
+import { NotificationType } from '@/types/notifications';
 
 // ---------------------------------------------------------------------------
 // Request — holder marks item broken
@@ -116,7 +117,7 @@ export async function serverRequestExchange(
 
     await serverCreateNotification({
       userId: result.signerUserId,
-      type: 'exchange_request_approval',
+      type: NotificationType.EXCHANGE_REQUEST_APPROVAL,
       title: 'בקשת החלפת ציוד',
       message: `${input.actorName} מבקש להחליף את ${result.equipmentName}: ${input.reason}`,
       relatedEquipmentId: result.equipmentId,
@@ -292,7 +293,7 @@ export async function serverApproveExchangeRequest(
 
     await serverCreateNotification({
       userId: result.holderUserId,
-      type: 'exchange_approved',
+      type: NotificationType.EXCHANGE_APPROVED,
       title: 'בקשת החלפה אושרה',
       message: `${input.actorName} אישר את ההחלפה. מספר סידורי חדש: ${result.newEquipmentDocId}`,
       relatedEquipmentId: result.newEquipmentDocId,
@@ -396,7 +397,7 @@ export async function serverRejectExchangeRequest(
 
     await serverCreateNotification({
       userId: result.holderUserId,
-      type: 'exchange_rejected',
+      type: NotificationType.EXCHANGE_REJECTED,
       title: 'בקשת החלפה נדחתה',
       message: `${input.actorName} דחה את בקשת ההחלפה${input.reason ? ': ' + input.reason : ''}`,
       relatedEquipmentId: result.equipmentId,
@@ -560,7 +561,7 @@ export async function serverReplaceByAnother(
 
     await serverCreateNotification({
       userId: result.holderUserId,
-      type: 'exchange_completed',
+      type: NotificationType.EXCHANGE_COMPLETED,
       title: 'הציוד שלך הוחלף',
       message: `${input.actorName} החליף את ${result.equipmentName} בפריט חדש (מספר סידורי ${result.newEquipmentDocId})`,
       relatedEquipmentId: result.newEquipmentDocId,

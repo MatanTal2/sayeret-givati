@@ -22,9 +22,9 @@ Individual notification item with type-based styling (icon + color), read/unread
 - Equipment-domain types (transfer, retirement, report-request, force-ops, daily-check, maintenance) → `/equipment`.
 - Manager-side template-review types (`template_proposed_for_review`, `new_template_request_for_review`, `template_request_rejected`) → `/management?tab=template-management` so the management page lands directly on the equipment-template tab instead of the default user tab.
 
-`resolveNotificationTarget` is exported for unit tests in `__tests__/NotificationItem.test.tsx` — covers both the equipment auto-open route and the management tab routing.
+`resolveNotificationTarget` is exported for unit tests in `__tests__/NotificationItem.test.tsx` — covers the equipment auto-open route, the management tab routing, and the no-duplicates / snake_case enum sanity suite.
 
-The function compares against raw string values because the Phase 4/5 server emits notification types from `src/types/equipment.ts`'s `NotificationType` enum, while `NotificationDisplayData` is typed against the legacy enum in `src/types/notifications.ts`.
+Since PR-A (2026-05-20) the function compares against `NotificationType` enum members directly — `src/types/notifications.ts` is the single source of truth, and the previous string-cast workaround for the duplicate `src/types/equipment.ts` enum is gone.
 
 ## Known Issues
 

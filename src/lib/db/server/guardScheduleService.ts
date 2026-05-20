@@ -22,6 +22,7 @@ import type {
   ShiftAssignment,
   UpdateGuardSchedulePatch,
 } from '@/types/guardSchedule';
+import { NotificationType } from '@/types/notifications';
 import { serverCreateActionLog } from './actionsLogService';
 import { serverCreateNotification } from './notificationService';
 
@@ -359,7 +360,7 @@ export async function serverShareGuardScheduleCopy(
     }),
     serverCreateNotification({
       userId: input.recipientUid,
-      type: 'guard_schedule_shared',
+      type: NotificationType.GUARD_SCHEDULE_SHARED,
       title: 'שותפה לוח שמירות',
       message: `${input.actorName} שיתף איתך עותק של "${source.title}"`,
       relatedGuardScheduleId: newRef.id,

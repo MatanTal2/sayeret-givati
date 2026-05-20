@@ -22,6 +22,7 @@ import type {
   AmmunitionReportRequestScope,
   AmmunitionReportRequestStatus,
 } from '@/types/ammunition';
+import { NotificationType } from '@/types/notifications';
 
 const SCOPES: AmmunitionReportRequestScope[] = ['INDIVIDUAL', 'TEAM', 'ALL'];
 
@@ -146,7 +147,7 @@ export async function serverCreateAmmunitionReportRequest(
     await serverCreateBatchNotifications(
       targets.map((uid) => ({
         userId: uid,
-        type: 'ammo_report_requested',
+        type: NotificationType.AMMO_REPORT_REQUESTED,
         title: 'בקשה לדיווח תחמושת',
         message:
           input.note ||

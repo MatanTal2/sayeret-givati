@@ -14,6 +14,7 @@ import {
   ReportRequestScope,
   ReportRequestStatus,
 } from '@/types/equipment';
+import { NotificationType } from '@/types/notifications';
 
 const DEFAULT_EXPIRY_MS = 48 * 60 * 60 * 1000; // 48 hours
 
@@ -101,7 +102,7 @@ export async function serverCreateReportRequest(
     await serverCreateBatchNotifications(
       resolvedTargetIds.map((uid) => ({
         userId: uid,
-        type: 'report_requested',
+        type: NotificationType.REPORT_REQUESTED,
         title: 'בקשת דיווח ציוד',
         message:
           input.note ||

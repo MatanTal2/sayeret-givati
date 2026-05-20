@@ -12,6 +12,7 @@ import { FieldValue, Timestamp, type DocumentData, type UpdateData } from 'fireb
 import { serverCreateActionLog } from './actionsLogService';
 import { serverCreateBatchNotifications } from './notificationService';
 import { ActionType } from '@/types/equipment';
+import { NotificationType } from '@/types/notifications';
 
 export type ForceOpKind = 'holder' | 'signer' | 'both';
 
@@ -149,8 +150,8 @@ export async function serverForceOps(
           userId: d.userId,
           type:
             d.role === 'holder'
-              ? 'force_transfer_executed'
-              : 'force_signer_changed',
+              ? NotificationType.FORCE_TRANSFER_EXECUTED
+              : NotificationType.FORCE_SIGNER_CHANGED,
           title:
             d.role === 'holder'
               ? 'ציוד הועבר מרשותך'

@@ -16,6 +16,7 @@ import {
   ActionType,
   TemplateStatus,
 } from '@/types/equipment';
+import { NotificationType } from '@/types/notifications';
 import { UserType } from '@/types/user';
 import { serverPromoteDraftsForTemplate } from './equipmentDraftService';
 
@@ -135,8 +136,8 @@ export async function serverProposeTemplate(
 
       if (!managersSnapshot.empty) {
         const notificationType = isRegularUser
-          ? 'new_template_request_for_review'
-          : 'template_proposed_for_review';
+          ? NotificationType.NEW_TEMPLATE_REQUEST_FOR_REVIEW
+          : NotificationType.TEMPLATE_PROPOSED_FOR_REVIEW;
         const title = isRegularUser
           ? 'בקשת תבנית חדשה מחייל'
           : 'הצעת תבנית ממפקד צוות';
@@ -232,7 +233,7 @@ export async function serverApproveTemplateRequest(
       const isUserRequest = template.status === TemplateStatus.PENDING_REQUEST;
       await serverCreateNotification({
         userId: template.proposedByUserId,
-        type: 'template_request_approved',
+        type: NotificationType.TEMPLATE_REQUEST_APPROVED,
         title: 'תבנית אושרה',
         message: isUserRequest
           ? `התבנית "${template.name}" אושרה. ניתן להשלים את ההרשמה לציוד.`
@@ -248,7 +249,7 @@ export async function serverApproveTemplateRequest(
       await serverCreateBatchNotifications(
         extraIds.map((uid) => ({
           userId: uid,
-          type: 'template_request_approved',
+          type: NotificationType.TEMPLATE_REQUEST_APPROVED,
           title: 'תבנית אושרה',
           message: `התבנית "${template.name}" אושרה. ניתן להשלים את ההרשמה לציוד.`,
           relatedEquipmentDocId: input.templateId,
@@ -306,7 +307,7 @@ export async function serverRejectTemplateRequest(
     if (template.proposedByUserId) {
       await serverCreateNotification({
         userId: template.proposedByUserId,
-        type: 'template_request_rejected',
+        type: NotificationType.TEMPLATE_REQUEST_REJECTED,
         title: 'בקשת תבנית נדחתה',
         message: `הבקשה לתבנית "${template.name}" נדחתה${input.reason ? ': ' + input.reason : ''}`,
         relatedEquipmentDocId: input.templateId,

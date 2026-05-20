@@ -21,25 +21,52 @@ export interface Notification {
   readAt?: Timestamp; // when the notification was marked as read
 }
 
+/**
+ * Single source of truth for notification types.
+ *
+ * Every value must have at least one producer in the codebase. If you add a
+ * value here, wire a producer call site at the same time — otherwise the
+ * type is dead-on-arrival and will be deleted on the next audit.
+ */
 export enum NotificationType {
-  TRANSFER_REQUEST = 'transfer_request',
-  TRANSFER_APPROVED = 'transfer_approved',
-  TRANSFER_REJECTED = 'transfer_rejected',
-  TRANSFER_COMPLETED = 'transfer_completed',
-  EQUIPMENT_UPDATE = 'equipment_update',
-  EQUIPMENT_STATUS_CHANGE = 'equipment_status_change',
-  SYSTEM_MESSAGE = 'system_message',
-  MAINTENANCE_DUE = 'maintenance_due',
-  COMMANDER_MESSAGE = 'commander_message',
-  DAILY_CHECK_REMINDER = 'daily_check_reminder',
-  AMMO_REPORT_SUBMITTED = 'ammo_report_submitted',
+  // Ammunition
+  AMMO_ASSIGNED_FROM_CENTRAL = 'ammo_assigned_from_central',
   AMMO_REPORT_REQUESTED = 'ammo_report_requested',
-  TRAINING_PLAN_SUBMITTED = 'training_plan_submitted',
+  AMMO_REPORT_SUBMITTED = 'ammo_report_submitted',
+  AMMO_RESTOCK_REQUEST = 'ammo_restock_request',
+  // Equipment lifecycle
+  EQUIPMENT_STATUS_CHANGE = 'equipment_status_change',
+  REPORT_REQUESTED = 'report_requested',
+  // Exchange (holder ↔ signer swap flow)
+  EXCHANGE_APPROVED = 'exchange_approved',
+  EXCHANGE_COMPLETED = 'exchange_completed',
+  EXCHANGE_REJECTED = 'exchange_rejected',
+  EXCHANGE_REQUEST_APPROVAL = 'exchange_request_approval',
+  // Force-ops (manager force transfers + signer changes)
+  FORCE_SIGNER_CHANGED = 'force_signer_changed',
+  FORCE_TRANSFER_EXECUTED = 'force_transfer_executed',
+  // Guard schedule
+  GUARD_SCHEDULE_SHARED = 'guard_schedule_shared',
+  // Retirement
+  RETIREMENT_APPROVED = 'retirement_approved',
+  RETIREMENT_REJECTED = 'retirement_rejected',
+  RETIREMENT_REQUEST_APPROVAL = 'retirement_request_approval',
+  // System
+  SYSTEM_MESSAGE = 'system_message',
+  // Template requests / proposals
+  NEW_TEMPLATE_REQUEST_FOR_REVIEW = 'new_template_request_for_review',
+  TEMPLATE_PROPOSED_FOR_REVIEW = 'template_proposed_for_review',
+  TEMPLATE_REQUEST_APPROVED = 'template_request_approved',
+  TEMPLATE_REQUEST_REJECTED = 'template_request_rejected',
+  // Training plan
   TRAINING_PLAN_APPROVED = 'training_plan_approved',
   TRAINING_PLAN_REJECTED = 'training_plan_rejected',
-  AMMO_RESTOCK_REQUEST = 'ammo_restock_request',
-  AMMO_ASSIGNED_FROM_CENTRAL = 'ammo_assigned_from_central',
-  GUARD_SCHEDULE_SHARED = 'guard_schedule_shared'
+  TRAINING_PLAN_SUBMITTED = 'training_plan_submitted',
+  // Transfer (regular holder ↔ holder transfer flow)
+  TRANSFER_APPROVED = 'transfer_approved',
+  TRANSFER_COMPLETED = 'transfer_completed',
+  TRANSFER_REJECTED = 'transfer_rejected',
+  TRANSFER_REQUEST = 'transfer_request',
 }
 
 export interface CreateNotificationData {

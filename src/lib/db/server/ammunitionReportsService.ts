@@ -22,6 +22,7 @@ import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { serverCreateActionLog } from './actionsLogService';
 import { serverCreateBatchNotifications } from './notificationService';
 import { serverPatchFulfillment } from './ammunitionReportRequestService';
+import { NotificationType } from '@/types/notifications';
 import type { ApiActor } from './policyHelpers';
 import { UserType } from '@/types/user';
 import type {
@@ -297,7 +298,7 @@ export async function serverSubmitAmmunitionReport(
       await serverCreateBatchNotifications(
         recipientIds.map((uid) => ({
           userId: uid,
-          type: 'ammo_report_submitted',
+          type: NotificationType.AMMO_REPORT_SUBMITTED,
           title: 'דיווח תחמושת חדש',
           message: `${reporterName} דיווח על שימוש ב${template.name}`,
           relatedEquipmentDocId: reportRef.id,

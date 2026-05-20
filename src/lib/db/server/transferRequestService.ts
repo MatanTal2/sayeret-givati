@@ -8,6 +8,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { serverCreateActionLog } from './actionsLogService';
 import { serverCreateNotification, serverCreateBatchNotifications } from './notificationService';
 import { EquipmentStatus } from '@/types/equipment';
+import { NotificationType } from '@/types/notifications';
 
 interface CreateTransferInput {
   equipmentDocId: string;
@@ -88,7 +89,7 @@ export async function serverCreateTransferRequest(input: CreateTransferInput): P
 
     await serverCreateNotification({
       userId: input.toUserId,
-      type: 'transfer_request',
+      type: NotificationType.TRANSFER_REQUEST,
       title: 'בקשת העברת ציוד',
       message: `${input.fromUserName} מבקש להעביר אליך: ${equipmentName}`,
       relatedEquipmentId: input.equipmentDocId,
@@ -190,7 +191,7 @@ export async function serverApproveTransferRequest(input: ApproveTransferInput):
     // Notify requester that transfer was approved
     await serverCreateNotification({
       userId: tr.fromUserId,
-      type: 'transfer_approved',
+      type: NotificationType.TRANSFER_APPROVED,
       title: 'בקשת העברה אושרה',
       message: `${input.approverUserName} אישר את בקשת ההעברה של ${tr.equipmentName}`,
       relatedEquipmentId: tr.equipmentId,
@@ -203,7 +204,7 @@ export async function serverApproveTransferRequest(input: ApproveTransferInput):
     await serverCreateBatchNotifications([
       {
         userId: tr.fromUserId,
-        type: 'transfer_completed',
+        type: NotificationType.TRANSFER_COMPLETED,
         title: 'העברת ציוד הושלמה',
         message: `העברת ${tr.equipmentName} הושלמה בהצלחה`,
         relatedEquipmentId: tr.equipmentId,
@@ -213,7 +214,7 @@ export async function serverApproveTransferRequest(input: ApproveTransferInput):
       },
       {
         userId: tr.toUserId,
-        type: 'transfer_completed',
+        type: NotificationType.TRANSFER_COMPLETED,
         title: 'העברת ציוד הושלמה',
         message: `העברת ${tr.equipmentName} הושלמה בהצלחה`,
         relatedEquipmentId: tr.equipmentId,
@@ -312,7 +313,7 @@ export async function serverRejectTransferRequest(input: RejectTransferInput): P
 
     await serverCreateNotification({
       userId: tr.fromUserId,
-      type: 'transfer_rejected',
+      type: NotificationType.TRANSFER_REJECTED,
       title: 'בקשת העברה נדחתה',
       message: `${input.rejectorUserName} דחה את בקשת ההעברה של ${tr.equipmentName}${input.rejectionReason ? ': ' + input.rejectionReason : ''}`,
       relatedEquipmentId: tr.equipmentId,

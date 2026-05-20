@@ -13,10 +13,11 @@ import {
 import { db } from '@/lib/firebase';
 import { apiFetch } from '@/lib/apiFetch';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Notification, 
-  NotificationContextType, 
-  UseNotificationsReturn 
+import {
+  Notification,
+  NotificationContextType,
+  NotificationType,
+  UseNotificationsReturn
 } from '@/types/notifications';
 import { NotificationService } from '@/utils/notifications'; // kept for client-side reads only
 
@@ -179,45 +180,61 @@ export function useNotificationDisplay() {
 
   const getNotificationIcon = (type: string): string => {
     switch (type) {
-      case 'transfer_request':
+      case NotificationType.TRANSFER_REQUEST:
         return '📤';
-      case 'transfer_approved':
+      case NotificationType.TRANSFER_APPROVED:
         return '✅';
-      case 'transfer_rejected':
+      case NotificationType.TRANSFER_REJECTED:
         return '❌';
-      case 'transfer_completed':
+      case NotificationType.TRANSFER_COMPLETED:
         return '🔄';
-      case 'equipment_update':
-        return '🔧';
-      case 'equipment_status_change':
+      case NotificationType.EQUIPMENT_STATUS_CHANGE:
         return '📊';
-      case 'system_message':
+      case NotificationType.SYSTEM_MESSAGE:
         return '📢';
-      case 'maintenance_due':
-        return '⚠️';
-      case 'commander_message':
-        return '👨‍✈️';
-      case 'daily_check_reminder':
-        return '📋';
-      case 'template_request_approved':
+      case NotificationType.TEMPLATE_REQUEST_APPROVED:
         return '✅';
-      case 'template_request_rejected':
+      case NotificationType.TEMPLATE_REQUEST_REJECTED:
         return '❌';
-      case 'template_proposed_for_review':
+      case NotificationType.TEMPLATE_PROPOSED_FOR_REVIEW:
         return '📝';
-      case 'new_template_request_for_review':
+      case NotificationType.NEW_TEMPLATE_REQUEST_FOR_REVIEW:
         return '🆕';
-      case 'retirement_request_approval':
+      case NotificationType.RETIREMENT_REQUEST_APPROVAL:
         return '📦';
-      case 'retirement_approved':
+      case NotificationType.RETIREMENT_APPROVED:
         return '✅';
-      case 'retirement_rejected':
+      case NotificationType.RETIREMENT_REJECTED:
         return '❌';
-      case 'report_requested':
+      case NotificationType.REPORT_REQUESTED:
         return '📋';
-      case 'force_transfer_executed':
-      case 'force_signer_changed':
+      case NotificationType.FORCE_TRANSFER_EXECUTED:
+      case NotificationType.FORCE_SIGNER_CHANGED:
         return '⚡';
+      case NotificationType.EXCHANGE_REQUEST_APPROVAL:
+        return '🔁';
+      case NotificationType.EXCHANGE_APPROVED:
+        return '✅';
+      case NotificationType.EXCHANGE_REJECTED:
+        return '❌';
+      case NotificationType.EXCHANGE_COMPLETED:
+        return '✔️';
+      case NotificationType.GUARD_SCHEDULE_SHARED:
+        return '🕐';
+      case NotificationType.AMMO_REPORT_REQUESTED:
+        return '📋';
+      case NotificationType.AMMO_REPORT_SUBMITTED:
+        return '🎯';
+      case NotificationType.AMMO_RESTOCK_REQUEST:
+        return '📦';
+      case NotificationType.AMMO_ASSIGNED_FROM_CENTRAL:
+        return '🎯';
+      case NotificationType.TRAINING_PLAN_SUBMITTED:
+        return '📝';
+      case NotificationType.TRAINING_PLAN_APPROVED:
+        return '✅';
+      case NotificationType.TRAINING_PLAN_REJECTED:
+        return '❌';
       default:
         return '🔔';
     }
@@ -225,45 +242,61 @@ export function useNotificationDisplay() {
 
   const getNotificationColor = (type: string): string => {
     switch (type) {
-      case 'transfer_request':
+      case NotificationType.TRANSFER_REQUEST:
         return 'text-blue-600';
-      case 'transfer_approved':
+      case NotificationType.TRANSFER_APPROVED:
         return 'text-green-600';
-      case 'transfer_rejected':
+      case NotificationType.TRANSFER_REJECTED:
         return 'text-red-600';
-      case 'transfer_completed':
+      case NotificationType.TRANSFER_COMPLETED:
         return 'text-purple-600';
-      case 'equipment_update':
-        return 'text-orange-600';
-      case 'equipment_status_change':
+      case NotificationType.EQUIPMENT_STATUS_CHANGE:
         return 'text-indigo-600';
-      case 'system_message':
+      case NotificationType.SYSTEM_MESSAGE:
         return 'text-gray-600';
-      case 'maintenance_due':
-        return 'text-yellow-600';
-      case 'commander_message':
-        return 'text-blue-800';
-      case 'daily_check_reminder':
-        return 'text-teal-600';
-      case 'template_request_approved':
+      case NotificationType.TEMPLATE_REQUEST_APPROVED:
         return 'text-success-600';
-      case 'template_request_rejected':
+      case NotificationType.TEMPLATE_REQUEST_REJECTED:
         return 'text-danger-600';
-      case 'template_proposed_for_review':
+      case NotificationType.TEMPLATE_PROPOSED_FOR_REVIEW:
         return 'text-info-600';
-      case 'new_template_request_for_review':
+      case NotificationType.NEW_TEMPLATE_REQUEST_FOR_REVIEW:
         return 'text-info-700';
-      case 'retirement_request_approval':
+      case NotificationType.RETIREMENT_REQUEST_APPROVAL:
         return 'text-warning-700';
-      case 'retirement_approved':
+      case NotificationType.RETIREMENT_APPROVED:
         return 'text-success-700';
-      case 'retirement_rejected':
+      case NotificationType.RETIREMENT_REJECTED:
         return 'text-danger-700';
-      case 'report_requested':
+      case NotificationType.REPORT_REQUESTED:
         return 'text-primary-600';
-      case 'force_transfer_executed':
-      case 'force_signer_changed':
+      case NotificationType.FORCE_TRANSFER_EXECUTED:
+      case NotificationType.FORCE_SIGNER_CHANGED:
         return 'text-orange-600';
+      case NotificationType.EXCHANGE_REQUEST_APPROVAL:
+        return 'text-warning-600';
+      case NotificationType.EXCHANGE_APPROVED:
+        return 'text-success-600';
+      case NotificationType.EXCHANGE_REJECTED:
+        return 'text-danger-600';
+      case NotificationType.EXCHANGE_COMPLETED:
+        return 'text-success-700';
+      case NotificationType.GUARD_SCHEDULE_SHARED:
+        return 'text-info-600';
+      case NotificationType.AMMO_REPORT_REQUESTED:
+        return 'text-primary-600';
+      case NotificationType.AMMO_REPORT_SUBMITTED:
+        return 'text-success-600';
+      case NotificationType.AMMO_RESTOCK_REQUEST:
+        return 'text-warning-600';
+      case NotificationType.AMMO_ASSIGNED_FROM_CENTRAL:
+        return 'text-info-700';
+      case NotificationType.TRAINING_PLAN_SUBMITTED:
+        return 'text-info-600';
+      case NotificationType.TRAINING_PLAN_APPROVED:
+        return 'text-success-600';
+      case NotificationType.TRAINING_PLAN_REJECTED:
+        return 'text-danger-600';
       default:
         return 'text-gray-500';
     }
