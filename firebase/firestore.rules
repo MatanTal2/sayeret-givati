@@ -238,6 +238,20 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Logistics templates — authenticated read; writes server-only via
+    // /api/logistics-templates (admin / system_manager / manager).
+    match /logisticsTemplates/{templateId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Logistics items — authenticated read; writes server-only via
+    // /api/logistics-items.
+    match /logisticsItems/{itemId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // Idempotency synchronization tokens (Phase 4 of offline-first
     // migration). Server-only — clients have zero access. Records are
     // ephemeral; the Firestore TTL on `expiresAt` purges them 24h after
