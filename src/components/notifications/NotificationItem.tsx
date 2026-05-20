@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Check, Trash2 } from 'lucide-react';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { NOTIFICATIONS } from '@/constants/text';
-import { NotificationDisplayData } from '@/types/notifications';
+import { NotificationDisplayData, NotificationType } from '@/types/notifications';
 
 interface NotificationItemProps {
   notification: NotificationDisplayData;
@@ -132,37 +132,45 @@ export default function NotificationItem({ notification }: NotificationItemProps
 }
 
 export function resolveNotificationTarget(n: NotificationDisplayData): string | null {
-  // Compare against string values directly — server writes notification types
-  // beyond the legacy NotificationType enum (template/retirement/report/force-ops types
-  // live in src/types/equipment.ts NotificationType).
-  const t = n.type as unknown as string;
-  if (t === 'template_request_approved') {
+  if (n.type === NotificationType.TEMPLATE_REQUEST_APPROVED) {
     return n.relatedEquipmentDocId
       ? `/equipment?resumeTemplate=${n.relatedEquipmentDocId}`
       : '/equipment';
   }
-  const equipmentTypes = new Set([
-    'transfer_request', 'transfer_approved', 'transfer_rejected', 'transfer_completed',
-    'equipment_update', 'equipment_status_change', 'maintenance_due', 'daily_check_reminder',
-    'equipment_transfer_request', 'equipment_transfer_approved', 'equipment_transfer_declined',
-    'retirement_request', 'retirement_request_approval', 'retirement_approved', 'retirement_rejected',
-    'report_requested', 'force_transfer_executed', 'force_signer_changed',
+  const equipmentTypes: ReadonlySet<NotificationType> = new Set([
+    NotificationType.TRANSFER_REQUEST,
+    NotificationType.TRANSFER_APPROVED,
+    NotificationType.TRANSFER_REJECTED,
+    NotificationType.TRANSFER_COMPLETED,
+    NotificationType.EQUIPMENT_STATUS_CHANGE,
+    NotificationType.RETIREMENT_REQUEST_APPROVAL,
+    NotificationType.RETIREMENT_APPROVED,
+    NotificationType.RETIREMENT_REJECTED,
+    NotificationType.REPORT_REQUESTED,
+    NotificationType.FORCE_TRANSFER_EXECUTED,
+    NotificationType.FORCE_SIGNER_CHANGED,
+    NotificationType.EXCHANGE_REQUEST_APPROVAL,
+    NotificationType.EXCHANGE_APPROVED,
+    NotificationType.EXCHANGE_REJECTED,
+    NotificationType.EXCHANGE_COMPLETED,
   ]);
-  if (equipmentTypes.has(t)) return '/equipment';
+  if (equipmentTypes.has(n.type)) return '/equipment';
 
-  const managementTypes = new Set([
-    'template_proposed_for_review', 'new_template_request_for_review', 'template_request_rejected',
+  const managementTypes: ReadonlySet<NotificationType> = new Set([
+    NotificationType.TEMPLATE_PROPOSED_FOR_REVIEW,
+    NotificationType.NEW_TEMPLATE_REQUEST_FOR_REVIEW,
+    NotificationType.TEMPLATE_REQUEST_REJECTED,
   ]);
-  if (managementTypes.has(t)) return '/management?tab=template-management';
+  if (managementTypes.has(n.type)) return '/management?tab=template-management';
 
-  if (t === 'ammo_report_submitted') return '/ammunition';
-  if (t === 'ammo_report_requested') {
+  if (n.type === NotificationType.AMMO_REPORT_SUBMITTED) return '/ammunition';
+  if (n.type === NotificationType.AMMO_REPORT_REQUESTED) {
     return n.relatedEquipmentDocId
       ? `/ammunition?requestId=${n.relatedEquipmentDocId}`
       : '/ammunition';
   }
 
-  if (t === 'guard_schedule_shared') {
+  if (n.type === NotificationType.GUARD_SCHEDULE_SHARED) {
     return n.relatedGuardScheduleId
       ? `/guard-scheduler/${n.relatedGuardScheduleId}`
       : '/guard-scheduler';
@@ -173,31 +181,23 @@ export function resolveNotificationTarget(n: NotificationDisplayData): string | 
 
 function getTypeLabel(type: string): string {
   switch (type) {
-    case 'transfer_request':
+    case NotificationType.TRANSFER_REQUEST:
       return 'בקשת העברה';
-    case 'transfer_approved':
+    case NotificationType.TRANSFER_APPROVED:
       return 'אושר';
-    case 'transfer_rejected':
+    case NotificationType.TRANSFER_REJECTED:
       return 'נדחה';
-    case 'transfer_completed':
+    case NotificationType.TRANSFER_COMPLETED:
       return 'הושלם';
-    case 'equipment_update':
-      return 'עדכון ציוד';
-    case 'equipment_status_change':
+    case NotificationType.EQUIPMENT_STATUS_CHANGE:
       return 'שינוי סטטוס';
-    case 'system_message':
+    case NotificationType.SYSTEM_MESSAGE:
       return 'מערכת';
-    case 'maintenance_due':
-      return 'תחזוקה';
-    case 'commander_message':
-      return 'מפקד';
-    case 'daily_check_reminder':
-      return 'בדיקה יומית';
-    case 'ammo_report_submitted':
+    case NotificationType.AMMO_REPORT_SUBMITTED:
       return 'דיווח תחמושת';
-    case 'ammo_report_requested':
+    case NotificationType.AMMO_REPORT_REQUESTED:
       return 'בקשת דיווח תחמושת';
-    case 'guard_schedule_shared':
+    case NotificationType.GUARD_SCHEDULE_SHARED:
       return 'לוח שמירות';
     default:
       return 'התראה';

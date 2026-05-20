@@ -14,6 +14,7 @@ import {
   RetirementRequestStatus,
   type EquipmentCondition,
 } from '@/types/equipment';
+import { NotificationType } from '@/types/notifications';
 
 interface CreateEquipmentInput {
   equipmentData: Record<string, unknown>;
@@ -373,7 +374,7 @@ export async function serverRetireEquipment(
       // Notify holder that they must approve.
       await serverCreateNotification({
         userId: eq.currentHolderId,
-        type: 'retirement_request_approval',
+        type: NotificationType.RETIREMENT_REQUEST_APPROVAL,
         title: 'בקשת החזרה לצבא',
         message: `${input.actorName} מבקש להחזיר לצבא: ${eq.productName}`,
         relatedEquipmentId: eq.id || input.equipmentId,

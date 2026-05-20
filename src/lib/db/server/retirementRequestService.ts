@@ -13,6 +13,7 @@ import {
   EquipmentStatus,
   RetirementRequestStatus,
 } from '@/types/equipment';
+import { NotificationType } from '@/types/notifications';
 
 interface ApproveRetirementInput {
   requestId: string;
@@ -92,7 +93,7 @@ export async function serverApproveRetirementRequest(
 
     await serverCreateNotification({
       userId: req.signerUserId,
-      type: 'retirement_approved',
+      type: NotificationType.RETIREMENT_APPROVED,
       title: 'בקשת החזרה לצבא אושרה',
       message: `${input.approverUserName} אישר את החזרת ${req.equipmentName} לצבא`,
       relatedEquipmentId: req.equipmentId,
@@ -161,7 +162,7 @@ export async function serverRejectRetirementRequest(
 
     await serverCreateNotification({
       userId: req.signerUserId,
-      type: 'retirement_rejected',
+      type: NotificationType.RETIREMENT_REJECTED,
       title: 'בקשת החזרה לצבא נדחתה',
       message: `${input.rejectorUserName} דחה את בקשת החזרת ${req.equipmentName}${input.reason ? ': ' + input.reason : ''}`,
       relatedEquipmentId: req.equipmentId,
