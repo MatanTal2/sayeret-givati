@@ -25,4 +25,8 @@ Timestamps in tracking entries can arrive as `Timestamp` instances, `Date`, ISO 
 
 ## Inline expand
 
-Each row is a `role="button"` element (`tabIndex=0`, `aria-expanded`). Click — or Enter / Space — toggles a single-open expansion panel showing the full ISO timestamp, the source (`tracking` / `log`), the owner doc id, the `isPredecessor` flag, the full photo (`max-h-64`), the untruncated note, and `details.condition` when present. Escape collapses the open row. Transition is a simple `max-h` + `opacity` Tailwind animation.
+Each row is a `role="button"` element (`tabIndex=0`, `aria-expanded`). Click — or Enter / Space — toggles a single-open expansion panel showing the source (`tracking` / `log`), the owner doc id, the `isPredecessor` flag, the full photo (`max-h-64`), the untruncated note, and `details.condition` when present. The full ISO timestamp was previously rendered here as well; it was dropped because the collapsed row already shows a localized `dd/mm/yy hh:mm` value, and double-rendering the same datum (in two formats, one of them debug-shaped) added noise without information. Escape collapses the open row. Transition is a simple `max-h` + `opacity` Tailwind animation.
+
+## Predecessor pill
+
+When the item has a predecessor chain (older items it was exchanged from), the header renders a pill formatted via `EXCHANGE.PREDECESSOR_PILL` substituting `{serial}` with the *display name* of the first predecessor, not its raw doc id. For items where `hasSerialNumber === false`, the doc id is a UUID that must never be shown — the pill falls back to the predecessor's `productName`. Computed once when the chain is walked and stored in component state.

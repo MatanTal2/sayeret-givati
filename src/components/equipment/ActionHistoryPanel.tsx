@@ -56,11 +56,11 @@ export default function ActionHistoryPanel({ equipment, onClose }: ActionHistory
   const [timeline, setTimeline] = useState<TimelineEntry[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [predecessorChain, setPredecessorChain] = useState<string[]>([]);
+  const [predecessorDisplay, setPredecessorDisplay] = useState<string | null>(null);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!equipment) { setTimeline(null); setPredecessorChain([]); setExpandedKey(null); return; }
+    if (!equipment) { setTimeline(null); setPredecessorDisplay(null); setExpandedKey(null); return; }
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -99,7 +99,13 @@ export default function ActionHistoryPanel({ equipment, onClose }: ActionHistory
         });
         merged.sort((a, b) => b.ts - a.ts);
         setTimeline(merged);
-        setPredecessorChain(chain.filter((c) => c.isPredecessor).map((c) => c.docId));
+        const firstPred = chain.find((c) => c.isPredecessor);
+        if (firstPred) {
+          const serial = equipmentSerialDisplay(firstPred.eq);
+          setPredecessorDisplay(serial ?? firstPred.eq.productName);
+        } else {
+          setPredecessorDisplay(null);
+        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
       } finally {
@@ -123,11 +129,6 @@ export default function ActionHistoryPanel({ equipment, onClose }: ActionHistory
       day: '2-digit', month: '2-digit', year: '2-digit',
       hour: '2-digit', minute: '2-digit',
     });
-  };
-
-  const formatIso = (ts: number, date: Date): string => {
-    if (ts === 0 || Number.isNaN(date.getTime())) return labels.UNKNOWN_DATE;
-    return date.toISOString();
   };
 
   const toggle = (key: string) => {
@@ -165,11 +166,11 @@ export default function ActionHistoryPanel({ equipment, onClose }: ActionHistory
                 return serial ? ` · צ: ${serial}` : '';
               })()}
             </p>
-            {predecessorChain.length > 0 && (
+            {predecessorDisplay && (
               <p className="mt-1 text-xs text-primary-700 bg-primary-50 inline-block px-2 py-0.5 rounded-full">
                 {TEXT_CONSTANTS.FEATURES.EQUIPMENT.EXCHANGE.PREDECESSOR_PILL.replace(
                   '{serial}',
-                  predecessorChain[0]
+                  predecessorDisplay
                 )}
               </p>
             )}
@@ -196,7 +197,6 @@ export default function ActionHistoryPanel({ equipment, onClose }: ActionHistory
               {timeline.map((entry) => {
                 const isExpanded = expandedKey === entry.key;
                 const shortDate = formatShortDate(entry.ts, entry.date);
-                const isoDate = formatIso(entry.ts, entry.date);
                 const actionLabel = actionLabels[entry.action] ?? entry.action;
                 const conditionLabel = entry.condition
                   ? conditionLabels[entry.condition] ?? entry.condition
@@ -267,8 +267,6 @@ export default function ActionHistoryPanel({ equipment, onClose }: ActionHistory
                     >
                       <div className="ps-4 pe-3 pb-3 pt-1 text-xs text-neutral-600 space-y-2">
                         <dl className="grid grid-cols-[max-content_1fr] gap-x-2 gap-y-1">
-                          <dt className="font-medium text-neutral-500">{labels.FULL_TIMESTAMP_LABEL}</dt>
-                          <dd className="text-neutral-700 break-all">{isoDate}</dd>
                           <dt className="font-medium text-neutral-500">{labels.SOURCE_LABEL}</dt>
                           <dd className="text-neutral-700">{sourceLabel}</dd>
                           <dt className="font-medium text-neutral-500">{labels.OWNER_DOC_LABEL}</dt>

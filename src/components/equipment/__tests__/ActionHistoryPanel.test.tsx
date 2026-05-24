@@ -38,7 +38,6 @@ jest.mock('@/constants/text', () => ({
           COLLAPSE_ROW_ARIA: 'הסתר פרטים',
           SOURCE_TRACKING: 'מהיסטוריית הפריט',
           SOURCE_LOG: 'מיומן הפעולות',
-          FULL_TIMESTAMP_LABEL: 'זמן מדויק',
           SOURCE_LABEL: 'מקור',
           OWNER_DOC_LABEL: 'מסמך פריט',
           PREDECESSOR_FLAG_LABEL: 'מהיסטוריה של פריט קודם',
@@ -75,7 +74,6 @@ const historyPanelLabels = {
   COLLAPSE_ROW_ARIA: 'הסתר פרטים',
   SOURCE_TRACKING: 'מהיסטוריית הפריט',
   SOURCE_LOG: 'מיומן הפעולות',
-  FULL_TIMESTAMP_LABEL: 'זמן מדויק',
   SOURCE_LABEL: 'מקור',
   OWNER_DOC_LABEL: 'מסמך פריט',
   PREDECESSOR_FLAG_LABEL: 'מהיסטוריה של פריט קודם',
@@ -163,11 +161,10 @@ describe('ActionHistoryPanel', () => {
     await waitFor(() => {
       expect(row!.getAttribute('aria-expanded')).toBe('true');
     });
-    // The full ISO timestamp should appear for the clicked row.
+    // Exact timestamp row removed — collapsed shortDate is the only time shown.
     const iso = new Date(Date.UTC(2026, 4, 1, 10, 30, 0)).toISOString();
-    expect(screen.getByText(iso)).toBeInTheDocument();
-    // Each row carries the detail labels — make sure they are present.
-    expect(screen.getAllByText(historyPanelLabels.FULL_TIMESTAMP_LABEL).length).toBeGreaterThan(0);
+    expect(screen.queryByText(iso)).toBeNull();
+    // Remaining detail labels still render in the expanded panel.
     expect(screen.getAllByText(historyPanelLabels.SOURCE_LABEL).length).toBeGreaterThan(0);
     expect(screen.getAllByText(historyPanelLabels.OWNER_DOC_LABEL).length).toBeGreaterThan(0);
   });
