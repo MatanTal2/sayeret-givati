@@ -42,6 +42,19 @@ AuthGuard
 - Create / edit / delete: ADMIN / SYSTEM_MANAGER / MANAGER / TEAM_LEADER.
   Enforced on `/api/logistics-items`; UI hides the buttons for everyone else.
 
+## Firestore rules + indexes
+
+The page relies on two collections — `logisticsTemplates` (managed under
+`Management → תבניות אפסנאות`) and `logisticsItems`. Both have authenticated-
+read rules in `firebase/firestore.rules`; writes are server-only. The template
+read uses `where('isActive','==',true) + orderBy('name')`, which requires the
+composite index `logisticsTemplates(isActive, name)` in
+`firebase/firestore.indexes.json`. Without the rule entries the default
+deny-all match silently empties the templates list, which leaves the Add-item
+button disabled and surfaces the misleading "no templates" banner. Deploy
+both with `firebase deploy --only firestore:rules,firestore:indexes` after
+any change.
+
 ## Empty states
 
 - No templates → info banner directing managers to `Management → תבניות
